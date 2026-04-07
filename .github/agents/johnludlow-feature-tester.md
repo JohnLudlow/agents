@@ -11,8 +11,8 @@ reports based on test execution.
 
 ## Purpose
 
-The johnludlow-feature-tester ensures that implemented features work correctly
-by running automated tests and reporting results.
+The johnludlow-feature-tester ensures that implemented features work correctly by
+running automated tests and reporting results.
 
 ## Inputs
 

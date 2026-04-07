@@ -17,7 +17,8 @@ are clear, actionable, and follow organizational standards.
 
 ## Inputs
 
-- A prompt (message/conversation or markdown document for detailed specifications)
+- A prompt (message/conversation or markdown document for detailed
+  specifications)
 - Optionally, an existing plan document to update
 
 ## Outputs

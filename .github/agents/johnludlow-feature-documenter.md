@@ -2,8 +2,8 @@
 
 ## Description
 
-Agent for documenting code and features. Produces well-formed markdown
-documentation in `/docs` folder based on templates and existing implementation.
+Agent for documenting code and features. Produces well-formed markdown documentation
+based on templates and existing implementation, stored in `/docs` folder.
 
 ## Temperature
 
@@ -11,9 +11,8 @@ documentation in `/docs` folder based on templates and existing implementation.
 
 ## Purpose
 
-The johnludlow-feature-documenter creates comprehensive, user-friendly
-documentation that explains features, APIs, and systems to other developers and
-users.
+The johnludlow-feature-documenter creates comprehensive, user-friendly documentation
+that explains features, APIs, and systems to other developers and users.
 
 ## Inputs
 
@@ -39,10 +38,10 @@ The agent MUST:
   - In plain English with jargon terms explained
 - Support hierarchical documentation:
 
-  ```text
-  - feature-name.md
-  - feature-name/child-feature-name.md
-  ```
+```markdown
+- feature-name.md
+- feature-name/child-feature-name.md
+```
 
 - Validate markdown compliance
 - Verify all links are valid
