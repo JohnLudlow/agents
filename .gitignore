@@ -17,6 +17,7 @@ build/
 dist/
 *.tar.gz
 *.zip
+!.github/actions/build/
 
 # Node
 node_modules/
@@ -48,4 +49,3 @@ johnludlow-agents-*.tgz
 # Installation backups
 .opencode/.johnludlow-backup-*
 .copilot/.johnludlow-backup-*
-

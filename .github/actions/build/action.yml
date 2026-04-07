@@ -1,0 +1,44 @@
+name: 'Build'
+description: 'Build @johnludlow/agents NPM package'
+
+inputs:
+  version:
+    description: 'Version to set in package.json'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+  - name: Setup Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: '22'
+
+  - name: Update package.json version
+    shell: bash
+    run: |
+      npm version ${{ inputs.version }} --no-git-tag-version
+      echo "✓ Updated package.json to version ${{ inputs.version }}"
+
+  - name: Create NPM package
+    shell: bash
+    run: |
+      npm pack
+      echo "✓ Created NPM package"
+
+  - name: Generate Copilot format
+    shell: bash
+    run: |
+      npm run generate:copilot
+      echo "✓ Generated GitHub Copilot format"
+
+  - name: List artifacts
+    shell: bash
+    run: |
+      echo "Generated artifacts:"
+      ls -lh johnludlow-agents-*.tgz 2>/dev/null || true
+      echo "  Agents:"
+      ls .github/agents/*.md 2>/dev/null | wc -l
+      echo "  Skills:"
+      ls .github/skills/*.md 2>/dev/null | wc -l
+
