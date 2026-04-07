@@ -46,7 +46,7 @@ jobs:
       - name: Upload NPM Package
         uses: actions/upload-artifact@v4
         with:
-          name: johnludlow-agents-${{ needs.setup.outputs.version }}
+          name: johnludlow-agents-${{ needs.setup.outputs.version }}.tgz
           path: johnludlow-agents-*.tgz
           retention-days: 30
 
