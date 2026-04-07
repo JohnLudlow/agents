@@ -1,0 +1,43 @@
+# Operating System
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.vim/
+
+# Build outputs
+build/
+dist/
+*.tar.gz
+*.zip
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.Python
+
+# Generated files
+*.backup
+*.tmp
+
+# Agent-specific
+docs/plans/**/*.md
+!docs/plans/.gitkeep
+
+# Package artifacts
+johnludlow-agents-*.tar.gz
+johnludlow-agents-*.zip
