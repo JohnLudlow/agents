@@ -58,7 +58,7 @@ runs:
     run: |
       for file in docs/templates/*.md; do
         echo "Checking $file..."
-        if ! grep -q "---" "$file"; then
+        if ! grep -q -- "^---$" "$file"; then
           echo "❌ Missing YAML frontmatter in $file"
           exit 1
         fi
