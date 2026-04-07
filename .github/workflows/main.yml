@@ -7,7 +7,7 @@ on:
 
 jobs:
   setup:
-    name: Setup
+    name: setup
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.setup.outputs.version }}
@@ -39,8 +39,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: ./.github/actions/setup
-
       - uses: ./.github/actions/build
         with:
           version: ${{ needs.setup.outputs.semVer }}
@@ -48,7 +46,7 @@ jobs:
       - name: Upload NPM Package
         uses: actions/upload-artifact@v4
         with:
-          name: npm-package
+          name: johnludlow-agents-${{ needs.setup.outputs.semVer }}
           path: johnludlow-agents-*.tgz
           retention-days: 30
 
