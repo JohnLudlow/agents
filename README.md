@@ -212,35 +212,30 @@ These agents are designed to work with:
 
 ### Copilot CLI
 
-After installation, configure agents in your Copilot CLI configuration file:
+The installation script automatically installs the recommended Copilot plugins. Agents are installed to:
 
-```yaml
-agents:
-  - name: johnludlow-feature-planner
-    path: ~/.local/share/agents/agents/johnludlow-feature-planner.md
-  - name: johnludlow-feature-implementer
-    path: ~/.local/share/agents/agents/johnludlow-feature-implementer.md
-  # ... more agents
 ```
+~/.local/share/agents/agents/johnludlow-*.md
+```
+
+After installation, agents can be referenced in Copilot CLI configuration. Check Copilot CLI documentation for agent configuration details.
+
+**Installed Plugins:**
+- awesome-copilot, azure, doublecheck, dotnet, dotnet-diag
+- context-engineering, csharp-dotnet-development, csharp-mcp-development
+- devops-oncall, technical-spike, microsoft-docs
+- openapi-to-application-csharp-dotnet, polyglot-test-agent
+- roundup, project-planning, security-best-practices
 
 ### OpenCode
 
-After installation, configure agents in your OpenCode configuration file:
+Agents are installed to:
 
-```json
-{
-  "agents": [
-    {
-      "name": "johnludlow-feature-planner",
-      "path": "~/.local/share/agents/agents/johnludlow-feature-planner.md"
-    },
-    {
-      "name": "johnludlow-feature-implementer",
-      "path": "~/.local/share/agents/agents/johnludlow-feature-implementer.md"
-    }
-  ]
-}
 ```
+~/.local/share/agents/agents/johnludlow-*.md
+```
+
+Configure agents in your OpenCode configuration file based on your tool's requirements.
 
 ## Standards and Best Practices
 

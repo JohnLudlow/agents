@@ -43,36 +43,29 @@ agents/
 
 ## Next Steps
 
-### 1. Configure with Copilot CLI
+### 1. Install with Copilot CLI
+
+The installation script will automatically install all recommended Copilot plugins:
 
 ```bash
-# Install the agents globally
+# Install the agents and plugins
 ./scripts/install.sh --copilot-cli
-
-# Add agents to your Copilot CLI config (usually in ~/.copilot/config)
-# Example:
-# agents:
-#   - name: johnludlow-feature-planner
-#     path: ~/.local/share/agents/agents/johnludlow-feature-planner.md
 ```
 
-### 2. Configure with OpenCode
+This installs:
+- johnludlow agents to `~/.local/share/agents/agents/`
+- Copilot plugins including awesome-copilot, azure, dotnet, csharp-dotnet-development, and more
+
+### 2. Install with OpenCode
 
 ```bash
 # Install the agents globally
 ./scripts/install.sh --opencode
-
-# Add agents to your OpenCode config
-# Example in ~/.opencode/config.json:
-# {
-#   "agents": [
-#     {
-#       "name": "johnludlow-feature-planner",
-#       "path": "~/.local/share/agents/agents/johnludlow-feature-planner.md"
-#     }
-#   ]
-# }
 ```
+
+This installs:
+- johnludlow agents to `~/.local/share/agents/agents/`
+- Ready to use with OpenCode
 
 ### 3. Use in Your Projects
 
@@ -83,6 +76,14 @@ Copy relevant agents to your project's `.github/agents` directory:
 mkdir -p .github/agents
 cp ~/.local/share/agents/agents/johnludlow-*.md .github/agents/
 ```
+
+### 4. Install Both (Recommended)
+
+```bash
+./scripts/install.sh --all
+```
+
+This installs agents for both Copilot CLI and OpenCode, along with all recommended plugins.
 
 ## Example Workflow
 

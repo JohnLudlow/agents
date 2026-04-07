@@ -90,7 +90,36 @@ if [ "$COPILOT_CLI" = true ]; then
     echo "Setting up Copilot CLI..."
     if command -v copilot &> /dev/null; then
         echo "Copilot CLI found at: $(command -v copilot)"
-        echo "Note: Manually configure agents in your Copilot CLI settings"
+        
+        echo ""
+        echo "Installing Copilot plugins..."
+        plugins=(
+            "awesome-copilot@awesome-copilot"
+            "azure@awesome-copilot"
+            "doublecheck@awesome-copilot"
+            "dotnet@awesome-copilot"
+            "dotnet-diag@awesome-copilot"
+            "context-engineering@awesome-copilot"
+            "csharp-dotnet-development@awesome-copilot"
+            "csharp-mcp-development@awesome-copilot"
+            "devops-oncall@awesome-copilot"
+            "technical-spike@awesome-copilot"
+            "microsoft-docs@awesome-copilot"
+            "openapi-to-application-csharp-dotnet@awesome-copilot"
+            "polyglot-test-agent@awesome-copilot"
+            "roundup@awesome-copilot"
+            "project-planning@awesome-copilot"
+            "security-best-practices@awesome-copilot"
+        )
+        
+        for plugin in "${plugins[@]}"; do
+            echo "Installing $plugin..."
+            if copilot plugin install "$plugin" 2>/dev/null; then
+                echo "  ✓ Installed"
+            else
+                echo "  ✗ Failed (plugin may already be installed)"
+            fi
+        done
     else
         echo "Copilot CLI not found. Please install it first:"
         echo "  npm install -g @github/copilot-cli"
