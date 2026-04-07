@@ -97,9 +97,9 @@ Signature
 
 ## See Also
 
-- [API Reference](../api/)
-- [Examples](../examples/)
-- [FAQ](../faq/)
+- [API Reference](#api-reference)
+- [Examples](#detailed-guide)
+- [FAQ](#common-issues-and-troubleshooting)
 
 ## Revision History
 
