@@ -1,0 +1,149 @@
+name: Validate and Package
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  validate:
+    name: Validate Agents and Skills
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install markdown lint
+        run: npm install -g markdownlint-cli
+      
+      - name: Validate markdown syntax
+        run: |
+          markdownlint '.github/agents/*.md' \
+                        '.github/skills/*.md' \
+                        'docs/templates/*.md' \
+                        '*.md'
+      
+      - name: Check for required sections in agent definitions
+        run: |
+          for file in .github/agents/*.md; do
+            echo "Checking $file..."
+            if ! grep -q "## Description" "$file"; then
+              echo "Missing ## Description in $file"
+              exit 1
+            fi
+            if ! grep -q "## Purpose" "$file"; then
+              echo "Missing ## Purpose in $file"
+              exit 1
+            fi
+            if ! grep -q "## Capabilities" "$file"; then
+              echo "Missing ## Capabilities in $file"
+              exit 1
+            fi
+            if ! grep -q "## Restrictions" "$file"; then
+              echo "Missing ## Restrictions in $file"
+              exit 1
+            fi
+          done
+      
+      - name: Check for required sections in skill definitions
+        run: |
+          for file in .github/skills/*.md; do
+            echo "Checking $file..."
+            if ! grep -q "## Overview" "$file"; then
+              echo "Missing ## Overview in $file"
+              exit 1
+            fi
+          done
+      
+      - name: Validate template structure
+        run: |
+          for file in docs/templates/*.md; do
+            echo "Checking $file..."
+            if ! grep -q "---" "$file"; then
+              echo "Missing YAML frontmatter in $file"
+              exit 1
+            fi
+          done
+
+  version:
+    name: Generate Version
+    needs: validate
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Generate version number
+        id: version
+        run: |
+          # Get the latest tag, or default to v0.0.0
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          MAJOR=$(echo $LATEST_TAG | cut -d. -f1 | cut -dv -f2)
+          MINOR=$(echo $LATEST_TAG | cut -d. -f2)
+          PATCH=$(echo $LATEST_TAG | cut -d. -f3)
+          
+          # Increment patch version
+          PATCH=$((PATCH + 1))
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          
+          echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+          echo "Generated version: $NEW_VERSION"
+
+  build:
+    name: Build Package
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create package directory
+        run: |
+          mkdir -p build
+          cp -r .github/agents build/
+          cp -r .github/skills build/
+          cp -r docs/templates build/
+          cp -r scripts build/
+          cp *.md build/ 2>/dev/null || true
+      
+      - name: Create release tarball
+        run: |
+          cd build
+          tar -czf johnludlow-agents-${{ needs.version.outputs.version }}.tar.gz *
+          mv johnludlow-agents-${{ needs.version.outputs.version }}.tar.gz ../
+      
+      - name: Create release zip
+        run: |
+          cd build
+          zip -r johnludlow-agents-${{ needs.version.outputs.version }}.zip .
+          mv johnludlow-agents-${{ needs.version.outputs.version }}.zip ../
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: agents-release
+          path: |
+            johnludlow-agents-*.tar.gz
+            johnludlow-agents-*.zip
+
+  tag:
+    name: Tag Release
+    needs: [validate, version]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create git tag
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag ${{ needs.version.outputs.version }}
+          git push origin ${{ needs.version.outputs.version }}
