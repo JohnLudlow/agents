@@ -1,10 +1,13 @@
 # Markdown and Documentation Standards
 
 ## Overview
+
 This skill defines standards for all markdown documents produced by johnludlow agents.
 
 ## Markdown Validation
+
 All documents MUST:
+
 - Pass markdownlint checks
 - Use proper heading hierarchy (h1 > h2 > h3, etc.)
 - Include YAML frontmatter with metadata
@@ -12,6 +15,7 @@ All documents MUST:
 - Use consistent code block formatting with language specification
 
 ## Document Structure
+
 - Start with an h1 title
 - Include a brief description section
 - Use descriptive section headings
@@ -19,6 +23,7 @@ All documents MUST:
 - Include table of contents for documents > 500 lines
 
 ## Plain Language Standards
+
 - Define all jargon terms on first use
 - Use active voice
 - Keep sentences concise (< 20 words average)
@@ -26,19 +31,23 @@ All documents MUST:
 - Include examples for complex concepts
 
 ## Link Validation
+
 All links MUST:
+
 - Be properly formatted with markdown syntax
 - Point to valid resources
 - Use relative paths for internal links
 - Include descriptive link text (not "click here")
 
 ## Code Examples
+
 - Include language specification in fenced code blocks
 - Provide complete, runnable examples
 - Include comments explaining complex logic
 - Match current project conventions
 
 ## YAML Frontmatter Template
+
 ```yaml
 ---
 title: Document Title

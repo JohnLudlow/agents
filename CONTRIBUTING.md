@@ -1,6 +1,7 @@
 # Contributing Guide
 
-Thank you for your interest in contributing to the johnludlow agents and skills repository!
+Thank you for your interest in contributing to the johnludlow agents and skills
+repository!
 
 ## Getting Started
 
@@ -79,26 +80,33 @@ When creating or updating templates:
 Before submitting a pull request:
 
 1. **Markdown Validation**
-   ```bash
-   npm install -g markdownlint-cli
-   markdownlint '.github/agents/*.md' '.github/skills/*.md' 'docs/templates/*.md' '*.md'
-   ```
 
-2. **Installation Script Testing**
-   - Test PowerShell installation on Windows:
-     ```powershell
-     .\install.ps1 -All
-     ```
-   - Test Bash installation on Linux/macOS:
-     ```bash
-     chmod +x ./install.sh
-     ./install.sh --all
-     ```
+```bash
+npm install -g markdownlint-cli
+markdownlint '.github/agents/*.md' '.github/skills/*.md' \
+  'docs/templates/*.md' '*.md'
+```
 
-3. **Agent Definition Validation**
-   - Ensure all required sections are present
-   - Check that file names match agent/skill names
-   - Verify links are valid and properly formatted
+1. **Installation Script Testing**
+
+- Test PowerShell installation on Windows:
+
+```powershell
+.\install.ps1 -All
+```
+
+- Test Bash installation on Linux/macOS:
+
+```bash
+chmod +x ./install.sh
+./install.sh --all
+```
+
+1. **Agent Definition Validation**
+
+- Ensure all required sections are present
+- Check that file names match agent/skill names
+- Verify links are valid and properly formatted
 
 ## Pull Request Guidelines
 
@@ -166,7 +174,8 @@ Releases are handled automatically via GitHub Actions:
 
 ## Code of Conduct
 
-Please be respectful and inclusive in all interactions. We welcome contributions from developers of all experience levels.
+Please be respectful and inclusive in all interactions. We welcome contributions
+from developers of all experience levels.
 
 ---
 
