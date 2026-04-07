@@ -1,0 +1,42 @@
+name: 'Setup'
+description: 'Setup for @johnludlow/agents NPM package'
+
+outputs:
+  version:
+    description: 'Semantic version'
+    value: ${{ steps.version.outputs.version }}
+
+runs:
+  using: 'composite'
+  steps:
+  - name: Setup Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: '18'
+
+  - name: Determine Version
+    id: version
+    shell: bash
+    run: |
+      # Get the latest tag, or default to v0.0.0
+      LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+      MAJOR=$(echo $LATEST_TAG | cut -d. -f1 | cut -dv -f2)
+      MINOR=$(echo $LATEST_TAG | cut -d. -f2)
+      PATCH=$(echo $LATEST_TAG | cut -d. -f3)
+      
+      # Increment patch version
+      PATCH=$((PATCH + 1))
+      NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+      VERSION_TAG="v${NEW_VERSION}"
+      
+      echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+      echo "version_tag=${VERSION_TAG}" >> $GITHUB_OUTPUT
+      echo "✓ Version: ${NEW_VERSION}"
+
+  - name: Cache NPM packages
+    uses: actions/cache@v4
+    with:
+      path: ~/.npm
+      key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+      restore-keys: |
+        ${{ runner.os }}-npm-

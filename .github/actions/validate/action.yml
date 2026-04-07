@@ -1,0 +1,77 @@
+name: 'Validate'
+description: 'Validate agents and skills markdown'
+
+runs:
+  using: 'composite'
+  steps:
+  - name: Setup Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: '18'
+
+  - name: Install markdown lint
+    shell: bash
+    run: npm install -g markdownlint-cli
+
+  - name: Validate markdown syntax
+    shell: bash
+    run: |
+      markdownlint 'agents/*.md' \
+                    'skills/*.md' \
+                    'docs/templates/*.md' \
+                    'README.md' \
+                    'QUICKSTART.md' \
+                    'CONTRIBUTING.md'
+
+  - name: Check required sections in agents
+    shell: bash
+    run: |
+      for file in agents/*.md; do
+        echo "Checking $file..."
+        if ! grep -q "## Description" "$file"; then
+          echo "❌ Missing ## Description in $file"
+          exit 1
+        fi
+        if ! grep -q "## Purpose" "$file"; then
+          echo "❌ Missing ## Purpose in $file"
+          exit 1
+        fi
+        if ! grep -q "## Capabilities" "$file"; then
+          echo "❌ Missing ## Capabilities in $file"
+          exit 1
+        fi
+        if ! grep -q "## Restrictions" "$file"; then
+          echo "❌ Missing ## Restrictions in $file"
+          exit 1
+        fi
+        echo "✓ $file is valid"
+      done
+
+  - name: Check required sections in skills
+    shell: bash
+    run: |
+      for file in skills/*.md; do
+        echo "Checking $file..."
+        if ! grep -q "## Overview" "$file"; then
+          echo "❌ Missing ## Overview in $file"
+          exit 1
+        fi
+        echo "✓ $file is valid"
+      done
+
+  - name: Validate template structure
+    shell: bash
+    run: |
+      for file in docs/templates/*.md; do
+        echo "Checking $file..."
+        if ! grep -q "---" "$file"; then
+          echo "❌ Missing YAML frontmatter in $file"
+          exit 1
+        fi
+        echo "✓ $file is valid"
+      done
+
+  - name: Validate package.json
+    shell: bash
+    run: |
+      node -e "require('./package.json')" && echo "✓ package.json is valid"

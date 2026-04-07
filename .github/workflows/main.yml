@@ -1,0 +1,85 @@
+name: Build and Package
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.setup.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: setup
+        uses: ./.github/actions/setup
+
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/validate
+
+  build:
+    name: Build
+    needs: [setup, validate]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      artifacts: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup
+
+      - uses: ./.github/actions/build
+        with:
+          version: ${{ needs.setup.outputs.version }}
+
+      - name: Upload NPM Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-package
+          path: johnludlow-agents-*.tgz
+          retention-days: 30
+
+      - name: Upload Copilot Format
+        uses: actions/upload-artifact@v4
+        with:
+          name: copilot-format
+          path: .github/agents/
+          retention-days: 30
+
+  release:
+    name: Release
+    needs: [setup, build]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup
+
+      - name: Tag Commit
+        shell: bash
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          TAG="v${{ needs.setup.outputs.version }}"
+          git tag $TAG
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git $TAG
+          echo "✓ Created tag: $TAG"
