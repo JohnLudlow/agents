@@ -4,7 +4,13 @@ description: 'Setup for @johnludlow/agents NPM package'
 outputs:
   version:
     description: 'Semantic version'
-    value: ${{ steps.version.outputs.version }}
+    value: ${{ steps.version_step.outputs.MajorMinorPatch }}
+  semVer:
+    description: 'Full semantic version'
+    value: ${{ steps.version_step.outputs.semVer }}
+  fullSemVer:
+    description: 'Full semantic version with pre-release'
+    value: ${{ steps.version_step.outputs.fullSemVer }}
 
 runs:
   using: 'composite'
@@ -14,24 +20,22 @@ runs:
     with:
       node-version: '22'
 
+  - name: Install GitVersion
+    uses: gittools/actions/gitversion/setup@v4.2.0
+    with:
+      versionSpec: '6.4.x'
+
   - name: Determine Version
-    id: version
+    id: version_step
+    uses: gittools/actions/gitversion/execute@v4.2.0
+
+  - name: Set Version Environment Variables
     shell: bash
     run: |
-      # Get the latest tag, or default to v0.0.0
-      LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-      MAJOR=$(echo $LATEST_TAG | cut -d. -f1 | cut -dv -f2)
-      MINOR=$(echo $LATEST_TAG | cut -d. -f2)
-      PATCH=$(echo $LATEST_TAG | cut -d. -f3)
-
-      # Increment patch version
-      PATCH=$((PATCH + 1))
-      NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-      VERSION_TAG="v${NEW_VERSION}"
-
-      echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
-      echo "version_tag=${VERSION_TAG}" >> $GITHUB_OUTPUT
-      echo "✓ Version: ${NEW_VERSION}"
+      echo "SEMVER=${{ steps.version_step.outputs.semVer }}" >> $GITHUB_ENV
+      echo "VERSION=${{ steps.version_step.outputs.MajorMinorPatch }}" >> $GITHUB_ENV
+      echo "FullSemVer=${{ steps.version_step.outputs.fullSemVer }}" >> $GITHUB_ENV
+      echo "✓ Version: ${{ steps.version_step.outputs.MajorMinorPatch }}"
 
   - name: Cache NPM packages
     uses: actions/cache@v4
@@ -40,3 +44,4 @@ runs:
       key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
       restore-keys: |
         ${{ runner.os }}-npm-
+
