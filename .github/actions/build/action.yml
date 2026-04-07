@@ -41,4 +41,3 @@ runs:
       ls .github/agents/*.md 2>/dev/null | wc -l
       echo "  Skills:"
       ls .github/skills/*.md 2>/dev/null | wc -l
-
