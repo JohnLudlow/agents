@@ -1,6 +1,6 @@
 {
   "name": "@johnludlow/agents",
-  "version": "0.0.2",
+  "version": "0.0.0",
   "description": "Reusable AI agents and skills for feature planning, implementation, documentation, and testing across C#, TypeScript, and C++ projects",
   "main": "index.js",
   "scripts": {
