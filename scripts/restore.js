@@ -77,40 +77,56 @@ function removeDirectory(dir) {
  * Restore from backup
  */
 function restore() {
-  console.log("📦 @johnludlow/agents Restore");
-  console.log("=============================\n");
+  try {
+    console.log("📦 @johnludlow/agents Restore");
+    console.log("=============================\n");
 
-  const mode = getInstallMode();
-  const targetDir = getOpencodeTargetDirectory(mode);
-  const backups = listBackups(targetDir);
+    const mode = getInstallMode();
+    console.log(`📍 Installation mode: ${mode}\n`);
+    
+    const targetDir = getOpencodeTargetDirectory(mode);
+    const backups = listBackups(targetDir);
 
-  if (backups.length === 0) {
-    console.log("ℹ️  No backups found");
-    return;
+    if (backups.length === 0) {
+      console.log("ℹ️  No backups found for restoration");
+      console.log(`   Looking in: ${path.dirname(targetDir)}`);
+      return;
+    }
+
+    console.log("📋 Available backups:\n");
+    backups.forEach((backup, index) => {
+      console.log(`   ${index + 1}. ${backup.timestamp}`);
+    });
+
+    // Restore the latest backup
+    const latestBackup = backups[0];
+    console.log(`\n🔄 Restoring from latest backup: ${latestBackup.timestamp}`);
+
+    // Remove current installation if it exists
+    if (fs.existsSync(targetDir)) {
+      console.log("   → Removing current installation...");
+      removeDirectory(targetDir);
+      console.log("   ✓ Removed current installation");
+    } else {
+      console.log("   → No current installation to replace");
+    }
+
+    // Restore from backup
+    console.log("   → Restoring from backup...");
+    fs.renameSync(latestBackup.path, targetDir);
+    console.log("   ✓ Restored from backup");
+
+    console.log(`\n✨ Restore complete!`);
+    console.log(`\n📍 Installation location: ${targetDir}`);
+    console.log("\n📚 Next steps:");
+    console.log("   - Agents and skills are ready to use");
+    console.log("   - OpenCode: https://opencode.ai/docs");
+    console.log("   - GitHub Copilot: https://github.com/features/copilot");
+  } catch (error) {
+    console.error("\n❌ Restore failed:");
+    console.error(error.message);
+    process.exit(1);
   }
-
-  console.log("Available backups:\n");
-  backups.forEach((backup, index) => {
-    console.log(`${index + 1}. ${backup.timestamp}`);
-    console.log(`   Path: ${backup.path}`);
-  });
-
-  // Restore the latest backup
-  const latestBackup = backups[0];
-  console.log(`\n📥 Restoring from latest backup: ${latestBackup.timestamp}`);
-
-  // Remove current installation if it exists
-  if (fs.existsSync(targetDir)) {
-    removeDirectory(targetDir);
-    console.log("  ✓ Removed current installation");
-  }
-
-  // Restore from backup
-  fs.renameSync(latestBackup.path, targetDir);
-  console.log("  ✓ Restored from backup");
-
-  console.log(`\n✨ Restore complete!`);
-  console.log(`Installation restored to: ${targetDir}`);
 }
 
 // Run restore

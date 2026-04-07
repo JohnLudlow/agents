@@ -4,10 +4,13 @@
   "description": "Reusable AI agents and skills for feature planning, implementation, documentation, and testing across C#, TypeScript, and C++ projects",
   "main": "index.js",
   "scripts": {
+    "install:local": "node scripts/install.js",
     "postinstall": "node scripts/install.js",
     "preuninstall": "node scripts/uninstall.js",
+    "uninstall": "node scripts/uninstall.js",
     "restore": "node scripts/restore.js",
-    "generate:copilot": "node scripts/generate-copilot.js"
+    "generate:copilot": "node scripts/generate-copilot.js",
+    "list": "node scripts/list.js"
   },
   "bin": {
     "johnludlow-agents": "./scripts/init.js"
@@ -32,7 +35,7 @@
     "url": "https://github.com/JohnLudlow/agents"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.0.0"
   },
   "dependencies": {},
   "devDependencies": {}

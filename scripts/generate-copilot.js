@@ -58,7 +58,7 @@ function copyFiles(sourceDir, targetDir, filePattern = "*.md") {
  * Generate Copilot configuration
  */
 function generateCopilotConfig() {
-  console.log("  → Generating Copilot configuration...");
+  console.log("\n  → Generating Copilot configuration file...");
 
   const agentsDir = OUTPUT_DIRS.agents;
   const skillsDir = OUTPUT_DIRS.skills;
@@ -110,39 +110,50 @@ ${skills.map(s => `#   - ${s.name}: ${s.path}`).join("\n")}
   const configPath = path.join(OUTPUT_DIRS.root, "copilot-agents.txt");
   fs.writeFileSync(configPath, configTemplate);
 
-  console.log(`    ✓ Generated Copilot configuration reference`);
+  console.log(`    ✓ Generated: ${configPath}`);
+  console.log(`      - ${agents.length} agent(s) referenced`);
+  console.log(`      - ${skills.length} skill(s) referenced`);
 }
 
 /**
  * Main generation function
  */
 function generate() {
-  console.log("🔄 @johnludlow/agents Copilot Format Generator");
-  console.log("==============================================\n");
-
   try {
+    console.log("🔄 @johnludlow/agents Copilot Format Generator");
+    console.log("==============================================\n");
+
     // Ensure output directories exist
     ensureDir(OUTPUT_DIRS.root);
 
     // Copy agents
     console.log("📋 Converting agents to Copilot format...");
     const agentsCopied = copyFiles(SOURCE_DIRS.agents, OUTPUT_DIRS.agents);
-    console.log(`  ✓ Copied ${agentsCopied} agent(s)`);
+    if (agentsCopied > 0) {
+      console.log(`    ✓ Copied ${agentsCopied} agent(s) to: ${OUTPUT_DIRS.agents}`);
+    } else {
+      console.log(`    ℹ️  No agents found to copy`);
+    }
 
     // Copy skills
-    console.log("📚 Converting skills to Copilot format...");
+    console.log("\n📚 Converting skills to Copilot format...");
     const skillsCopied = copyFiles(SOURCE_DIRS.skills, OUTPUT_DIRS.skills);
-    console.log(`  ✓ Copied ${skillsCopied} skill(s)`);
+    if (skillsCopied > 0) {
+      console.log(`    ✓ Copied ${skillsCopied} skill(s) to: ${OUTPUT_DIRS.skills}`);
+    } else {
+      console.log(`    ℹ️  No skills found to copy`);
+    }
 
     // Generate configuration
     generateCopilotConfig();
 
-    console.log("\n✓ Conversion complete!");
-    console.log(`\n📁 Generated files are in: ${OUTPUT_DIRS.root}`);
-    console.log("\nNext steps:");
-    console.log("1. Review the generated agents and skills");
-    console.log("2. Configure in your GitHub Copilot settings");
-    console.log("3. Test the agents and skills with Copilot CLI");
+    console.log("\n✨ Generation complete!");
+    console.log(`\n📁 Output directory: ${OUTPUT_DIRS.root}`);
+    console.log("\n📚 Next steps:");
+    console.log("   1. Review the generated files in .github/agents and .github/skills");
+    console.log("   2. Configure agents and skills in your GitHub Copilot settings");
+    console.log("   3. Test with GitHub Copilot CLI: gh copilot");
+    console.log("   4. See: https://github.com/features/copilot for documentation");
 
   } catch (error) {
     console.error("\n❌ Generation failed:");

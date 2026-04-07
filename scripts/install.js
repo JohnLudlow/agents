@@ -140,70 +140,75 @@ function installAgentsAndSkills(mode) {
 }
 
 /**
- * Install Copilot plugins
+ * Install Copilot agents and skills
  */
-function installCopilotPlugins() {
-  console.log("\n🔌 Installing Copilot plugins...");
+function installCopilotAgents(mode, sourceAgentsDir, sourceSkillsDir) {
+  console.log("\n🔌 Installing GitHub Copilot format...");
 
-  const plugins = [
-    "awesome-copilot@awesome-copilot",
-    "azure@awesome-copilot",
-    "doublecheck@awesome-copilot",
-    "dotnet@awesome-copilot",
-    "dotnet-diag@awesome-copilot",
-    "context-engineering@awesome-copilot",
-    "csharp-dotnet-development@awesome-copilot",
-    "csharp-mcp-development@awesome-copilot",
-    "devops-oncall@awesome-copilot",
-    "technical-spike@awesome-copilot",
-    "microsoft-docs@awesome-copilot",
-    "openapi-to-application-csharp-dotnet@awesome-copilot",
-    "polyglot-test-agent@awesome-copilot",
-    "roundup@awesome-copilot",
-    "project-planning@awesome-copilot",
-    "security-best-practices@awesome-copilot"
-  ];
+  // Determine target directory
+  const copilotDir = mode === "global" 
+    ? COPILOT_GLOBAL_DIR 
+    : COPILOT_LOCAL_DIR;
 
-  // Check if copilot CLI is available
-  try {
-    execSync("copilot --version", { stdio: "ignore" });
-  } catch (error) {
-    console.warn("⚠️  Copilot CLI not found");
-    console.warn("   Install Copilot CLI: https://github.com/github/copilot-cli");
-    return;
+  // Create target directories
+  const copilotAgentsDir = path.join(copilotDir, "agents");
+  const copilotSkillsDir = path.join(copilotDir, "skills");
+
+  // Copy agents to Copilot format
+  if (fs.existsSync(sourceAgentsDir)) {
+    console.log("  → Installing agents to Copilot format...");
+    copyDirectory(sourceAgentsDir, copilotAgentsDir);
+    const agentFiles = fs.readdirSync(copilotAgentsDir).filter(f => f.endsWith('.md'));
+    console.log(`    ✓ Installed ${agentFiles.length} agents to Copilot`);
   }
 
-  let installed = 0;
-  let failed = 0;
-
-  for (const plugin of plugins) {
-    try {
-      execSync(`copilot plugin install ${plugin}`, { stdio: "ignore" });
-      installed++;
-    } catch (error) {
-      // Plugin may already be installed, so we don't count as failure
-      failed++;
-    }
+  // Copy skills to Copilot format
+  if (fs.existsSync(sourceSkillsDir)) {
+    console.log("  → Installing skills to Copilot format...");
+    copyDirectory(sourceSkillsDir, copilotSkillsDir);
+    const skillFiles = fs.readdirSync(copilotSkillsDir).filter(f => f.endsWith('.md'));
+    console.log(`    ✓ Installed ${skillFiles.length} skills to Copilot`);
   }
 
-  console.log(`  ✓ Plugin installation complete (${installed} successful)`);
+  console.log(`\n✓ Copilot format installation complete to: ${copilotDir}`);
+  return copilotDir;
 }
+
+
 
 /**
  * Display next steps
  */
-function displayNextSteps(installDir) {
+function displayNextSteps(opencodeDir, copilotDir, mode) {
   console.log("\n📚 Next steps:");
-  console.log(`\n1. Agents and skills are installed to: ${installDir}`);
+  console.log("\n1. Agents and skills installed successfully!");
+  
   console.log("\n2. For OpenCode:");
-  console.log("   - Agents and skills are ready to use");
-  console.log("   - Check OpenCode documentation for agent configuration");
+  if (mode === "global") {
+    console.log(`   - Global installation: ${opencodeDir}`);
+  } else {
+    console.log(`   - Local installation: ${opencodeDir}`);
+  }
+  console.log("   - Agents and skills are ready to use immediately");
+  console.log("   - See: https://opencode.ai/docs for documentation");
+  
   console.log("\n3. For GitHub Copilot:");
-  console.log("   - Run: npm run generate:copilot");
-  console.log("   - This creates .github/agents and .github/skills");
-  console.log("   - Configure in your .github/copilot/config.yml");
-  console.log("\n4. To restore from backup:");
-  console.log("   - npm run restore");
+  if (mode === "global") {
+    console.log(`   - Global installation: ${copilotDir}`);
+  } else {
+    console.log(`   - Local installation: ${copilotDir}`);
+  }
+  console.log("   - Agents and skills are ready to use immediately");
+  console.log("   - Configure in: .github/copilot/config.yml");
+  
+  console.log("\n4. Additional commands:");
+  console.log("   - npm run restore     : Restore from backup");
+  console.log("   - npm run uninstall   : Remove installations");
+  console.log("   - npm run list        : Show installed agents/skills");
+  
+  console.log("\n5. Documentation:");
+  console.log("   - OpenCode: https://opencode.ai/docs");
+  console.log("   - GitHub Copilot: https://github.com/features/copilot");
 }
 
 /**
@@ -215,18 +220,23 @@ async function main() {
     console.log("=====================================\n");
 
     const mode = getInstallMode();
+    
+    console.log(`📍 Installation mode: ${mode}`);
+    
+    // Check if OpenCode is available
     const openCodeAvailable = checkOpenCodeInstalled();
-
-    // Install agents and skills
-    const installDir = installAgentsAndSkills(mode);
-
-    // Try to install Copilot plugins if global install
-    if (mode === "global") {
-      installCopilotPlugins();
+    if (!openCodeAvailable && mode === "local") {
+      console.log("   Note: Installing to local .opencode directory");
     }
 
+    // Install agents and skills to OpenCode format
+    const opencodeDir = installAgentsAndSkills(mode);
+
+    // Install agents and skills to GitHub Copilot format
+    const copilotDir = installCopilotAgents(mode, SOURCE_DIRS.agents, SOURCE_DIRS.skills);
+
     // Display next steps
-    displayNextSteps(installDir);
+    displayNextSteps(opencodeDir, copilotDir, mode);
 
     console.log("\n✨ Installation successful!");
   } catch (error) {
@@ -244,4 +254,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { installAgentsAndSkills, installCopilotPlugins };
+module.exports = { installAgentsAndSkills, installCopilotAgents };
