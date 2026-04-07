@@ -12,7 +12,7 @@ runs:
   - name: Setup Node.js
     uses: actions/setup-node@v4
     with:
-      node-version: '18'
+      node-version: '22'
 
   - name: Determine Version
     id: version
@@ -23,12 +23,12 @@ runs:
       MAJOR=$(echo $LATEST_TAG | cut -d. -f1 | cut -dv -f2)
       MINOR=$(echo $LATEST_TAG | cut -d. -f2)
       PATCH=$(echo $LATEST_TAG | cut -d. -f3)
-      
+
       # Increment patch version
       PATCH=$((PATCH + 1))
       NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
       VERSION_TAG="v${NEW_VERSION}"
-      
+
       echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
       echo "version_tag=${VERSION_TAG}" >> $GITHUB_OUTPUT
       echo "✓ Version: ${NEW_VERSION}"
