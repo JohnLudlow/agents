@@ -3,5 +3,10 @@
 # Template files contain placeholder links
 docs/templates/*.md
 
+# Agent definition files (have YAML frontmatter, not standard markdown)
+opencode/agents/*.md
+.opencode/agents/*.md
+.github/agents/*.md
+
 # Node modules
 node_modules/

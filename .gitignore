@@ -50,4 +50,4 @@ johnludlow-agents-*.tgz
 .opencode/.johnludlow-backup-*
 .copilot/.johnludlow-backup-*
 
-.rumdl/
+.rumdl_cache/

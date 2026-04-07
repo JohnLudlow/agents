@@ -24,6 +24,7 @@ const BACKUP_SUFFIX = `.johnludlow-backup-${new Date().toISOString().replace(/[:
 const SOURCE_DIRS = {
   agents: path.join(__dirname, "..", "agents"),
   skills: path.join(__dirname, "..", "skills"),
+  opencodeConfig: path.join(__dirname, "..", "opencode"),
 };
 
 /**
@@ -140,6 +141,64 @@ function installAgentsAndSkills(mode) {
 }
 
 /**
+ * Install OpenCode configuration with permissions
+ */
+function installOpenCodeConfig(mode) {
+  console.log("\n⚙️  Installing OpenCode configuration...");
+
+  const opencodeDir = mode === "global" 
+    ? OPENCODE_GLOBAL_DIR 
+    : path.join(process.cwd(), ".opencode");
+
+  const configSourceDir = SOURCE_DIRS.opencodeConfig;
+
+  if (!fs.existsSync(configSourceDir)) {
+    console.log("   ℹ️  OpenCode configuration files not found in package");
+    return null;
+  }
+
+  // Copy config.json
+  const configSourcePath = path.join(configSourceDir, "config.json");
+  const configTargetPath = path.join(opencodeDir, "config.json");
+
+  if (fs.existsSync(configSourcePath)) {
+    // Backup existing config
+    if (fs.existsSync(configTargetPath)) {
+      const backupPath = configTargetPath + BACKUP_SUFFIX;
+      fs.copyFileSync(configTargetPath, backupPath);
+      console.log("   → Backed up existing config.json");
+    }
+
+    fs.copyFileSync(configSourcePath, configTargetPath);
+    console.log("   ✓ Installed config.json with permissions");
+  }
+
+  // Copy agent definitions to agents directory
+  const agentsSourceDir = path.join(configSourceDir, "agents");
+  const agentsTargetDir = path.join(opencodeDir, "agents");
+
+  if (fs.existsSync(agentsSourceDir)) {
+    if (!fs.existsSync(agentsTargetDir)) {
+      fs.mkdirSync(agentsTargetDir, { recursive: true });
+    }
+
+    const agentFiles = fs.readdirSync(agentsSourceDir).filter(f => f.endsWith('.md'));
+    agentFiles.forEach(file => {
+      const sourcePath = path.join(agentsSourceDir, file);
+      const targetPath = path.join(agentsTargetDir, file);
+      fs.copyFileSync(sourcePath, targetPath);
+    });
+
+    if (agentFiles.length > 0) {
+      console.log(`   ✓ Installed ${agentFiles.length} agent definitions`);
+    }
+  }
+
+  console.log(`   📁 Location: ${opencodeDir}`);
+  return opencodeDir;
+}
+
+/**
  * Install Copilot agents and skills
  */
 function installCopilotAgents(mode, sourceAgentsDir, sourceSkillsDir) {
@@ -231,6 +290,9 @@ async function main() {
 
     // Install agents and skills to OpenCode format
     const opencodeDir = installAgentsAndSkills(mode);
+
+    // Install OpenCode configuration with permissions
+    installOpenCodeConfig(mode);
 
     // Install agents and skills to GitHub Copilot format
     const copilotDir = installCopilotAgents(mode, SOURCE_DIRS.agents, SOURCE_DIRS.skills);

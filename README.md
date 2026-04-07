@@ -76,6 +76,26 @@ Defines code quality expectations across C#, TypeScript, and C++.
 
 [View full skill definition](.github/skills/johnludlow-code-quality.md)
 
+## Permissions
+
+Each agent has specific permissions that control what actions it can perform. These
+are automatically installed and configured during setup.
+
+### Permission Model
+
+- **Feature Planner**: Can read project files, write to `docs/plans/`, run git read
+  commands, create GitHub issues
+- **Feature Implementer**: Can write source code, run build/test commands, read-only
+  git commands
+- **Feature Documenter**: Can write documentation, read project files, create GitHub
+  issues
+- **Feature Tester**: Can read code and docs, run test commands
+
+Each agent is restricted to prevent accidental destructive operations (like git
+commits or pushes) while enabling productive work within their domain.
+
+**[Full Permissions Documentation](./docs/PERMISSIONS.md)**
+
 ## Templates
 
 Pre-built templates for common documents:
@@ -105,6 +125,8 @@ This automatically:
 
 - Detects your environment (global or local installation)
 - Installs agents and skills to OpenCode configuration directory
+- Installs OpenCode `config.json` with permission rules
+- Installs agent definitions with capabilities and restrictions
 - Copies agents to GitHub Copilot format in `.github/agents/` (local mode)
 - Attempts to install recommended Copilot plugins (if Copilot CLI is available)
 - Creates backup of any existing installation
