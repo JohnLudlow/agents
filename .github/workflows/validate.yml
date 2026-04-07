@@ -16,21 +16,21 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '18'
       
       - name: Install markdown lint
         run: npm install -g markdownlint-cli
       
       - name: Validate markdown syntax
         run: |
-          markdownlint '.github/agents/*.md' \
-                        '.github/skills/*.md' \
+          markdownlint 'agents/*.md' \
+                        'skills/*.md' \
                         'docs/templates/*.md' \
                         '*.md'
       
       - name: Check for required sections in agent definitions
         run: |
-          for file in .github/agents/*.md; do
+          for file in agents/*.md; do
             echo "Checking $file..."
             if ! grep -q "## Description" "$file"; then
               echo "Missing ## Description in $file"
@@ -52,7 +52,7 @@ jobs:
       
       - name: Check for required sections in skill definitions
         run: |
-          for file in .github/skills/*.md; do
+          for file in skills/*.md; do
             echo "Checking $file..."
             if ! grep -q "## Overview" "$file"; then
               echo "Missing ## Overview in $file"
@@ -69,6 +69,10 @@ jobs:
               exit 1
             fi
           done
+      
+      - name: Validate package.json
+        run: |
+          node -e "require('./package.json')" && echo "✓ package.json is valid"
 
   version:
     name: Generate Version
@@ -98,40 +102,30 @@ jobs:
           echo "Generated version: $NEW_VERSION"
 
   build:
-    name: Build Package
+    name: Build NPM Package
     needs: version
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
-      - name: Create package directory
-        run: |
-          mkdir -p build
-          cp -r .github/agents build/
-          cp -r .github/skills build/
-          cp -r docs/templates build/
-          cp -r scripts build/
-          cp *.md build/ 2>/dev/null || true
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
       
-      - name: Create release tarball
+      - name: Update package.json version
         run: |
-          cd build
-          tar -czf johnludlow-agents-${{ needs.version.outputs.version }}.tar.gz *
-          mv johnludlow-agents-${{ needs.version.outputs.version }}.tar.gz ../
+          npm version ${{ needs.version.outputs.version }} --no-git-tag-version
       
-      - name: Create release zip
+      - name: Create npm package
         run: |
-          cd build
-          zip -r johnludlow-agents-${{ needs.version.outputs.version }}.zip .
-          mv johnludlow-agents-${{ needs.version.outputs.version }}.zip ../
+          npm pack
       
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: agents-release
-          path: |
-            johnludlow-agents-*.tar.gz
-            johnludlow-agents-*.zip
+          name: npm-package
+          path: johnludlow-agents-*.tgz
 
   tag:
     name: Tag Release

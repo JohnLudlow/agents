@@ -1,6 +1,8 @@
 # johnludlow Agents and Skills
 
-A collection of reusable AI agents and skills for Copilot CLI and OpenCode, designed to streamline feature planning, implementation, documentation, and testing for multi-language projects.
+A collection of reusable AI agents and skills for OpenCode and GitHub Copilot CLI, designed to streamline feature planning, implementation, documentation, and testing for multi-language projects.
+
+Distributed as an NPM package with automated installation scripts for seamless setup across different development environments.
 
 ## Overview
 
@@ -74,67 +76,116 @@ Pre-built templates for common documents:
 
 ### Prerequisites
 
-- Node.js 18+ (for Copilot CLI or OpenCode)
-- Git
-- Bash (Linux/macOS) or PowerShell (Windows)
+- Node.js 18+ (for NPM package management)
+- npm (Node Package Manager)
+- OpenCode or GitHub Copilot CLI (optional, but required to use the agents)
 
 ### Quick Start
 
-#### Windows (PowerShell)
-```powershell
-cd path/to/your/repo
-.\install.ps1 -All
-```
+The installation is completely automated through NPM's `postinstall` hook.
 
-#### Linux/macOS (Bash)
 ```bash
-cd /path/to/your/repo
-chmod +x ./install.sh
-./install.sh --all
+npm install @johnludlow/agents
 ```
 
-### Advanced Installation
+This automatically:
+- Detects your environment (global or local installation)
+- Installs agents and skills to OpenCode configuration directory
+- Copies agents to GitHub Copilot format in `.github/agents/` (local mode)
+- Attempts to install recommended Copilot plugins (if Copilot CLI is available)
+- Creates backup of any existing installation
 
-Install for specific tools:
+### Global Installation
 
-**PowerShell:**
-```powershell
-.\install.ps1 -OpenCode
-.\install.ps1 -CopilotCLI
-```
-
-**Bash:**
 ```bash
-./install.sh --opencode
-./install.sh --copilot-cli
+npm install -g @johnludlow/agents
 ```
 
-Specify custom installation path:
+Global installation will:
+- Install to `~/.config/opencode/` (OpenCode global config)
+- Make agents available to all projects
+- Install Copilot plugins globally
+- Create automated backups
 
-**PowerShell:**
-```powershell
-.\install.ps1 -InstallPath "C:\custom\path"
-```
+### Local Installation
 
-**Bash:**
 ```bash
-./install.sh --install-path "/custom/path"
+npm install @johnludlow/agents
+```
+
+Local installation will:
+- Install to `.opencode/` (project-local config)
+- Create `.github/agents/` and `.github/skills/` directories
+- Backups stored in the same directory structure
+- Project-specific agent configuration
+
+### Verify Installation
+
+```bash
+# List installed agents and skills
+ls ~/.config/opencode/agents/   # or .opencode/agents/ for local
+ls ~/.config/opencode/skills/   # or .opencode/skills/ for local
 ```
 
 ## Usage
 
-### Using Agents with Copilot CLI
-
-```bash
-copilot chat johnludlow-feature-planner "Please plan a user authentication system"
-```
-
 ### Using Agents with OpenCode
 
+Once installed, agents are available in OpenCode:
+
 ```bash
-opencode agent johnludlow-feature-planner
-# or
-opencode /command johnludlow-feature-planner "Please plan a user authentication system"
+# In any OpenCode session
+/agent johnludlow-feature-planner
+```
+
+### Using Agents with GitHub Copilot CLI
+
+First, generate Copilot format:
+
+```bash
+npm run generate:copilot
+```
+
+Then use in Copilot:
+
+```bash
+copilot chat -a johnludlow-feature-planner "Please plan a user authentication system"
+```
+
+### Available Commands
+
+```bash
+# Install (run automatically on npm install, but can be run manually)
+npm run install
+
+# Generate GitHub Copilot format from OpenCode format
+npm run generate:copilot
+
+# Restore from latest backup
+npm run restore
+
+# Show CLI help
+npx @johnludlow/agents help
+```
+
+### CLI Tool
+
+The package includes a CLI tool for manual management:
+
+```bash
+# Global installation
+johnludlow-agents [command]
+
+# Local installation  
+npx @johnludlow/agents [command]
+
+# Commands:
+johnludlow-agents install         # Install agents
+johnludlow-agents uninstall       # Remove agents
+johnludlow-agents restore         # Restore from backup
+johnludlow-agents generate-copilot # Create Copilot format
+johnludlow-agents help            # Show help
+johnludlow-agents version         # Show version
 ```
 
 ## Workflow Example
@@ -175,15 +226,44 @@ These agents are designed to work with:
 
 ## Key Features
 
-- ✅ Cross-platform compatibility (Windows, Linux, macOS)
-- ✅ Works with both Copilot CLI and OpenCode
+- ✅ Cross-platform (Windows, Linux, macOS)
+- ✅ Single command installation via NPM
+- ✅ Works with both OpenCode and GitHub Copilot CLI
 - ✅ Enforces documentation standards
 - ✅ Consistent code quality expectations
 - ✅ Template-based document generation
 - ✅ Automated markdown validation
+- ✅ Automatic backup and restore functionality
+- ✅ Semantic versioning with npm
+- ✅ Easy uninstall with `npm uninstall`
 
 ## Project Structure
 
+```
+.
+├── agents/                 # OpenCode agents (primary source)
+│   ├── johnludlow-feature-planner.md
+│   ├── johnludlow-feature-implementer.md
+│   ├── johnludlow-feature-documenter.md
+│   └── johnludlow-feature-tester.md
+├── skills/                 # OpenCode skills (primary source)
+│   ├── johnludlow-markdown-standards.md
+│   └── johnludlow-code-quality.md
+├── .github/                # GitHub Copilot format (generated)
+│   ├── agents/             (created by npm run generate:copilot)
+│   ├── skills/             (created by npm run generate:copilot)
+│   └── workflows/          # CI/CD workflows
+├── docs/
+│   ├── templates/          # Document templates
+│   └── plans/              # Generated feature plans
+├── scripts/
+│   ├── install.js         # Installation script (runs on postinstall)
+│   ├── uninstall.js       # Uninstall script (runs on preuninstall)
+│   ├── generate-copilot.js # Generate GitHub Copilot format
+│   ├── restore.js         # Restore from backup
+│   └── init.js            # CLI entry point
+├── package.json           # NPM package manifest
+└── README.md              # This file
 ```
 .
 ├── .github/
@@ -210,32 +290,39 @@ These agents are designed to work with:
 
 ## Configuration
 
-### Copilot CLI
+### Installation Directories
 
-The installation script automatically installs the recommended Copilot plugins. Agents are installed to:
+Agents and skills are installed to predictable locations:
 
+**OpenCode (Global)**
 ```
-~/.local/share/agents/agents/johnludlow-*.md
-```
-
-After installation, agents can be referenced in Copilot CLI configuration. Check Copilot CLI documentation for agent configuration details.
-
-**Installed Plugins:**
-- awesome-copilot, azure, doublecheck, dotnet, dotnet-diag
-- context-engineering, csharp-dotnet-development, csharp-mcp-development
-- devops-oncall, technical-spike, microsoft-docs
-- openapi-to-application-csharp-dotnet, polyglot-test-agent
-- roundup, project-planning, security-best-practices
-
-### OpenCode
-
-Agents are installed to:
-
-```
-~/.local/share/agents/agents/johnludlow-*.md
+~/.config/opencode/agents/
+~/.config/opencode/skills/
 ```
 
-Configure agents in your OpenCode configuration file based on your tool's requirements.
+**OpenCode (Local)**
+```
+.opencode/agents/
+.opencode/skills/
+```
+
+**GitHub Copilot (Generated)**
+```
+.github/agents/          (created by npm run generate:copilot)
+.github/skills/          (created by npm run generate:copilot)
+```
+
+### Backups
+
+Installation backups are created automatically:
+```
+~/.config/opencode/.johnludlow-backup-YYYY-MM-DDTHH-MM-SS
+```
+
+Restore the latest backup:
+```bash
+npm run restore
+```
 
 ## Standards and Best Practices
 
@@ -263,11 +350,14 @@ Code created by johnludlow-feature-implementer follows the standards in johnludl
 
 Contributions are welcome! Please follow these guidelines:
 
-1. Ensure all markdown files pass markdownlint validation
-2. Add descriptive comments to agent definitions
-3. Update templates when adding new document types
-4. Test installation scripts before submitting changes
-5. Update this README if adding new agents or skills
+1. Edit agent/skill definitions in the `agents/` or `skills/` directories
+2. Ensure all markdown files pass markdownlint validation
+3. Run `npm run generate:copilot` to update GitHub Copilot format
+4. Test installation: `npm install` (from package directory)
+5. Update README.md if adding new agents or skills
+6. Submit a pull request with clear descriptions
+
+See CONTRIBUTING.md for detailed guidelines.
 
 ## License
 

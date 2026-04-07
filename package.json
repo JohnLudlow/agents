@@ -1,0 +1,39 @@
+{
+  "name": "@johnludlow/agents",
+  "version": "0.0.1",
+  "description": "Reusable AI agents and skills for feature planning, implementation, documentation, and testing across C#, TypeScript, and C++ projects",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "node scripts/install.js",
+    "preuninstall": "node scripts/uninstall.js",
+    "restore": "node scripts/restore.js",
+    "generate:copilot": "node scripts/generate-copilot.js"
+  },
+  "bin": {
+    "johnludlow-agents": "./scripts/init.js"
+  },
+  "keywords": [
+    "opencode",
+    "copilot",
+    "agents",
+    "skills",
+    "planning",
+    "implementation",
+    "documentation",
+    "testing",
+    "csharp",
+    "typescript",
+    "cpp"
+  ],
+  "author": "John Ludlow",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JohnLudlow/agents"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
