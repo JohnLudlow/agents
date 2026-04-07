@@ -1,344 +1,230 @@
 # CI/CD Pipeline Documentation
 
+This document describes the automated CI/CD pipeline for the johnludlow agents
+and skills repository.
+
 ## Overview
 
-The `@johnludlow/agents` repository uses a modular GitHub Actions workflow with semantic versioning, automated validation, and artifact publishing. The design follows the patterns established in the Template repository.
+The repository uses GitHub Actions for automated validation, testing, building,
+and releasing of the NPM package. The pipeline ensures all changes meet quality
+standards before being released.
 
-## Workflow Structure
+## Workflow: main.yml
 
-### Main Workflow: `.github/workflows/main.yml`
+The primary workflow is defined in `.github/workflows/main.yml` and executes on:
 
-Orchestrates the entire CI/CD pipeline with four main jobs:
+- Push to `main` or `develop` branches
+- Pull requests to either branch
 
-```
-setup (runs first)
-  ↓
-  ├─→ validate (parallel)
-  │    
-  ├─→ build (depends on setup + validate)
-  │    ↓
-  │    release (depends on setup + build, only on main branch)
-```
-
-## Jobs
+## Pipeline Stages
 
 ### 1. Setup Job
 
-**Purpose**: Initialize environment and determine version
+**Purpose**: Initialize the environment and determine semantic version
 
-**When**: Always runs
-**Outputs**: `version` (semantic version)
+**Actions**:
 
-**Steps**:
-1. Checkout repository with full history
-2. Setup Node.js 18
-3. Determine version based on git tags
-4. Cache NPM packages for faster builds
+- Setup Node.js 22
+- Install GitVersion
+- Execute GitVersion to determine the next semantic version
+- Output version information for subsequent jobs
 
-**Version Logic**:
-- Gets latest git tag (e.g., `v1.2.3`)
-- Increments patch version (e.g., `v1.2.4`)
-- Used by downstream jobs for consistent versioning
+**Output**: Version number (e.g., `0.1.0`)
 
 ### 2. Validate Job
 
-**Purpose**: Ensure code quality and documentation standards
+**Purpose**: Check code quality and markdown standards
 
-**When**: Always runs
-**Dependencies**: None
+**Actions**:
 
-**Validations**:
-- ✅ Markdown syntax with markdownlint
-- ✅ Required sections in agent definitions:
-  - `## Description`
-  - `## Purpose`
-  - `## Capabilities`
-  - `## Restrictions`
-- ✅ Required sections in skill definitions:
-  - `## Overview`
-- ✅ Template structure (YAML frontmatter)
-- ✅ package.json validity
+- Validate markdown syntax with `rumdl check`
+- Check required sections in agent definitions
+- Check required sections in skill definitions
+- Validate template file structure
+- Validate package.json
 
-**Fails if**: Any validation fails, blocking build and release
+**Required Sections**:
+
+**Agents must include**:
+
+- Description
+- Purpose
+- Capabilities
+- Restrictions
+
+**Skills must include**:
+
+- Overview
+
+**Templates must include**:
+
+- YAML frontmatter with metadata
 
 ### 3. Build Job
 
-**Purpose**: Create NPM package and artifacts
+**Purpose**: Create distributable artifacts
 
-**When**: Always runs (but must pass validate and setup)
-**Dependencies**: `setup`, `validate`
-**Artifacts**:
-- `johnludlow-agents-X.Y.Z.tgz` - NPM package
-- `copilot-format/` - GitHub Copilot format agents/skills
+**Actions**:
 
-**Steps**:
-1. Checkout repository
-2. Setup Node.js environment
-3. Update package.json with determined version
-4. Create NPM package with `npm pack`
-5. Generate GitHub Copilot format with `npm run generate:copilot`
-6. Upload artifacts with 30-day retention
+- Create NPM package (`.tgz`)
+- Generate GitHub Copilot format artifacts
+- Store artifacts for download
 
-**Artifacts Available**:
-```
-npm-package/
-  └─ johnludlow-agents-0.1.2.tgz    (NPM package)
+**Outputs**:
 
-copilot-format/
-  └─ agents/                          (Copilot format agents)
-  └─ skills/                          (Copilot format skills)
-```
+- `@johnludlow-agents-*.tgz` - NPM package
+- `.github/agents/` - Generated Copilot format agents
+- `.github/skills/` - Generated Copilot format skills
 
 ### 4. Release Job
 
-**Purpose**: Tag repository and publish release
+**Purpose**: Create GitHub release and tag commit (main branch only)
 
-**When**: Only on `push` to `main` branch (not pull requests)
-**Dependencies**: `setup`, `build`
+**Actions**:
 
-**Steps**:
-1. Checkout repository with full history
-2. Configure git user (GitHub Actions bot)
-3. Create annotated git tag (e.g., `v0.1.2`)
-4. Push tag to repository
-5. Triggers GitHub Release creation
-
-**Note**: This job only runs after successful build on main branch
-
-## GitHub Actions
-
-### Action: `.github/actions/setup`
-
-**Reusable action for environment setup and versioning**
-
-**Inputs**: None
+- Run only on `main` branch after successful build
+- Create git tag with semantic version
+- Create GitHub release with version number
+- Attach build artifacts to release
 
 **Outputs**:
-- `version` - Semantic version (e.g., `0.1.2`)
-- `version_tag` - Git tag format (e.g., `v0.1.2`)
 
-**Used by**: All jobs that need versioning or Node.js
+- Git tag (e.g., `v0.1.0`)
+- GitHub Release with downloadable artifacts
 
-### Action: `.github/actions/validate`
+## Semantic Versioning
 
-**Reusable action for markdown and code validation**
+The pipeline uses **GitVersion** for automatic semantic versioning based on:
 
-**Inputs**: None
+- Commit history analysis
+- Conventional commit messages
+- Git tags
 
-**Outputs**: None (exits with code 1 on failure)
+### Version Bumping
 
-**Used by**: Validate job
+Control version bumps using commit message prefixes:
 
-**Validations**:
-- Markdown files in `agents/`, `skills/`, `docs/templates/`
-- Documentation files (`README.md`, `QUICKSTART.md`, `CONTRIBUTING.md`)
-- Agent definition structure
-- Skill definition structure
-- Template frontmatter format
-- package.json syntax
+- `+semver: major` - Increment major version (breaking changes)
+- `+semver: minor` - Increment minor version (new features)
+- `+semver: patch` - Increment patch version (bug fixes)
+- `+semver: none` - No version change
 
-### Action: `.github/actions/build`
+**Example commit message**:
 
-**Reusable action for building NPM package**
+```text
+feat: add new johnludlow-performance-analyzer agent
 
-**Inputs**:
-- `version` - Version to set in package.json (required)
++semver: minor
+```
 
-**Outputs**: None
+## Reusable Actions
 
-**Artifacts Created**:
-- `johnludlow-agents-X.Y.Z.tgz` - NPM tarball
-- `.github/agents/` - Copilot format agents
-- `.github/skills/` - Copilot format skills
+The pipeline uses reusable GitHub Actions for modularity:
 
-**Used by**: Build job
+### `.github/actions/setup`
 
-## Triggering Workflows
+Initializes the build environment:
 
-### On Push to Main
-All jobs run:
-1. `setup` → determines version
-2. `validate` → checks quality
-3. `build` → creates package
-4. `release` → creates git tag and triggers GitHub Release
+- Sets up Node.js 22
+- Installs and runs GitVersion
+- Exposes version output variables
 
-### On Push to Develop
-Jobs 1-3 run, but NOT release:
-1. `setup` → determines version
-2. `validate` → checks quality
-3. `build` → creates package (no tag)
+### `.github/actions/validate`
 
-### On Pull Request
-Jobs 1-2 run, but NOT build or release:
-1. `setup` → determines version
-2. `validate` → checks quality
+Validates code quality:
 
-## Version Management
+- Markdown linting with `rumdl`
+- Structural validation of agents and skills
+- Configuration validation
 
-### Semantic Versioning
+### `.github/actions/build`
 
-Uses simple git tag-based versioning:
+Creates distributable artifacts:
+
+- Generates NPM package
+- Creates GitHub Copilot format files
+- Prepares release artifacts
+
+## Local Testing
+
+### Running the Validate Action Locally
 
 ```bash
-# Create releases manually with git tags
-git tag v0.1.0
-git push origin v0.1.0
+# Install rumdl
+npm install -g rumdl
+
+# Run markdown validation
+rumdl check .
+
+# Check agent structure
+for file in agents/*.md; do
+  grep -q "## Description" "$file" || echo "Missing Description in $file"
+  grep -q "## Purpose" "$file" || echo "Missing Purpose in $file"
+done
 ```
 
-Or let GitHub Actions create tags:
-- Workflow determines next patch version
-- Creates git tag: `v0.1.2`
-- GitHub Actions creates Release
+### Running the Build Locally
 
-### Version Format
-
-- **Git tags**: `v0.1.2` (with `v` prefix)
-- **package.json**: `0.1.2` (without `v` prefix)
-- **Artifacts**: `johnludlow-agents-0.1.2.tgz` (without `v` prefix)
-
-## Artifact Management
-
-### NPM Package
-
-**File**: `johnludlow-agents-X.Y.Z.tgz`
-
-**Created by**: Build job
-**Available**: During workflow run
-**Retention**: 30 days
-**Contains**: All agents, skills, scripts, documentation
-
-**Download**:
 ```bash
-# From GitHub Actions artifacts UI
-# Or via gh command:
-gh run download <run-id> -n npm-package
+# Generate NPM package
+npm pack
+
+# Generate Copilot format
+npm run generate:copilot
 ```
-
-### Copilot Format
-
-**Location**: `.github/agents/` and `.github/skills/`
-
-**Created by**: `npm run generate:copilot` (in build job)
-**Available**: In artifacts and in repository
-**Contains**: Agents and skills in GitHub Copilot format
-
-## Permissions
-
-The workflow uses minimal required permissions:
-
-```yaml
-permissions:
-  contents: read         # Validate job
-  artifacts: write       # Build job (upload)
-  contents: write        # Release job (git push)
-```
-
-## Monitoring
-
-### GitHub Actions UI
-
-- **Actions tab**: View workflow runs
-- **Logs**: Detailed output from each job
-- **Artifacts**: Download npm package and Copilot format
-
-### Exit Codes
-
-- `0` - Success
-- `1` - Validation failed (markdown, structure, etc.)
-- `128` - Git error (tag conflicts, etc.)
 
 ## Troubleshooting
 
-### Validate Job Fails
+### Pipeline Fails on Markdown Validation
 
-**Check**:
-1. Markdown files pass `markdownlint`
-2. Agent files have required sections
-3. Skill files have `## Overview` section
-4. Templates have YAML frontmatter
-5. package.json is valid JSON
+Check the validate action output for specific errors:
 
-**Fix**:
 ```bash
-# Locally:
-npm install -g markdownlint-cli
-markdownlint 'agents/*.md'
+rumdl check .
 ```
 
-### Build Job Fails
+Common issues:
 
-**Check**:
-1. Validate job passed
-2. Setup job ran successfully
-3. `npm pack` works locally
-4. `npm run generate:copilot` works locally
+- Lines exceeding 80 characters (MD013)
+- Headings not surrounded by blank lines (MD022)
+- Missing language specification in code blocks (MD040)
 
-**Fix**:
+### Pipeline Fails on Agent Validation
+
+Ensure all agent files have required sections:
+
 ```bash
-# Locally:
-npm install
-npm run generate:copilot
-npm pack
+for file in agents/*.md; do
+  grep -q "## Description" "$file" || echo "Missing in $file"
+  grep -q "## Purpose" "$file" || echo "Missing in $file"
+  grep -q "## Capabilities" "$file" || echo "Missing in $file"
+  grep -q "## Restrictions" "$file" || echo "Missing in $file"
+done
 ```
 
-### Release Job Doesn't Run
+### Version Not Incrementing
 
-**Check**:
-1. You're pushing to `main` branch (not PR)
-2. Build job succeeded
-3. Repository has write permissions
+Check GitVersion configuration in `GitVersion.yml`. Common issues:
 
-**Note**: Release job only runs on `push` events to `main`, not on pull requests
+- Branch not in configuration
+- Git tags not properly formatted
+- Commit messages not following convention
 
-### Version Already Exists
+## Environment Variables
 
-**If**: Tag `vX.Y.Z` already exists
+The pipeline uses these environment variables:
 
-**Fix**: Delete tag and re-run workflow
-```bash
-git tag -d vX.Y.Z
-git push --delete origin vX.Y.Z
-```
+- `GITHUB_TOKEN` - For GitHub CLI operations
+- `VERSION` - Semantic version from GitVersion
 
-## Example Workflow Run
+## Security
 
-```
-Event: Push to main branch
-Branch: refs/heads/main
-Commit: 12345ab
-
-[setup]
-  ├─ Checkout with fetch-depth: 0
-  ├─ Setup Node.js 18
-  ├─ Git tags: latest = v0.1.0
-  ├─ Determine version: 0.1.1
-  └─ Output: version = 0.1.1
-  
-[validate] (parallel)
-  ├─ Markdown validation ✓
-  ├─ Agent structure ✓
-  ├─ Skill structure ✓
-  ├─ Template format ✓
-  └─ package.json ✓
-  
-[build] (waits for setup + validate)
-  ├─ Setup Node.js
-  ├─ Update package.json: 0.1.1
-  ├─ Create npm package
-  ├─ Generate Copilot format
-  ├─ Upload artifact: johnludlow-agents-0.1.1.tgz (30 days)
-  └─ Upload artifact: copilot-format (30 days)
-  
-[release] (waits for setup + build, main branch only)
-  ├─ Setup Node.js
-  ├─ Create git tag: v0.1.1
-  ├─ Push tag to repository
-  └─ GitHub Release created (auto)
-```
+- Git operations use SSH deploy keys
+- No credentials are logged
+- All artifacts are signed with release tags
 
 ## See Also
 
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
-- [Reusable Workflows](https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions)
-- [Template Repository CI/CD](https://github.com/JohnLudlow/Template/.github/workflows)
-- [NPM Package Documentation](README.md)
+- [Contributing Guidelines](../CONTRIBUTING.md)
+- [README.md](../README.md)
+- [GitVersion Documentation](https://gitversion.net/)

@@ -2,8 +2,8 @@
 
 ## Description
 
-Agent for implementing planned changes. Produces code and configuration changes based
-on well-formed plan documents created by johnludlow-feature-planner.
+Agent for implementing planned changes. Produces code and configuration changes
+based on well-formed plan documents created by johnludlow-feature-planner.
 
 ## Temperature
 

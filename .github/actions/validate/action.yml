@@ -9,19 +9,13 @@ runs:
     with:
       node-version: '22'
 
-  - name: Install markdown lint
+  - name: Install rumdl
     shell: bash
-    run: npm install -g markdownlint-cli
+    run: npm install -g rumdl
 
-  - name: Validate markdown syntax
+  - name: Validate markdown with rumdl
     shell: bash
-    run: |
-      markdownlint 'agents/*.md' \
-                    'skills/*.md' \
-                    'docs/templates/*.md' \
-                    'README.md' \
-                    'QUICKSTART.md' \
-                    'CONTRIBUTING.md'
+    run: rumdl check .
 
   - name: Check required sections in agents
     shell: bash

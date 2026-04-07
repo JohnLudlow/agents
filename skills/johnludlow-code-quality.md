@@ -2,8 +2,8 @@
 
 ## Overview
 
-This skill defines code quality expectations for features implemented by johnludlow agents
-across C#, TypeScript, and C++.
+This skill defines code quality expectations for features implemented by johnludlow
+agents across C#, TypeScript, and C++.
 
 ## General Principles
 

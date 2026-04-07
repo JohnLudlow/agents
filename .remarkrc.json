@@ -1,0 +1,11 @@
+{
+  "plugins": [
+    "remark-preset-lint-recommended",
+    [
+      "remark-lint-line-length",
+      {
+        "length": 80
+      }
+    ]
+  ]
+}

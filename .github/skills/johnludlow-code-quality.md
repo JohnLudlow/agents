@@ -1,9 +1,12 @@
 # Code Quality Standards
 
 ## Overview
-This skill defines code quality expectations for features implemented by johnludlow agents across C#, TypeScript, and C++.
+
+This skill defines code quality expectations for features implemented by
+johnludlow agents across C#, TypeScript, and C++.
 
 ## General Principles
+
 - Follow SOLID principles
 - Keep functions small and focused (single responsibility)
 - Use meaningful names for variables, functions, and classes
@@ -11,6 +14,7 @@ This skill defines code quality expectations for features implemented by johnlud
 - Maintain consistent style with existing codebase
 
 ## Performance Considerations
+
 - Avoid unnecessary allocations
 - Use appropriate data structures
 - Profile before optimizing
@@ -18,6 +22,7 @@ This skill defines code quality expectations for features implemented by johnlud
 - Consider memory usage in loops
 
 ## Maintainability
+
 - Write self-documenting code
 - Keep cyclomatic complexity low
 - Use dependency injection where appropriate
@@ -25,6 +30,7 @@ This skill defines code quality expectations for features implemented by johnlud
 - Maintain consistent patterns
 
 ## Testability
+
 - Design code to be testable
 - Avoid static dependencies
 - Use interfaces for external dependencies
@@ -32,6 +38,7 @@ This skill defines code quality expectations for features implemented by johnlud
 - Provide meaningful test error messages
 
 ## C# Specific
+
 - Use async/await for I/O operations
 - Leverage LINQ appropriately
 - Use dependency injection containers
@@ -39,6 +46,7 @@ This skill defines code quality expectations for features implemented by johnlud
 - Use nullable reference types
 
 ## TypeScript Specific
+
 - Use strict mode
 - Leverage TypeScript types fully
 - Avoid `any` type
@@ -46,6 +54,7 @@ This skill defines code quality expectations for features implemented by johnlud
 - Include JSDoc comments for public functions
 
 ## C++ Specific
+
 - Use modern C++ (C++17+)
 - Use smart pointers for memory management
 - Avoid raw pointers
@@ -53,6 +62,7 @@ This skill defines code quality expectations for features implemented by johnlud
 - Include proper exception handling
 
 ## Testing Requirements
+
 - Write tests for all public APIs
 - Aim for > 80% code coverage for critical paths
 - Use descriptive test names

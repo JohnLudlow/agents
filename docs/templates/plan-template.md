@@ -78,9 +78,9 @@ status: Planning
 
 ### Technical Risks
 
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|-----------|
-| Risk 1 | High/Med/Low | High/Med/Low | Mitigation strategy |
+| Risk   | Probability  | Impact       | Mitigation            |
+|:-------|:-------------|:-------------|:----------------------|
+| Risk 1 | High/Med/Low | High/Med/Low | Mitigation strategy   |
 
 ### Resource Risks
 
@@ -118,6 +118,6 @@ status: Planning
 
 ## Revision History
 
-| Date | Author | Changes |
-|------|--------|---------|
-| YYYY-MM-DD | Agent | Initial plan |
+| Date       | Author | Changes          |
+|:-----------|:-------|:-----------------|
+| YYYY-MM-DD | Agent  | Initial plan     |

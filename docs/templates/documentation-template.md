@@ -103,6 +103,6 @@ Signature
 
 ## Revision History
 
-| Date | Author | Changes |
-|------|--------|---------|
-| YYYY-MM-DD | Agent | Initial documentation |
+| Date       | Author | Changes               |
+|:-----------|:-------|:----------------------|
+| YYYY-MM-DD | Agent  | Initial documentation |

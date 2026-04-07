@@ -1,12 +1,17 @@
 # johnludlow Agents and Skills
 
-A collection of reusable AI agents and skills for OpenCode and GitHub Copilot CLI, designed to streamline feature planning, implementation, documentation, and testing for multi-language projects.
+A collection of reusable AI agents and skills for OpenCode and GitHub Copilot CLI,
+designed to streamline feature planning, implementation, documentation, and testing
+for multi-language projects.
 
-Distributed as an NPM package with automated installation scripts for seamless setup across different development environments.
+Distributed as an NPM package with automated installation scripts for seamless setup
+across different development environments.
 
 ## Overview
 
-This repository contains agents and skills that work with both Copilot CLI and OpenCode. These tools are designed to assist with the complete software development lifecycle:
+This repository contains agents and skills that work with both Copilot CLI and
+OpenCode. These tools are designed to assist with the complete software development
+lifecycle:
 
 - **Planning**: Create well-structured feature plans
 - **Implementation**: Develop features according to approved plans
@@ -16,6 +21,7 @@ This repository contains agents and skills that work with both Copilot CLI and O
 ## Agents
 
 ### johnludlow-feature-planner
+
 Creates comprehensive feature plans and project specifications.
 
 - **Temperature**: 0.6 (balanced creativity and consistency)
@@ -25,6 +31,7 @@ Creates comprehensive feature plans and project specifications.
 [View full agent definition](.github/agents/johnludlow-feature-planner.md)
 
 ### johnludlow-feature-implementer
+
 Implements features based on approved plans with code quality and best practices.
 
 - **Temperature**: 0.2 (precise, consistent implementation)
@@ -34,6 +41,7 @@ Implements features based on approved plans with code quality and best practices
 [View full agent definition](.github/agents/johnludlow-feature-implementer.md)
 
 ### johnludlow-feature-documenter
+
 Creates user-friendly technical documentation for features and APIs.
 
 - **Temperature**: 0.2 (precise, consistent documentation)
@@ -43,6 +51,7 @@ Creates user-friendly technical documentation for features and APIs.
 [View full agent definition](.github/agents/johnludlow-feature-documenter.md)
 
 ### johnludlow-feature-tester
+
 Runs automated tests and reports results.
 
 - **Temperature**: 0.2 (precise test execution)
@@ -56,11 +65,13 @@ Runs automated tests and reports results.
 Skills provide shared knowledge and standards for agents.
 
 ### johnludlow-markdown-standards
+
 Defines markdown document structure, formatting, and quality standards.
 
 [View full skill definition](.github/skills/johnludlow-markdown-standards.md)
 
 ### johnludlow-code-quality
+
 Defines code quality expectations across C#, TypeScript, and C++.
 
 [View full skill definition](.github/skills/johnludlow-code-quality.md)
@@ -69,8 +80,10 @@ Defines code quality expectations across C#, TypeScript, and C++.
 
 Pre-built templates for common documents:
 
-- **Plan Template** (`docs/templates/plan-template.md`): Structure for feature plans
-- **Documentation Template** (`docs/templates/documentation-template.md`): Structure for technical documentation
+- **Plan Template** (`docs/templates/plan-template.md`): Structure for feature
+  plans
+- **Documentation Template** (`docs/templates/documentation-template.md`):
+  Structure for technical documentation
 
 ## Installation
 
@@ -89,6 +102,7 @@ npm install @johnludlow/agents
 ```
 
 This automatically:
+
 - Detects your environment (global or local installation)
 - Installs agents and skills to OpenCode configuration directory
 - Copies agents to GitHub Copilot format in `.github/agents/` (local mode)
@@ -102,6 +116,7 @@ npm install -g @johnludlow/agents
 ```
 
 Global installation will:
+
 - Install to `~/.config/opencode/` (OpenCode global config)
 - Make agents available to all projects
 - Install Copilot plugins globally
@@ -114,6 +129,7 @@ npm install @johnludlow/agents
 ```
 
 Local installation will:
+
 - Install to `.opencode/` (project-local config)
 - Create `.github/agents/` and `.github/skills/` directories
 - Backups stored in the same directory structure
@@ -193,28 +209,24 @@ johnludlow-agents version         # Show version
 A typical workflow using these agents:
 
 1. **Plan** (johnludlow-feature-planner)
-   ```
+
    Define feature requirements, architecture, and implementation phases
    Output: Feature plan document
-   ```
 
 2. **Implement** (johnludlow-feature-implementer)
-   ```
+
    Follow the plan to implement code and tests
    Output: Updated source files, tests, and code changes
-   ```
 
 3. **Document** (johnludlow-feature-documenter)
-   ```
+
    Create user-friendly documentation for the feature
    Output: API docs, guides, and references
-   ```
 
 4. **Test** (johnludlow-feature-tester)
-   ```
+
    Run automated tests and report results
    Output: Test results and coverage reports
-   ```
 
 ## Supported Languages
 
@@ -239,7 +251,7 @@ These agents are designed to work with:
 
 ## Project Structure
 
-```
+```bash
 .
 ├── agents/                 # OpenCode agents (primary source)
 │   ├── johnludlow-feature-planner.md
@@ -271,28 +283,6 @@ These agents are designed to work with:
 ├── package.json           # NPM package manifest
 └── README.md              # This file
 ```
-.
-├── .github/
-│   ├── agents/              # Agent definitions
-│   │   ├── johnludlow-feature-planner.md
-│   │   ├── johnludlow-feature-implementer.md
-│   │   ├── johnludlow-feature-documenter.md
-│   │   └── johnludlow-feature-tester.md
-│   ├── skills/              # Shared skills
-│   │   ├── johnludlow-markdown-standards.md
-│   │   └── johnludlow-code-quality.md
-│   └── workflows/           # GitHub Actions workflows
-│       └── validate.yml
-├── docs/
-│   ├── templates/           # Document templates
-│   │   ├── plan-template.md
-│   │   └── documentation-template.md
-│   └── plans/               # Generated feature plans
-├── scripts/
-│   ├── install.ps1         # PowerShell installer
-│   └── install.sh          # Bash installer
-└── prompt.md               # Original specifications
-```
 
 ## Configuration
 
@@ -300,20 +290,23 @@ These agents are designed to work with:
 
 Agents and skills are installed to predictable locations:
 
-**OpenCode (Global)**
-```
+#### OpenCode (Global)
+
+```bash
 ~/.config/opencode/agents/
 ~/.config/opencode/skills/
 ```
 
-**OpenCode (Local)**
-```
+#### OpenCode (Local)
+
+```bash
 .opencode/agents/
 .opencode/skills/
 ```
 
-**GitHub Copilot (Generated)**
-```
+#### GitHub Copilot (Generated)
+
+```bash
 .github/agents/          (created by npm run generate:copilot)
 .github/skills/          (created by npm run generate:copilot)
 ```
@@ -321,11 +314,13 @@ Agents and skills are installed to predictable locations:
 ### Backups
 
 Installation backups are created automatically:
-```
+
+```bash
 ~/.config/opencode/.johnludlow-backup-YYYY-MM-DDTHH-MM-SS
 ```
 
 Restore the latest backup:
+
 ```bash
 npm run restore
 ```
@@ -334,7 +329,8 @@ npm run restore
 
 ### Documentation Standards
 
-All documents created by these agents follow the markdown standards defined in johnludlow-markdown-standards skill:
+All documents created by these agents follow the markdown standards defined in the
+johnludlow-markdown-standards skill:
 
 - Valid YAML frontmatter
 - Proper heading hierarchy
@@ -344,7 +340,8 @@ All documents created by these agents follow the markdown standards defined in j
 
 ### Code Quality Standards
 
-Code created by johnludlow-feature-implementer follows the standards in johnludlow-code-quality skill:
+Code created by johnludlow-feature-implementer follows the standards in the
+johnludlow-code-quality skill:
 
 - SOLID principles
 - Language-specific best practices
@@ -372,16 +369,19 @@ The repository uses GitHub Actions for automated validation and packaging:
 **Workflow**: `.github/workflows/main.yml`
 
 **Actions**:
+
 - `setup` - Initialize environment and determine semantic version
 - `validate` - Check markdown, structure, and package.json
 - `build` - Create NPM package and Copilot format artifacts
 - `release` - Tag commits and create GitHub releases (main branch only)
 
 **Automatic on**:
+
 - Push to `main` or `develop` branches
 - Pull requests to either branch
 
 **Outputs**:
+
 - Downloadable NPM package (`.tgz`)
 - GitHub Copilot format artifacts
 - Semantic versioning with git tags
@@ -394,19 +394,23 @@ See [CI/CD.md](docs/CI-CD.md) for detailed pipeline documentation.
 
 ## Related Repositories
 
-- [Template Repository](https://github.com/JohnLudlow/Template) - Original template with agents
-- [FourXGame Repository](https://github.com/JohnLudlow/FourXGame) - Game development agents
+- [Template Repository](https://github.com/JohnLudlow/Template) - Original template
+  with agents
+- [FourXGame Repository](https://github.com/JohnLudlow/FourXGame) - Game
+  development agents
 
 ## Support
 
 For issues or questions:
 
-- GitHub Issues: [Create an issue](../../issues)
-- Discussions: [Start a discussion](../../discussions)
+- GitHub Issues: [Create an issue](https://github.com/JohnLudlow/agents/issues)
+- Discussions:
+  [Start a discussion](https://github.com/JohnLudlow/agents/discussions)
 
 ## Changelog
 
 ### v0.0.1 (Initial Release)
+
 - Initial agent definitions (planner, implementer, documenter, tester)
 - Core skills (markdown standards, code quality)
 - Installation scripts (PowerShell and Bash)
