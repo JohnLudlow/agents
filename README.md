@@ -249,11 +249,17 @@ These agents are designed to work with:
 ├── skills/                 # OpenCode skills (primary source)
 │   ├── johnludlow-markdown-standards.md
 │   └── johnludlow-code-quality.md
-├── .github/                # GitHub Copilot format (generated)
-│   ├── agents/             (created by npm run generate:copilot)
-│   ├── skills/             (created by npm run generate:copilot)
-│   └── workflows/          # CI/CD workflows
+├── .github/
+│   ├── actions/            # Reusable GitHub Actions
+│   │   ├── setup/          # Setup Node.js and determine version
+│   │   ├── validate/       # Validate markdown and structure
+│   │   └── build/          # Build NPM package
+│   ├── agents/             # GitHub Copilot format (generated)
+│   ├── skills/             # GitHub Copilot format (generated)
+│   └── workflows/
+│       └── main.yml        # CI/CD workflow
 ├── docs/
+│   ├── CI-CD.md           # CI/CD pipeline documentation
 │   ├── templates/          # Document templates
 │   └── plans/              # Generated feature plans
 ├── scripts/
@@ -358,6 +364,29 @@ Contributions are welcome! Please follow these guidelines:
 6. Submit a pull request with clear descriptions
 
 See CONTRIBUTING.md for detailed guidelines.
+
+## CI/CD Pipeline
+
+The repository uses GitHub Actions for automated validation and packaging:
+
+**Workflow**: `.github/workflows/main.yml`
+
+**Actions**:
+- `setup` - Initialize environment and determine semantic version
+- `validate` - Check markdown, structure, and package.json
+- `build` - Create NPM package and Copilot format artifacts
+- `release` - Tag commits and create GitHub releases (main branch only)
+
+**Automatic on**:
+- Push to `main` or `develop` branches
+- Pull requests to either branch
+
+**Outputs**:
+- Downloadable NPM package (`.tgz`)
+- GitHub Copilot format artifacts
+- Semantic versioning with git tags
+
+See [CI/CD.md](docs/CI-CD.md) for detailed pipeline documentation.
 
 ## License
 
