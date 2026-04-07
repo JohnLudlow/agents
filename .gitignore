@@ -49,3 +49,5 @@ johnludlow-agents-*.tgz
 # Installation backups
 .opencode/.johnludlow-backup-*
 .copilot/.johnludlow-backup-*
+
+.rumdl/
