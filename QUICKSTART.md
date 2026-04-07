@@ -1,191 +1,207 @@
 # Quick Start Guide
 
-## What Was Provisioned
+## Installation
 
-This repository now contains a complete system of AI agents and skills for software development:
-
-### Agents Created
-1. **johnludlow-feature-planner** - Creates feature plans and specifications
-2. **johnludlow-feature-implementer** - Implements features from plans
-3. **johnludlow-feature-documenter** - Generates technical documentation
-4. **johnludlow-feature-tester** - Runs and validates automated tests
-
-### Skills Created
-1. **johnludlow-markdown-standards** - Document formatting and quality standards
-2. **johnludlow-code-quality** - Code quality expectations for C#, TypeScript, C++
-
-### Templates Created
-1. **plan-template.md** - Structure for feature planning documents
-2. **documentation-template.md** - Structure for technical documentation
-
-### Infrastructure Created
-1. **Installation scripts** (PowerShell and Bash) - Automated setup for both OSes
-2. **GitHub Actions workflow** - Automated validation and packaging
-3. **Documentation** (README, CONTRIBUTING) - Comprehensive guides
-
-## File Structure
-
-```
-agents/
-├── .github/
-│   ├── agents/              # Agent definitions
-│   ├── skills/              # Shared skills
-│   └── workflows/           # CI/CD workflows
-├── docs/
-│   ├── templates/           # Document templates
-│   └── plans/               # Feature plan documents (generated)
-├── scripts/
-│   ├── install.ps1         # Windows installer
-│   └── install.sh          # Unix installer
-├── README.md               # Main documentation
-└── CONTRIBUTING.md         # Contribution guidelines
-```
-
-## Next Steps
-
-### 1. Install with Copilot CLI
-
-The installation script will automatically install all recommended Copilot plugins:
+The simplest way to install `@johnludlow/agents` is using NPM:
 
 ```bash
-# Install the agents and plugins
-./scripts/install.sh --copilot-cli
+npm install @johnludlow/agents
 ```
 
-This installs:
-- johnludlow agents to `~/.local/share/agents/agents/`
-- Copilot plugins including awesome-copilot, azure, dotnet, csharp-dotnet-development, and more
-
-### 2. Install with OpenCode
+Or for global installation across all your projects:
 
 ```bash
-# Install the agents globally
-./scripts/install.sh --opencode
+npm install -g @johnludlow/agents
 ```
 
-This installs:
-- johnludlow agents to `~/.local/share/agents/agents/`
-- Ready to use with OpenCode
+That's it! The installation script runs automatically and sets up:
+- ✓ Agents to OpenCode configuration
+- ✓ Skills to OpenCode configuration
+- ✓ Backup of any existing installation
+- ✓ GitHub Copilot format (optional, use `npm run generate:copilot`)
 
-### 3. Use in Your Projects
+## What Gets Installed
 
-Copy relevant agents to your project's `.github/agents` directory:
+### OpenCode
+Agents and skills are installed to:
+- **Global**: `~/.config/opencode/agents/` and `~/.config/opencode/skills/`
+- **Local**: `.opencode/agents/` and `.opencode/skills/`
+
+### GitHub Copilot
+Generate Copilot format (optional):
+```bash
+npm run generate:copilot
+```
+
+This creates:
+- `.github/agents/`
+- `.github/skills/`
+
+## Using the Agents
+
+### With OpenCode
+Agents are ready to use immediately after installation:
 
 ```bash
-# In your project repo:
-mkdir -p .github/agents
-cp ~/.local/share/agents/agents/johnludlow-*.md .github/agents/
+# In OpenCode chat
+/agent johnludlow-feature-planner
 ```
 
-### 4. Install Both (Recommended)
+### With GitHub Copilot CLI
 
+First generate the Copilot format:
 ```bash
-./scripts/install.sh --all
+npm run generate:copilot
 ```
 
-This installs agents for both Copilot CLI and OpenCode, along with all recommended plugins.
+Then use with Copilot:
+```bash
+copilot chat -a johnludlow-feature-planner "Please plan a new feature"
+```
 
 ## Example Workflow
 
-### Step 1: Create a Feature Plan
+### 1. Plan a Feature
 ```bash
-copilot chat johnludlow-feature-planner "I need to implement user authentication with OAuth2"
+# Using OpenCode
+/agent johnludlow-feature-planner
 ```
+"I need to implement user authentication with OAuth2"
 
-### Step 2: Implement the Feature
+**Output**: Creates `docs/plans/user-authentication.md`
+
+### 2. Implement the Feature
 ```bash
-copilot chat johnludlow-feature-implementer "Implement the authentication system according to the plan in docs/plans/"
+/agent johnludlow-feature-implementer
 ```
+"Implement the authentication system according to the plan in docs/plans/user-authentication.md"
 
-### Step 3: Document the Feature
+**Output**: Modified source files with implementation
+
+### 3. Document the Feature
 ```bash
-copilot chat johnludlow-feature-documenter "Create API documentation for the authentication system"
+/agent johnludlow-feature-documenter
 ```
+"Create API documentation for the authentication system"
 
-### Step 4: Validate with Tests
+**Output**: Creates `docs/api/authentication.md`
+
+### 4. Run Tests
 ```bash
-copilot chat johnludlow-feature-tester "Run all authentication-related tests"
+/agent johnludlow-feature-tester
 ```
+"Run all authentication-related tests"
 
-## Key Capabilities
+**Output**: Test results and coverage report
 
-### Temperature Settings
-- **Planner (0.6)**: Balanced creativity for planning
-- **Implementer (0.2)**: Precise, consistent implementation
-- **Documenter (0.2)**: Precise, consistent documentation
-- **Tester (0.2)**: Precise test execution
-
-### Supported Languages
-- C# / .NET (primary)
-- TypeScript / JavaScript
-- C++ (game development)
-
-### Quality Standards
-- Markdown validation and linting
-- SOLID principles and clean code
-- Comprehensive test coverage (>80%)
-- Complete documentation with examples
-
-## Installation Options
-
-### All-in-One
-```powershell
-# Windows
-.\scripts\install.ps1 -All
-```
+## Available Commands
 
 ```bash
-# Linux/macOS
-./scripts/install.sh --all
+# Installation (automatic, but can be run manually)
+npm run install
+
+# Generate GitHub Copilot format from OpenCode format
+npm run generate:copilot
+
+# Restore from latest backup
+npm run restore
+
+# Show help
+npx johnludlow-agents help
+
+# Show version
+npx johnludlow-agents version
 ```
 
-### Specific Tools
+## Agent Details
+
+### johnludlow-feature-planner (Temperature: 0.6)
+- **Purpose**: Create comprehensive feature plans
+- **Input**: Feature description or user story
+- **Output**: Well-structured plan document in `docs/plans/`
+- **Ideal for**: Planning, requirements clarification, architecture decisions
+
+### johnludlow-feature-implementer (Temperature: 0.2)
+- **Purpose**: Implement features following approved plans
+- **Input**: Plan document + implementation details
+- **Output**: Code changes, tests, and updated documentation
+- **Ideal for**: Feature implementation, refactoring, bug fixes
+
+### johnludlow-feature-documenter (Temperature: 0.2)
+- **Purpose**: Generate technical documentation
+- **Input**: Implementation code + documentation requirements
+- **Output**: API docs, guides, and reference materials in `docs/`
+- **Ideal for**: API documentation, user guides, architecture docs
+
+### johnludlow-feature-tester (Temperature: 0.2)
+- **Purpose**: Run automated tests and validate implementations
+- **Input**: Test specifications or implementation
+- **Output**: Test results, coverage metrics, failure analysis
+- **Ideal for**: Quality assurance, regression testing, validation
+
+## Supported Languages
+
+These agents work with:
+- **C# / .NET** (primary)
+- **TypeScript / JavaScript**
+- **C++** (game development)
+
+## Troubleshooting
+
+### Agents not found in OpenCode
+1. Verify installation: `ls ~/.config/opencode/agents/`
+2. If empty, run: `npm run install`
+3. Restart OpenCode
+
+### Need to uninstall?
 ```bash
-./scripts/install.sh --opencode
-./scripts/install.sh --copilot-cli
+npm uninstall @johnludlow/agents
+
+# Or globally
+npm uninstall -g @johnludlow/agents
 ```
 
-### Custom Path
+### Restore from backup?
 ```bash
-./scripts/install.sh --install-path "/custom/path"
+npm run restore
 ```
 
-## Validation
+Backups are saved with timestamps and can be restored at any time.
 
-The GitHub Actions workflow automatically validates:
+### Using in your project?
 
-✅ Markdown syntax (markdownlint)
-✅ Required sections in agent/skill definitions
-✅ Template structure
-✅ Document generation
-
-Push to `main` or open a PR to trigger validation.
-
-## Support
-
-- Check README.md for detailed documentation
-- Review CONTRIBUTING.md for development guidelines
-- See individual agent/skill definitions for detailed specs
-
-## Common Issues
-
-### Agents not found after installation
-- Ensure installation path is correct
-- Verify agent files were copied to destination
-- Check tool configuration points to correct directory
-
-### Markdown validation fails
-```bash
-npm install -g markdownlint-cli
-markdownlint '.github/agents/*.md'
+Add to your project's package.json:
+```json
+{
+  "dependencies": {
+    "@johnludlow/agents": "^0.0.1"
+  }
+}
 ```
 
-### Install scripts won't run
-```bash
-# On Unix-like systems, make scripts executable:
-chmod +x scripts/install.sh
-```
+Then agents are available locally in `.opencode/agents/`
+
+## Environment Requirements
+
+- **Node.js**: 18.0.0 or higher
+- **npm**: 6.0.0 or higher
+- **OpenCode**: (optional, but required to use the agents)
+- **GitHub Copilot CLI**: (optional, for Copilot integration)
+
+## More Information
+
+- See **README.md** for comprehensive documentation
+- See **CONTRIBUTING.md** for development guidelines
+- Check individual agent definitions in `agents/` directory
+- Review skill definitions in `skills/` directory
+
+## Getting Help
+
+- 📖 Read the [README.md](README.md)
+- 🤝 Contribute: See [CONTRIBUTING.md](CONTRIBUTING.md)
+- 🐛 Report issues on GitHub
+- 💬 Start discussions for questions
 
 ---
 
-Ready to start? Check out the README.md for more details!
+Happy planning, implementing, and documenting! 🚀

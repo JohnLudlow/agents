@@ -22,6 +22,8 @@ dist/
 node_modules/
 npm-debug.log
 yarn-error.log
+package-lock.json
+.npmrc (but tracked in repo)
 
 # Python
 __pycache__/
@@ -41,3 +43,9 @@ docs/plans/**/*.md
 # Package artifacts
 johnludlow-agents-*.tar.gz
 johnludlow-agents-*.zip
+johnludlow-agents-*.tgz
+
+# Installation backups
+.opencode/.johnludlow-backup-*
+.copilot/.johnludlow-backup-*
+
