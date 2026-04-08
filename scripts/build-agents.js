@@ -3,9 +3,11 @@
 /**
  * @johnludlow/agents Build Script
  *
- * Generates format-specific agent definitions from canonical sources:
+ * Generates format-specific agent and skill definitions from canonical sources:
  * - agents/*.md (canonical source) → opencode/agents/*.md (with YAML frontmatter)
  * - agents/*.md (canonical source) → .github/agents/*.md (for Copilot)
+ * - skills/*.md (canonical source) → opencode/skills/*.md (plain markdown)
+ * - skills/*.md (canonical source) → .github/skills/*.md (plain markdown)
  */
 
 const fs = require("fs");
@@ -223,19 +225,107 @@ function buildCopilotAgents() {
 }
 
 /**
+ * Build OpenCode skill definitions from canonical source
+ */
+function buildOpenCodeSkills() {
+  console.log("📚 Building OpenCode skill definitions...");
+
+  const sourceDir = path.join(__dirname, "..", "skills");
+  const targetDir = path.join(__dirname, "..", "opencode", "skills");
+
+  // Ensure source directory exists
+  if (!fs.existsSync(sourceDir)) {
+    console.log(`  ℹ️  No skills directory found at ${sourceDir}`);
+    return;
+  }
+
+  // Ensure target directory exists
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+
+  const skillFiles = fs.readdirSync(sourceDir).filter((f) => f.endsWith(".md"));
+
+  if (skillFiles.length === 0) {
+    console.log("  ℹ️  No skill files found");
+    return;
+  }
+
+  skillFiles.forEach((file) => {
+    const sourcePath = path.join(sourceDir, file);
+    const targetPath = path.join(targetDir, file);
+
+    // Read canonical source
+    const content = fs.readFileSync(sourcePath, "utf8");
+
+    // Copy as-is for OpenCode (plain markdown)
+    fs.writeFileSync(targetPath, content);
+    console.log(`  ✓ Generated ${file}`);
+  });
+
+  console.log(`✓ OpenCode skill definitions built to ${targetDir}\n`);
+}
+
+/**
+ * Build Copilot skill definitions from canonical source
+ */
+function buildCopilotSkills() {
+  console.log("🔌 Building GitHub Copilot skill definitions...");
+
+  const sourceDir = path.join(__dirname, "..", "skills");
+  const targetDir = path.join(__dirname, "..", ".github", "skills");
+
+  // Ensure source directory exists
+  if (!fs.existsSync(sourceDir)) {
+    console.log(`  ℹ️  No skills directory found at ${sourceDir}`);
+    return;
+  }
+
+  // Ensure target directory exists
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+
+  const skillFiles = fs.readdirSync(sourceDir).filter((f) => f.endsWith(".md"));
+
+  if (skillFiles.length === 0) {
+    console.log("  ℹ️  No skill files found");
+    return;
+  }
+
+  skillFiles.forEach((file) => {
+    const sourcePath = path.join(sourceDir, file);
+    const targetPath = path.join(targetDir, file);
+
+    // Read canonical source
+    const content = fs.readFileSync(sourcePath, "utf8");
+
+    // Copy as-is for Copilot (plain markdown)
+    fs.writeFileSync(targetPath, content);
+    console.log(`  ✓ Generated ${file}`);
+  });
+
+  console.log(`✓ Copilot skill definitions built to ${targetDir}\n`);
+}
+
+/**
  * Main build function
  */
 function build() {
   try {
-    console.log("🔨 Building @johnludlow/agents agent definitions\n");
+    console.log("🔨 Building @johnludlow/agents agent and skill definitions\n");
 
     buildOpenCodeAgents();
     buildCopilotAgents();
+    buildOpenCodeSkills();
+    buildCopilotSkills();
 
     console.log("✨ Build complete!");
     console.log("\n📁 Generated files:");
     console.log(`  - opencode/agents/*.md (with OpenCode YAML frontmatter)`);
+    console.log(`  - opencode/skills/*.md (plain markdown)`);
     console.log(`  - .github/agents/*.md (for GitHub Copilot)`);
+    console.log(`  - .github/skills/*.md (for GitHub Copilot)`);
   } catch (error) {
     console.error("\n❌ Build failed:");
     console.error(error.message);
@@ -248,4 +338,4 @@ if (require.main === module) {
   build();
 }
 
-module.exports = { buildOpenCodeAgents, buildCopilotAgents };
+module.exports = { buildOpenCodeAgents, buildCopilotAgents, buildOpenCodeSkills, buildCopilotSkills };
