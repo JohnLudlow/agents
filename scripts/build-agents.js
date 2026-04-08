@@ -4,8 +4,8 @@
  * @johnludlow/agents Build Script
  *
  * Generates format-specific agent and skill definitions from canonical sources:
- * - agents/*.md (canonical source) → opencode/agents/*.md (with YAML frontmatter)
- * - agents/*.md (canonical source) → .github/agents/*.md (for Copilot)
+ * - agents/*.md (canonical source) → opencode/agents/*.md (with OpenCode YAML frontmatter)
+ * - agents/*.md (canonical source) → .github/agents/*.md (with Copilot YAML frontmatter)
  * - skills/*.md (canonical source) → opencode/skills/*.md (plain markdown)
  * - skills/*.md (canonical source) → .github/skills/*.md (plain markdown)
  */
@@ -158,6 +158,30 @@ function generateOpenCodeFrontmatter(agentName) {
 }
 
 /**
+ * Generate YAML frontmatter for Copilot CLI format
+ * 
+ * Copilot CLI uses a simplified frontmatter format with:
+ * - description: brief description of the agent
+ * - temperature: model temperature (0-1)
+ */
+function generateCopilotFrontmatter(agentName) {
+  const config = AGENT_PERMISSIONS[agentName];
+  if (!config) {
+    console.warn(`⚠️  No permission config found for ${agentName}`);
+    return "";
+  }
+
+  const yamlLines = [
+    "---",
+    `description: ${config.description}`,
+    `temperature: ${config.temperature}`,
+    "---",
+  ];
+
+  return yamlLines.join("\n");
+}
+
+/**
  * Build OpenCode agent definitions from canonical source
  */
 function buildOpenCodeAgents() {
@@ -195,6 +219,9 @@ function buildOpenCodeAgents() {
 
 /**
  * Build Copilot agent definitions from canonical source
+ * 
+ * Generates agents with Copilot CLI-compatible YAML frontmatter
+ * containing description and temperature settings
  */
 function buildCopilotAgents() {
   console.log("🔌 Building GitHub Copilot agent definitions...");
@@ -212,12 +239,17 @@ function buildCopilotAgents() {
   agentFiles.forEach((file) => {
     const sourcePath = path.join(sourceDir, file);
     const targetPath = path.join(targetDir, file);
+    const agentName = path.basename(file, ".md");
 
     // Read canonical source
     const content = fs.readFileSync(sourcePath, "utf8");
 
-    // Copy as-is for Copilot (no frontmatter needed)
-    fs.writeFileSync(targetPath, content);
+    // Generate Copilot version with frontmatter
+    const frontmatter = generateCopilotFrontmatter(agentName);
+    const copilotContent = `${frontmatter}\n\n${content}`;
+
+    // Write to Copilot directory
+    fs.writeFileSync(targetPath, copilotContent);
     console.log(`  ✓ Generated ${file}`);
   });
 
@@ -324,8 +356,8 @@ function build() {
     console.log("\n📁 Generated files:");
     console.log(`  - opencode/agents/*.md (with OpenCode YAML frontmatter)`);
     console.log(`  - opencode/skills/*.md (plain markdown)`);
-    console.log(`  - .github/agents/*.md (for GitHub Copilot)`);
-    console.log(`  - .github/skills/*.md (for GitHub Copilot)`);
+    console.log(`  - .github/agents/*.md (with Copilot YAML frontmatter)`);
+    console.log(`  - .github/skills/*.md (plain markdown)`);
   } catch (error) {
     console.error("\n❌ Build failed:");
     console.error(error.message);
