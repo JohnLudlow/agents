@@ -156,7 +156,7 @@ npm run install:local
 ### Adding a New Template
 
 1. Create a new file in `docs/templates/` named `[document-type]-template.md`
-2. Include YAML frontmatter
+2. Follow the existing template format and do not add YAML frontmatter
 3. Provide clear structure with helpful placeholders
 4. Include example content where appropriate
 5. Update the README.md to reference the new template
