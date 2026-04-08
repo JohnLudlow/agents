@@ -58,7 +58,7 @@ The primary workflow is defined in `.github/workflows/main.yml` and executes on:
 
 **Templates must include**:
 
-- YAML frontmatter with metadata
+- Plain markdown content only (no YAML frontmatter)
 
 ### 3. Build Job
 
