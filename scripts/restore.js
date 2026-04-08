@@ -4,111 +4,19 @@
  * @johnludlow/agents Restore Script
  *
  * Restores agents and skills from the latest backup.
- * Uses unified platform logic shared with install.js and uninstall.js.
+ * Uses platform helpers shared with install.js and uninstall.js via platform-utils.js.
  */
 
 const fs = require("fs");
 const path = require("path");
-const os = require("os");
 
-// ============================================================================
-// CONFIGURATION
-// ============================================================================
-
-const BACKUP_SUFFIX = `.johnludlow-backup-${new Date().toISOString().replace(/[:.]/g, "-")}`;
-
-// Installation platform definitions
-const PLATFORMS = {
-  opencode: {
-    name: "OpenCode",
-    emoji: "⚙️ ",
-    globalDir: path.join(os.homedir(), ".config", "opencode"),
-    localDir: (cwd) => path.join(cwd, ".opencode"),
-  },
-  copilot: {
-    name: "GitHub Copilot",
-    emoji: "🔌",
-    globalDir: path.join(os.homedir(), ".copilot"),
-    localDir: (cwd) => path.join(cwd, ".github"),
-    // For local mode, only manage these subdirectories
-    // to avoid affecting workflows, issue templates, and other .github metadata
-    // Only restore these subdirs in local mode to avoid wiping other .github content
-    localManagedSubDirs: ["agents", "skills"],
-  },
-};
-
-// ============================================================================
-// UTILITIES
-// ============================================================================
-
-/**
- * Determine installation mode (global vs local)
- */
-function getInstallMode() {
-  const isGlobalInstall = process.env.npm_config_global === "true";
-  return isGlobalInstall ? "global" : "local";
-}
-
-/**
- * Get target directory for a platform and mode
- */
-function getTargetDirectory(platform, mode, cwd = process.cwd()) {
-  const platformConfig = PLATFORMS[platform];
-  if (!platformConfig) {
-    throw new Error(`Unknown platform: ${platform}`);
-  }
-
-  if (mode === "global") {
-    return platformConfig.globalDir;
-  } else {
-    return platformConfig.localDir(cwd);
-  }
-}
-
-/**
- * Find and list all available backups for a platform
- */
-function listBackupsForPlatform(targetDir) {
-  const parentDir = path.dirname(targetDir);
-  if (!fs.existsSync(parentDir)) {
-    return [];
-  }
-
-  const dirName = path.basename(targetDir);
-  const files = fs.readdirSync(parentDir);
-  const backups = files
-    .filter(f => f.startsWith(dirName + ".johnludlow-backup-"))
-    .sort()
-    .reverse();
-
-  return backups.map(b => ({
-    name: b,
-    path: path.join(parentDir, b),
-    timestamp: b.replace(dirName + ".johnludlow-backup-", "")
-  }));
-}
-
-/**
- * Remove directory recursively
- */
-function removeDirectory(dir) {
-  if (!fs.existsSync(dir)) {
-    return;
-  }
-
-  const files = fs.readdirSync(dir);
-
-  for (const file of files) {
-    const filePath = path.join(dir, file);
-    if (fs.statSync(filePath).isDirectory()) {
-      removeDirectory(filePath);
-    } else {
-      fs.unlinkSync(filePath);
-    }
-  }
-
-  fs.rmdirSync(dir);
-}
+const {
+  PLATFORMS,
+  getInstallMode,
+  getTargetDirectory,
+  removeDirectory,
+  listBackupsForPlatform,
+} = require("./platform-utils.js");
 
 /**
  * Restore from backup for a platform
