@@ -335,6 +335,7 @@ This project uses a single-source-of-truth approach for agent and skill definiti
 ### Why Single-Source-of-Truth?
 
 This approach ensures:
+
 - **No duplicates**: One canonical definition maintained
 - **Consistency**: Same content generates all formats
 - **Maintainability**: Update once, deploy everywhere
@@ -429,7 +430,8 @@ Contributions are welcome! Please follow these guidelines:
 5. Update README.md if adding new agents or skills
 6. Submit a pull request with clear descriptions
 
-**Important**: Always edit files in `agents/` and `skills/` directories. The files in `opencode/`, `.github/`, and `.opencode/` are automatically generated and should not be edited directly.
+**Important**: Always edit files in `agents/` and `skills/` directories. The files in `opencode/`, `.github/`, and
+`.opencode/` are automatically generated and should not be edited directly.
 
 See CONTRIBUTING.md for detailed guidelines.
 

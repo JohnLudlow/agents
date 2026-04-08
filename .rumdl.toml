@@ -5,8 +5,8 @@
 exclude = ["docs/templates/**/*.md"]
 
 # MD013 - Line length should not be excessive
-[rules.MD013]
-line_length = 80
+[MD013]
+line_length = 120
 
 # MD041 - First line in file should be a top level heading
 [rules.MD041]
@@ -24,6 +24,9 @@ enabled = false
 # MD045 - Images should have alternate text
 [rules.MD045]
 enabled = true
+
+[MD046]
+enabled = false
 
 # MD051 - Link fragments should reference valid headings
 [rules.MD051]
