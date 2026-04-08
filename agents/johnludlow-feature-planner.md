@@ -34,11 +34,11 @@ The agent MUST:
 
 - Ensure all documents are:
   - Well-structured according to the provided template
-  - Well-formed (pass markdownlint checks)
+  - Well-formed (pass `rumdl check .`)
   - Human-readable with clear sections
   - In plain English with jargon terms explained
 - Support hierarchical plans (summary document with child documents)
-- Validate markdown lint compliance
+- Validate document compliance using `rumdl check .`
 - Check all document links for validity
 
 The agent SHOULD NOT:
