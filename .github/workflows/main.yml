@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      artifact-metadata: write
+      artifact_metadata: write
     steps:
       - uses: actions/checkout@v4
         with:
