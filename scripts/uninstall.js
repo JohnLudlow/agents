@@ -28,6 +28,8 @@ const PLATFORMS = {
     emoji: "🔌",
     globalDir: path.join(os.homedir(), ".copilot"),
     localDir: (cwd) => path.join(cwd, ".github"),
+    // Only uninstall these subdirs in local mode to avoid removing other .github content
+    localManagedSubDirs: ["agents", "skills"],
   },
 };
 
@@ -153,6 +155,35 @@ function uninstallPlatform(platform, mode) {
   const targetDir = getTargetDirectory(platform, mode);
 
   console.log(`\n${config.emoji} Uninstalling from ${config.name}...`);
+
+  if (mode === "local" && config.localManagedSubDirs) {
+    // For Copilot local: only remove managed subdirs to avoid deleting other .github content
+    let anyRemoved = false;
+    for (const subDirName of config.localManagedSubDirs) {
+      const subDir = path.join(targetDir, subDirName);
+      if (!fs.existsSync(subDir)) {
+        continue;
+      }
+
+      const latestBackup = findLatestBackup(subDir);
+      if (latestBackup && fs.existsSync(latestBackup)) {
+        console.log(`   → Backup found for ${subDirName}/, restoring from: ${path.basename(latestBackup)}`);
+        removeDirectory(subDir);
+        fs.renameSync(latestBackup, subDir);
+        console.log(`   ✓ Restored ${subDirName}/ from backup`);
+      } else {
+        console.log(`   → Removing ${subDirName}/`);
+        removeDirectory(subDir);
+        console.log(`   ✓ Removed ${subDirName}/`);
+      }
+      anyRemoved = true;
+    }
+    if (!anyRemoved) {
+      console.log("   ℹ️  No managed directories found");
+      return null;
+    }
+    return targetDir;
+  }
 
   if (!fs.existsSync(targetDir)) {
     console.log("   ℹ️  No installation found");

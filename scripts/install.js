@@ -35,6 +35,8 @@ const PLATFORMS = {
     globalDir: path.join(os.homedir(), ".copilot"),
     localDir: (cwd) => path.join(cwd, ".github"),
     requiresConfig: false,
+    // Only backup/restore these subdirs in local mode to avoid clobbering other .github content
+    localManagedSubDirs: ["agents", "skills"],
   },
 };
 
@@ -174,15 +176,29 @@ function installPlatform(platform, mode) {
 
   console.log(`${config.emoji} Installing ${config.name} format...`);
 
-  // Backup existing installation (before creating directory)
-  const backupDir = backupExistingDirectory(targetDir);
-  if (backupDir) {
-    console.log(`  ✓ Backed up existing installation to: ${backupDir}`);
-  }
+  if (mode === "local" && config.localManagedSubDirs) {
+    // For Copilot local: only backup managed subdirs to avoid clobbering the rest of .github
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+    for (const subDirName of config.localManagedSubDirs) {
+      const subDir = path.join(targetDir, subDirName);
+      const backupDir = backupExistingDirectory(subDir);
+      if (backupDir) {
+        console.log(`  ✓ Backed up existing ${subDirName}/ to: ${path.basename(backupDir)}`);
+      }
+    }
+  } else {
+    // Backup existing installation (before creating directory)
+    const backupDir = backupExistingDirectory(targetDir);
+    if (backupDir) {
+      console.log(`  ✓ Backed up existing installation to: ${backupDir}`);
+    }
 
-  // Now create the target directory (after backup)
-  if (!fs.existsSync(targetDir)) {
-    fs.mkdirSync(targetDir, { recursive: true });
+    // Now create the target directory (after backup)
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
   }
 
   // Create subdirectories

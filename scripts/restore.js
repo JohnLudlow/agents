@@ -28,6 +28,8 @@ const PLATFORMS = {
     emoji: "🔌",
     globalDir: path.join(os.homedir(), ".copilot"),
     localDir: (cwd) => path.join(cwd, ".github"),
+    // Only restore these subdirs in local mode to avoid wiping other .github content
+    localManagedSubDirs: ["agents", "skills"],
   },
 };
 
@@ -110,9 +112,36 @@ function removeDirectory(dir) {
 function restorePlatform(platform, mode) {
   const config = PLATFORMS[platform];
   const targetDir = getTargetDirectory(platform, mode);
-  const backups = listBackupsForPlatform(targetDir);
 
   console.log(`\n${config.emoji} ${config.name}:`);
+
+  if (mode === "local" && config.localManagedSubDirs) {
+    // For Copilot local: only restore managed subdirs to avoid wiping the rest of .github
+    let anyRestored = false;
+    for (const subDirName of config.localManagedSubDirs) {
+      const subDir = path.join(targetDir, subDirName);
+      const backups = listBackupsForPlatform(subDir);
+
+      if (backups.length === 0) {
+        console.log(`   ℹ️  No backups found for ${subDirName}/`);
+        continue;
+      }
+
+      const latestBackup = backups[0];
+      console.log(`   → Restoring ${subDirName}/ from: ${latestBackup.timestamp}`);
+
+      if (fs.existsSync(subDir)) {
+        removeDirectory(subDir);
+      }
+
+      fs.renameSync(latestBackup.path, subDir);
+      console.log(`   ✓ Restored ${subDirName}/`);
+      anyRestored = true;
+    }
+    return anyRestored ? targetDir : null;
+  }
+
+  const backups = listBackupsForPlatform(targetDir);
 
   if (backups.length === 0) {
     console.log("   ℹ️  No backups found");
