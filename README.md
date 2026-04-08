@@ -386,7 +386,7 @@ Agents and skills are installed to predictable locations:
 Installation backups are created automatically:
 
 ```bash
-~/.config/opencode/.johnludlow-backup-YYYY-MM-DDTHH-MM-SS
+~/.config/opencode.johnludlow-backup-YYYY-MM-DDTHH-MM-SS
 ```
 
 Restore the latest backup:
