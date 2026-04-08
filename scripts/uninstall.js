@@ -129,7 +129,7 @@ function listBackupsForPlatform(targetDir) {
   return backups.map(b => ({
     name: b,
     path: path.join(parentDir, b),
-    timestamp: b.replace(dirName + ".johnludlow-backup-", "").replace(/-/g, ":")
+    timestamp: b.replace(dirName + ".johnludlow-backup-", "")
   }));
 }
 

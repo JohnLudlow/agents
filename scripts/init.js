@@ -21,6 +21,8 @@ Commands:
   install [--global]        Install agents and skills
   uninstall                 Remove agents and skills (with restore option)
   restore                   Restore from latest backup
+  generate-copilot          Generate GitHub Copilot format from OpenCode format
+  list                      List installed agents and skills
   help                      Show this help message
   version                   Show version information
 
@@ -29,6 +31,8 @@ Examples:
   johnludlow-agents install --global
   johnludlow-agents uninstall
   johnludlow-agents restore
+  johnludlow-agents generate-copilot
+  johnludlow-agents list
 
 For more information, visit: https://github.com/JohnLudlow/agents
   `);
@@ -70,6 +74,18 @@ async function main() {
       case "restore": {
         const { restore } = require("./restore.js");
         restore();
+        break;
+      }
+
+      case "generate-copilot": {
+        const { generate } = require("./generate-copilot.js");
+        generate();
+        break;
+      }
+
+      case "list": {
+        const { list } = require("./list.js");
+        list();
         break;
       }
 
