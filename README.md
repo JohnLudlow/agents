@@ -109,7 +109,7 @@ Pre-built templates for common documents:
 
 ### Prerequisites
 
-- Node.js 18+ (for NPM package management)
+- Node.js 22+ (required by the package engine)
 - npm (Node Package Manager)
 - OpenCode or GitHub Copilot CLI (optional, but required to use the agents)
 
