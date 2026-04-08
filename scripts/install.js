@@ -4,6 +4,7 @@
  * @johnludlow/agents Installation Script
  *
  * Installs agents and skills in both OpenCode and GitHub Copilot formats.
+ * Uses unified installation logic for both platforms with consistent backup/restore.
  * - OpenCode: Installs to ~/.config/opencode/ (global) or .opencode/ (local)
  * - GitHub Copilot: Installs to ~/.copilot/ (global) or .github/ (local)
  */
@@ -11,56 +12,69 @@
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
-const { execSync } = require("child_process");
 
-// Configuration
-const OPENCODE_GLOBAL_DIR = path.join(os.homedir(), ".config", "opencode");
-const OPENCODE_LOCAL_DIR = path.join(process.cwd(), ".opencode");
-const COPILOT_GLOBAL_DIR = path.join(os.homedir(), ".copilot");
-const COPILOT_LOCAL_DIR = path.join(process.cwd(), ".github");
+// ============================================================================
+// CONFIGURATION
+// ============================================================================
+
 const BACKUP_SUFFIX = `.johnludlow-backup-${new Date().toISOString().replace(/[:.]/g, "-")}`;
+
+// Installation platform definitions
+const PLATFORMS = {
+  opencode: {
+    name: "OpenCode",
+    emoji: "⚙️ ",
+    globalDir: path.join(os.homedir(), ".config", "opencode"),
+    localDir: (cwd) => path.join(cwd, ".opencode"),
+    requiresConfig: true,
+    configFile: "config.json",
+  },
+  copilot: {
+    name: "GitHub Copilot",
+    emoji: "🔌",
+    globalDir: path.join(os.homedir(), ".copilot"),
+    localDir: (cwd) => path.join(cwd, ".github"),
+    requiresConfig: false,
+  },
+};
 
 // Source directories (relative to package root)
 const SOURCE_DIRS = {
-  agents: path.join(__dirname, "..", "agents"),
+  canonicalAgents: path.join(__dirname, "..", "agents"),
+  canonicalSkills: path.join(__dirname, "..", "skills"),
   opencodeAgents: path.join(__dirname, "..", "opencode", "agents"),
-  skills: path.join(__dirname, "..", "skills"),
   opencodeConfig: path.join(__dirname, "..", "opencode"),
 };
 
+// ============================================================================
+// UTILITIES
+// ============================================================================
+
 /**
- * Check if OpenCode is installed
+ * Get source agents directory for a platform
+ * 
+ * For OpenCode: Uses pre-built opencode/agents (with YAML frontmatter + permissions)
+ * For Copilot: Uses canonical agents/ (plain markdown)
  */
-function checkOpenCodeInstalled() {
-  if (!fs.existsSync(OPENCODE_GLOBAL_DIR)) {
-    console.warn("⚠️  OpenCode configuration directory not found");
-    console.warn("   Install OpenCode: https://opencode.ai");
-    return false;
+function getSourceAgentsDir(platform) {
+  if (platform === "opencode") {
+    return SOURCE_DIRS.opencodeAgents;
   }
-  console.log("✓ OpenCode detected");
-  return true;
+  if (platform === "copilot") {
+    // Copilot gets plain markdown from canonical source
+    return SOURCE_DIRS.canonicalAgents;
+  }
+  throw new Error(`Unknown platform: ${platform}`);
 }
 
 /**
- * Determine installation mode (global vs local)
+ * Get source skills directory for a platform
+ * 
+ * For both OpenCode and Copilot: Uses canonical skills/ (plain markdown)
  */
-function getInstallMode() {
-  const isGlobalInstall = process.env.npm_config_global === "true";
-  return isGlobalInstall ? "global" : "local";
-}
-
-/**
- * Get target installation directory for OpenCode
- */
-function getOpencodeTargetDirectory(mode) {
-  if (mode === "global") {
-    return OPENCODE_GLOBAL_DIR;
-  } else {
-    if (!fs.existsSync(OPENCODE_LOCAL_DIR)) {
-      fs.mkdirSync(OPENCODE_LOCAL_DIR, { recursive: true });
-    }
-    return OPENCODE_LOCAL_DIR;
-  }
+function getSourceSkillsDir(platform) {
+  // Both platforms use canonical skills (plain markdown)
+  return SOURCE_DIRS.canonicalSkills;
 }
 
 /**
@@ -93,51 +107,103 @@ function copyDirectory(source, target) {
 }
 
 /**
- * Backup existing installations
+ * Backup existing directory
  */
-function backupExistingInstallation(targetDir) {
+function backupExistingDirectory(targetDir) {
   if (fs.existsSync(targetDir)) {
     const backupDir = targetDir + BACKUP_SUFFIX;
     fs.renameSync(targetDir, backupDir);
-    console.log(`✓ Backed up existing installation to: ${backupDir}`);
     return backupDir;
   }
   return null;
 }
 
 /**
- * Install agents and skills
+ * Count markdown files in directory
  */
-function installAgentsAndSkills(mode) {
-  console.log(`\n📦 Installing agents and skills (${mode} mode)...`);
+function countMarkdownFiles(dir) {
+  if (!fs.existsSync(dir)) return 0;
+  return fs.readdirSync(dir).filter(f => f.endsWith('.md')).length;
+}
 
-  // Get target directory
-  const targetDir = getOpencodeTargetDirectory(mode);
+/**
+ * Check if OpenCode is installed
+ */
+function checkOpenCodeInstalled() {
+  const openCodeDir = PLATFORMS.opencode.globalDir;
+  return fs.existsSync(openCodeDir);
+}
+
+/**
+ * Determine installation mode (global vs local)
+ */
+function getInstallMode() {
+  const isGlobalInstall = process.env.npm_config_global === "true";
+  return isGlobalInstall ? "global" : "local";
+}
+
+/**
+ * Get target directory for a platform and mode
+ */
+function getTargetDirectory(platform, mode, cwd = process.cwd()) {
+  const platformConfig = PLATFORMS[platform];
+  if (!platformConfig) {
+    throw new Error(`Unknown platform: ${platform}`);
+  }
+
+  if (mode === "global") {
+    return platformConfig.globalDir;
+  } else {
+    const localDir = platformConfig.localDir(cwd);
+    if (!fs.existsSync(localDir)) {
+      fs.mkdirSync(localDir, { recursive: true });
+    }
+    return localDir;
+  }
+}
+
+// ============================================================================
+// INSTALLATION
+// ============================================================================
+
+/**
+ * Install agents and skills for a platform
+ */
+function installPlatform(platform, mode) {
+  const config = PLATFORMS[platform];
+  const targetDir = getTargetDirectory(platform, mode);
+  const sourceAgentsDir = getSourceAgentsDir(platform);
+  const sourceSkillsDir = getSourceSkillsDir(platform);
+
+  console.log(`${config.emoji} Installing ${config.name} format...`);
 
   // Backup existing installation
-  backupExistingInstallation(targetDir);
+  const backupDir = backupExistingDirectory(targetDir);
+  if (backupDir) {
+    console.log(`  ✓ Backed up existing installation to: ${backupDir}`);
+  }
 
-  // Create necessary directories
+  // Create directories
   const agentsDir = path.join(targetDir, "agents");
   const skillsDir = path.join(targetDir, "skills");
 
-  // Copy agents
-  if (fs.existsSync(SOURCE_DIRS.agents)) {
+  // Install agents
+  if (fs.existsSync(sourceAgentsDir)) {
     console.log("  → Installing agents...");
-    copyDirectory(SOURCE_DIRS.agents, agentsDir);
-    const agentFiles = fs.readdirSync(agentsDir).filter(f => f.endsWith('.md'));
-    console.log(`    ✓ Installed ${agentFiles.length} agents`);
+    copyDirectory(sourceAgentsDir, agentsDir);
+    const count = countMarkdownFiles(agentsDir);
+    console.log(`    ✓ Installed ${count} agents`);
   }
 
-  // Copy skills
-  if (fs.existsSync(SOURCE_DIRS.skills)) {
+  // Install skills
+  if (fs.existsSync(sourceSkillsDir)) {
     console.log("  → Installing skills...");
-    copyDirectory(SOURCE_DIRS.skills, skillsDir);
-    const skillFiles = fs.readdirSync(skillsDir).filter(f => f.endsWith('.md'));
-    console.log(`    ✓ Installed ${skillFiles.length} skills`);
+    copyDirectory(sourceSkillsDir, skillsDir);
+    const count = countMarkdownFiles(skillsDir);
+    console.log(`    ✓ Installed ${count} skills`);
   }
 
-  console.log(`\n✓ Installation complete to: ${targetDir}`);
+  console.log(`\n✓ ${config.name} installation complete to: ${targetDir}`);
   return targetDir;
 }
 
@@ -147,10 +213,7 @@ function installAgentsAndSkills(mode) {
 function installOpenCodeConfig(mode) {
   console.log("\n⚙️  Installing OpenCode configuration...");
 
-  const opencodeDir = mode === "global"
-    ? OPENCODE_GLOBAL_DIR
-    : path.join(process.cwd(), ".opencode");
-
+  const targetDir = getTargetDirectory("opencode", mode);
   const configSourceDir = SOURCE_DIRS.opencodeConfig;
 
   if (!fs.existsSync(configSourceDir)) {
@@ -160,7 +223,7 @@ function installOpenCodeConfig(mode) {
 
   // Copy config.json
   const configSourcePath = path.join(configSourceDir, "config.json");
-  const configTargetPath = path.join(opencodeDir, "config.json");
+  const configTargetPath = path.join(targetDir, "config.json");
 
   if (fs.existsSync(configSourcePath)) {
     // Backup existing config
@@ -176,7 +239,7 @@ function installOpenCodeConfig(mode) {
 
   // Copy agent definitions to agents directory
   const agentsSourceDir = path.join(configSourceDir, "agents");
-  const agentsTargetDir = path.join(opencodeDir, "agents");
+  const agentsTargetDir = path.join(targetDir, "agents");
 
   if (fs.existsSync(agentsSourceDir)) {
     if (!fs.existsSync(agentsTargetDir)) {
@@ -195,70 +258,24 @@ function installOpenCodeConfig(mode) {
     }
   }
 
-  console.log(`   📁 Location: ${opencodeDir}`);
-  return opencodeDir;
+  console.log(`   📁 Location: ${targetDir}`);
+  return targetDir;
 }
-
-/**
- * Install Copilot agents and skills
- */
-function installCopilotAgents(mode, sourceAgentsDir, sourceSkillsDir) {
-  console.log("\n🔌 Installing GitHub Copilot format...");
-
-  // Determine target directory
-  const copilotDir = mode === "global"
-    ? COPILOT_GLOBAL_DIR
-    : COPILOT_LOCAL_DIR;
-
-  // Create target directories
-  const copilotAgentsDir = path.join(copilotDir, "agents");
-  const copilotSkillsDir = path.join(copilotDir, "skills");
-
-  // Copy agents to Copilot format
-  if (fs.existsSync(sourceAgentsDir)) {
-    console.log("  → Installing agents to Copilot format...");
-
-    copyDirectory(sourceAgentsDir, copilotAgentsDir);
-    const agentFiles = fs.readdirSync(copilotAgentsDir).filter(f => f.endsWith('.md'));
-    console.log(`    ✓ Installed ${agentFiles.length} agents to Copilot`);
-  }
-
-  // Copy skills to Copilot format
-  if (fs.existsSync(sourceSkillsDir)) {
-    console.log("  → Installing skills to Copilot format...");
-    copyDirectory(sourceSkillsDir, copilotSkillsDir);
-    const skillFiles = fs.readdirSync(copilotSkillsDir).filter(f => f.endsWith('.md'));
-    console.log(`    ✓ Installed ${skillFiles.length} skills to Copilot`);
-  }
-
-  console.log(`\n✓ Copilot format installation complete to: ${copilotDir}`);
-  return copilotDir;
-}
-
-
 
 /**
  * Display next steps
  */
-function displayNextSteps(opencodeDir, copilotDir, mode) {
+function displayNextSteps(opencodePath, copilotPath, mode) {
   console.log("\n📚 Next steps:");
   console.log("\n1. Agents and skills installed successfully!");
 
   console.log("\n2. For OpenCode:");
-  if (mode === "global") {
-    console.log(`   - Global installation: ${opencodeDir}`);
-  } else {
-    console.log(`   - Local installation: ${opencodeDir}`);
-  }
+  console.log(`   - ${mode === "global" ? "Global" : "Local"} installation: ${opencodePath}`);
   console.log("   - Agents and skills are ready to use immediately");
   console.log("   - See: https://opencode.ai/docs for documentation");
 
   console.log("\n3. For GitHub Copilot:");
-  if (mode === "global") {
-    console.log(`   - Global installation: ${copilotDir}`);
-  } else {
-    console.log(`   - Local installation: ${copilotDir}`);
-  }
+  console.log(`   - ${mode === "global" ? "Global" : "Local"} installation: ${copilotPath}`);
   console.log("   - Agents and skills are ready to use immediately");
   console.log("   - Configure in: .github/copilot/config.yml");
 
@@ -272,6 +289,10 @@ function displayNextSteps(opencodeDir, copilotDir, mode) {
   console.log("   - GitHub Copilot: https://github.com/features/copilot");
 }
 
+// ============================================================================
+// MAIN
+// ============================================================================
+
 /**
  * Main installation function
  */
@@ -281,9 +302,8 @@ async function main() {
     console.log("=====================================\n");
 
     const mode = getInstallMode();
-    
     console.log(`📍 Installation mode: ${mode}`);
-    
+
     // Build agent definitions from canonical source
     console.log("\n🔨 Building agent definitions...");
     try {
@@ -292,24 +312,21 @@ async function main() {
     } catch (buildError) {
       console.warn("   ⚠️  Could not build agents, using pre-built versions");
     }
-    
+
     // Check if OpenCode is available
     const openCodeAvailable = checkOpenCodeInstalled();
     if (!openCodeAvailable && mode === "local") {
       console.log("   Note: Installing to local .opencode directory");
     }
 
-    // Install agents and skills to OpenCode format
-    const opencodeDir = installAgentsAndSkills(mode);
-
-    // Install OpenCode configuration with permissions
+    // Install both platforms
+    const opencodePath = installPlatform("opencode", mode);
     installOpenCodeConfig(mode);
-
-    // Install agents and skills to GitHub Copilot format
-    const copilotDir = installCopilotAgents(mode, SOURCE_DIRS.agents, SOURCE_DIRS.skills);
+    console.log("");
+    const copilotPath = installPlatform("copilot", mode);
 
     // Display next steps
-    displayNextSteps(opencodeDir, copilotDir, mode);
+    displayNextSteps(opencodePath, copilotPath, mode);
 
     console.log("\n✨ Installation successful!");
   } catch (error) {
@@ -327,4 +344,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { installAgentsAndSkills, installCopilotAgents };
+module.exports = { installPlatform, installOpenCodeConfig };
