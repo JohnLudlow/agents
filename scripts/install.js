@@ -144,6 +144,7 @@ function getInstallMode() {
 
 /**
  * Get target directory for a platform and mode
+ * Note: Does NOT create the directory - that's done after backup
  */
 function getTargetDirectory(platform, mode, cwd = process.cwd()) {
   const platformConfig = PLATFORMS[platform];
@@ -154,11 +155,7 @@ function getTargetDirectory(platform, mode, cwd = process.cwd()) {
   if (mode === "global") {
     return platformConfig.globalDir;
   } else {
-    const localDir = platformConfig.localDir(cwd);
-    if (!fs.existsSync(localDir)) {
-      fs.mkdirSync(localDir, { recursive: true });
-    }
-    return localDir;
+    return platformConfig.localDir(cwd);
   }
 }
 
@@ -177,13 +174,18 @@ function installPlatform(platform, mode) {
 
   console.log(`${config.emoji} Installing ${config.name} format...`);
 
-  // Backup existing installation
+  // Backup existing installation (before creating directory)
   const backupDir = backupExistingDirectory(targetDir);
   if (backupDir) {
     console.log(`  ✓ Backed up existing installation to: ${backupDir}`);
   }
 
-  // Create directories
+  // Now create the target directory (after backup)
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+
+  // Create subdirectories
   const agentsDir = path.join(targetDir, "agents");
   const skillsDir = path.join(targetDir, "skills");
 
@@ -215,6 +217,11 @@ function installOpenCodeConfig(mode) {
 
   const targetDir = getTargetDirectory("opencode", mode);
   const configSourceDir = SOURCE_DIRS.opencodeConfig;
+
+  // Ensure target directory exists
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
 
   if (!fs.existsSync(configSourceDir)) {
     console.log("   ℹ️  OpenCode configuration files not found in package");

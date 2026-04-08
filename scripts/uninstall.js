@@ -4,18 +4,36 @@
  * @johnludlow/agents Uninstallation Script
  *
  * Removes agents and skills from both OpenCode and GitHub Copilot configurations.
- * Restores from backup if available.
+ * Uses unified platform logic shared with install.js and restore.js.
  */
 
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-// Configuration
-const OPENCODE_GLOBAL_DIR = path.join(os.homedir(), ".config", "opencode");
-const OPENCODE_LOCAL_DIR = path.join(process.cwd(), ".opencode");
-const COPILOT_GLOBAL_DIR = path.join(os.homedir(), ".copilot");
-const COPILOT_LOCAL_DIR = path.join(process.cwd(), ".github");
+// ============================================================================
+// CONFIGURATION
+// ============================================================================
+
+// Installation platform definitions
+const PLATFORMS = {
+  opencode: {
+    name: "OpenCode",
+    emoji: "⚙️ ",
+    globalDir: path.join(os.homedir(), ".config", "opencode"),
+    localDir: (cwd) => path.join(cwd, ".opencode"),
+  },
+  copilot: {
+    name: "GitHub Copilot",
+    emoji: "🔌",
+    globalDir: path.join(os.homedir(), ".copilot"),
+    localDir: (cwd) => path.join(cwd, ".github"),
+  },
+};
+
+// ============================================================================
+// UTILITIES
+// ============================================================================
 
 /**
  * Determine installation mode (global vs local)
@@ -26,17 +44,19 @@ function getInstallMode() {
 }
 
 /**
- * Get target installation directory for OpenCode
+ * Get target directory for a platform and mode
  */
-function getOpencodeTargetDirectory(mode) {
-  return mode === "global" ? OPENCODE_GLOBAL_DIR : OPENCODE_LOCAL_DIR;
-}
+function getTargetDirectory(platform, mode, cwd = process.cwd()) {
+  const platformConfig = PLATFORMS[platform];
+  if (!platformConfig) {
+    throw new Error(`Unknown platform: ${platform}`);
+  }
 
-/**
- * Get target installation directory for Copilot
- */
-function getCopilotTargetDirectory(mode) {
-  return mode === "global" ? COPILOT_GLOBAL_DIR : COPILOT_LOCAL_DIR;
+  if (mode === "global") {
+    return platformConfig.globalDir;
+  } else {
+    return platformConfig.localDir(cwd);
+  }
 }
 
 /**
@@ -62,17 +82,18 @@ function removeDirectory(dir) {
 }
 
 /**
- * Find and restore latest backup
+ * Find and restore latest backup for a platform
  */
-function restoreLatestBackup(targetDir) {
+function findLatestBackup(targetDir) {
   const parentDir = path.dirname(targetDir);
   if (!fs.existsSync(parentDir)) {
     return null;
   }
 
+  const dirName = path.basename(targetDir);
   const files = fs.readdirSync(parentDir);
   const backups = files
-    .filter(f => f.startsWith(path.basename(targetDir) + ".johnludlow-backup-"))
+    .filter(f => f.startsWith(dirName + ".johnludlow-backup-"))
     .sort()
     .reverse();
 
@@ -80,28 +101,69 @@ function restoreLatestBackup(targetDir) {
     return null;
   }
 
-  const latestBackup = path.join(parentDir, backups[0]);
-  return latestBackup;
+  return path.join(parentDir, backups[0]);
 }
 
 /**
- * Uninstall agents and skills from OpenCode
+ * List all available backups for a platform
  */
-function uninstallOpenCode(mode) {
-  console.log("\n📍 Uninstalling from OpenCode...");
-  
-  const targetDir = getOpencodeTargetDirectory(mode);
+function listBackupsForPlatform(targetDir) {
+  const parentDir = path.dirname(targetDir);
+  if (!fs.existsSync(parentDir)) {
+    return [];
+  }
+
+  const dirName = path.basename(targetDir);
+  const files = fs.readdirSync(parentDir);
+  const backups = files
+    .filter(f => f.startsWith(dirName + ".johnludlow-backup-"))
+    .sort()
+    .reverse();
+
+  return backups.map(b => ({
+    name: b,
+    path: path.join(parentDir, b),
+    timestamp: b.replace(dirName + ".johnludlow-backup-", "").replace(/-/g, ":")
+  }));
+}
+
+/**
+ * Remove empty parent directory if possible
+ */
+function removeEmptyParentDirectory(targetDir) {
+  try {
+    const parentDir = path.dirname(targetDir);
+    if (fs.existsSync(parentDir) && fs.readdirSync(parentDir).length === 0) {
+      fs.rmdirSync(parentDir);
+    }
+  } catch (error) {
+    // Parent directory might not be empty or doesn't exist, that's okay
+  }
+}
+
+// ============================================================================
+// UNINSTALLATION
+// ============================================================================
+
+/**
+ * Uninstall agents and skills from a platform
+ */
+function uninstallPlatform(platform, mode) {
+  const config = PLATFORMS[platform];
+  const targetDir = getTargetDirectory(platform, mode);
+
+  console.log(`\n${config.emoji} Uninstalling from ${config.name}...`);
 
   if (!fs.existsSync(targetDir)) {
-    console.log("   ℹ️  No OpenCode installation found");
+    console.log("   ℹ️  No installation found");
     return null;
   }
 
   // Check for backups
-  const latestBackup = restoreLatestBackup(targetDir);
+  const latestBackup = findLatestBackup(targetDir);
 
   if (latestBackup && fs.existsSync(latestBackup)) {
-    console.log("   → Backup found, restoring from: " + path.basename(latestBackup));
+    console.log(`   → Backup found, restoring from: ${path.basename(latestBackup)}`);
     
     // Remove current installation
     removeDirectory(targetDir);
@@ -113,57 +175,17 @@ function uninstallOpenCode(mode) {
     // Just remove the installation
     console.log(`   → Removing installation from: ${targetDir}`);
     removeDirectory(targetDir);
-    console.log("   ✓ Removed OpenCode installation");
+    console.log("   ✓ Removed installation");
   }
 
   // Remove empty parent directories if they exist
-  try {
-    const parentDir = path.dirname(targetDir);
-    if (fs.readdirSync(parentDir).length === 0) {
-      fs.rmdirSync(parentDir);
-    }
-  } catch (error) {
-    // Parent directory might not be empty or doesn't exist, that's okay
-  }
+  removeEmptyParentDirectory(targetDir);
 
   return targetDir;
 }
 
 /**
- * Uninstall agents and skills from GitHub Copilot
- */
-function uninstallCopilot(mode) {
-  console.log("\n🔌 Uninstalling from GitHub Copilot...");
-  
-  const targetDir = getCopilotTargetDirectory(mode);
-  const agentsDir = path.join(targetDir, "agents");
-  const skillsDir = path.join(targetDir, "skills");
-
-  let removed = false;
-
-  if (fs.existsSync(agentsDir)) {
-    console.log("   → Removing agents...");
-    removeDirectory(agentsDir);
-    removed = true;
-  }
-
-  if (fs.existsSync(skillsDir)) {
-    console.log("   → Removing skills...");
-    removeDirectory(skillsDir);
-    removed = true;
-  }
-
-  if (removed) {
-    console.log("   ✓ Removed Copilot installation");
-  } else {
-    console.log("   ℹ️  No Copilot installation found");
-  }
-
-  return targetDir;
-}
-
-/**
- * Uninstall agents and skills
+ * Main uninstallation function
  */
 function uninstall() {
   try {
@@ -173,8 +195,9 @@ function uninstall() {
     const mode = getInstallMode();
     console.log(`\n📍 Installation mode: ${mode}`);
 
-    const opencodeDir = uninstallOpenCode(mode);
-    const copilotDir = uninstallCopilot(mode);
+    // Uninstall both platforms
+    uninstallPlatform("opencode", mode);
+    uninstallPlatform("copilot", mode);
 
     console.log("\n✨ Uninstallation complete!");
     console.log("\n📚 Note:");
@@ -192,4 +215,4 @@ if (require.main === module) {
   uninstall();
 }
 
-module.exports = { uninstall };
+module.exports = { uninstallPlatform };

@@ -4,15 +4,36 @@
  * @johnludlow/agents Restore Script
  *
  * Restores agents and skills from the latest backup.
+ * Uses unified platform logic shared with install.js and uninstall.js.
  */
 
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-// Configuration
-const OPENCODE_GLOBAL_DIR = path.join(os.homedir(), ".config", "opencode");
-const OPENCODE_LOCAL_DIR = path.join(process.cwd(), ".opencode");
+// ============================================================================
+// CONFIGURATION
+// ============================================================================
+
+// Installation platform definitions
+const PLATFORMS = {
+  opencode: {
+    name: "OpenCode",
+    emoji: "⚙️ ",
+    globalDir: path.join(os.homedir(), ".config", "opencode"),
+    localDir: (cwd) => path.join(cwd, ".opencode"),
+  },
+  copilot: {
+    name: "GitHub Copilot",
+    emoji: "🔌",
+    globalDir: path.join(os.homedir(), ".copilot"),
+    localDir: (cwd) => path.join(cwd, ".github"),
+  },
+};
+
+// ============================================================================
+// UTILITIES
+// ============================================================================
 
 /**
  * Determine installation mode (global vs local)
@@ -23,31 +44,41 @@ function getInstallMode() {
 }
 
 /**
- * Get target installation directory for OpenCode
+ * Get target directory for a platform and mode
  */
-function getOpencodeTargetDirectory(mode) {
-  return mode === "global" ? OPENCODE_GLOBAL_DIR : OPENCODE_LOCAL_DIR;
+function getTargetDirectory(platform, mode, cwd = process.cwd()) {
+  const platformConfig = PLATFORMS[platform];
+  if (!platformConfig) {
+    throw new Error(`Unknown platform: ${platform}`);
+  }
+
+  if (mode === "global") {
+    return platformConfig.globalDir;
+  } else {
+    return platformConfig.localDir(cwd);
+  }
 }
 
 /**
- * Find and list all available backups
+ * Find and list all available backups for a platform
  */
-function listBackups(targetDir) {
+function listBackupsForPlatform(targetDir) {
   const parentDir = path.dirname(targetDir);
   if (!fs.existsSync(parentDir)) {
     return [];
   }
 
+  const dirName = path.basename(targetDir);
   const files = fs.readdirSync(parentDir);
   const backups = files
-    .filter(f => f.startsWith(path.basename(targetDir) + ".johnludlow-backup-"))
+    .filter(f => f.startsWith(dirName + ".johnludlow-backup-"))
     .sort()
     .reverse();
 
   return backups.map(b => ({
     name: b,
     path: path.join(parentDir, b),
-    timestamp: b.replace(path.basename(targetDir) + ".johnludlow-backup-", "").replace(/-/g, ":")
+    timestamp: b.replace(dirName + ".johnludlow-backup-", "").replace(/-/g, ":")
   }));
 }
 
@@ -74,54 +105,75 @@ function removeDirectory(dir) {
 }
 
 /**
- * Restore from backup
+ * Restore from backup for a platform
+ */
+function restorePlatform(platform, mode) {
+  const config = PLATFORMS[platform];
+  const targetDir = getTargetDirectory(platform, mode);
+  const backups = listBackupsForPlatform(targetDir);
+
+  console.log(`\n${config.emoji} ${config.name}:`);
+
+  if (backups.length === 0) {
+    console.log("   ℹ️  No backups found");
+    return null;
+  }
+
+  console.log("   Available backups:");
+  backups.forEach((backup, index) => {
+    console.log(`     ${index + 1}. ${backup.timestamp}`);
+  });
+
+  // Restore the latest backup
+  const latestBackup = backups[0];
+  console.log(`\n   → Restoring from: ${latestBackup.timestamp}`);
+
+  // Remove current installation if it exists
+  if (fs.existsSync(targetDir)) {
+    console.log("   → Removing current installation...");
+    removeDirectory(targetDir);
+  }
+
+  // Restore from backup
+  fs.renameSync(latestBackup.path, targetDir);
+  console.log("   ✓ Restored from backup");
+
+  return targetDir;
+}
+
+// ============================================================================
+// MAIN
+// ============================================================================
+
+/**
+ * Main restore function
  */
 function restore() {
   try {
     console.log("📦 @johnludlow/agents Restore");
-    console.log("=============================\n");
+    console.log("=============================");
 
     const mode = getInstallMode();
-    console.log(`📍 Installation mode: ${mode}\n`);
-    
-    const targetDir = getOpencodeTargetDirectory(mode);
-    const backups = listBackups(targetDir);
+    console.log(`\n📍 Installation mode: ${mode}`);
 
-    if (backups.length === 0) {
-      console.log("ℹ️  No backups found for restoration");
-      console.log(`   Looking in: ${path.dirname(targetDir)}`);
+    // Restore both platforms
+    const opencodePath = restorePlatform("opencode", mode);
+    const copilotPath = restorePlatform("copilot", mode);
+
+    if (!opencodePath && !copilotPath) {
+      console.log("\nℹ️  No backups found for any platform");
       return;
     }
 
-    console.log("📋 Available backups:\n");
-    backups.forEach((backup, index) => {
-      console.log(`   ${index + 1}. ${backup.timestamp}`);
-    });
-
-    // Restore the latest backup
-    const latestBackup = backups[0];
-    console.log(`\n🔄 Restoring from latest backup: ${latestBackup.timestamp}`);
-
-    // Remove current installation if it exists
-    if (fs.existsSync(targetDir)) {
-      console.log("   → Removing current installation...");
-      removeDirectory(targetDir);
-      console.log("   ✓ Removed current installation");
-    } else {
-      console.log("   → No current installation to replace");
-    }
-
-    // Restore from backup
-    console.log("   → Restoring from backup...");
-    fs.renameSync(latestBackup.path, targetDir);
-    console.log("   ✓ Restored from backup");
-
-    console.log(`\n✨ Restore complete!`);
-    console.log(`\n📍 Installation location: ${targetDir}`);
+    console.log("\n✨ Restore complete!");
     console.log("\n📚 Next steps:");
     console.log("   - Agents and skills are ready to use");
-    console.log("   - OpenCode: https://opencode.ai/docs");
-    console.log("   - GitHub Copilot: https://github.com/features/copilot");
+    if (opencodePath) {
+      console.log("   - OpenCode: https://opencode.ai/docs");
+    }
+    if (copilotPath) {
+      console.log("   - GitHub Copilot: https://github.com/features/copilot");
+    }
   } catch (error) {
     console.error("\n❌ Restore failed:");
     console.error(error.message);
@@ -134,4 +186,4 @@ if (require.main === module) {
   restore();
 }
 
-module.exports = { restore };
+module.exports = { restorePlatform };
