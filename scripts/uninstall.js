@@ -32,6 +32,7 @@ const PLATFORMS = {
     localDir: (cwd) => path.join(cwd, ".github"),
     // For local mode, only manage these subdirectories
     // to avoid affecting workflows, issue templates, and other .github metadata
+    // Only uninstall these subdirs in local mode to avoid removing other .github content
     localManagedSubDirs: ["agents", "skills"],
   },
 };
@@ -161,40 +162,37 @@ function uninstallPlatform(platform, mode) {
 
   console.log(`\n${config.emoji} Uninstalling from ${config.name}...`);
 
-  if (isCopilotLocal && managedSubDirs) {
-    // For local Copilot: handle subdirectories individually
-    let foundAny = false;
-    
-    for (const subDir of managedSubDirs) {
-      const subDirPath = path.join(targetDir, subDir);
-      
-      if (!fs.existsSync(subDirPath)) {
+  if (mode === "local" && config.localManagedSubDirs) {
+    // For Copilot local: only remove managed subdirs to avoid deleting other .github content
+    let anyRemoved = false;
+    for (const subDirName of config.localManagedSubDirs) {
+      const subDir = path.join(targetDir, subDirName);
+      if (!fs.existsSync(subDir)) {
         continue;
       }
-      
-      foundAny = true;
-      const latestBackup = findLatestBackup(subDirPath);
-      
+
+      const latestBackup = findLatestBackup(subDir);
       if (latestBackup && fs.existsSync(latestBackup)) {
-        console.log(`   → ${subDir}: Backup found, restoring from: ${path.basename(latestBackup)}`);
-        removeDirectory(subDirPath);
-        fs.renameSync(latestBackup, subDirPath);
-        console.log(`   ✓ ${subDir}: Restored from backup`);
+        console.log(`   → Backup found for ${subDirName}/, restoring from: ${path.basename(latestBackup)}`);
+        removeDirectory(subDir);
+        fs.renameSync(latestBackup, subDir);
+        console.log(`   ✓ Restored ${subDirName}/ from backup`);
       } else {
-        console.log(`   → ${subDir}: Removing installation`);
-        removeDirectory(subDirPath);
-        console.log(`   ✓ ${subDir}: Removed`);
+        console.log(`   → Removing ${subDirName}/`);
+        removeDirectory(subDir);
+        console.log(`   ✓ Removed ${subDirName}/`);
       }
+      anyRemoved = true;
     }
-    
-    if (!foundAny) {
-      console.log("   ℹ️  No installations found");
+    if (!anyRemoved) {
+      console.log("   ℹ️  No managed directories found");
+      return null;
     }
-    
-    return null;
+    return targetDir;
   }
 
   // For global mode or other platforms: handle entire directory
+
   if (!fs.existsSync(targetDir)) {
     console.log("   ℹ️  No installation found");
     return null;
@@ -205,10 +203,10 @@ function uninstallPlatform(platform, mode) {
 
   if (latestBackup && fs.existsSync(latestBackup)) {
     console.log(`   → Backup found, restoring from: ${path.basename(latestBackup)}`);
-    
+
     // Remove current installation
     removeDirectory(targetDir);
-    
+
     // Restore backup
     fs.renameSync(latestBackup, targetDir);
     console.log("   ✓ Restored from backup");

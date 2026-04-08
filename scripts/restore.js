@@ -32,6 +32,7 @@ const PLATFORMS = {
     localDir: (cwd) => path.join(cwd, ".github"),
     // For local mode, only manage these subdirectories
     // to avoid affecting workflows, issue templates, and other .github metadata
+    // Only restore these subdirs in local mode to avoid wiping other .github content
     localManagedSubDirs: ["agents", "skills"],
   },
 };
@@ -122,45 +123,45 @@ function restorePlatform(platform, mode) {
 
   if (isCopilotLocal && managedSubDirs) {
     // For local Copilot: handle subdirectories individually
-    let foundAny = false;
-    let restoredAny = false;
-    
-    for (const subDir of managedSubDirs) {
-      const subDirPath = path.join(targetDir, subDir);
+    let anyRestored = false;
+
+    for (const subDirName of managedSubDirs) {
+      const subDirPath = path.join(targetDir, subDirName);
       const backups = listBackupsForPlatform(subDirPath);
-      
+
       if (backups.length === 0) {
+        console.log(`   ℹ️  No backups found for ${subDirName}/`);
         continue;
       }
-      
-      foundAny = true;
-      const latestBackup = backups[0];
-      console.log(`   ${subDir}: Available backups:`);
+
+      console.log(`   ${subDirName}: Available backups:`);
       backups.forEach((backup, index) => {
         console.log(`     ${index + 1}. ${backup.timestamp}`);
       });
-      
-      console.log(`   → ${subDir}: Restoring from: ${latestBackup.timestamp}`);
-      
+
+      const latestBackup = backups[0];
+      console.log(`   → ${subDirName}: Restoring from: ${latestBackup.timestamp}`);
+
       // Remove current installation if it exists
       if (fs.existsSync(subDirPath)) {
         removeDirectory(subDirPath);
       }
-      
+
       // Restore from backup
       fs.renameSync(latestBackup.path, subDirPath);
-      console.log(`   ✓ ${subDir}: Restored from backup`);
-      restoredAny = true;
+      console.log(`   ✓ ${subDirName}: Restored from backup`);
+      anyRestored = true;
     }
-    
-    if (!foundAny) {
+
+    if (!anyRestored) {
       console.log("   ℹ️  No backups found");
     }
-    
-    return restoredAny ? targetDir : null;
+
+    return anyRestored ? targetDir : null;
   }
 
   // For global mode or other platforms: handle entire directory
+
   const backups = listBackupsForPlatform(targetDir);
 
   if (backups.length === 0) {
