@@ -136,7 +136,7 @@ npx @johnludlow/agents version
 
 ## Agent Details
 
-### johnludlow-feature-planner (Temperature: 0.6)
+### johnludlow-feature-planner (Temperature: 0.3)
 
 - **Purpose**: Create comprehensive feature plans
 - **Input**: Feature description or user story
