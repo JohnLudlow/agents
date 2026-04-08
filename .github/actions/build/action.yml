@@ -9,35 +9,35 @@ inputs:
 runs:
   using: 'composite'
   steps:
-  - name: Setup Node.js
-    uses: actions/setup-node@v4
-    with:
-      node-version: '22'
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
 
-  - name: Update package.json version
-    shell: bash
-    run: |
-      npm version ${{ inputs.version }} --no-git-tag-version
-      echo "✓ Updated package.json to version ${{ inputs.version }}"
+    - name: Update package.json version
+      shell: bash
+      run: |
+        npm version ${{ inputs.version }} --no-git-tag-version
+        echo "✓ Updated package.json to version ${{ inputs.version }}"
 
-  - name: Build agent definitions
-    shell: bash
-    run: |
-      npm run build:agents
-      echo "✓ Built agent definitions for OpenCode and Copilot"
+    - name: Build agent definitions
+      shell: bash
+      run: |
+        npm run build:agents
+        echo "✓ Built agent definitions for OpenCode and Copilot"
 
-  - name: Create NPM package
-    shell: bash
-    run: |
-      npm pack
-      echo "✓ Created NPM package"
+    - name: Create NPM package
+      shell: bash
+      run: |
+        npm pack
+        echo "✓ Created NPM package"
 
-  - name: List artifacts
-    shell: bash
-    run: |
-      echo "Generated artifacts:"
-      ls -lh johnludlow-agents-*.tgz 2>/dev/null || true
-      echo "  Agents:"
-      ls .github/agents/*.md 2>/dev/null | wc -l
-      echo "  Skills:"
-      ls .github/skills/*.md 2>/dev/null | wc -l
+    - name: List artifacts
+      shell: bash
+      run: |
+        echo "Generated artifacts:"
+        ls -lh johnludlow-agents-*.tgz 2>/dev/null || true
+        echo "  Agents:"
+        ls .github/agents/*.md 2>/dev/null | wc -l
+        echo "  Skills:"
+        ls .github/skills/*.md 2>/dev/null | wc -l
