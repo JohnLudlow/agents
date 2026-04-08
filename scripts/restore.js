@@ -15,6 +15,8 @@ const os = require("os");
 // CONFIGURATION
 // ============================================================================
 
+const BACKUP_SUFFIX = `.johnludlow-backup-${new Date().toISOString().replace(/[:.]/g, "-")}`;
+
 // Installation platform definitions
 const PLATFORMS = {
   opencode: {
@@ -28,6 +30,9 @@ const PLATFORMS = {
     emoji: "🔌",
     globalDir: path.join(os.homedir(), ".copilot"),
     localDir: (cwd) => path.join(cwd, ".github"),
+    // For local mode, only manage these subdirectories
+    // to avoid affecting workflows, issue templates, and other .github metadata
+    localManagedSubDirs: ["agents", "skills"],
   },
 };
 
@@ -110,9 +115,53 @@ function removeDirectory(dir) {
 function restorePlatform(platform, mode) {
   const config = PLATFORMS[platform];
   const targetDir = getTargetDirectory(platform, mode);
-  const backups = listBackupsForPlatform(targetDir);
+  const isCopilotLocal = platform === "copilot" && mode === "local";
+  const managedSubDirs = isCopilotLocal ? config.localManagedSubDirs : null;
 
   console.log(`\n${config.emoji} ${config.name}:`);
+
+  if (isCopilotLocal && managedSubDirs) {
+    // For local Copilot: handle subdirectories individually
+    let foundAny = false;
+    let restoredAny = false;
+    
+    for (const subDir of managedSubDirs) {
+      const subDirPath = path.join(targetDir, subDir);
+      const backups = listBackupsForPlatform(subDirPath);
+      
+      if (backups.length === 0) {
+        continue;
+      }
+      
+      foundAny = true;
+      const latestBackup = backups[0];
+      console.log(`   ${subDir}: Available backups:`);
+      backups.forEach((backup, index) => {
+        console.log(`     ${index + 1}. ${backup.timestamp}`);
+      });
+      
+      console.log(`   → ${subDir}: Restoring from: ${latestBackup.timestamp}`);
+      
+      // Remove current installation if it exists
+      if (fs.existsSync(subDirPath)) {
+        removeDirectory(subDirPath);
+      }
+      
+      // Restore from backup
+      fs.renameSync(latestBackup.path, subDirPath);
+      console.log(`   ✓ ${subDir}: Restored from backup`);
+      restoredAny = true;
+    }
+    
+    if (!foundAny) {
+      console.log("   ℹ️  No backups found");
+    }
+    
+    return restoredAny ? targetDir : null;
+  }
+
+  // For global mode or other platforms: handle entire directory
+  const backups = listBackupsForPlatform(targetDir);
 
   if (backups.length === 0) {
     console.log("   ℹ️  No backups found");

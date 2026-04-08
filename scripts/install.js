@@ -35,6 +35,9 @@ const PLATFORMS = {
     globalDir: path.join(os.homedir(), ".copilot"),
     localDir: (cwd) => path.join(cwd, ".github"),
     requiresConfig: false,
+    // For local mode, only manage these subdirectories
+    // to avoid affecting workflows, issue templates, and other .github metadata
+    localManagedSubDirs: ["agents", "skills"],
   },
 };
 
@@ -107,13 +110,35 @@ function copyDirectory(source, target) {
 }
 
 /**
- * Backup existing directory
+ * Backup existing directory or subdirectories for local Copilot mode
+ * 
+ * For Copilot local mode: backs up only managed subdirectories individually
+ * to avoid affecting workflows, issue templates, and other .github metadata
  */
-function backupExistingDirectory(targetDir) {
+function backupExistingDirectory(targetDir, platform, mode) {
+  const platformConfig = PLATFORMS[platform];
+  const isCopilotLocal = platform === "copilot" && mode === "local";
+  const managedSubDirs = isCopilotLocal ? platformConfig.localManagedSubDirs : null;
+  
+  if (isCopilotLocal && managedSubDirs) {
+    // For local Copilot: backup only managed subdirectories individually
+    const backups = [];
+    for (const subDir of managedSubDirs) {
+      const subDirPath = path.join(targetDir, subDir);
+      if (fs.existsSync(subDirPath)) {
+        const backupDir = subDirPath + BACKUP_SUFFIX;
+        fs.renameSync(subDirPath, backupDir);
+        backups.push(backupDir);
+      }
+    }
+    return backups.length > 0 ? backups : null;
+  }
+  
+  // For global mode or other platforms: backup entire directory
   if (fs.existsSync(targetDir)) {
     const backupDir = targetDir + BACKUP_SUFFIX;
     fs.renameSync(targetDir, backupDir);
-    return backupDir;
+    return [backupDir];
   }
   return null;
 }
@@ -175,9 +200,16 @@ function installPlatform(platform, mode) {
   console.log(`${config.emoji} Installing ${config.name} format...`);
 
   // Backup existing installation (before creating directory)
-  const backupDir = backupExistingDirectory(targetDir);
-  if (backupDir) {
-    console.log(`  ✓ Backed up existing installation to: ${backupDir}`);
+  const backupDirs = backupExistingDirectory(targetDir, platform, mode);
+  if (backupDirs) {
+    if (platform === "copilot" && mode === "local") {
+      console.log(`  ✓ Backed up existing subdirectories`);
+      backupDirs.forEach(dir => {
+        console.log(`    → ${path.basename(dir).replace(BACKUP_SUFFIX, '')}`);
+      });
+    } else {
+      console.log(`  ✓ Backed up existing installation to: ${backupDirs[0]}`);
+    }
   }
 
   // Now create the target directory (after backup)
@@ -242,27 +274,6 @@ function installOpenCodeConfig(mode) {
 
     fs.copyFileSync(configSourcePath, configTargetPath);
     console.log("   ✓ Installed config.json with permissions");
-  }
-
-  // Copy agent definitions to agents directory
-  const agentsSourceDir = path.join(configSourceDir, "agents");
-  const agentsTargetDir = path.join(targetDir, "agents");
-
-  if (fs.existsSync(agentsSourceDir)) {
-    if (!fs.existsSync(agentsTargetDir)) {
-      fs.mkdirSync(agentsTargetDir, { recursive: true });
-    }
-
-    const agentFiles = fs.readdirSync(agentsSourceDir).filter(f => f.endsWith('.md'));
-    agentFiles.forEach(file => {
-      const sourcePath = path.join(agentsSourceDir, file);
-      const targetPath = path.join(agentsTargetDir, file);
-      fs.copyFileSync(sourcePath, targetPath);
-    });
-
-    if (agentFiles.length > 0) {
-      console.log(`   ✓ Installed ${agentFiles.length} agent definitions`);
-    }
   }
 
   console.log(`   📁 Location: ${targetDir}`);

@@ -15,6 +15,8 @@ const os = require("os");
 // CONFIGURATION
 // ============================================================================
 
+const BACKUP_SUFFIX = `.johnludlow-backup-${new Date().toISOString().replace(/[:.]/g, "-")}`;
+
 // Installation platform definitions
 const PLATFORMS = {
   opencode: {
@@ -28,6 +30,9 @@ const PLATFORMS = {
     emoji: "🔌",
     globalDir: path.join(os.homedir(), ".copilot"),
     localDir: (cwd) => path.join(cwd, ".github"),
+    // For local mode, only manage these subdirectories
+    // to avoid affecting workflows, issue templates, and other .github metadata
+    localManagedSubDirs: ["agents", "skills"],
   },
 };
 
@@ -151,9 +156,45 @@ function removeEmptyParentDirectory(targetDir) {
 function uninstallPlatform(platform, mode) {
   const config = PLATFORMS[platform];
   const targetDir = getTargetDirectory(platform, mode);
+  const isCopilotLocal = platform === "copilot" && mode === "local";
+  const managedSubDirs = isCopilotLocal ? config.localManagedSubDirs : null;
 
   console.log(`\n${config.emoji} Uninstalling from ${config.name}...`);
 
+  if (isCopilotLocal && managedSubDirs) {
+    // For local Copilot: handle subdirectories individually
+    let foundAny = false;
+    
+    for (const subDir of managedSubDirs) {
+      const subDirPath = path.join(targetDir, subDir);
+      
+      if (!fs.existsSync(subDirPath)) {
+        continue;
+      }
+      
+      foundAny = true;
+      const latestBackup = findLatestBackup(subDirPath);
+      
+      if (latestBackup && fs.existsSync(latestBackup)) {
+        console.log(`   → ${subDir}: Backup found, restoring from: ${path.basename(latestBackup)}`);
+        removeDirectory(subDirPath);
+        fs.renameSync(latestBackup, subDirPath);
+        console.log(`   ✓ ${subDir}: Restored from backup`);
+      } else {
+        console.log(`   → ${subDir}: Removing installation`);
+        removeDirectory(subDirPath);
+        console.log(`   ✓ ${subDir}: Removed`);
+      }
+    }
+    
+    if (!foundAny) {
+      console.log("   ℹ️  No installations found");
+    }
+    
+    return null;
+  }
+
+  // For global mode or other platforms: handle entire directory
   if (!fs.existsSync(targetDir)) {
     console.log("   ℹ️  No installation found");
     return null;
