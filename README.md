@@ -282,8 +282,8 @@ These agents are designed to work with:
 │   ├── skills/
 │   └── config.json
 ├── .github/                # 🔨 Generated GitHub Copilot format
-│   ├── agents/             # Plain markdown, no frontmatter
-│   ├── skills/
+│   ├── agents/             # Generated Copilot agent markdown with YAML frontmatter
+│   ├── skills/             # Generated Copilot skill markdown
 │   ├── actions/            # Reusable GitHub Actions
 │   │   ├── setup/          # Setup Node.js and determine version
 │   │   ├── validate/       # Validate markdown and structure
