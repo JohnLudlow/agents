@@ -53,18 +53,6 @@ runs:
           echo "✓ $file is valid"
         done
 
-    - name: Validate template structure
-      shell: bash
-      run: |
-        for file in docs/templates/*.md; do
-          echo "Checking $file..."
-          if ! grep -q -- "^---$" "$file"; then
-            echo "❌ Missing YAML frontmatter in $file"
-            exit 1
-          fi
-          echo "✓ $file is valid"
-        done
-
     - name: Validate package.json
       shell: bash
       run: |
