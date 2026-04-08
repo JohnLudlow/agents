@@ -10,9 +10,10 @@ All documents MUST:
 
 - Pass markdownlint checks
 - Use proper heading hierarchy (h1 > h2 > h3, etc.)
-- Include YAML frontmatter with metadata
 - Have valid internal and external links
 - Use consistent code block formatting with language specification
+
+OpenCode agent and skill definition files MUST also include YAML frontmatter with metadata (name, version, description, model, and permissions). Plain markdown files for GitHub Copilot do not use frontmatter.
 
 ## Document Structure
 

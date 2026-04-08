@@ -92,9 +92,10 @@ function removeDirectory(dir) {
 }
 
 /**
- * Copy directory recursively, skipping README.md files
+ * Copy directory recursively.
+ * By default skips README.md files (set skipReadme: false for backup copies).
  */
-function copyDirectory(source, target) {
+function copyDirectory(source, target, { skipReadme = true } = {}) {
   if (!fs.existsSync(source)) {
     return;
   }
@@ -106,14 +107,14 @@ function copyDirectory(source, target) {
   const files = fs.readdirSync(source);
 
   files.forEach((file) => {
-    // Never copy README.md into agent/skill directories
-    if (file === "README.md") return;
+    // Skip README.md when installing into agent/skill directories, but not when backing up
+    if (skipReadme && file === "README.md") return;
 
     const sourcePath = path.join(source, file);
     const targetPath = path.join(target, file);
 
     if (fs.statSync(sourcePath).isDirectory()) {
-      copyDirectory(sourcePath, targetPath);
+      copyDirectory(sourcePath, targetPath, { skipReadme });
     } else {
       fs.copyFileSync(sourcePath, targetPath);
     }
@@ -144,7 +145,7 @@ function backupExistingDirectory(targetDir, platform, mode) {
       const subDirPath = path.join(targetDir, subDir);
       if (fs.existsSync(subDirPath)) {
         const backupDir = subDirPath + BACKUP_SUFFIX;
-        copyDirectory(subDirPath, backupDir);
+        copyDirectory(subDirPath, backupDir, { skipReadme: false });
         backups.push(backupDir);
       }
     }
@@ -154,7 +155,7 @@ function backupExistingDirectory(targetDir, platform, mode) {
   // For other platforms (OpenCode): backup entire directory by copying
   if (fs.existsSync(targetDir)) {
     const backupDir = targetDir + BACKUP_SUFFIX;
-    copyDirectory(targetDir, backupDir);
+    copyDirectory(targetDir, backupDir, { skipReadme: false });
     return [backupDir];
   }
   return null;
@@ -176,11 +177,17 @@ function listBackupsForPlatform(targetDir) {
     .sort()
     .reverse();
 
-  return backups.map(b => ({
-    name: b,
-    path: path.join(parentDir, b),
-    timestamp: b.replace(dirName + ".johnludlow-backup-", "")
-  }));
+  return backups.map(b => {
+    const suffix = b.replace(dirName + ".johnludlow-backup-", "");
+    // Reconstruct ISO-8601: the backup suffix replaced [:.]→- in the time portion only.
+    // Date dashes (YYYY-MM-DD) are natural and unchanged; only THH-MM-SS-mssZ needs fixing.
+    const timestamp = suffix.replace(/T(\d{2})-(\d{2})-(\d{2})-(\d{3})Z$/, "T$1:$2:$3.$4Z");
+    return {
+      name: b,
+      path: path.join(parentDir, b),
+      timestamp,
+    };
+  });
 }
 
 /**
