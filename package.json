@@ -7,7 +7,6 @@
     "build:agents": "node scripts/build-agents.js",
     "install:local": "node scripts/install.js",
     "postinstall": "node scripts/install.js",
-    "preuninstall": "node scripts/uninstall.js",
     "uninstall": "node scripts/uninstall.js",
     "restore": "node scripts/restore.js",
     "generate:copilot": "node scripts/generate-copilot.js",
