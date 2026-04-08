@@ -115,8 +115,11 @@ docs/plans/user-authentication.md"
 ## Available Commands
 
 ```bash
-# Installation (automatic, but can be run manually)
-npm run install
+# Install globally
+npm install --global @johnludlow/agents
+
+# Or install and run in one step
+npx @johnludlow/agents install --global
 
 # Generate GitHub Copilot format from OpenCode format
 npm run generate:copilot
@@ -125,10 +128,10 @@ npm run generate:copilot
 npm run restore
 
 # Show help
-npx johnludlow-agents help
+npx @johnludlow/agents help
 
 # Show version
-npx johnludlow-agents version
+npx @johnludlow/agents version
 ```
 
 ## Agent Details
