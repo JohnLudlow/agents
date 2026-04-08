@@ -40,7 +40,6 @@ The primary workflow is defined in `.github/workflows/main.yml` and executes on:
 - Validate markdown syntax with `rumdl check`
 - Check required sections in agent definitions
 - Check required sections in skill definitions
-- Validate template file structure
 - Validate package.json
 
 **Required Sections**:
