@@ -24,7 +24,7 @@ lifecycle:
 
 Creates comprehensive feature plans and project specifications.
 
-- **Temperature**: 0.6 (balanced creativity and consistency)
+- **Temperature**: 0.3 (balanced creativity and consistency)
 - **Focus**: Planning, design, and specification
 - **Output**: Markdown plan documents in `docs/plans/`
 
