@@ -219,9 +219,9 @@ The pipeline uses these environment variables:
 
 ## Security
 
-- Git operations use SSH deploy keys
+- Git operations in CI that push commits or tags use HTTPS with the GitHub-provided `GITHUB_TOKEN`
 - No credentials are logged
-- All artifacts are signed with release tags
+- Release tags are used to identify published artifacts
 
 ## See Also
 
