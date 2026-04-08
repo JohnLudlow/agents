@@ -113,32 +113,37 @@ function copyDirectory(source, target) {
 /**
  * Backup existing directory or subdirectories for local Copilot mode
  *
- * For Copilot local mode: backs up only managed subdirectories individually
- * to avoid affecting workflows, issue templates, and other .github metadata
+ * For Copilot (both local and global): backs up only managed subdirectories individually
+ * to avoid affecting workflows, issue templates, and other platform metadata
+ * 
+ * For other platforms: backs up by copying the entire directory
+ * Uses copy instead of move to preserve originals during backup
  */
 function backupExistingDirectory(targetDir, platform, mode) {
   const platformConfig = PLATFORMS[platform];
-  const isCopilotLocal = platform === "copilot" && mode === "local";
-  const managedSubDirs = isCopilotLocal ? platformConfig.localManagedSubDirs : null;
+  const isCopilot = platform === "copilot";
+  const managedSubDirs = isCopilot ? platformConfig.localManagedSubDirs : null;
 
-  if (isCopilotLocal && managedSubDirs) {
-    // For local Copilot: backup only managed subdirectories individually
+  if (isCopilot && managedSubDirs) {
+    // For Copilot (both local and global): backup only managed subdirectories individually
+    // This preserves other content like config.json, IDE settings, plugins, etc.
     const backups = [];
     for (const subDir of managedSubDirs) {
       const subDirPath = path.join(targetDir, subDir);
       if (fs.existsSync(subDirPath)) {
         const backupDir = subDirPath + BACKUP_SUFFIX;
-        fs.renameSync(subDirPath, backupDir);
+        // Copy directory recursively instead of moving
+        copyDirectory(subDirPath, backupDir);
         backups.push(backupDir);
       }
     }
     return backups.length > 0 ? backups : null;
   }
 
-  // For global mode or other platforms: backup entire directory
+  // For other platforms (OpenCode): backup entire directory by copying
   if (fs.existsSync(targetDir)) {
     const backupDir = targetDir + BACKUP_SUFFIX;
-    fs.renameSync(targetDir, backupDir);
+    copyDirectory(targetDir, backupDir);
     return [backupDir];
   }
   return null;
@@ -185,6 +190,28 @@ function getTargetDirectory(platform, mode, cwd = process.cwd()) {
   }
 }
 
+/**
+ * Remove directory recursively
+ */
+function removeDirectory(dir) {
+  if (!fs.existsSync(dir)) {
+    return;
+  }
+
+  const files = fs.readdirSync(dir);
+
+  for (const file of files) {
+    const filePath = path.join(dir, file);
+    if (fs.statSync(filePath).isDirectory()) {
+      removeDirectory(filePath);
+    } else {
+      fs.unlinkSync(filePath);
+    }
+  }
+
+  fs.rmdirSync(dir);
+}
+
 // ============================================================================
 // INSTALLATION
 // ============================================================================
@@ -200,37 +227,27 @@ function installPlatform(platform, mode) {
 
   console.log(`${config.emoji} Installing ${config.name} format...`);
 
-  if (mode === "local" && config.localManagedSubDirs && platform === "copilot") {
-    // For Copilot local: only backup managed subdirs to avoid clobbering the rest of .github
-    if (!fs.existsSync(targetDir)) {
-      fs.mkdirSync(targetDir, { recursive: true });
-    }
-    for (const subDirName of config.localManagedSubDirs) {
-      const subDir = path.join(targetDir, subDirName);
-      const backupDir = backupExistingDirectory(subDir, platform, mode);
-      if (backupDir) {
-        console.log(`  ✓ Backed up existing ${subDirName}/ to: ${path.basename(backupDir)}`);
-      }
-    }
-  } else {
-    // Backup existing installation (before creating directory)
-    const backupDirs = backupExistingDirectory(targetDir, platform, mode);
-    if (backupDirs) {
-      if (platform === "copilot" && mode === "local") {
-        console.log(`  ✓ Backed up existing subdirectories`);
-        backupDirs.forEach(dir => {
-          console.log(`    → ${path.basename(dir).replace(BACKUP_SUFFIX, '')}`);
-        });
-      } else {
-        console.log(`  ✓ Backed up existing installation to: ${backupDirs[0]}`);
-      }
-    }
+  // Backup existing installation (by copying, not moving)
+  const backupDirs = backupExistingDirectory(targetDir, platform, mode);
+  if (backupDirs) {
+    console.log(`  ✓ Backed up existing subdirectories`);
+    backupDirs.forEach(dir => {
+      console.log(`    → ${path.basename(dir).replace(BACKUP_SUFFIX, '')}`);
+    });
   }
 
+  // Now create the target directory (after backup)
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
 
-    // Now create the target directory (after backup)
-    if (!fs.existsSync(targetDir)) {
-      fs.mkdirSync(targetDir, { recursive: true });
+  // For Copilot: remove old managed subdirectories before installing new ones
+  if (platform === "copilot" && config.localManagedSubDirs) {
+    for (const subDir of config.localManagedSubDirs) {
+      const subDirPath = path.join(targetDir, subDir);
+      if (fs.existsSync(subDirPath)) {
+        removeDirectory(subDirPath);
+      }
     }
   }
 
