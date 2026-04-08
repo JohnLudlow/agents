@@ -13,7 +13,8 @@ All documents MUST:
 - Have valid internal and external links
 - Use consistent code block formatting with language specification
 
-OpenCode agent and skill definition files MUST also include YAML frontmatter with metadata (name, version, description, model, and permissions). Plain markdown files for GitHub Copilot do not use frontmatter.
+OpenCode agent and skill definition files MUST also include YAML frontmatter with metadata (name, version, description,
+model, and permissions). Plain markdown files for GitHub Copilot do not use frontmatter.
 
 ## Document Structure
 
