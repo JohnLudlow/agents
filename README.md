@@ -506,7 +506,7 @@ For issues or questions:
 
 - Initial agent definitions (planner, implementer, documenter, tester)
 - Core skills (markdown standards, code quality)
-- Installation scripts (PowerShell and Bash)
+- Node-based installation scripts
 - GitHub Actions validation workflow
 - Documentation templates
 
