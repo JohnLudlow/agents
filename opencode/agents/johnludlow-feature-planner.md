@@ -30,7 +30,7 @@ documents in `docs/plans` or in GitHub issues/work items based on templates.
 
 ## Temperature
 
-0.3
+0.6
 
 ## Purpose
 

@@ -41,7 +41,7 @@ const SOURCE_DIRS = {
 
 /**
  * Get source agents directory for a platform
- * 
+ *
  * For OpenCode: Uses pre-built opencode/agents (with YAML frontmatter + permissions)
  * For Copilot: Uses generated .github/agents in global mode (with Copilot frontmatter),
  *              or canonical agents/ in local mode (build will add frontmatter before shipping)
@@ -217,8 +217,8 @@ const COPILOT_PLUGINS = [
 /**
  * Check whether the GitHub CLI (`gh`) is available on PATH
  */
-function isGhCliAvailable() {
-  const result = spawnSync("gh", ["--version"], { encoding: "utf8", stdio: "pipe" });
+function isCopilotCliAvailable() {
+  const result = spawnSync("copilot", ["version"], { encoding: "utf8", stdio: "pipe" });
   return result.status === 0;
 }
 
@@ -226,10 +226,10 @@ function isGhCliAvailable() {
  * Attempt to install a single Copilot plugin via `gh extension install`
  * Returns true on success, false on failure.
  */
-function installPluginViaGh(scope, name) {
+function installCopilotPlugin(scope, name) {
   const result = spawnSync(
-    "gh",
-    ["extension", "install", `${scope}/${name}`],
+    "copilot",
+    ["plugin", "install", `${scope}/${name}`],
     { encoding: "utf8", stdio: "pipe" }
   );
   return result.status === 0;
@@ -238,7 +238,7 @@ function installPluginViaGh(scope, name) {
 /**
  * Install recommended Copilot plugins.
  *
- * If the `gh` CLI is available the script attempts to install each plugin via
+ * If the `copilot` CLI is available the script attempts to install each plugin via
  * `gh extension install <scope>/<name>`.  When `gh` is not available (or a
  * plugin install fails) the plugin is flagged for manual installation and a
  * human-readable summary is printed at the end.
@@ -246,14 +246,14 @@ function installPluginViaGh(scope, name) {
 function installCopilotPlugins() {
   console.log("\n🔌 Installing recommended Copilot plugins...");
 
-  const ghAvailable = isGhCliAvailable();
+  const ghAvailable = isCopilotCliAvailable();
   if (!ghAvailable) {
-    console.log("   ℹ️  GitHub CLI (gh) not found — plugins must be installed manually.");
-    console.log("      Install the gh CLI: https://cli.github.com/\n");
+    console.log("   ℹ️  Copilot CLI not found — plugins must be installed manually.");
+    console.log("      Install the CoPilot CLI: https://github.com/features/copilot/cli/\n");
     console.log("   Recommended plugins:");
     COPILOT_PLUGINS.forEach(({ name, scope, version }) => {
       console.log(`     • ${name}@${scope} (${version})`);
-      console.log(`       gh extension install ${scope}/${name}`);
+      console.log(`       copilot plugin install ${scope}/${name}`);
     });
     return;
   }
@@ -263,7 +263,7 @@ function installCopilotPlugins() {
 
   for (const { name, scope, version } of COPILOT_PLUGINS) {
     process.stdout.write(`   → ${name}@${scope} (${version})... `);
-    if (installPluginViaGh(scope, name)) {
+    if (installCopilotPlugin(scope, name)) {
       process.stdout.write("✓\n");
       succeeded.push({ name, scope });
     } else {
