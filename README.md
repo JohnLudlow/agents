@@ -178,13 +178,7 @@ Once installed, agents are available in OpenCode:
 
 ### Using Agents with GitHub Copilot CLI
 
-First, generate Copilot format:
-
-```bash
-npm run generate:copilot
-```
-
-Then use in Copilot:
+The agents are automatically generated in Copilot format during installation. Use them in Copilot:
 
 ```bash
 copilot chat -a johnludlow-feature-planner "Please plan a user authentication system"
@@ -193,11 +187,11 @@ copilot chat -a johnludlow-feature-planner "Please plan a user authentication sy
 ### Available Commands
 
 ```bash
-# Install (run automatically on npm install, but can be run manually)
-npm run install
+# Build format-specific agents from canonical source
+npm run build:agents
 
-# Generate GitHub Copilot format from OpenCode format
-npm run generate:copilot
+# Install (run automatically on npm install, but can be run manually)
+npm run install:local
 
 # Restore from latest backup
 npm run restore
@@ -275,35 +269,88 @@ These agents are designed to work with:
 
 ```bash
 .
-├── agents/                 # OpenCode agents (primary source)
+├── agents/                 # 📝 Canonical agent definitions (PRIMARY SOURCE)
 │   ├── johnludlow-feature-planner.md
 │   ├── johnludlow-feature-implementer.md
 │   ├── johnludlow-feature-documenter.md
 │   └── johnludlow-feature-tester.md
-├── skills/                 # OpenCode skills (primary source)
+├── skills/                 # 📝 Canonical skill definitions (PRIMARY SOURCE)
 │   ├── johnludlow-markdown-standards.md
 │   └── johnludlow-code-quality.md
-├── .github/
+├── opencode/               # 🔨 Generated OpenCode format (built from agents/)
+│   ├── agents/             # With YAML frontmatter and permissions
+│   ├── skills/
+│   └── config.json
+├── .github/                # 🔨 Generated GitHub Copilot format
+│   ├── agents/             # Plain markdown, no frontmatter
+│   ├── skills/
 │   ├── actions/            # Reusable GitHub Actions
 │   │   ├── setup/          # Setup Node.js and determine version
 │   │   ├── validate/       # Validate markdown and structure
 │   │   └── build/          # Build NPM package
-│   ├── agents/             # GitHub Copilot format (generated)
-│   ├── skills/             # GitHub Copilot format (generated)
 │   └── workflows/
 │       └── main.yml        # CI/CD workflow
+├── .opencode/              # 🎯 User installation directory (created at install time)
 ├── docs/
 │   ├── CI-CD.md           # CI/CD pipeline documentation
+│   ├── PERMISSIONS.md      # Detailed permissions reference
 │   ├── templates/          # Document templates
 │   └── plans/              # Generated feature plans
-├── scripts/
+├── scripts/                # Build and installation scripts
+│   ├── build-agents.js    # 🔨 Build script to generate format-specific versions
 │   ├── install.js         # Installation script (runs on postinstall)
 │   ├── uninstall.js       # Uninstall script (runs on preuninstall)
-│   ├── generate-copilot.js # Generate GitHub Copilot format
+│   ├── generate-copilot.js # Legacy Copilot generation (use build-agents.js instead)
 │   ├── restore.js         # Restore from backup
 │   └── init.js            # CLI entry point
 ├── package.json           # NPM package manifest
 └── README.md              # This file
+
+Legend: 📝 = Source files (edit these), 🔨 = Generated files (don't edit), 🎯 = Installation target
+```
+
+## Build System
+
+This project uses a single-source-of-truth approach for agent and skill definitions:
+
+### How It Works
+
+1. **Canonical Source** (`agents/` and `skills/` directories)
+   - Contains the primary, detailed definitions of all agents and skills
+   - Includes complete descriptions, capabilities, requirements, and restrictions
+   - Pure markdown format without frontmatter
+
+2. **Build Process** (runs on `npm install` and `npm run build:agents`)
+   - Generates format-specific versions from the canonical source
+   - Creates OpenCode format with YAML frontmatter (including permissions)
+   - Creates Copilot format (plain markdown, no frontmatter)
+   - Outputs to `opencode/agents/`, `opencode/skills/`, `.github/agents/`, `.github/skills/`
+
+3. **Installation** (automatic via postinstall hook)
+   - Runs the build process first to generate format-specific files
+   - Installs built agents to `.opencode/` (local) or `~/.config/opencode/` (global)
+   - Installs permissions configuration
+   - Creates backups automatically
+
+### Why Single-Source-of-Truth?
+
+This approach ensures:
+- **No duplicates**: One canonical definition maintained
+- **Consistency**: Same content generates all formats
+- **Maintainability**: Update once, deploy everywhere
+- **Format flexibility**: Different platforms get optimized formats
+
+### Commands
+
+```bash
+# Build format-specific agents from canonical source
+npm run build:agents
+
+# Install agents (includes build step automatically)
+npm install
+
+# Install locally in current project
+npm run install:local
 ```
 
 ## Configuration
@@ -375,12 +422,14 @@ johnludlow-code-quality skill:
 
 Contributions are welcome! Please follow these guidelines:
 
-1. Edit agent/skill definitions in the `agents/` or `skills/` directories
+1. **Edit canonical sources** in `agents/` or `skills/` directories (not the generated files)
 2. Ensure all markdown files pass markdownlint validation
-3. Run `npm run generate:copilot` to update GitHub Copilot format
+3. Run `npm run build:agents` to generate format-specific versions
 4. Test installation: `npm install` (from package directory)
 5. Update README.md if adding new agents or skills
 6. Submit a pull request with clear descriptions
+
+**Important**: Always edit files in `agents/` and `skills/` directories. The files in `opencode/`, `.github/`, and `.opencode/` are automatically generated and should not be edited directly.
 
 See CONTRIBUTING.md for detailed guidelines.
 
