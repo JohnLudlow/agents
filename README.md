@@ -299,7 +299,7 @@ These agents are designed to work with:
 ├── scripts/                # Build and installation scripts
 │   ├── build-agents.js    # 🔨 Build script to generate format-specific versions
 │   ├── install.js         # Installation script (runs on postinstall)
-│   ├── uninstall.js       # Uninstall script (runs on preuninstall)
+│   ├── uninstall.js       # Uninstall script (runs on uninstall)
 │   ├── generate-copilot.js # Legacy Copilot generation (use build-agents.js instead)
 │   ├── restore.js         # Restore from backup
 │   └── init.js            # CLI entry point
