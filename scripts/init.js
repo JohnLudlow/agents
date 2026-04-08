@@ -7,9 +7,6 @@
  * Uses the refactored install, uninstall, and restore scripts.
  */
 
-const fs = require("fs");
-const path = require("path");
-
 /**
  * Display help message
  */
