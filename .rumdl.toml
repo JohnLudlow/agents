@@ -9,34 +9,34 @@ exclude = ["docs/templates/**/*.md"]
 line_length = 120
 
 # MD041 - First line in file should be a top level heading
-[rules.MD041]
+[MD041]
 enabled = true
 
 # MD043 - Required heading structure (optional, can enforce specific structures)
 # Disabled by default to allow flexible heading structures
-[rules.MD043]
+[MD043]
 enabled = false
 
 # MD044 - Proper names should have the correct capitalization
-[rules.MD044]
+[MD044]
 enabled = false
 
 # MD045 - Images should have alternate text
-[rules.MD045]
+[MD045]
 enabled = true
 
 [MD046]
 enabled = false
 
 # MD051 - Link fragments should reference valid headings
-[rules.MD051]
+[MD051]
 enabled = false
 
 # MD052 - Reference links should use a reference that exists
-[rules.MD052]
+[MD052]
 enabled = false
 
 # MD057 - Relative link does not exist
 # Disabled because templates contain placeholder links
-[rules.MD057]
+[MD057]
 enabled = false

@@ -28,7 +28,7 @@ Creates comprehensive feature plans and project specifications.
 - **Focus**: Planning, design, and specification
 - **Output**: Markdown plan documents in `docs/plans/`
 
-[View full agent definition](.github/agents/johnludlow-feature-planner.md)
+[View full agent definition](agents/johnludlow-feature-planner.md)
 
 ### johnludlow-feature-implementer
 
@@ -38,7 +38,7 @@ Implements features based on approved plans with code quality and best practices
 - **Focus**: Code implementation, testing, quality
 - **Output**: Modified source files and tests
 
-[View full agent definition](.github/agents/johnludlow-feature-implementer.md)
+[View full agent definition](agents/johnludlow-feature-implementer.md)
 
 ### johnludlow-feature-documenter
 
@@ -48,7 +48,7 @@ Creates user-friendly technical documentation for features and APIs.
 - **Focus**: Documentation, guides, references
 - **Output**: Markdown documentation in `docs/`
 
-[View full agent definition](.github/agents/johnludlow-feature-documenter.md)
+[View full agent definition](agents/johnludlow-feature-documenter.md)
 
 ### johnludlow-feature-tester
 
@@ -58,7 +58,7 @@ Runs automated tests and reports results.
 - **Focus**: Testing, validation, quality assurance
 - **Output**: Test results and coverage reports
 
-[View full agent definition](.github/agents/johnludlow-feature-tester.md)
+[View full agent definition](agents/johnludlow-feature-tester.md)
 
 ## Skills
 
@@ -68,13 +68,13 @@ Skills provide shared knowledge and standards for agents.
 
 Defines markdown document structure, formatting, and quality standards.
 
-[View full skill definition](.github/skills/johnludlow-markdown-standards.md)
+[View full skill definition](skills/johnludlow-markdown-standards.md)
 
 ### johnludlow-code-quality
 
 Defines code quality expectations across C#, TypeScript, and C++.
 
-[View full skill definition](.github/skills/johnludlow-code-quality.md)
+[View full skill definition](skills/johnludlow-code-quality.md)
 
 ## Permissions
 
