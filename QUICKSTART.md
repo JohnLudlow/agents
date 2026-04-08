@@ -210,7 +210,7 @@ Then agents are available locally in `.opencode/agents/`
 
 ## Environment Requirements
 
-- **Node.js**: 18.0.0 or higher
+- **Node.js**: 22.0.0 or higher
 - **npm**: 6.0.0 or higher
 - **OpenCode**: (optional, but required to use the agents)
 - **GitHub Copilot CLI**: (optional, for Copilot integration)
