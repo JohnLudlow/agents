@@ -402,7 +402,7 @@ npm run restore
 All documents created by these agents follow the markdown standards defined in the
 johnludlow-markdown-standards skill:
 
-- Valid YAML frontmatter
+- Valid YAML frontmatter for OpenCode definition files
 - Proper heading hierarchy
 - Markdown linting compliance
 - Plain language with defined jargon
