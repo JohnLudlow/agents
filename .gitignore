@@ -55,5 +55,7 @@ docs/plans/**/*.md
 .opencode/.johnludlow-backup-*
 .copilot.johnludlow-backup-*
 .copilot/.johnludlow-backup-*
+.github/agents/
+.github/skills/
 
 .rumdl_cache/
