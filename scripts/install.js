@@ -23,6 +23,7 @@ const BACKUP_SUFFIX = `.johnludlow-backup-${new Date().toISOString().replace(/[:
 // Source directories (relative to package root)
 const SOURCE_DIRS = {
   agents: path.join(__dirname, "..", "agents"),
+  opencodeAgents: path.join(__dirname, "..", "opencode", "agents"),
   skills: path.join(__dirname, "..", "skills"),
   opencodeConfig: path.join(__dirname, "..", "opencode"),
 };
@@ -146,8 +147,8 @@ function installAgentsAndSkills(mode) {
 function installOpenCodeConfig(mode) {
   console.log("\n⚙️  Installing OpenCode configuration...");
 
-  const opencodeDir = mode === "global" 
-    ? OPENCODE_GLOBAL_DIR 
+  const opencodeDir = mode === "global"
+    ? OPENCODE_GLOBAL_DIR
     : path.join(process.cwd(), ".opencode");
 
   const configSourceDir = SOURCE_DIRS.opencodeConfig;
@@ -205,8 +206,8 @@ function installCopilotAgents(mode, sourceAgentsDir, sourceSkillsDir) {
   console.log("\n🔌 Installing GitHub Copilot format...");
 
   // Determine target directory
-  const copilotDir = mode === "global" 
-    ? COPILOT_GLOBAL_DIR 
+  const copilotDir = mode === "global"
+    ? COPILOT_GLOBAL_DIR
     : COPILOT_LOCAL_DIR;
 
   // Create target directories
@@ -216,6 +217,7 @@ function installCopilotAgents(mode, sourceAgentsDir, sourceSkillsDir) {
   // Copy agents to Copilot format
   if (fs.existsSync(sourceAgentsDir)) {
     console.log("  → Installing agents to Copilot format...");
+
     copyDirectory(sourceAgentsDir, copilotAgentsDir);
     const agentFiles = fs.readdirSync(copilotAgentsDir).filter(f => f.endsWith('.md'));
     console.log(`    ✓ Installed ${agentFiles.length} agents to Copilot`);
@@ -241,7 +243,7 @@ function installCopilotAgents(mode, sourceAgentsDir, sourceSkillsDir) {
 function displayNextSteps(opencodeDir, copilotDir, mode) {
   console.log("\n📚 Next steps:");
   console.log("\n1. Agents and skills installed successfully!");
-  
+
   console.log("\n2. For OpenCode:");
   if (mode === "global") {
     console.log(`   - Global installation: ${opencodeDir}`);
@@ -250,7 +252,7 @@ function displayNextSteps(opencodeDir, copilotDir, mode) {
   }
   console.log("   - Agents and skills are ready to use immediately");
   console.log("   - See: https://opencode.ai/docs for documentation");
-  
+
   console.log("\n3. For GitHub Copilot:");
   if (mode === "global") {
     console.log(`   - Global installation: ${copilotDir}`);
@@ -259,12 +261,12 @@ function displayNextSteps(opencodeDir, copilotDir, mode) {
   }
   console.log("   - Agents and skills are ready to use immediately");
   console.log("   - Configure in: .github/copilot/config.yml");
-  
+
   console.log("\n4. Additional commands:");
   console.log("   - npm run restore     : Restore from backup");
   console.log("   - npm run uninstall   : Remove installations");
   console.log("   - npm run list        : Show installed agents/skills");
-  
+
   console.log("\n5. Documentation:");
   console.log("   - OpenCode: https://opencode.ai/docs");
   console.log("   - GitHub Copilot: https://github.com/features/copilot");
@@ -281,6 +283,15 @@ async function main() {
     const mode = getInstallMode();
     
     console.log(`📍 Installation mode: ${mode}`);
+    
+    // Build agent definitions from canonical source
+    console.log("\n🔨 Building agent definitions...");
+    try {
+      const { buildOpenCodeAgents } = require("./build-agents.js");
+      buildOpenCodeAgents();
+    } catch (buildError) {
+      console.warn("   ⚠️  Could not build agents, using pre-built versions");
+    }
     
     // Check if OpenCode is available
     const openCodeAvailable = checkOpenCodeInstalled();

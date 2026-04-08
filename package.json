@@ -4,6 +4,7 @@
   "description": "Reusable AI agents and skills for feature planning, implementation, documentation, and testing across C#, TypeScript, and C++ projects",
   "main": "index.js",
   "scripts": {
+    "build:agents": "node scripts/build-agents.js",
     "install:local": "node scripts/install.js",
     "postinstall": "node scripts/install.js",
     "preuninstall": "node scripts/uninstall.js",

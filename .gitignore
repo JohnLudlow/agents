@@ -18,6 +18,8 @@ dist/
 *.tar.gz
 *.zip
 !.github/actions/build/
+!.github/workflows/
+!.github/agents/
 
 # Node
 node_modules/
@@ -41,13 +43,17 @@ __pycache__/
 docs/plans/**/*.md
 !docs/plans/.gitkeep
 
-# Package artifacts
-johnludlow-agents-*.tar.gz
-johnludlow-agents-*.zip
-johnludlow-agents-*.tgz
+# Generated agent definition files in build directory (built from agents/*.md source)
+# Note: opencode/agents/*.md are committed as build artifacts
+# But .opencode/ is user installation directory, not committed
+
+# Installation directories (created at install time)
+.opencode/
+.opencode.johnludlow-backup-*
 
 # Installation backups
 .opencode/.johnludlow-backup-*
+.copilot.johnludlow-backup-*
 .copilot/.johnludlow-backup-*
 
 .rumdl_cache/

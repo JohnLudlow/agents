@@ -20,17 +20,17 @@ runs:
       npm version ${{ inputs.version }} --no-git-tag-version
       echo "✓ Updated package.json to version ${{ inputs.version }}"
 
+  - name: Build agent definitions
+    shell: bash
+    run: |
+      npm run build:agents
+      echo "✓ Built agent definitions for OpenCode and Copilot"
+
   - name: Create NPM package
     shell: bash
     run: |
       npm pack
       echo "✓ Created NPM package"
-
-  - name: Generate Copilot format
-    shell: bash
-    run: |
-      npm run generate:copilot
-      echo "✓ Generated GitHub Copilot format"
 
   - name: List artifacts
     shell: bash

@@ -1,0 +1,251 @@
+#!/usr/bin/env node
+
+/**
+ * @johnludlow/agents Build Script
+ *
+ * Generates format-specific agent definitions from canonical sources:
+ * - agents/*.md (canonical source) → opencode/agents/*.md (with YAML frontmatter)
+ * - agents/*.md (canonical source) → .github/agents/*.md (for Copilot)
+ */
+
+const fs = require("fs");
+const path = require("path");
+
+// Permissions mapping - extracted from config.json
+const AGENT_PERMISSIONS = {
+  "johnludlow-feature-planner": {
+    description: "Plans features and creates detailed implementation plans",
+    mode: "subagent",
+    temperature: 0.3,
+    permission: {
+      read: { "*": "allow" },
+      edit: { "*": "deny", "docs/plans/*": "allow" },
+      bash: {
+        "*": "deny",
+        "git log*": "allow",
+        "git status*": "allow",
+        "git branch*": "allow",
+        "git diff*": "allow",
+      },
+      grep: { "*": "allow" },
+      webfetch: "ask",
+      task: { "*": "deny" },
+    },
+  },
+  "johnludlow-feature-implementer": {
+    description: "Implements features and makes code changes",
+    mode: "subagent",
+    temperature: 0.2,
+    permission: {
+      read: { "*": "allow", "*.env": "deny" },
+      edit: {
+        "*": "deny",
+        "src/**": "allow",
+        "lib/**": "allow",
+        "components/**": "allow",
+        "*.ts": "allow",
+        "*.tsx": "allow",
+        "*.cs": "allow",
+        "*.cpp": "allow",
+        "*.h": "allow",
+      },
+      bash: {
+        "*": "deny",
+        "git log*": "allow",
+        "git status*": "allow",
+        "git branch*": "allow",
+        "git diff*": "allow",
+        "npm run build*": "allow",
+        "npm run test*": "allow",
+        "npm run lint*": "allow",
+        "dotnet build*": "allow",
+        "dotnet test*": "allow",
+        "cargo build*": "allow",
+        "cargo test*": "allow",
+      },
+      grep: { "*": "allow" },
+      lsp: "allow",
+      webfetch: "ask",
+    },
+  },
+  "johnludlow-feature-documenter": {
+    description: "Writes and maintains project documentation",
+    mode: "subagent",
+    temperature: 0.2,
+    permission: {
+      read: { "*": "allow" },
+      edit: {
+        "*": "deny",
+        "docs/**": "allow",
+        "docs/plans/*": "allow",
+        "README.md": "allow",
+        "*.md": "ask",
+      },
+      bash: {
+        "*": "deny",
+        "git log*": "allow",
+        "git status*": "allow",
+        "git branch*": "allow",
+        "git diff*": "allow",
+      },
+      grep: { "*": "allow" },
+      webfetch: "ask",
+      task: { "*": "deny" },
+    },
+  },
+  "johnludlow-feature-tester": {
+    description: "Tests features and reports results",
+    mode: "subagent",
+    temperature: 0.2,
+    permission: {
+      read: { "*": "allow", "*.env": "deny" },
+      edit: { "*": "deny" },
+      bash: {
+        "*": "deny",
+        "npm test*": "allow",
+        "npm run test*": "allow",
+        "dotnet test*": "allow",
+        "cargo test*": "allow",
+        "git log*": "allow",
+        "git status*": "allow",
+        "git branch*": "allow",
+        "git diff*": "allow",
+      },
+      grep: { "*": "allow" },
+      webfetch: "ask",
+    },
+  },
+};
+
+/**
+ * Generate YAML frontmatter for OpenCode format
+ */
+function generateOpenCodeFrontmatter(agentName) {
+  const config = AGENT_PERMISSIONS[agentName];
+  if (!config) {
+    console.warn(`⚠️  No permission config found for ${agentName}`);
+    return "";
+  }
+
+  const yamlLines = [
+    "---",
+    `description: ${config.description}`,
+    `mode: ${config.mode}`,
+    `temperature: ${config.temperature}`,
+    "permission:",
+  ];
+
+  // Add permissions
+  for (const [key, value] of Object.entries(config.permission)) {
+    if (typeof value === "string") {
+      yamlLines.push(`  ${key}: ${value}`);
+    } else if (typeof value === "object") {
+      yamlLines.push(`  ${key}:`);
+      for (const [k, v] of Object.entries(value)) {
+        if (k === "*") {
+          yamlLines.push(`    "*": ${v}`);
+        } else {
+          yamlLines.push(`    "${k}": ${v}`);
+        }
+      }
+    }
+  }
+
+  yamlLines.push("---");
+  return yamlLines.join("\n");
+}
+
+/**
+ * Build OpenCode agent definitions from canonical source
+ */
+function buildOpenCodeAgents() {
+  console.log("📦 Building OpenCode agent definitions...");
+
+  const sourceDir = path.join(__dirname, "..", "agents");
+  const targetDir = path.join(__dirname, "..", "opencode", "agents");
+
+  // Ensure target directory exists
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+
+  const agentFiles = fs.readdirSync(sourceDir).filter((f) => f.endsWith(".md"));
+
+  agentFiles.forEach((file) => {
+    const sourcePath = path.join(sourceDir, file);
+    const targetPath = path.join(targetDir, file);
+    const agentName = path.basename(file, ".md");
+
+    // Read canonical source
+    const content = fs.readFileSync(sourcePath, "utf8");
+
+    // Generate OpenCode version with frontmatter
+    const frontmatter = generateOpenCodeFrontmatter(agentName);
+    const opencodeContent = `${frontmatter}\n\n${content}`;
+
+    // Write to OpenCode directory
+    fs.writeFileSync(targetPath, opencodeContent);
+    console.log(`  ✓ Generated ${file}`);
+  });
+
+  console.log(`✓ OpenCode agent definitions built to ${targetDir}\n`);
+}
+
+/**
+ * Build Copilot agent definitions from canonical source
+ */
+function buildCopilotAgents() {
+  console.log("🔌 Building GitHub Copilot agent definitions...");
+
+  const sourceDir = path.join(__dirname, "..", "agents");
+  const targetDir = path.join(__dirname, "..", ".github", "agents");
+
+  // Ensure target directory exists
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+
+  const agentFiles = fs.readdirSync(sourceDir).filter((f) => f.endsWith(".md"));
+
+  agentFiles.forEach((file) => {
+    const sourcePath = path.join(sourceDir, file);
+    const targetPath = path.join(targetDir, file);
+
+    // Read canonical source
+    const content = fs.readFileSync(sourcePath, "utf8");
+
+    // Copy as-is for Copilot (no frontmatter needed)
+    fs.writeFileSync(targetPath, content);
+    console.log(`  ✓ Generated ${file}`);
+  });
+
+  console.log(`✓ Copilot agent definitions built to ${targetDir}\n`);
+}
+
+/**
+ * Main build function
+ */
+function build() {
+  try {
+    console.log("🔨 Building @johnludlow/agents agent definitions\n");
+
+    buildOpenCodeAgents();
+    buildCopilotAgents();
+
+    console.log("✨ Build complete!");
+    console.log("\n📁 Generated files:");
+    console.log(`  - opencode/agents/*.md (with OpenCode YAML frontmatter)`);
+    console.log(`  - .github/agents/*.md (for GitHub Copilot)`);
+  } catch (error) {
+    console.error("\n❌ Build failed:");
+    console.error(error.message);
+    process.exit(1);
+  }
+}
+
+// Run build if this is being executed directly
+if (require.main === module) {
+  build();
+}
+
+module.exports = { buildOpenCodeAgents, buildCopilotAgents };
