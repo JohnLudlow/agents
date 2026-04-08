@@ -51,6 +51,9 @@ docs/plans/**/*.md
 .opencode/
 .opencode.johnludlow-backup-*
 
+# Packages
+johnludlow-agents-*.tgz
+
 # Installation backups
 .opencode/.johnludlow-backup-*
 .copilot.johnludlow-backup-*
