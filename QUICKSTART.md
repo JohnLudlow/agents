@@ -177,7 +177,7 @@ These agents work with:
 ### Agents not found in OpenCode
 
 1. Verify installation: `ls ~/.config/opencode/agents/`
-2. If empty, run: `npm run install`
+2. If empty, run: `npx @johnludlow/agents install`
 3. Restart OpenCode
 
 ### Need to uninstall?
