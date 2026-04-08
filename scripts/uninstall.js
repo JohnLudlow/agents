@@ -215,4 +215,4 @@ if (require.main === module) {
   uninstall();
 }
 
-module.exports = { uninstallPlatform };
+module.exports = { uninstallPlatform, uninstall };

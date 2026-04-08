@@ -1,142 +1,27 @@
-# Install script for johnludlow agents and skills
-# Usage: .\install.ps1
+# DEPRECATED: Use npm installation instead
 
-param(
-    [switch]$OpenCode,
-    [switch]$CopilotCLI,
-    [string]$InstallPath,
-    [switch]$All
-)
+This script is deprecated and no longer maintained.
 
-# If no options specified, install for all
-if (-not $OpenCode -and -not $CopilotCLI -and -not $All) {
-    $All = $true
-}
+## Use this instead:
 
-if ($All) {
-    $OpenCode = $true
-    $CopilotCLI = $true
-}
+```powershell
+npm install @johnludlow/agents
+```
 
-# Get default install paths
-$scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
+The npm-based installation (via `scripts/install.js`) is now the recommended way to install agents and skills.
+It provides:
+- Unified installation for both OpenCode and GitHub Copilot
+- Automatic backup/restore functionality
+- Cross-platform support (Windows, macOS, Linux)
+- Proper permission management
+- Better error handling
 
-if (-not $InstallPath) {
-    if ($IsLinux -or $IsMacOS) {
-        $InstallPath = "$HOME/.local/share/agents"
-    } else {
-        $InstallPath = "$env:APPDATA/opencode/agents"
-    }
-}
+## Manual installation (not recommended)
 
-Write-Host "Installing johnludlow agents and skills to: $InstallPath" -ForegroundColor Green
+If you need to manually install agents, you can:
 
-# Create installation directory
-if (-not (Test-Path $InstallPath)) {
-    New-Item -ItemType Directory -Path $InstallPath -Force | Out-Null
-    Write-Host "Created installation directory" -ForegroundColor Yellow
-}
+1. Copy agents from `opencode/agents/` to `$env:APPDATA\opencode\agents\` (Windows) or `~/.config/opencode/agents/` (Linux/Mac)
+2. Copy skills from `skills/` to `$env:APPDATA\opencode\skills\` or `~/.config/opencode/skills/`
+3. Copy config.json from `opencode/config.json` to the appropriate location
 
-# Install agents
-Write-Host "`nInstalling agents..." -ForegroundColor Cyan
-$agentDir = Join-Path $scriptPath ".github/agents"
-$destAgentDir = Join-Path $InstallPath "agents"
-
-if (-not (Test-Path $destAgentDir)) {
-    New-Item -ItemType Directory -Path $destAgentDir -Force | Out-Null
-}
-
-Copy-Item "$agentDir/*.md" $destAgentDir -Force
-Write-Host "Agents installed to: $destAgentDir" -ForegroundColor Green
-
-# Install skills
-Write-Host "`nInstalling skills..." -ForegroundColor Cyan
-$skillDir = Join-Path $scriptPath ".github/skills"
-$destSkillDir = Join-Path $InstallPath "skills"
-
-if (-not (Test-Path $destSkillDir)) {
-    New-Item -ItemType Directory -Path $destSkillDir -Force | Out-Null
-}
-
-Copy-Item "$skillDir/*.md" $destSkillDir -Force
-Write-Host "Skills installed to: $destSkillDir" -ForegroundColor Green
-
-# Install templates
-Write-Host "`nInstalling templates..." -ForegroundColor Cyan
-$templateDir = Join-Path $scriptPath "docs/templates"
-$destTemplateDir = Join-Path $InstallPath "templates"
-
-if (-not (Test-Path $destTemplateDir)) {
-    New-Item -ItemType Directory -Path $destTemplateDir -Force | Out-Null
-}
-
-Copy-Item "$templateDir/*.md" $destTemplateDir -Force
-Write-Host "Templates installed to: $destTemplateDir" -ForegroundColor Green
-
-# Copilot CLI specific installation
-if ($CopilotCLI) {
-    Write-Host "`nSetting up Copilot CLI..." -ForegroundColor Cyan
-
-    # Check if copilot CLI is installed
-    $copilotCLI = Get-Command copilot -ErrorAction SilentlyContinue
-
-    if ($copilotCLI) {
-        Write-Host "Copilot CLI found at: $($copilotCLI.Source)" -ForegroundColor Green
-        
-        Write-Host "`nInstalling Copilot plugins..." -ForegroundColor Cyan
-        $plugins = @(
-            "awesome-copilot@awesome-copilot",
-            "azure@awesome-copilot",
-            "doublecheck@awesome-copilot",
-            "dotnet@awesome-copilot",
-            "dotnet-diag@awesome-copilot",
-            "context-engineering@awesome-copilot",
-            "csharp-dotnet-development@awesome-copilot",
-            "csharp-mcp-development@awesome-copilot",
-            "devops-oncall@awesome-copilot",
-            "technical-spike@awesome-copilot",
-            "microsoft-docs@awesome-copilot",
-            "openapi-to-application-csharp-dotnet@awesome-copilot",
-            "polyglot-test-agent@awesome-copilot",
-            "roundup@awesome-copilot",
-            "project-planning@awesome-copilot",
-            "security-best-practices@awesome-copilot"
-        )
-        
-        foreach ($plugin in $plugins) {
-            Write-Host "Installing $plugin..." -ForegroundColor Gray
-            & copilot plugin install $plugin 2>$null
-            if ($LASTEXITCODE -eq 0) {
-                Write-Host "  ✓ Installed" -ForegroundColor Green
-            } else {
-                Write-Host "  ✗ Failed (plugin may already be installed)" -ForegroundColor Yellow
-            }
-        }
-    } else {
-        Write-Warning "Copilot CLI not found. Please install it first:"
-        Write-Host "  npm install -g @github/copilot-cli" -ForegroundColor Gray
-    }
-}
-
-# OpenCode specific installation
-if ($OpenCode) {
-    Write-Host "`nSetting up OpenCode..." -ForegroundColor Cyan
-
-    # Check if opencode CLI is installed
-    $opencodeCLI = Get-Command opencode -ErrorAction SilentlyContinue
-
-    if ($opencodeCLI) {
-        Write-Host "OpenCode found at: $($opencodeCLI.Source)" -ForegroundColor Green
-        Write-Host "Note: Manually configure agents in your OpenCode settings" -ForegroundColor Yellow
-    } else {
-        Write-Warning "OpenCode not found. Please install it first:"
-        Write-Host "  npm install -g @anomalyco/opencode" -ForegroundColor Gray
-    }
-}
-
-Write-Host "`nInstallation complete!" -ForegroundColor Green
-Write-Host "`nNext steps:" -ForegroundColor Cyan
-Write-Host "1. Configure your agent tool with the installed agents and skills"
-Write-Host "2. Copy relevant agents from $destAgentDir to your tool's agent directory"
-Write-Host "3. Copy relevant skills from $destSkillDir to your tool's skills directory"
-Write-Host "`nFor more information, see the README.md in the repository"
+But the npm installation is strongly recommended.

@@ -351,4 +351,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { installPlatform, installOpenCodeConfig };
+module.exports = { installPlatform, installOpenCodeConfig, main };

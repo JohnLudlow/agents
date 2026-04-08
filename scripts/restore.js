@@ -186,4 +186,4 @@ if (require.main === module) {
   restore();
 }
 
-module.exports = { restorePlatform };
+module.exports = { restorePlatform, restore };
