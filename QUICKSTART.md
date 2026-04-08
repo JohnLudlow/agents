@@ -122,10 +122,10 @@ npm install --global @johnludlow/agents
 npx @johnludlow/agents install --global
 
 # Generate GitHub Copilot format from OpenCode format
-npm run generate:copilot
+npx @johnludlow/agents generate-copilot
 
 # Restore from latest backup
-npm run restore
+npx @johnludlow/agents restore
 
 # Show help
 npx @johnludlow/agents help

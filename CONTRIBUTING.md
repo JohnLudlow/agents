@@ -87,19 +87,24 @@ markdownlint '.github/agents/*.md' '.github/skills/*.md' \
   'docs/templates/*.md' '*.md'
 ```
 
-1. **Installation Script Testing**
+1. **Installation Testing**
 
-- Test PowerShell installation on Windows:
-
-```powershell
-.\install.ps1 -All
-```
-
-- Test Bash installation on Linux/macOS:
+- Test installation on any platform:
 
 ```bash
-chmod +x ./install.sh
-./install.sh --all
+npm install
+```
+
+- Or run the install script directly:
+
+```bash
+node scripts/install.js
+```
+
+- For local testing without global install:
+
+```bash
+npm run install:local
 ```
 
 1. **Agent Definition Validation**
@@ -133,16 +138,16 @@ chmod +x ./install.sh
 
 ### Adding a New Agent
 
-1. Create a new file in `.github/agents/` named `johnludlow-[agent-name].md`
+1. Create a new file in `agents/` named `johnludlow-[agent-name].md`
 2. Follow the standard agent definition structure
 3. Include all required sections
 4. Update the README.md with the new agent
 5. Add the agent to the GitHub Actions validation workflow
-6. Test installation scripts
+6. Run `node scripts/install.js` to verify it installs correctly
 
 ### Adding a New Skill
 
-1. Create a new file in `.github/skills/` named `johnludlow-[skill-name].md`
+1. Create a new file in `skills/` named `johnludlow-[skill-name].md`
 2. Follow the standard skill definition structure
 3. Include practical guidance and examples
 4. Link from relevant agent definitions
