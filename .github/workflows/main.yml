@@ -54,7 +54,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: copilot-format
-          path: .github/agents/
+          path: |
+            .github/agents/
+            .github/skills/
           retention-days: 30
 
   release:
