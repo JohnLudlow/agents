@@ -49,6 +49,7 @@ docs/plans/**/*.md
 
 # Installation directories (created at install time)
 .opencode/
+opencode/
 .opencode.johnludlow-backup-*
 .github/agents.johnludlow-backup-*/*
 .github/skills.johnludlow-backup-*/*

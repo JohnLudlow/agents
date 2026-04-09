@@ -7,7 +7,7 @@
  * - agents/*.md (canonical source) → opencode/agents/*.md (with OpenCode YAML frontmatter)
  * - agents/*.md (canonical source) → .github/agents/*.md (with Copilot YAML frontmatter)
  * - skills/*.md (canonical source) → opencode/skills/*.md (plain markdown)
- * - skills/*.md (canonical source) → .github/skills/*.md (plain markdown)
+ * - skills/*.md (canonical source) → .github/skills/*.md (with Copilot YAML frontmatter)
  */
 
 const fs = require("fs");
@@ -181,6 +181,22 @@ function generateCopilotFrontmatter(agentName) {
   return yamlLines.join("\n");
 }
 
+const COPILOT_SKILL_DESCRIPTIONS = {
+  "johnludlow-markdown-standards": "Markdown and documentation standards (rumdl, structure, links, code blocks)",
+  "johnludlow-code-quality": "Code quality standards across C#, TypeScript, and C++ (SOLID, testing, performance)",
+};
+
+function generateCopilotSkillFrontmatter(skillName) {
+  let description = COPILOT_SKILL_DESCRIPTIONS[skillName];
+  if (!description) {
+    console.warn(`⚠️  No Copilot skill description found for ${skillName}; using fallback`);
+    description = `Skill: ${skillName}`;
+  }
+
+  const yamlLines = ["---", `description: ${description}`, "---"];
+  return yamlLines.join("\n");
+}
+
 /**
  * Build OpenCode agent definitions from canonical source
  */
@@ -328,12 +344,16 @@ function buildCopilotSkills() {
   skillFiles.forEach((file) => {
     const sourcePath = path.join(sourceDir, file);
     const targetPath = path.join(targetDir, file);
+    const skillName = path.basename(file, ".md");
 
     // Read canonical source
     const content = fs.readFileSync(sourcePath, "utf8");
 
-    // Copy as-is for Copilot (plain markdown)
-    fs.writeFileSync(targetPath, content);
+    // Generate Copilot version with simplified frontmatter
+    const frontmatter = generateCopilotSkillFrontmatter(skillName);
+    const copilotContent = `${frontmatter}\n\n${content}`;
+
+    fs.writeFileSync(targetPath, copilotContent);
     console.log(`  ✓ Generated ${file}`);
   });
 
@@ -357,7 +377,7 @@ function build() {
     console.log(`  - opencode/agents/*.md (with OpenCode YAML frontmatter)`);
     console.log(`  - opencode/skills/*.md (plain markdown)`);
     console.log(`  - .github/agents/*.md (with Copilot YAML frontmatter)`);
-    console.log(`  - .github/skills/*.md (plain markdown)`);
+    console.log(`  - .github/skills/*.md (with Copilot YAML frontmatter)`);
   } catch (error) {
     console.error("\n❌ Build failed:");
     console.error(error.message);

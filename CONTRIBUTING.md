@@ -71,7 +71,7 @@ When creating or updating templates:
    - Include example content where appropriate
 
 2. **Validation**
-   - Must pass markdownlint checks
+   - Must pass `rumdl check .`
    - Should be concise but complete
    - Should guide users through the document structure
 
@@ -82,9 +82,8 @@ Before submitting a pull request:
 1. **Markdown Validation**
 
 ```bash
-npm install -g markdownlint-cli
-markdownlint '.github/agents/*.md' '.github/skills/*.md' \
-  'docs/templates/*.md' '*.md'
+npm install -g rumdl
+rumdl check .
 ```
 
 1. **Installation Testing**

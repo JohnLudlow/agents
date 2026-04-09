@@ -323,7 +323,8 @@ This project uses a single-source-of-truth approach for agent and skill definiti
 2. **Build Process** (runs on `npm install` and `npm run build:agents`)
    - Generates format-specific versions from the canonical source
    - Creates OpenCode format with YAML frontmatter (including permissions)
-   - Creates Copilot format (plain markdown, no frontmatter)
+   - Creates Copilot **agent** format with Copilot-compatible YAML frontmatter (description + temperature)
+   - Creates Copilot **skill** format with Copilot-compatible YAML frontmatter (description)
    - Outputs to `opencode/agents/`, `opencode/skills/`, `.github/agents/`, `.github/skills/`
 
 3. **Installation** (automatic via postinstall hook)
