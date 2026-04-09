@@ -82,3 +82,30 @@ jobs:
           git tag $TAG
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git $TAG
           echo "✓ Created tag: $TAG"
+
+      - name: Generate Release Notes
+        id: release-notes
+        shell: bash
+        run: |
+          node scripts/generate-release-notes.js > RELEASE_NOTES.md
+          cat RELEASE_NOTES.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: johnludlow-agents-${{ needs.setup.outputs.version }}.tgz
+          path: ./release-artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.setup.outputs.version }}
+          body_path: RELEASE_NOTES.md
+          files: |
+            ./release-artifacts/johnludlow-agents-*.tgz
+            ./scripts/install-release.ps1
+            ./scripts/install-release.sh
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

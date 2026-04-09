@@ -1,5 +1,9 @@
 # johnludlow Agents and Skills
 
+[![Build Status](https://github.com/JohnLudlow/agents/actions/workflows/main.yml/badge.svg)](https://github.com/JohnLudlow/agents/actions/workflows/main.yml)
+[![npm version](https://img.shields.io/npm/v/@johnludlow/agents)](https://www.npmjs.com/package/@johnludlow/agents)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A collection of reusable AI agents and skills for OpenCode and GitHub Copilot CLI,
 designed to streamline feature planning, implementation, documentation, and testing
 for multi-language projects.
@@ -107,63 +111,41 @@ Pre-built templates for common documents:
 
 ## Installation
 
-### Prerequisites
+For comprehensive installation instructions, see the **[INSTALLATION.md](docs/INSTALLATION.md)** guide.
 
-- Node.js 22.0.0+ (for NPM package management)
-- npm (Node Package Manager)
-- OpenCode or GitHub Copilot CLI (optional, but required to use the agents)
+### Quick Start (Recommended)
 
-### Quick Start
+The easiest way to install is using our automated installation scripts:
 
-The installation is completely automated through NPM's `postinstall` hook.
+**Windows (PowerShell):**
+```powershell
+$script = "install-release.ps1"
+Invoke-WebRequest -Uri "https://github.com/JohnLudlow/agents/releases/download/latest/$script" -OutFile $script
+.\$script
+```
+
+**macOS/Linux (Bash):**
+```bash
+curl -fsSL "https://github.com/JohnLudlow/agents/releases/download/latest/install-release.sh" -o install-release.sh
+chmod +x install-release.sh
+./install-release.sh
+```
+
+### Or Use npm
 
 ```bash
 npm install @johnludlow/agents
 ```
 
-This automatically:
-
-- Detects your environment (global or local installation)
-- Installs agents and skills to OpenCode configuration directory
-- Installs OpenCode `config.json` with permission rules
-- Installs agent definitions with capabilities and restrictions
-- Copies agents to GitHub Copilot format in `.github/agents/` (local mode)
-- Attempts to install recommended Copilot plugins (if Copilot CLI is available)
-- Creates backup of any existing installation
-
-### Global Installation
-
+For global installation:
 ```bash
 npm install -g @johnludlow/agents
 ```
 
-Global installation will:
+### Prerequisites
 
-- Install to `~/.config/opencode/` (OpenCode global config)
-- Make agents available to all projects
-- Install Copilot plugins globally
-- Create automated backups
-
-### Local Installation
-
-```bash
-npm install @johnludlow/agents
-```
-
-Local installation will:
-
-- Install to `.opencode/` (project-local config)
-- Create `.github/agents/` and `.github/skills/` directories
-- Backups stored in the same directory structure
-- Project-specific agent configuration
-
-### Verify Installation
-
-```bash
-# List installed agents and skills
-ls ~/.config/opencode/agents/   # or .opencode/agents/ for local
-ls ~/.config/opencode/skills/   # or .opencode/skills/ for local
-```
+- Node.js 22.0.0+ ([Download](https://nodejs.org/))
+- npm (included with Node.js)
 
 ## Usage
 
