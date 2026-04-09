@@ -223,23 +223,23 @@ function isCopilotCliAvailable() {
 }
 
 /**
- * Attempt to install a single Copilot plugin via `gh extension install`
+ * Attempt to install a single Copilot plugin via `copilot plugin install`
  * Returns true on success, false on failure.
  */
 function installCopilotPlugin(scope, name) {
-  const result = spawnSync(
-    "copilot",
-    ["plugin", "install", `${scope}/${name}`],
-    { encoding: "utf8", stdio: "pipe" }
-  );
-  return result.status === 0;
-}
+   const result = spawnSync(
+     "copilot",
+     ["plugin", "install", `${name}@${scope}`],
+     { encoding: "utf8", stdio: "pipe" }
+   );
+   return result.status === 0;
+ }
 
 /**
  * Install recommended Copilot plugins.
  *
  * If the `copilot` CLI is available the script attempts to install each plugin via
- * `gh extension install <scope>/<name>`.  When `gh` is not available (or a
+ * `copilot plugin install <scope>/<name>`.  When `copilot` is not available (or a
  * plugin install fails) the plugin is flagged for manual installation and a
  * human-readable summary is printed at the end.
  */
@@ -247,16 +247,16 @@ function installCopilotPlugins() {
   console.log("\n🔌 Installing recommended Copilot plugins...");
 
   const ghAvailable = isCopilotCliAvailable();
-  if (!ghAvailable) {
-    console.log("   ℹ️  Copilot CLI not found — plugins must be installed manually.");
-    console.log("      Install the CoPilot CLI: https://github.com/features/copilot/cli/\n");
-    console.log("   Recommended plugins:");
-    COPILOT_PLUGINS.forEach(({ name, scope, version }) => {
-      console.log(`     • ${name}@${scope} (${version})`);
-      console.log(`       copilot plugin install ${scope}/${name}`);
-    });
-    return;
-  }
+   if (!ghAvailable) {
+     console.log("   ℹ️  Copilot CLI not found — plugins must be installed manually.");
+     console.log("      Install the CoPilot CLI: https://github.com/features/copilot/cli/\n");
+     console.log("   Recommended plugins:");
+     COPILOT_PLUGINS.forEach(({ name, scope, version }) => {
+       console.log(`     • ${name}@${scope} (${version})`);
+       console.log(`       copilot plugin install ${name}@${scope}`);
+     });
+     return;
+   }
 
   const succeeded = [];
   const failed = [];
@@ -272,17 +272,17 @@ function installCopilotPlugins() {
     }
   }
 
-  if (succeeded.length > 0) {
-    console.log(`\n   ✓ Installed ${succeeded.length} plugin(s) via gh extension`);
-  }
+   if (succeeded.length > 0) {
+     console.log(`\n   ✓ Installed ${succeeded.length} plugin(s) via copilot plugin install`);
+   }
 
-  if (failed.length > 0) {
-    console.log(`\n   ⚠️  ${failed.length} plugin(s) could not be installed automatically:`);
-    failed.forEach(({ name, scope, version }) => {
-      console.log(`     • ${name}@${scope} (${version})`);
-      console.log(`       gh extension install ${scope}/${name}`);
-    });
-  }
+   if (failed.length > 0) {
+     console.log(`\n   ⚠️  ${failed.length} plugin(s) could not be installed automatically:`);
+     failed.forEach(({ name, scope, version }) => {
+       console.log(`     • ${name}@${scope} (${version})`);
+       console.log(`       copilot plugin install ${name}@${scope}`);
+     });
+   }
 }
 
 /**
