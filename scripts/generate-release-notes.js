@@ -165,9 +165,17 @@ function readChangelog() {
 function generateInstallationInstructions(version) {
     return `## Installation
 
-### Option 1: PowerShell (Windows)
+### Option 1: PowerShell (Windows) - One-liner
 
-Download and run the installation script:
+The simplest method - just copy and paste in PowerShell:
+
+\`\`\`powershell
+iwr https://github.com/JohnLudlow/agents/releases/download/v${version}/install-release.ps1 | iex
+\`\`\`
+
+### Option 1b: PowerShell (Windows) - Manual
+
+Or download and run the script manually:
 
 \`\`\`powershell
 # Download the installation script
@@ -290,9 +298,14 @@ function generateReleaseNotes(version) {
 
 function main() {
     try {
-        // Get version from package.json
-        const pkg = readPackageJson();
-        const version = pkg.version;
+        // Get version from environment variable (set by GitHub Actions)
+        // Falls back to package.json for local testing
+        let version = process.env.RELEASE_VERSION;
+        
+        if (!version) {
+            const pkg = readPackageJson();
+            version = pkg.version;
+        }
         
         // Generate release notes
         const notes = generateReleaseNotes(version);
