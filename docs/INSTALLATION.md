@@ -341,7 +341,7 @@ To check your installed version:
 npm list @johnludlow/agents
 ```
 
-To upgrade to a newer version, visit the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases/latest)**, pick the release you want, and run:
+To upgrade to a newer version, find the `.tgz` asset on the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases/latest)** and run:
 
 ```bash
 npm install -g <tgz-url>
