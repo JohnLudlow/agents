@@ -1,0 +1,98 @@
+# Documentation Template
+
+Use this template when creating documentation with johnludlow-feature-documenter.
+
+## Overview
+
+[1-2 paragraph overview of the feature/component]
+
+### Key Features
+
+- [Feature 1]
+- [Feature 2]
+- [Feature 3]
+
+## Getting Started
+
+### Prerequisites
+
+- [Prerequisite 1]
+- [Prerequisite 2]
+
+### Quick Start
+
+[Simple, working example to get users up and running quickly]
+
+```csharp
+// C# example
+example code here
+```
+
+```typescript
+// TypeScript example
+example code here
+```
+
+## Detailed Guide
+
+### Concept 1: [Concept Name]
+
+[Explain the concept with examples]
+
+#### Example
+
+[Working example demonstrating the concept]
+
+### Concept 2: [Concept Name]
+
+[Explain the concept with examples]
+
+## API Reference
+
+### Function/Method: [Name]
+
+```csharp
+Signature
+```
+
+- **Parameters**: [Description]
+- **Returns**: [Description]
+- **Throws**: [Exceptions]
+- **Example**: [Code example]
+
+## Best Practices
+
+- [Best practice 1]
+- [Best practice 2]
+- [Best practice 3]
+
+## Common Issues and Troubleshooting
+
+### Issue 1: [Description]
+
+**Solution**: [How to resolve]
+
+### Issue 2: [Description]
+
+**Solution**: [How to resolve]
+
+## Performance Considerations
+
+[Any performance-related information or tips]
+
+## Related Topics
+
+- [Link to related documentation]
+- [Link to related documentation]
+
+## See Also
+
+- [API Reference](#api-reference)
+- [Examples](#detailed-guide)
+- [FAQ](#common-issues-and-troubleshooting)
+
+## Revision History
+
+| Date       | Author | Changes               |
+|:-----------|:-------|:----------------------|
+| YYYY-MM-DD | Agent  | Initial documentation |

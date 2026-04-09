@@ -1,0 +1,67 @@
+# Operating System
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.vim/
+
+# Build outputs
+build/
+dist/
+*.tar.gz
+*.zip
+!.github/actions/build/
+!.github/workflows/
+!.github/agents/
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+.npmrc (but tracked in repo)
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.Python
+
+# Generated files
+*.backup
+*.tmp
+
+# Agent-specific
+docs/plans/**/*.md
+!docs/plans/.gitkeep
+
+# Generated agent definition files in build directory (built from agents/*.md source)
+# Note: opencode/agents/*.md are committed as build artifacts
+# But .opencode/ is user installation directory, not committed
+
+# Installation directories (created at install time)
+.opencode/
+opencode/
+.opencode.johnludlow-backup-*
+.github/agents.johnludlow-backup-*/*
+.github/skills.johnludlow-backup-*/*
+
+# Packages
+johnludlow-agents-*.tgz
+
+# Installation backups
+.opencode/.johnludlow-backup-*
+.copilot.johnludlow-backup-*
+.copilot/.johnludlow-backup-*
+.github/agents/
+.github/skills/
+
+.rumdl_cache/

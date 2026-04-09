@@ -1,0 +1,16 @@
+# GitHub Copilot Configuration for @johnludlow/agents
+# 
+# This file should be copied to your repository's .github/copilot/config.yml
+# and configured according to GitHub Copilot documentation.
+#
+# Agents:
+#   - johnludlow-feature-documenter: ./agents/johnludlow-feature-documenter.md
+#   - johnludlow-feature-implementer: ./agents/johnludlow-feature-implementer.md
+#   - johnludlow-feature-planner: ./agents/johnludlow-feature-planner.md
+#   - johnludlow-feature-tester: ./agents/johnludlow-feature-tester.md
+#
+# Skills:
+#   - johnludlow-code-quality: ./skills/johnludlow-code-quality.md
+#   - johnludlow-markdown-standards: ./skills/johnludlow-markdown-standards.md
+#
+# See https://github.com/github/copilot-cli for more information.
