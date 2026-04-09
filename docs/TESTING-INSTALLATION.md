@@ -1,6 +1,7 @@
 # Installation Testing Guide
 
-This guide provides comprehensive testing procedures for the `@johnludlow/agents` installation process across all platforms and installation methods.
+This guide provides comprehensive testing procedures for the `@johnludlow/agents` installation process across all
+platforms and installation methods.
 
 ## Test Environment Setup
 

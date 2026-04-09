@@ -279,34 +279,6 @@ The Release job automatically:
 
 Users can then download the release from: <https://github.com/JohnLudlow/agents/releases>
 
-## Local Testing
-
-### Running the Validate Action Locally
-
-```bash
-# Install rumdl
-npm install -g rumdl
-
-# Run markdown validation
-rumdl check .
-
-# Check agent structure
-for file in agents/*.md; do
-  grep -q "## Description" "$file" || echo "Missing Description in $file"
-  grep -q "## Purpose" "$file" || echo "Missing Purpose in $file"
-done
-```
-
-### Running the Build Locally
-
-```bash
-# Generate NPM package
-npm pack
-
-# Generate Copilot format
-npm run generate:copilot
-```
-
 ## Troubleshooting
 
 ### Pipeline Fails on Markdown Validation
