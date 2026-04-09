@@ -39,18 +39,19 @@ npm install <tgz-url>
 
 ### Method 1: From GitHub Release (Recommended)
 
-Install directly from a release package URL using npm:
+Visit the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases/latest)** to find the latest release.
+Each release includes a `.tgz` asset — copy its URL and use it for installation.
 
 **Global installation:**
 
 ```bash
-npm install -g https://github.com/JohnLudlow/agents/releases/download/vX.X.X/johnludlow-agents-X.X.X.tgz
+npx <tgz-url> install --global
 ```
 
 **Local installation:**
 
 ```bash
-npm install https://github.com/JohnLudlow/agents/releases/download/vX.X.X/johnludlow-agents-X.X.X.tgz
+npm install <tgz-url>
 ```
 
 **Advantages:**
