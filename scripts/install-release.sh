@@ -62,17 +62,17 @@ write_header() {
 
 write_success() {
     local message="$1"
-    echo -e "${GREEN}✓ ${message}${NC}"
+    echo -e "${GREEN}[OK]${NC} ${message}"
 }
 
 write_warning() {
     local message="$1"
-    echo -e "${YELLOW}⚠ ${message}${NC}"
+    echo -e "${YELLOW}[WARN]${NC} ${message}"
 }
 
 write_error() {
     local message="$1"
-    echo -e "${RED}✗ ${message}${NC}"
+    echo -e "${RED}[ERROR]${NC} ${message}"
 }
 
 # Check if a command exists
