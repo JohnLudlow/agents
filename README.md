@@ -115,7 +115,7 @@ For comprehensive installation instructions, see the **[INSTALLATION.md](docs/IN
 
 ### Quick Start (Recommended)
 
-Visit the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases)** to find the latest release.
+Visit the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases/latest)** to find the latest release.
 Each release includes a `.tgz` asset — copy its URL and use it with `npx`:
 
 ```bash

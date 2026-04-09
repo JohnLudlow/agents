@@ -167,7 +167,7 @@ function generateInstallationInstructions(version) {
 
 ### Quick Start (Recommended)
 
-The simplest way to install is directly from the release package using npm:
+The simplest way to install is directly from the release package using npx:
 
 **Windows (PowerShell):**
 

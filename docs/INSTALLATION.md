@@ -22,7 +22,7 @@ npm --version
 
 ## Quick Start (Recommended)
 
-Visit the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases)** to find the latest release.
+Visit the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases/latest)** to find the latest release.
 Each release includes a `.tgz` asset — copy its URL and use it with `npx`:
 
 ```bash
@@ -341,7 +341,7 @@ To check your installed version:
 npm list @johnludlow/agents
 ```
 
-To upgrade to a newer version, visit the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases)**, pick the release you want, and run:
+To upgrade to a newer version, visit the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases/latest)**, pick the release you want, and run:
 
 ```bash
 npm install -g <tgz-url>
