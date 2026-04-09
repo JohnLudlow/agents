@@ -105,8 +105,6 @@ jobs:
           body_path: RELEASE_NOTES.md
           files: |
             ./release-artifacts/johnludlow-agents-*.tgz
-            ./scripts/install-release.ps1
-            ./scripts/install-release.sh
           draft: false
           prerelease: false
         env:

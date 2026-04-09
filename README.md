@@ -115,40 +115,11 @@ For comprehensive installation instructions, see the **[INSTALLATION.md](docs/IN
 
 ### Quick Start (Recommended)
 
-The easiest way to install is using our automated installation scripts:
-
-**Windows (PowerShell):**
-
-```powershell
-iwr https://github.com/JohnLudlow/agents/releases/download/latest/install-release.ps1 | iex
-```
-
-Or download and run manually:
-
-```powershell
-$script = "install-release.ps1"
-Invoke-WebRequest -Uri "https://github.com/JohnLudlow/agents/releases/download/latest/$script" -OutFile $script
-.\$script
-```
-
-**macOS/Linux (Bash):**
+Visit the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases/latest)** to find the latest release.
+Each release includes a `.tgz` asset — copy its URL and use it with `npx`:
 
 ```bash
-curl -fsSL "https://github.com/JohnLudlow/agents/releases/download/latest/install-release.sh" -o install-release.sh
-chmod +x install-release.sh
-./install-release.sh
-```
-
-### Or Use npm
-
-```bash
-npm install @johnludlow/agents
-```
-
-For global installation:
-
-```bash
-npm install -g @johnludlow/agents
+npx <tgz-url> install --global
 ```
 
 ### Prerequisites

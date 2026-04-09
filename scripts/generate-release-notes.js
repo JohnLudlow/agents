@@ -165,46 +165,28 @@ function readChangelog() {
 function generateInstallationInstructions(version) {
     return `## Installation
 
-### Option 1: PowerShell (Windows) - One-liner
+### Quick Start (Recommended)
 
-The simplest method - just copy and paste in PowerShell:
+The simplest way to install is directly from the release package using npx:
 
-\`\`\`powershell
-iwr https://github.com/JohnLudlow/agents/releases/download/v${version}/install-release.ps1 | iex
-\`\`\`
-
-### Option 1b: PowerShell (Windows) - Manual
-
-Or download and run the script manually:
+**Windows (PowerShell):**
 
 \`\`\`powershell
-# Download the installation script
-$script = "install-release.ps1"
-Invoke-WebRequest -Uri "${GITHUB_RELEASES_URL}/download/v${version}/$script" -OutFile $script
-
-# Run the installation script
-.\\$script -Version "${version}"
+npx https://github.com/JohnLudlow/agents/releases/download/v${version}/johnludlow-agents-${version}.tgz install --global
 \`\`\`
 
-### Option 2: Bash (macOS/Linux)
-
-Download and run the installation script:
+**macOS/Linux (Bash):**
 
 \`\`\`bash
-# Download the installation script
-curl -fsSL "${GITHUB_RELEASES_URL}/download/v${version}/install-release.sh" -o install-release.sh
-chmod +x install-release.sh
-
-# Run the installation script
-./install-release.sh "${version}"
+npx https://github.com/JohnLudlow/agents/releases/download/v${version}/johnludlow-agents-${version}.tgz install --global
 \`\`\`
 
-### Option 3: npm (Any Platform)
+### Or Install Locally
 
-If you have the release package available locally:
+To install in the current project instead of globally:
 
 \`\`\`bash
-npm install ./johnludlow-agents-${version}.tgz
+npm install https://github.com/JohnLudlow/agents/releases/download/v${version}/johnludlow-agents-${version}.tgz
 \`\`\`
 
 ### Verification
@@ -215,7 +197,7 @@ After installation, verify it worked:
 npm list @johnludlow/agents
 \`\`\`
 
-For global installation, add the \`--global\` flag to the installation scripts.`;
+For help with installation, see the [Installation Guide](https://github.com/JohnLudlow/agents/blob/main/docs/INSTALLATION.md).`;
 }
 
 function generateReleaseNotes(version) {

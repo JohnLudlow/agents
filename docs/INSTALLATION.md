@@ -1,6 +1,6 @@
 # Installation Guide
 
-This guide explains how to install `@johnludlow/agents` using our automated release installation scripts.
+This guide explains how to install `@johnludlow/agents` from a GitHub release.
 
 ## Prerequisites
 
@@ -20,138 +20,86 @@ node --version   # Should be v22.0.0 or later
 npm --version
 ```
 
-## Quick Start
+## Quick Start (Recommended)
 
-The fastest way to install is using the automated installation script for your platform.
-
-### Windows (PowerShell)
-
-```powershell
-# Download and run the installation script
-$version = "latest"  # or specific version like "1.0.0"
-$script = "install-release.ps1"
-
-Invoke-WebRequest -Uri "https://github.com/JohnLudlow/agents/releases/download/latest/$script" -OutFile $script
-
-# Run the installation
-.\$script -Version $version
-```
-
-Or install directly with NPM from the release:
-
-```powershell
-# Download the .tgz package from the release page
-npm install ./johnludlow-agents-VERSION.tgz
-```
-
-### macOS/Linux (Bash)
+Visit the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases/latest)** to find the latest release.
+Each release includes a `.tgz` asset — copy its URL and use it with `npx`:
 
 ```bash
-# Download and run the installation script
-version="latest"  # or specific version like "1.0.0"
-
-curl -fsSL "https://github.com/JohnLudlow/agents/releases/download/$version/install-release.sh" -o install-release.sh
-chmod +x install-release.sh
-
-./install-release.sh $version
+npx <tgz-url> install --global
 ```
 
-Or install directly with npm:
+Or install it locally in your current project:
 
 ```bash
-# Download the .tgz package from the release page
-npm install ./johnludlow-agents-VERSION.tgz
+npm install <tgz-url>
 ```
 
 ## Installation Methods
 
-We support multiple installation methods depending on your preference and environment.
+### Method 1: From GitHub Release (Recommended)
 
-### Method 1: Automated Installation Scripts (Recommended)
+Visit the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases/latest)** to find the latest release.
+Each release includes a `.tgz` asset — copy its URL and use it for installation.
 
-The easiest and most reliable method. These scripts handle:
+**Global installation:**
 
-- Version detection
-- Package download
-- Extraction
-- NPM installation
-- Verification
+```bash
+npx <tgz-url> install --global
+```
+
+**Local installation:**
+
+```bash
+npm install <tgz-url>
+```
 
 **Advantages:**
 
 - Simple one-command installation
-- Automatic error checking
-- Works with both local and global installation
-- Cross-platform support
+- Works on all platforms (Windows, macOS, Linux)
+- No scripts to download or execute
+- Automatic error checking by npm
+- No extraction needed
 
-**Disadvantages:**
+### Method 2: Download and Install Locally
 
-- None
-
-**See:** Quick Start section above
-
-### Method 2: Direct npm Installation
-
-Install directly from the release package if you already have it downloaded.
-
-```bash
-npm install ./johnludlow-agents-VERSION.tgz
-```
-
-For global installation:
-
-```bash
-npm install -g ./johnludlow-agents-VERSION.tgz
-```
-
-**Advantages:**
-
-- Simple
-- No script execution needed
-
-**Disadvantages:**
-
-- Must download package file first
-- Must remember correct file name
-
-### Method 3: Manual Download and Install
-
-For full control or when scripts are blocked:
+For offline installation or manual control:
 
 1. **Download the release package**
    - Visit: <https://github.com/JohnLudlow/agents/releases>
    - Download the `.tgz` file for your version
 
-2. **Extract the package**
-
-   Windows (PowerShell):
-
-   ```powershell
-   tar -xzf johnludlow-agents-VERSION.tgz
-   ```
-
-   macOS/Linux:
+2. **Install with npm**
 
    ```bash
-   tar -xzf johnludlow-agents-VERSION.tgz
+   # Global installation
+   npm install -g ./johnludlow-agents-X.X.X.tgz
+
+   # Local installation
+   npm install ./johnludlow-agents-X.X.X.tgz
    ```
 
-3. **Install with npm**
+### Method 3: From npm Registry
 
-   ```bash
-   npm install ./package
-   ```
+If the package is published to npm:
+
+```bash
+# Global installation
+npm install -g @johnludlow/agents
+
+# Local installation
+npm install @johnludlow/agents
+```
 
 ## Installation Locations
-
-The package installs to different locations depending on the installation type:
 
 ### Local Installation (Project-Specific)
 
 Installs agents and skills into the current project directory:
 
 ```bash
-npm install @johnludlow/agents
+npm install https://github.com/JohnLudlow/agents/releases/download/vX.X.X/johnludlow-agents-X.X.X.tgz
 ```
 
 **Installation directories:**
@@ -171,17 +119,7 @@ npm install @johnludlow/agents
 Makes agents available to all projects:
 
 ```bash
-npm install -g @johnludlow/agents
-```
-
-or with the installation script:
-
-```powershell
-.\install-release.ps1 -Global
-```
-
-```bash
-./install-release.sh --global
+npm install -g https://github.com/JohnLudlow/agents/releases/download/vX.X.X/johnludlow-agents-X.X.X.tgz
 ```
 
 **Installation directories:**
@@ -209,7 +147,7 @@ You should see output like:
 
 ```text
 your-project@1.0.0
-└── @johnludlow/agents@1.0.0
+└── @johnludlow/agents@X.X.X
 ```
 
 ### List Installed Agents
@@ -272,7 +210,7 @@ npm uninstall -g @johnludlow/agents
 
 ### Node.js version error
 
-**Error:** `Node.js version X.X.X is below minimum required version 22.0.0`
+**Error:** `npm ERR! engine unsupported`
 
 **Solution:** Upgrade Node.js to version 22.0.0 or later
 
@@ -283,40 +221,24 @@ node --version  # Verify installation
 
 ### npm not found
 
-**Error:** `npm is not installed or not in PATH`
+**Error:** `npm: command not found`
 
 **Solution:** npm is included with Node.js. Reinstall Node.js from <https://nodejs.org/>
 
-### Script execution disabled (Windows)
+### Network/Download fails
 
-**Error:** `Cannot be loaded because running scripts is disabled on this system`
-
-**Solution:** Enable script execution temporarily:
-
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
-.\install-release.ps1
-```
-
-Or run PowerShell as Administrator and set:
-
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
-```
-
-### Download fails
-
-**Error:** `Failed to download package` or `curl: command not found`
+**Error:** `npm ERR! 404 Not Found` or download timeout
 
 **Solution:**
 
 1. Check your internet connection
-2. Try downloading the release manually from <https://github.com/JohnLudlow/agents/releases>
-3. Ensure curl or wget is installed (usually pre-installed on macOS/Linux)
+2. Verify the release version exists: <https://github.com/JohnLudlow/agents/releases>
+3. Try again - GitHub may be temporarily unavailable
+4. Use a specific version instead of "latest"
 
 ### npm install fails
 
-**Error:** `npm install failed`
+**Error:** `npm ERR! code ERESOLVE` or permission errors
 
 **Solution:**
 
@@ -324,7 +246,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
 2. Clear npm cache: `npm cache clean --force`
 3. Try installing again
 4. Check if disk space is available
-5. Check file permissions in the installation directory
+5. For global install, ensure you have write permissions to npm's global directory
 
 ### Cannot find module error after installation
 
@@ -348,45 +270,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
 3. Restart OpenCode or your terminal session
 4. For global installation, verify `~/.config/opencode` exists
 
-## Advanced Installation Options
-
-### Installation Script Options
-
-**PowerShell:**
-
-```powershell
-.\install-release.ps1 -Help
-.\install-release.ps1 -Version "1.0.0"      # Install specific version
-.\install-release.ps1 -Global               # Install globally
-.\install-release.ps1 -Version "1.0.0" -Global  # Both options
-```
-
-**Bash:**
-
-```bash
-./install-release.sh
-./install-release.sh 1.0.0              # Install specific version
-./install-release.sh latest --global    # Install latest globally
-./install-release.sh 1.0.0 --global     # Both options
-```
-
-### Custom Installation Directory
-
-To install to a custom temporary directory:
-
-**PowerShell:**
-
-```powershell
-.\install-release.ps1 -WorkingDirectory "C:\custom\temp"
-```
-
-**Bash:**
-
-```bash
-TEMP_DIR="/custom/temp" ./install-release.sh
-```
-
-### Offline Installation
+## Offline Installation
 
 If you need to install without internet access:
 
@@ -395,7 +279,7 @@ If you need to install without internet access:
 3. Install with npm:
 
    ```bash
-   npm install ./johnludlow-agents-VERSION.tgz
+   npm install -g ./johnludlow-agents-X.X.X.tgz
    ```
 
 ## Getting Help
@@ -437,12 +321,6 @@ When you install `@johnludlow/agents`, you get:
 - **config.json** - OpenCode configuration with permissions
 - **Permission rules** - Security boundaries for each agent
 
-### Scripts
-
-- **install.js** - Installation script
-- **uninstall.js** - Uninstall script
-- **restore.js** - Backup restore script
-
 ## Backup and Restore
 
 The installation process automatically creates backups:
@@ -464,14 +342,8 @@ To check your installed version:
 npm list @johnludlow/agents
 ```
 
-To upgrade to a newer version:
+To upgrade to a newer version, find the `.tgz` asset on the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases/latest)** and run:
 
 ```bash
-npm install @johnludlow/agents@latest
-```
-
-To install a specific version:
-
-```bash
-npm install @johnludlow/agents@1.0.0
+npm install -g <tgz-url>
 ```
