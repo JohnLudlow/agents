@@ -118,11 +118,13 @@ For comprehensive installation instructions, see the **[INSTALLATION.md](docs/IN
 The easiest way to install is using our automated installation scripts:
 
 **Windows (PowerShell):**
+
 ```powershell
 iwr https://github.com/JohnLudlow/agents/releases/download/latest/install-release.ps1 | iex
 ```
 
 Or download and run manually:
+
 ```powershell
 $script = "install-release.ps1"
 Invoke-WebRequest -Uri "https://github.com/JohnLudlow/agents/releases/download/latest/$script" -OutFile $script
@@ -130,6 +132,7 @@ Invoke-WebRequest -Uri "https://github.com/JohnLudlow/agents/releases/download/l
 ```
 
 **macOS/Linux (Bash):**
+
 ```bash
 curl -fsSL "https://github.com/JohnLudlow/agents/releases/download/latest/install-release.sh" -o install-release.sh
 chmod +x install-release.sh
@@ -143,6 +146,7 @@ npm install @johnludlow/agents
 ```
 
 For global installation:
+
 ```bash
 npm install -g @johnludlow/agents
 ```
