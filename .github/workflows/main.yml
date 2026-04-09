@@ -86,6 +86,8 @@ jobs:
       - name: Generate Release Notes
         id: release-notes
         shell: bash
+        env:
+          RELEASE_VERSION: ${{ needs.setup.outputs.version }}
         run: |
           node scripts/generate-release-notes.js > RELEASE_NOTES.md
           cat RELEASE_NOTES.md >> $GITHUB_STEP_SUMMARY

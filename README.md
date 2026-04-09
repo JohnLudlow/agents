@@ -120,6 +120,12 @@ The easiest way to install is using our automated installation scripts:
 **Windows (PowerShell):**
 
 ```powershell
+iwr https://github.com/JohnLudlow/agents/releases/download/latest/install-release.ps1 | iex
+```
+
+Or download and run manually:
+
+```powershell
 $script = "install-release.ps1"
 Invoke-WebRequest -Uri "https://github.com/JohnLudlow/agents/releases/download/latest/$script" -OutFile $script
 .\$script
