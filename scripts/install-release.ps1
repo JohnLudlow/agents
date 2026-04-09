@@ -64,17 +64,17 @@ function Write-Header {
 
 function Write-Success {
     param([string]$Message)
-    Write-Host "✓ $Message" -ForegroundColor Green
+    Write-Host "[OK] $Message" -ForegroundColor Green
 }
 
 function Write-Warning {
     param([string]$Message)
-    Write-Host "⚠ $Message" -ForegroundColor Yellow
+    Write-Host "[WARN] $Message" -ForegroundColor Yellow
 }
 
 function Write-Error {
     param([string]$Message)
-    Write-Host "✗ $Message" -ForegroundColor Red
+    Write-Host "[ERROR] $Message" -ForegroundColor Red
 }
 
 function Test-Command {
@@ -105,7 +105,7 @@ function Test-NodeVersion {
     if (-not (Test-Command "node")) {
         Write-Error "Node.js is not installed or not in PATH"
         Write-Host "Please install Node.js $MIN_NODE_VERSION or later from https://nodejs.org/"
-        exit 1
+        return $false
     }
     
     $nodeVersion = & node --version
@@ -113,10 +113,11 @@ function Test-NodeVersion {
     
     if ((Compare-SemanticVersion $nodeVersion $MIN_NODE_VERSION) -lt 0) {
         Write-Error "Node.js version $nodeVersion is below minimum required version $MIN_NODE_VERSION"
-        exit 1
+        return $false
     }
     
     Write-Success "Node.js $nodeVersion is compatible"
+    return $true
 }
 
 function Test-NPM {
@@ -124,11 +125,12 @@ function Test-NPM {
     
     if (-not (Test-Command "npm")) {
         Write-Error "npm is not installed or not in PATH"
-        exit 1
+        return $false
     }
     
     $npmVersion = & npm --version
     Write-Success "npm $npmVersion is available"
+    return $true
 }
 
 function Get-ReleaseInfo {
@@ -155,7 +157,7 @@ function Get-ReleaseInfo {
         } else {
             Write-Error "Failed to fetch release information: $($_.Exception.Message)"
         }
-        exit 1
+        return $null
     }
 }
 
@@ -170,7 +172,7 @@ function Get-DownloadUrl {
         Write-Error "No NPM package (.tgz) found in release assets"
         Write-Host "Available assets:"
         $Release.assets | ForEach-Object { Write-Host "  - $($_.name)" }
-        exit 1
+        return $null
     }
     
     Write-Success "Found package: $($asset.name)"
@@ -198,9 +200,10 @@ function Invoke-Download {
         Invoke-WebRequest -Uri $Url -OutFile $Destination -UseBasicParsing
         $ProgressPreference = "SilentlyContinue"
         Write-Success "Downloaded to $Destination"
+        return $true
     } catch {
         Write-Error "Failed to download package: $($_.Exception.Message)"
-        exit 1
+        return $false
     }
 }
 
@@ -226,13 +229,14 @@ function Invoke-Extract {
             } else {
                 Write-Error "Neither tar nor 7-Zip found for extraction"
                 Write-Host "Please install 7-Zip or upgrade to PowerShell 7+ with tar support"
-                exit 1
+                return $false
             }
         }
         Write-Success "Extracted to $ExtractPath"
+        return $true
     } catch {
         Write-Error "Failed to extract package: $($_.Exception.Message)"
-        exit 1
+        return $false
     }
 }
 
@@ -252,13 +256,14 @@ function Invoke-NPMInstall {
         
         if ($LASTEXITCODE -ne 0) {
             Write-Error "npm install failed with exit code $LASTEXITCODE"
-            exit 1
+            return $false
         }
         
         Write-Success "Package installed successfully"
+        return $true
     } catch {
         Write-Error "Failed to install package: $($_.Exception.Message)"
-        exit 1
+        return $false
     }
 }
 
@@ -312,52 +317,81 @@ function Cleanup {
 # Main Installation Flow
 # ============================================================================
 
+# ============================================================================
+# Main Installation Flow
+# ============================================================================
+
+$script:ExitCode = 0
+
 Write-Header "Installing $PACKAGE_NAME"
 
 # Validate prerequisites
-Test-NodeVersion
-Test-NPM
-
-# Fetch release information
-$release = Get-ReleaseInfo -Version $Version
-Write-Success "Found release: $($release.tag_name) - $($release.name)"
-
-# Get download URL
-$downloadUrl = Get-DownloadUrl -Release $release
-
-# Create temporary directory
-$tempDir = New-TempDirectory
-Write-Success "Created temporary directory: $tempDir"
-
-try {
-    # Download package
-    $packageFile = Join-Path $tempDir "package.tgz"
-    Invoke-Download -Url $downloadUrl -Destination $packageFile
-    
-    # Extract package
-    $extractDir = Join-Path $tempDir "extracted"
-    $null = New-Item -ItemType Directory -Path $extractDir -Force
-    Invoke-Extract -TgzFile $packageFile -ExtractPath $extractDir
-    
-    # Find the package directory (usually "package")
-    $packageDir = Join-Path $extractDir "package"
-    if (-not (Test-Path $packageDir)) {
-        # If no package subdirectory, use the extract directory
-        $packageDir = $extractDir
+if (-not (Test-NodeVersion)) {
+    $script:ExitCode = 1
+} elseif (-not (Test-NPM)) {
+    $script:ExitCode = 1
+} else {
+    # Fetch release information
+    $release = Get-ReleaseInfo -Version $Version
+    if ($null -eq $release) {
+        $script:ExitCode = 1
+    } else {
+        Write-Success "Found release: $($release.tag_name) - $($release.name)"
+        
+        # Get download URL
+        $downloadUrl = Get-DownloadUrl -Release $release
+        if ($null -eq $downloadUrl) {
+            $script:ExitCode = 1
+        } else {
+            # Create temporary directory
+            $tempDir = New-TempDirectory
+            Write-Success "Created temporary directory: $tempDir"
+            
+            try {
+                # Download package
+                $packageFile = Join-Path $tempDir "package.tgz"
+                if (-not (Invoke-Download -Url $downloadUrl -Destination $packageFile)) {
+                    $script:ExitCode = 1
+                } else {
+                    # Extract package
+                    $extractDir = Join-Path $tempDir "extracted"
+                    $null = New-Item -ItemType Directory -Path $extractDir -Force
+                    if (-not (Invoke-Extract -TgzFile $packageFile -ExtractPath $extractDir)) {
+                        $script:ExitCode = 1
+                    } else {
+                        # Find the package directory (usually "package")
+                        $packageDir = Join-Path $extractDir "package"
+                        if (-not (Test-Path $packageDir)) {
+                            # If no package subdirectory, use the extract directory
+                            $packageDir = $extractDir
+                        }
+                        
+                        # Install with npm
+                        if (-not (Invoke-NPMInstall -PackagePath $packageDir -IsGlobal:$Global)) {
+                            $script:ExitCode = 1
+                        } else {
+                            # Verify installation
+                            $verified = Verify-Installation
+                            
+                            # Show post-install instructions
+                            Show-PostInstallInstructions
+                        }
+                    }
+                }
+            } finally {
+                # Always cleanup
+                Cleanup -TempDir $tempDir
+            }
+        }
     }
-    
-    # Install with npm
-    Invoke-NPMInstall -PackagePath $packageDir -IsGlobal:$Global
-    
-    # Verify installation
-    $verified = Verify-Installation
-    
-    # Show post-install instructions
-    Show-PostInstallInstructions
-    
-    exit 0
-    
-} finally {
-    # Always cleanup
-    Cleanup -TempDir $tempDir
 }
+
+if ($script:ExitCode -eq 0) {
+    Write-Host ""
+    Write-Success "Installation completed successfully"
+} else {
+    Write-Host ""
+    Write-Error "Installation failed. Please see errors above for details."
+}
+
+exit $script:ExitCode
