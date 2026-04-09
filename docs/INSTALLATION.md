@@ -22,30 +22,17 @@ npm --version
 
 ## Quick Start (Recommended)
 
-The simplest way to install is directly from the release package using npm.
-
-### Windows (PowerShell)
-
-```powershell
-npx https://github.com/JohnLudlow/agents/releases/download/latest/johnludlow-agents-latest.tgz install --global
-```
-
-Or for a specific version:
-
-```powershell
-npx https://github.com/JohnLudlow/agents/releases/download/v1.0.0/johnludlow-agents-1.0.0.tgz install --global
-```
-
-### macOS/Linux (Bash)
+Visit the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases)** to find the latest release.
+Each release includes a `.tgz` asset — copy its URL and use it with `npx`:
 
 ```bash
-npx https://github.com/JohnLudlow/agents/releases/download/latest/johnludlow-agents-latest.tgz install --global
+npx <tgz-url> install --global
 ```
 
-Or for a specific version:
+Or install it locally in your current project:
 
 ```bash
-npx https://github.com/JohnLudlow/agents/releases/download/v1.0.0/johnludlow-agents-1.0.0.tgz install --global
+npm install <tgz-url>
 ```
 
 ## Installation Methods
@@ -354,14 +341,8 @@ To check your installed version:
 npm list @johnludlow/agents
 ```
 
-To upgrade to a newer version:
+To upgrade to a newer version, visit the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases)**, pick the release you want, and run:
 
 ```bash
-npm install -g https://github.com/JohnLudlow/agents/releases/download/latest/johnludlow-agents-latest.tgz
-```
-
-To install a specific version:
-
-```bash
-npm install -g https://github.com/JohnLudlow/agents/releases/download/v1.0.0/johnludlow-agents-1.0.0.tgz
+npm install -g <tgz-url>
 ```

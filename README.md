@@ -115,24 +115,11 @@ For comprehensive installation instructions, see the **[INSTALLATION.md](docs/IN
 
 ### Quick Start (Recommended)
 
-Install directly from the latest release:
-
-**Windows (PowerShell):**
-
-```powershell
-npx https://github.com/JohnLudlow/agents/releases/download/latest/johnludlow-agents-latest.tgz install --global
-```
-
-**macOS/Linux (Bash):**
+Visit the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases)** to find the latest release.
+Each release includes a `.tgz` asset — copy its URL and use it with `npx`:
 
 ```bash
-npx https://github.com/JohnLudlow/agents/releases/download/latest/johnludlow-agents-latest.tgz install --global
-```
-
-### Or Install Locally
-
-```bash
-npm install https://github.com/JohnLudlow/agents/releases/download/latest/johnludlow-agents-latest.tgz
+npx <tgz-url> install --global
 ```
 
 ### Prerequisites
