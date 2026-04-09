@@ -70,6 +70,7 @@ We support multiple installation methods depending on your preference and enviro
 ### Method 1: Automated Installation Scripts (Recommended)
 
 The easiest and most reliable method. These scripts handle:
+
 - Version detection
 - Package download
 - Extraction
@@ -77,12 +78,14 @@ The easiest and most reliable method. These scripts handle:
 - Verification
 
 **Advantages:**
+
 - Simple one-command installation
 - Automatic error checking
 - Works with both local and global installation
 - Cross-platform support
 
 **Disadvantages:**
+
 - None
 
 **See:** Quick Start section above
@@ -102,10 +105,12 @@ npm install -g ./johnludlow-agents-VERSION.tgz
 ```
 
 **Advantages:**
+
 - Simple
 - No script execution needed
 
 **Disadvantages:**
+
 - Must download package file first
 - Must remember correct file name
 
@@ -114,22 +119,25 @@ npm install -g ./johnludlow-agents-VERSION.tgz
 For full control or when scripts are blocked:
 
 1. **Download the release package**
-   - Visit: https://github.com/JohnLudlow/agents/releases
+   - Visit: <https://github.com/JohnLudlow/agents/releases>
    - Download the `.tgz` file for your version
 
 2. **Extract the package**
-   
+
    Windows (PowerShell):
+
    ```powershell
    tar -xzf johnludlow-agents-VERSION.tgz
    ```
-   
+
    macOS/Linux:
+
    ```bash
    tar -xzf johnludlow-agents-VERSION.tgz
    ```
 
 3. **Install with npm**
+
    ```bash
    npm install ./package
    ```
@@ -147,11 +155,13 @@ npm install @johnludlow/agents
 ```
 
 **Installation directories:**
+
 - Agents: `.opencode/agents/`
 - Skills: `.opencode/skills/`
 - GitHub format: `.github/agents/` and `.github/skills/`
 
 **When to use:**
+
 - Installing for a specific project
 - Multiple projects with different configurations
 - Keeping agents project-specific
@@ -175,10 +185,12 @@ or with the installation script:
 ```
 
 **Installation directories:**
+
 - Agents: `~/.config/opencode/agents/`
 - Skills: `~/.config/opencode/skills/`
 
 **When to use:**
+
 - Using agents in multiple projects
 - System-wide agent management
 - Simplifying workflow across projects
@@ -194,7 +206,8 @@ npm list @johnludlow/agents
 ```
 
 You should see output like:
-```
+
+```text
 your-project@1.0.0
 └── @johnludlow/agents@1.0.0
 ```
@@ -202,16 +215,19 @@ your-project@1.0.0
 ### List Installed Agents
 
 **For local installation:**
+
 ```bash
 ls .opencode/agents/
 ```
 
 **For global installation:**
+
 ```bash
 ls ~/.config/opencode/agents/
 ```
 
 You should see files like:
+
 - `johnludlow-feature-planner.md`
 - `johnludlow-feature-implementer.md`
 - `johnludlow-feature-documenter.md`
@@ -220,12 +236,14 @@ You should see files like:
 ### Test Agent Integration
 
 **With OpenCode:**
+
 ```bash
 # Try using an agent
 opencode agent johnludlow-feature-planner
 ```
 
 **With GitHub Copilot CLI:**
+
 ```bash
 # List available agents
 copilot agent list
@@ -257,6 +275,7 @@ npm uninstall -g @johnludlow/agents
 **Error:** `Node.js version X.X.X is below minimum required version 22.0.0`
 
 **Solution:** Upgrade Node.js to version 22.0.0 or later
+
 ```bash
 # Visit https://nodejs.org/ to download and install
 node --version  # Verify installation
@@ -266,19 +285,21 @@ node --version  # Verify installation
 
 **Error:** `npm is not installed or not in PATH`
 
-**Solution:** npm is included with Node.js. Reinstall Node.js from https://nodejs.org/
+**Solution:** npm is included with Node.js. Reinstall Node.js from <https://nodejs.org/>
 
 ### Script execution disabled (Windows)
 
 **Error:** `Cannot be loaded because running scripts is disabled on this system`
 
 **Solution:** Enable script execution temporarily:
+
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 .\install-release.ps1
 ```
 
 Or run PowerShell as Administrator and set:
+
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
 ```
@@ -288,8 +309,9 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
 **Error:** `Failed to download package` or `curl: command not found`
 
 **Solution:**
+
 1. Check your internet connection
-2. Try downloading the release manually from https://github.com/JohnLudlow/agents/releases
+2. Try downloading the release manually from <https://github.com/JohnLudlow/agents/releases>
 3. Ensure curl or wget is installed (usually pre-installed on macOS/Linux)
 
 ### npm install fails
@@ -297,6 +319,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
 **Error:** `npm install failed`
 
 **Solution:**
+
 1. Check npm version: `npm --version`
 2. Clear npm cache: `npm cache clean --force`
 3. Try installing again
@@ -308,6 +331,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
 **Error:** `Cannot find module '@johnludlow/agents'`
 
 **Solution:**
+
 1. Verify installation: `npm list @johnludlow/agents`
 2. Try reinstalling: `npm install @johnludlow/agents`
 3. Clear npm cache: `npm cache clean --force`
@@ -316,6 +340,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
 ### Agents not appearing in OpenCode
 
 **Solution:**
+
 1. Verify installation completed successfully
 2. Check that agents are in the correct directory:
    - Local: `.opencode/agents/`
@@ -328,6 +353,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
 ### Installation Script Options
 
 **PowerShell:**
+
 ```powershell
 .\install-release.ps1 -Help
 .\install-release.ps1 -Version "1.0.0"      # Install specific version
@@ -336,6 +362,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
 ```
 
 **Bash:**
+
 ```bash
 ./install-release.sh
 ./install-release.sh 1.0.0              # Install specific version
@@ -348,11 +375,13 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
 To install to a custom temporary directory:
 
 **PowerShell:**
+
 ```powershell
 .\install-release.ps1 -WorkingDirectory "C:\custom\temp"
 ```
 
 **Bash:**
+
 ```bash
 TEMP_DIR="/custom/temp" ./install-release.sh
 ```
@@ -364,6 +393,7 @@ If you need to install without internet access:
 1. Download the release `.tgz` file on a machine with internet
 2. Transfer the file to the target machine
 3. Install with npm:
+
    ```bash
    npm install ./johnludlow-agents-VERSION.tgz
    ```
@@ -373,17 +403,17 @@ If you need to install without internet access:
 If you encounter issues during installation:
 
 1. **Check this guide** - See the Troubleshooting section above
-2. **Check the README** - https://github.com/JohnLudlow/agents#readme
-3. **Create an issue** - https://github.com/JohnLudlow/agents/issues
-4. **Start a discussion** - https://github.com/JohnLudlow/agents/discussions
+2. **Check the README** - <https://github.com/JohnLudlow/agents#readme>
+3. **Create an issue** - <https://github.com/JohnLudlow/agents/issues>
+4. **Start a discussion** - <https://github.com/JohnLudlow/agents/discussions>
 
 ## Next Steps
 
 After successful installation:
 
-1. **Read the README** - https://github.com/JohnLudlow/agents#readme
-2. **Check the documentation** - https://github.com/JohnLudlow/agents/tree/main/docs
-3. **Review agent definitions** - https://github.com/JohnLudlow/agents/tree/main/agents
+1. **Read the README** - <https://github.com/JohnLudlow/agents#readme>
+2. **Check the documentation** - <https://github.com/JohnLudlow/agents/tree/main/docs>
+3. **Review agent definitions** - <https://github.com/JohnLudlow/agents/tree/main/agents>
 4. **See usage examples** - Check individual agent files for examples
 
 ## What Gets Installed
@@ -391,20 +421,24 @@ After successful installation:
 When you install `@johnludlow/agents`, you get:
 
 ### Agents (4 total)
+
 - **johnludlow-feature-planner** - Create comprehensive feature plans
 - **johnludlow-feature-implementer** - Implement features from plans
 - **johnludlow-feature-documenter** - Generate technical documentation
 - **johnludlow-feature-tester** - Run tests and report results
 
 ### Skills (2 total)
+
 - **johnludlow-markdown-standards** - Markdown formatting and structure standards
 - **johnludlow-code-quality** - Code quality expectations and best practices
 
 ### Configuration
+
 - **config.json** - OpenCode configuration with permissions
 - **Permission rules** - Security boundaries for each agent
 
 ### Scripts
+
 - **install.js** - Installation script
 - **uninstall.js** - Uninstall script
 - **restore.js** - Backup restore script

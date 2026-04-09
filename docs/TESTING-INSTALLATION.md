@@ -21,6 +21,7 @@ Create a clean test environment by:
 1. Using a fresh VM or container
 2. Using a temporary user account
 3. Removing previous installations:
+
    ```bash
    npm uninstall @johnludlow/agents
    npm uninstall -g @johnludlow/agents
@@ -49,6 +50,7 @@ Create a clean test environment by:
 **Method**: PowerShell installation script, local installation
 
 **Prerequisites**:
+
 - Windows 10/11
 - PowerShell 5.1+
 - Node.js 22.0.0+
@@ -57,12 +59,14 @@ Create a clean test environment by:
 **Steps**:
 
 1. **Open PowerShell**
+
    ```powershell
    # Start PowerShell (as regular user, not admin)
    powershell
    ```
 
 2. **Download the installation script**
+
    ```powershell
    $version = "latest"
    $script = "install-release.ps1"
@@ -70,17 +74,20 @@ Create a clean test environment by:
    ```
 
 3. **Run the installation script**
+
    ```powershell
    .\$script -Version $version
    ```
 
 4. **Verify installation**
+
    ```powershell
    npm list @johnludlow/agents
    ls .opencode/agents/
    ```
 
 **Expected Results**:
+
 - Script downloads successfully
 - No errors during extraction
 - NPM installation completes
@@ -89,6 +96,7 @@ Create a clean test environment by:
 - Exit code 0
 
 **Success Criteria**:
+
 - ✓ Script completes without errors
 - ✓ All agents visible in `.opencode/agents/`
 - ✓ Verification shows package installed
@@ -101,6 +109,7 @@ Create a clean test environment by:
 **Method**: PowerShell installation script, global installation
 
 **Prerequisites**:
+
 - Same as Test 1
 - Administrator access (for global npm install)
 
@@ -109,6 +118,7 @@ Create a clean test environment by:
 1. **Start PowerShell as Administrator**
 
 2. **Download the installation script**
+
    ```powershell
    $version = "latest"
    $script = "install-release.ps1"
@@ -116,17 +126,20 @@ Create a clean test environment by:
    ```
 
 3. **Run with global flag**
+
    ```powershell
    .\$script -Version $version -Global
    ```
 
 4. **Verify global installation**
+
    ```powershell
    npm list -g @johnludlow/agents
    ls $PROFILE\NodeModules\@johnludlow\agents\
    ```
 
 **Expected Results**:
+
 - Same as Test 1, but in global npm location
 - Exit code 0
 
@@ -138,6 +151,7 @@ Create a clean test environment by:
 **Method**: Bash installation script, local installation
 
 **Prerequisites**:
+
 - macOS or Linux
 - Bash 4.0+
 - Node.js 22.0.0+
@@ -147,28 +161,33 @@ Create a clean test environment by:
 **Steps**:
 
 1. **Open terminal**
+
    ```bash
    cd ~/test-directory  # Use a test directory
    ```
 
 2. **Download the installation script**
+
    ```bash
    curl -fsSL "https://github.com/JohnLudlow/agents/releases/download/latest/install-release.sh" -o install-release.sh
    chmod +x install-release.sh
    ```
 
 3. **Run the installation script**
+
    ```bash
    ./install-release.sh latest
    ```
 
 4. **Verify installation**
+
    ```bash
    npm list @johnludlow/agents
    ls .opencode/agents/
    ```
 
 **Expected Results**:
+
 - Script downloads successfully
 - No errors during extraction
 - NPM installation completes
@@ -184,29 +203,34 @@ Create a clean test environment by:
 **Method**: Bash installation script, global installation
 
 **Prerequisites**:
+
 - Same as Test 3
 - May require `sudo` or elevated privileges
 
 **Steps**:
 
 1. **Download the installation script**
+
    ```bash
    curl -fsSL "https://github.com/JohnLudlow/agents/releases/download/latest/install-release.sh" -o install-release.sh
    chmod +x install-release.sh
    ```
 
 2. **Run with global flag**
+
    ```bash
    ./install-release.sh latest --global
    ```
 
 3. **Verify global installation**
+
    ```bash
    npm list -g @johnludlow/agents
    ls ~/.config/opencode/agents/
    ```
 
 **Expected Results**:
+
 - Agents installed to `~/.config/opencode/agents/`
 - All agents present
 - Exit code 0
@@ -219,6 +243,7 @@ Create a clean test environment by:
 **Method**: Direct npm installation from .tgz package
 
 **Prerequisites**:
+
 - Node.js 22.0.0+
 - npm
 - Downloaded `.tgz` file from release
@@ -226,21 +251,24 @@ Create a clean test environment by:
 **Steps**:
 
 1. **Download release package**
-   - Visit: https://github.com/JohnLudlow/agents/releases
+   - Visit: <https://github.com/JohnLudlow/agents/releases>
    - Download the `.tgz` file for your version
 
 2. **Install with npm**
+
    ```bash
    npm install ./johnludlow-agents-VERSION.tgz
    ```
 
 3. **Verify installation**
+
    ```bash
    npm list @johnludlow/agents
    ls .opencode/agents/
    ```
 
 **Expected Results**:
+
 - Package extracts successfully
 - NPM installation completes
 - All agents installed
@@ -254,26 +282,30 @@ Create a clean test environment by:
 **Method**: Global npm installation
 
 **Prerequisites**:
+
 - Same as Test 5
 - Administrator/sudo access
 
 **Steps**:
 
 1. **Download release package**
-   - Visit: https://github.com/JohnLudlow/agents/releases
+   - Visit: <https://github.com/JohnLudlow/agents/releases>
    - Download the `.tgz` file
 
 2. **Install globally**
+
    ```bash
    npm install -g ./johnludlow-agents-VERSION.tgz
    ```
 
 3. **Verify**
+
    ```bash
    npm list -g @johnludlow/agents
    ```
 
 **Expected Results**:
+
 - Installed to global npm location
 - All agents present in global OpenCode directory
 - Exit code 0
@@ -286,21 +318,24 @@ Create a clean test environment by:
 **Method**: Verify agents work after installation
 
 **Prerequisites**:
+
 - Installation completed successfully
 - OpenCode installed
 
 **Steps**:
 
 1. **List installed agents**
+
    ```bash
    # Local
    ls .opencode/agents/
-   
+
    # Global
    ls ~/.config/opencode/agents/
    ```
 
 2. **Check agent content**
+
    ```bash
    cat .opencode/agents/johnludlow-feature-planner.md | head -20
    ```
@@ -310,12 +345,14 @@ Create a clean test environment by:
    - Should include: name, description, temperature, instructions
 
 4. **Test with OpenCode**
+
    ```bash
    # Try to load the agent
    opencode agent johnludlow-feature-planner
    ```
 
 **Expected Results**:
+
 - All 4 agents present:
   - johnludlow-feature-planner.md
   - johnludlow-feature-implementer.md
@@ -332,6 +369,7 @@ Create a clean test environment by:
 **Method**: Test error conditions
 
 **Prerequisites**:
+
 - Test environment set up
 
 **Test Cases**:
@@ -368,11 +406,13 @@ Create a clean test environment by:
 **Method**: Verify uninstall works correctly
 
 **Prerequisites**:
+
 - Package installed
 
 **Steps**:
 
 1. **Uninstall the package**
+
    ```bash
    npm uninstall @johnludlow/agents
    # or globally
@@ -380,12 +420,14 @@ Create a clean test environment by:
    ```
 
 2. **Verify removal**
+
    ```bash
    npm list @johnludlow/agents
    ls .opencode/agents/
    ```
 
 **Expected Results**:
+
 - Package no longer in npm list
 - Agents directory still exists (preserved)
 - Or agents removed if cleanup script is present
@@ -399,16 +441,19 @@ Create a clean test environment by:
 **Method**: Test backup and restore functionality
 
 **Prerequisites**:
+
 - Initial installation
 
 **Steps**:
 
 1. **Install a version**
+
    ```bash
    npm install @johnludlow/agents@1.0.0
    ```
 
 2. **Check backup created**
+
    ```bash
    ls ~/.config/ | grep "opencode-backup"
    # or
@@ -416,11 +461,13 @@ Create a clean test environment by:
    ```
 
 3. **Modify an agent** (to verify restore works)
+
    ```bash
    echo "test" >> ~/.config/opencode/agents/johnludlow-feature-planner.md
    ```
 
 4. **Restore from backup**
+
    ```bash
    npm run restore
    ```
@@ -429,6 +476,7 @@ Create a clean test environment by:
    - Original file should be restored
 
 **Expected Results**:
+
 - Backup created automatically
 - Restore script available
 - Original files restored
@@ -510,6 +558,7 @@ Recommended GitHub Actions workflow tests:
 **Issue**: `running scripts is disabled on this system`
 
 **Workaround**:
+
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 ```
@@ -519,6 +568,7 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 **Issue**: Script cannot be executed (gatekeeper)
 
 **Workaround**:
+
 ```bash
 chmod +x install-release.sh
 xattr -d com.apple.quarantine install-release.sh
@@ -529,6 +579,7 @@ xattr -d com.apple.quarantine install-release.sh
 **Issue**: Download timeout
 
 **Workaround**:
+
 - Download manually from releases page
 - Use local installation method
 - Check internet connection
@@ -545,12 +596,14 @@ xattr -d com.apple.quarantine install-release.sh
 **Version Tested**: X.X.X
 
 ### Environment
+
 - Platform: [Windows/macOS/Linux]
 - Node.js Version: X.X.X
 - npm Version: X.X.X
 - Shell: [PowerShell/Bash/Zsh/Other]
 
 ### Tests Completed
+
 - [ ] Test 1: PowerShell Local
 - [ ] Test 2: PowerShell Global
 - [ ] Test 3: Bash Local
@@ -563,10 +616,12 @@ xattr -d com.apple.quarantine install-release.sh
 - [ ] Test 10: Backup/Restore
 
 ### Issues Found
+
 - [Issue 1]
 - [Issue 2]
 
 ### Recommendations
+
 - [Recommendation 1]
 - [Recommendation 2]
 

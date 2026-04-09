@@ -202,6 +202,7 @@ node scripts/generate-release-notes.js
 You can test the installation scripts locally before release:
 
 **PowerShell:**
+
 ```powershell
 # Download and test the script
 Invoke-WebRequest -Uri "https://github.com/JohnLudlow/agents/releases/download/vX.X.X/install-release.ps1" -OutFile install-release.ps1
@@ -214,6 +215,7 @@ Invoke-WebRequest -Uri "https://github.com/JohnLudlow/agents/releases/download/v
 ```
 
 **Bash:**
+
 ```bash
 # Download and test the script
 curl -fsSL "https://github.com/JohnLudlow/agents/releases/download/vX.X.X/install-release.sh" -o install-release.sh
@@ -275,7 +277,7 @@ The Release job automatically:
    - Assets: NPM package + installation scripts
    - Draft: false (automatically published)
 
-Users can then download the release from: https://github.com/JohnLudlow/agents/releases
+Users can then download the release from: <https://github.com/JohnLudlow/agents/releases>
 
 ## Local Testing
 
