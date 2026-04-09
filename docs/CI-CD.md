@@ -77,19 +77,35 @@ The primary workflow is defined in `.github/workflows/main.yml` and executes on:
 
 ### 4. Release Job
 
-**Purpose**: Create GitHub release and tag commit (main branch only)
+**Purpose**: Create GitHub release with comprehensive release notes and installation scripts (main branch only)
 
 **Actions**:
 
-- Run only on `main` branch after successful build
 - Create git tag with semantic version
-- Create GitHub release with version number
-- Attach build artifacts to release
+- Generate comprehensive release notes including:
+  - Installation instructions (PowerShell, Bash, npm)
+  - Changelog from conventional commits
+  - Feature, fix, and other change categorization
+  - Contributor list
+  - Commit links and comparison
+- Download build artifacts
+- Create GitHub release with:
+  - Generated release notes as description
+  - NPM package (.tgz) as downloadable asset
+  - Installation scripts (PowerShell and Bash) as downloadable assets
+  - Draft: false (automatically published)
 
 **Outputs**:
 
 - Git tag (e.g., `v0.1.0`)
-- GitHub Release with downloadable artifacts
+- GitHub Release with comprehensive documentation and downloadable files
+- Release notes available at: `https://github.com/JohnLudlow/agents/releases/tag/v0.1.0`
+
+**Release Assets Included**:
+
+- `johnludlow-agents-0.1.0.tgz` - NPM package for direct installation
+- `install-release.ps1` - PowerShell installation script
+- `install-release.sh` - Bash installation script
 
 ## Semantic Versioning
 
@@ -171,6 +187,97 @@ npm pack
 # Generate Copilot format
 npm run generate:copilot
 ```
+
+### Testing Release Process Locally
+
+```bash
+# Generate release notes (preview)
+node scripts/generate-release-notes.js
+
+# This will show you what the release notes will look like
+```
+
+### Testing Installation Scripts
+
+You can test the installation scripts locally before release:
+
+**PowerShell:**
+
+```powershell
+# Download and test the script
+Invoke-WebRequest -Uri "https://github.com/JohnLudlow/agents/releases/download/vX.X.X/install-release.ps1" -OutFile install-release.ps1
+
+# Test with a specific version
+.\install-release.ps1 -Version "X.X.X"
+
+# Test global installation
+.\install-release.ps1 -Version "X.X.X" -Global
+```
+
+**Bash:**
+
+```bash
+# Download and test the script
+curl -fsSL "https://github.com/JohnLudlow/agents/releases/download/vX.X.X/install-release.sh" -o install-release.sh
+chmod +x install-release.sh
+
+# Test with a specific version
+./install-release.sh X.X.X
+
+# Test global installation
+./install-release.sh X.X.X --global
+```
+
+## Installation Flow
+
+The automated release process includes installation support:
+
+### Release Notes Generation
+
+When the Release job runs, it automatically generates comprehensive release notes that include:
+
+1. **Installation Instructions** - Platform-specific commands for:
+   - PowerShell (Windows)
+   - Bash (macOS/Linux)
+   - npm (all platforms)
+
+2. **Changelog** - Categorized commit history:
+   - ✨ Features (commits starting with `feat:`)
+   - 🐛 Bug Fixes (commits starting with `fix:`)
+   - ⚡ Performance Improvements (commits starting with `perf:`)
+   - 📚 Documentation (commits starting with `docs:`)
+   - 🔧 Refactoring (commits starting with `refactor:`)
+   - ✅ Tests (commits starting with `test:`)
+   - 📦 Other Changes
+
+3. **Contributors** - Top 20 contributors with commit counts
+
+4. **Links** - Comparison and commit history links
+
+### Installation Scripts as Release Assets
+
+Both installation scripts are included as downloadable assets in each GitHub release:
+
+- **install-release.ps1** - PowerShell installation script
+- **install-release.sh** - Bash installation script
+
+Users can download these scripts and run them independently.
+
+### Automated Release Publishing
+
+The Release job automatically:
+
+1. Generates release notes from commit history
+2. Downloads the NPM package built in the Build job
+3. Includes installation scripts in the release
+4. Creates a GitHub Release with:
+   - Tag name: `vX.X.X` (e.g., `v0.1.0`)
+   - Title: Release version number
+   - Description: Generated release notes
+   - Assets: NPM package + installation scripts
+   - Draft: false (automatically published)
+
+Users can then download the release from: <https://github.com/JohnLudlow/agents/releases>
 
 ## Troubleshooting
 
