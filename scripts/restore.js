@@ -24,13 +24,13 @@ const {
 function restorePlatform(platform, mode) {
   const config = PLATFORMS[platform];
   const targetDir = getTargetDirectory(platform, mode);
-  const isCopilotLocal = platform === "copilot" && mode === "local";
-  const managedSubDirs = isCopilotLocal ? config.localManagedSubDirs : null;
+  const isCopilot = platform === "copilot";
+  const managedSubDirs = isCopilot ? config.localManagedSubDirs : null;
 
   console.log(`\n${config.emoji} ${config.name}:`);
 
-  if (isCopilotLocal && managedSubDirs) {
-    // For local Copilot: handle subdirectories individually
+  if (isCopilot && managedSubDirs) {
+    // For Copilot (local and global): handle managed subdirectories individually
     let anyRestored = false;
 
     for (const subDirName of managedSubDirs) {

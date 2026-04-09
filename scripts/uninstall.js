@@ -47,15 +47,15 @@ function removeEmptyParentDirectory(targetDir) {
 function uninstallPlatform(platform, mode) {
   const config = PLATFORMS[platform];
   const targetDir = getTargetDirectory(platform, mode);
-  const isCopilotLocal = platform === "copilot" && mode === "local";
-  const managedSubDirs = isCopilotLocal ? config.localManagedSubDirs : null;
+  const isCopilot = platform === "copilot";
+  const managedSubDirs = isCopilot ? config.localManagedSubDirs : null;
 
   console.log(`\n${config.emoji} Uninstalling from ${config.name}...`);
 
-  if (mode === "local" && config.localManagedSubDirs) {
-    // For Copilot local: only remove managed subdirs to avoid deleting other .github content
+  if (isCopilot && managedSubDirs) {
+    // For Copilot (local and global): only remove managed subdirs to avoid deleting other platform content
     let anyRemoved = false;
-    for (const subDirName of config.localManagedSubDirs) {
+    for (const subDirName of managedSubDirs) {
       const subDir = path.join(targetDir, subDirName);
       if (!fs.existsSync(subDir)) {
         continue;
