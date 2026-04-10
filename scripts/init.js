@@ -48,6 +48,16 @@ function showVersion() {
 }
 
 /**
+ * Set the global flag if --global is present in args
+ * @param {string[]} args - CLI arguments
+ */
+function setGlobalFlag(args) {
+  if (args.includes("--global")) {
+    process.env.npm_config_global = "true";
+  }
+}
+
+/**
  * Main CLI function
  */
 async function main() {
@@ -57,10 +67,7 @@ async function main() {
   try {
     switch (command) {
       case "install": {
-        // Set global flag if --global is passed
-        if (args.includes("--global")) {
-          process.env.npm_config_global = "true";
-        }
+        setGlobalFlag(args);
         const { main: installMain } = require("./install.js");
         await installMain();
         break;
@@ -85,10 +92,7 @@ async function main() {
       }
 
       case "list": {
-        // Set global flag if --global is passed
-        if (args.includes("--global")) {
-          process.env.npm_config_global = "true";
-        }
+        setGlobalFlag(args);
         const { list } = require("./list.js");
         list();
         break;
