@@ -18,21 +18,22 @@ Usage:
   johnludlow-agents [command] [options]
 
 Commands:
-  install [--global]        Install agents and skills
-  uninstall                 Remove agents and skills (with restore option)
-  restore                   Restore from latest backup
-  generate-copilot          Generate GitHub Copilot format from OpenCode format
-  list                      List installed agents and skills
-  help                      Show this help message
-  version                   Show version information
+   install [--global]        Install agents and skills
+   uninstall                 Remove agents and skills (with restore option)
+   restore                   Restore from latest backup
+   generate-copilot          Generate GitHub Copilot format from OpenCode format
+   list [--global]           List installed agents and skills
+   help                      Show this help message
+   version                   Show version information
 
 Examples:
-  johnludlow-agents install
-  johnludlow-agents install --global
-  johnludlow-agents uninstall
-  johnludlow-agents restore
-  johnludlow-agents generate-copilot
-  johnludlow-agents list
+   johnludlow-agents install
+   johnludlow-agents install --global
+   johnludlow-agents list
+   johnludlow-agents list --global
+   johnludlow-agents uninstall
+   johnludlow-agents restore
+   johnludlow-agents generate-copilot
 
 For more information, visit: https://github.com/JohnLudlow/agents
   `);
@@ -47,6 +48,16 @@ function showVersion() {
 }
 
 /**
+ * Set the global flag if --global is present in args
+ * @param {string[]} args - CLI arguments
+ */
+function setGlobalFlag(args) {
+  if (args.includes("--global")) {
+    process.env.npm_config_global = "true";
+  }
+}
+
+/**
  * Main CLI function
  */
 async function main() {
@@ -56,10 +67,7 @@ async function main() {
   try {
     switch (command) {
       case "install": {
-        // Set global flag if --global is passed
-        if (args.includes("--global")) {
-          process.env.npm_config_global = "true";
-        }
+        setGlobalFlag(args);
         const { main: installMain } = require("./install.js");
         await installMain();
         break;
@@ -84,6 +92,7 @@ async function main() {
       }
 
       case "list": {
+        setGlobalFlag(args);
         const { list } = require("./list.js");
         list();
         break;
