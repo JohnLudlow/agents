@@ -84,15 +84,15 @@ async function main() {
         break;
       }
 
-       case "list": {
-         // Set global flag if --global is passed
-         if (args.includes("--global")) {
-           process.env.npm_config_global = "true";
-         }
-         const { list } = require("./list.js");
-         list();
-         break;
-       }
+      case "list": {
+        // Set global flag if --global is passed
+        if (args.includes("--global")) {
+          process.env.npm_config_global = "true";
+        }
+        const { list } = require("./list.js");
+        list();
+        break;
+      }
 
       case "version":
       case "-v":
