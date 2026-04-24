@@ -37,6 +37,9 @@
   "engines": {
     "node": ">=22.0.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "opentmux": "^1.5.7",
+    "@ramtinj95/opencode-tokenscope": "^1.6.3"
+  },
   "devDependencies": {}
 }
