@@ -127,6 +127,18 @@ npx <tgz-url> install --global
 - Node.js 22.0.0+ ([Download](https://nodejs.org/))
 - npm (included with Node.js)
 
+### What Gets Installed
+
+The installation script automatically sets up:
+
+- **Agents** - johnludlow-feature-planner, implementer, documenter, and tester
+- **Skills** - Reusable knowledge bases for all agents
+- **OpenCode Plugins**:
+  - **oh-my-opencode** - Shell environment configuration for OpenCode
+  - **opentmux** - Real-time tmux integration for viewing agent execution
+  - **@ramtinj95/opencode-tokenscope** - Token usage analysis and cost tracking
+- **GitHub Copilot Plugins** - Recommended development tools (if Copilot CLI is available)
+
 ## Usage
 
 ### Using Agents with OpenCode

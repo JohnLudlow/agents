@@ -286,6 +286,139 @@ function installCopilotPlugins() {
 }
 
 /**
+ * Check if OpenCode config file exists and return path
+ */
+function getOpenCodeConfigPath(mode) {
+  const opencodePath = getTargetDirectory("opencode", mode);
+  return path.join(opencodePath, "opencode.json");
+}
+
+/**
+ * Read and parse OpenCode config
+ */
+function readOpenCodeConfig(configPath) {
+  if (!fs.existsSync(configPath)) {
+    // Create new config if it doesn't exist
+    return { plugin: [] };
+  }
+  try {
+    const content = fs.readFileSync(configPath, "utf8");
+    return JSON.parse(content);
+  } catch (error) {
+    console.warn(`   ⚠️  Could not parse existing config at ${configPath}, starting fresh`);
+    return { plugin: [] };
+  }
+}
+
+/**
+ * Write OpenCode config
+ */
+function writeOpenCodeConfig(configPath, config) {
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+}
+
+/**
+ * Install OpenCode plugins
+ *
+ * Installs npm packages and adds them to the OpenCode plugin configuration.
+ * Supports:
+ * - oh-my-opencode: Shell configuration enhancer (no npm install needed)
+ * - opentmux: tmux integration for agent execution
+ * - tokenscope: Token usage analysis and cost tracking
+ */
+function installOpenCodePlugins(mode) {
+  console.log("\n🔌 Installing OpenCode plugins...");
+
+  const configPath = getOpenCodeConfigPath(mode);
+  const config = readOpenCodeConfig(configPath);
+
+  // Ensure plugin array exists
+  if (!Array.isArray(config.plugin)) {
+    config.plugin = [];
+  }
+
+    // TODO: tokenscope also needs a command mapped
+  const pluginInstallations = [
+    {
+      name: "oh-my-opencode",
+      package: null, // No npm package for oh-my-opencode
+      description: "Shell configuration and environment setup",
+    },
+    {
+      name: "opentmux",
+      package: "opentmux",
+      description: "Smart tmux integration for agent execution",
+    },
+    {
+      name: "@ramtinj95/opencode-tokenscope",  
+      package: "@ramtinj95/opencode-tokenscope",
+      description: "Token usage analysis and cost tracking",
+    },
+  ];
+
+  const installed = [];
+  const failed = [];
+
+  for (const plugin of pluginInstallations) {
+    process.stdout.write(`   → ${plugin.name}... `);
+
+    // Install npm package if specified
+    if (plugin.package) {
+      const result = spawnSync("npm", ["install", "-g", plugin.package], {
+        encoding: "utf8",
+        stdio: "pipe",
+      });
+
+      if (result.status !== 0) {
+        process.stdout.write("✗\n");
+        failed.push(plugin);
+        continue;
+      }
+    }
+
+    // Add to config if not already present
+    if (!config.plugin.includes(plugin.name)) {
+      config.plugin.push(plugin.name);
+    }
+
+    process.stdout.write("✓\n");
+    installed.push(plugin);
+  }
+
+  // Write updated config
+  if (installed.length > 0 || config.plugin.length > 0) {
+    const configDir = path.dirname(configPath);
+    if (!fs.existsSync(configDir)) {
+      fs.mkdirSync(configDir, { recursive: true });
+    }
+    writeOpenCodeConfig(configPath, config);
+  }
+
+  // Summary
+  if (installed.length > 0) {
+    console.log(`\n   ✓ Installed ${installed.length} plugin(s):`);
+    installed.forEach(p => {
+      console.log(`     • ${p.name}`);
+      console.log(`       ${p.description}`);
+      if (p.package) {
+        console.log(`       Package: ${p.package}`);
+      }
+    });
+  }
+
+  if (failed.length > 0) {
+    console.log(`\n   ⚠️  ${failed.length} plugin(s) failed to install:`);
+    failed.forEach(p => {
+      console.log(`     • ${p.name} (${p.package || "no npm package"})`);
+    });
+  }
+
+  if (installed.length > 0) {
+    console.log(`\n   📁 Config file: ${configPath}`);
+  }
+}
+
+/**
  * Display next steps
  */
 function displayNextSteps(opencodePath, copilotPath, mode) {
@@ -294,7 +427,7 @@ function displayNextSteps(opencodePath, copilotPath, mode) {
 
   console.log("\n2. For OpenCode:");
   console.log(`   - ${mode === "global" ? "Global" : "Local"} installation: ${opencodePath}`);
-  console.log("   - Agents and skills are ready to use immediately");
+  console.log("   - Agents, skills, and plugins are ready to use immediately");
   console.log("   - See: https://opencode.ai/docs for documentation");
 
   console.log("\n3. For GitHub Copilot:");
@@ -348,6 +481,9 @@ async function main() {
     installOpenCodeConfig(mode);
     console.log("");
     const copilotPath = installPlatform("copilot", mode);
+
+    // Install OpenCode plugins
+    installOpenCodePlugins(mode);
 
     // Install recommended Copilot plugins
     installCopilotPlugins();

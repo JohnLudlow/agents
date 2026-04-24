@@ -24,6 +24,8 @@ const AGENT_PERMISSIONS = {
       edit: { "*": "deny", "docs/plans/*": "allow" },
       bash: {
         "*": "deny",
+        "gh issue*" : "ask",
+        "gh issue view*" : "allow",
         "git log*": "allow",
         "git status*": "allow",
         "git branch*": "allow",
@@ -53,6 +55,7 @@ const AGENT_PERMISSIONS = {
       },
       bash: {
         "*": "deny",
+        "gh issue view*" : "allow",
         "git log*": "allow",
         "git status*": "allow",
         "git branch*": "allow",
