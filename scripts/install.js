@@ -337,6 +337,7 @@ function installOpenCodePlugins(mode) {
     config.plugin = [];
   }
 
+    // TODO: tokenscope also needs a command mapped
   const pluginInstallations = [
     {
       name: "oh-my-opencode",
@@ -349,7 +350,7 @@ function installOpenCodePlugins(mode) {
       description: "Smart tmux integration for agent execution",
     },
     {
-      name: "@ramtinj95/opencode-tokenscope",
+      name: "@ramtinj95/opencode-tokenscope",  
       package: "@ramtinj95/opencode-tokenscope",
       description: "Token usage analysis and cost tracking",
     },
