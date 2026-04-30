@@ -290,23 +290,30 @@ function installCopilotPlugins() {
  */
 function getOpenCodeConfigPath(mode) {
   const opencodePath = getTargetDirectory("opencode", mode);
-  return path.join(opencodePath, "opencode.json");
+  const configFile = PLATFORMS.opencode.configFile || "config.json";
+  return path.join(opencodePath, configFile);
 }
 
 /**
  * Read and parse OpenCode config
+ * Returns { config, valid } — valid is false if parsing failed.
  */
 function readOpenCodeConfig(configPath) {
   if (!fs.existsSync(configPath)) {
     // Create new config if it doesn't exist
-    return { plugin: [] };
+    return { config: { plugin: [] }, valid: true };
   }
   try {
     const content = fs.readFileSync(configPath, "utf8");
-    return JSON.parse(content);
+    return { config: JSON.parse(content), valid: true };
   } catch (error) {
-    console.warn(`   ⚠️  Could not parse existing config at ${configPath}, starting fresh`);
-    return { plugin: [] };
+    // Backup the corrupted file to prevent data loss
+    const backupPath = configPath + BACKUP_SUFFIX;
+    fs.copyFileSync(configPath, backupPath);
+    console.warn(`   ⚠️  Could not parse existing config at ${configPath}`);
+    console.warn(`   → Original file backed up to: ${backupPath}`);
+    console.warn(`   → Skipping plugin installation. Please fix the JSON and rerun.`);
+    return { config: null, valid: false };
   }
 }
 
@@ -330,18 +337,22 @@ function installOpenCodePlugins(mode) {
   console.log("\n🔌 Installing OpenCode plugins...");
 
   const configPath = getOpenCodeConfigPath(mode);
-  const config = readOpenCodeConfig(configPath);
+  const { config, valid } = readOpenCodeConfig(configPath);
+  if (!valid) return;
 
   // Ensure plugin array exists
   if (!Array.isArray(config.plugin)) {
     config.plugin = [];
   }
 
-    // TODO: tokenscope also needs a command mapped
+  const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf8"));
+  const deps = packageJson.dependencies || {};
+
+  // TODO: tokenscope also needs a command mapped
   const pluginInstallations = [
     {
       name: "oh-my-opencode",
-      package: null, // No npm package for oh-my-opencode
+      package: null,
       description: "Shell configuration and environment setup",
     },
     {
@@ -350,7 +361,7 @@ function installOpenCodePlugins(mode) {
       description: "Smart tmux integration for agent execution",
     },
     {
-      name: "@ramtinj95/opencode-tokenscope",  
+      name: "@ramtinj95/opencode-tokenscope",
       package: "@ramtinj95/opencode-tokenscope",
       description: "Token usage analysis and cost tracking",
     },
@@ -362,9 +373,10 @@ function installOpenCodePlugins(mode) {
   for (const plugin of pluginInstallations) {
     process.stdout.write(`   → ${plugin.name}... `);
 
-    // Install npm package if specified
     if (plugin.package) {
-      const result = spawnSync("npm", ["install", "-g", plugin.package], {
+      const version = deps[plugin.package];
+      const pkgSpec = version ? `${plugin.package}@${version}` : plugin.package;
+      const result = spawnSync("npm", ["install", "-g", pkgSpec], {
         encoding: "utf8",
         stdio: "pipe",
       });
