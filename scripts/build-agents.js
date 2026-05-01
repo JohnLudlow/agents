@@ -15,6 +15,130 @@ const path = require("path");
 
 // Permissions mapping - extracted from config.json
 const AGENT_PERMISSIONS = {
+  // Top-level agents (mode: agent) - user-facing, intent-locked
+  "johnludlow-planner": {
+    description: "Top-level planning agent. Plans only, never implements.",
+    mode: "agent",
+    temperature: 0.3,
+    permission: {
+      read: { "*": "allow" },
+      edit: { "*": "deny", "docs/plans/*": "allow" },
+      bash: {
+        "*": "deny",
+        "gh issue*": "ask",
+        "gh issue view*": "allow",
+        "git log*": "allow",
+        "git status*": "allow",
+        "git branch*": "allow",
+        "git diff*": "allow",
+      },
+      grep: { "*": "allow" },
+      webfetch: "ask",
+      task: {
+        "*": "deny",
+        "johnludlow-feature-planner": "allow",
+        "johnludlow-feature-documenter": "allow",
+        "johnludlow-feature-reviewer": "allow",
+      },
+    },
+  },
+  "johnludlow-implementer": {
+    description: "Top-level implementation agent. Implements approved plans.",
+    mode: "agent",
+    temperature: 0.2,
+    permission: {
+      read: { "*": "allow", "*.env": "deny" },
+      edit: { "*": "deny" },
+      bash: {
+        "*": "deny",
+        "gh issue view*": "allow",
+        "git log*": "allow",
+        "git status*": "allow",
+        "git branch*": "allow",
+        "git diff*": "allow",
+      },
+      grep: { "*": "allow" },
+      webfetch: "ask",
+      task: {
+        "*": "deny",
+        "johnludlow-feature-implementer": "allow",
+        "johnludlow-feature-tester": "allow",
+        "johnludlow-feature-reviewer": "allow",
+      },
+    },
+  },
+  "johnludlow-tdd-implementer": {
+    description: "Top-level TDD agent. Enforces red-green-refactor cycle.",
+    mode: "agent",
+    temperature: 0.2,
+    permission: {
+      read: { "*": "allow", "*.env": "deny" },
+      edit: { "*": "deny" },
+      bash: {
+        "*": "deny",
+        "gh issue view*": "allow",
+        "git log*": "allow",
+        "git status*": "allow",
+        "git branch*": "allow",
+        "git diff*": "allow",
+      },
+      grep: { "*": "allow" },
+      webfetch: "ask",
+      task: {
+        "*": "deny",
+        "johnludlow-feature-tester": "allow",
+        "johnludlow-feature-implementer": "allow",
+        "johnludlow-feature-reviewer": "allow",
+      },
+    },
+  },
+  "johnludlow-documenter": {
+    description: "Top-level documentation agent. Documents only, never implements.",
+    mode: "agent",
+    temperature: 0.2,
+    permission: {
+      read: { "*": "allow" },
+      edit: { "*": "deny" },
+      bash: {
+        "*": "deny",
+        "git log*": "allow",
+        "git status*": "allow",
+        "git branch*": "allow",
+        "git diff*": "allow",
+      },
+      grep: { "*": "allow" },
+      webfetch: "ask",
+      task: {
+        "*": "deny",
+        "johnludlow-feature-documenter": "allow",
+        "johnludlow-feature-reviewer": "allow",
+      },
+    },
+  },
+  "johnludlow-tester": {
+    description: "Top-level testing agent. Runs tests and reports results.",
+    mode: "agent",
+    temperature: 0.2,
+    permission: {
+      read: { "*": "allow", "*.env": "deny" },
+      edit: { "*": "deny" },
+      bash: {
+        "*": "deny",
+        "git log*": "allow",
+        "git status*": "allow",
+        "git branch*": "allow",
+        "git diff*": "allow",
+      },
+      grep: { "*": "allow" },
+      webfetch: "ask",
+      task: {
+        "*": "deny",
+        "johnludlow-feature-tester": "allow",
+        "johnludlow-feature-reviewer": "allow",
+      },
+    },
+  },
+  // Sub-agents (mode: subagent) - delegated to by top-level agents
   "johnludlow-feature-planner": {
     description: "Plans features and creates detailed implementation plans",
     mode: "subagent",
@@ -118,6 +242,25 @@ const AGENT_PERMISSIONS = {
       },
       grep: { "*": "allow" },
       webfetch: "ask",
+    },
+  },
+  "johnludlow-feature-reviewer": {
+    description: "Adversarial reviewer. Read-only quality gate for all agents.",
+    mode: "subagent",
+    temperature: 0.4,
+    permission: {
+      read: { "*": "allow" },
+      edit: { "*": "deny" },
+      bash: {
+        "*": "deny",
+        "git log*": "allow",
+        "git status*": "allow",
+        "git branch*": "allow",
+        "git diff*": "allow",
+      },
+      grep: { "*": "allow" },
+      webfetch: "deny",
+      task: { "*": "deny" },
     },
   },
 };
