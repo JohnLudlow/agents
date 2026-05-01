@@ -101,7 +101,7 @@ Creates comprehensive feature plans and project specifications.
 
 [View full agent definition](agents/johnludlow-feature-planner.md)
 
-### johnludlow-feature-implementer
+#### johnludlow-feature-implementer
 
 Implements features based on approved plans with code quality and best practices.
 
@@ -111,7 +111,7 @@ Implements features based on approved plans with code quality and best practices
 
 [View full agent definition](agents/johnludlow-feature-implementer.md)
 
-### johnludlow-feature-documenter
+#### johnludlow-feature-documenter
 
 Creates user-friendly technical documentation for features and APIs.
 
@@ -121,7 +121,7 @@ Creates user-friendly technical documentation for features and APIs.
 
 [View full agent definition](agents/johnludlow-feature-documenter.md)
 
-### johnludlow-feature-tester
+#### johnludlow-feature-tester
 
 Runs automated tests and reports results.
 

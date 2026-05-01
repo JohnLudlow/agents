@@ -130,4 +130,4 @@ The agent MUST NOT:
 
 - Invoked by all top-level agents before they report completion
 - Works with both Copilot CLI and OpenCode
-- Cannot be selected directly by users (sub-agent only)
+- Intended to be used as a sub-agent quality gate rather than a primary user-facing agent

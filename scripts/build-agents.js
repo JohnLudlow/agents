@@ -18,7 +18,7 @@ const AGENT_PERMISSIONS = {
   // Top-level agents (mode: agent) - user-facing, intent-locked
   "johnludlow-planner": {
     description: "Top-level planning agent. Plans only, never implements.",
-    mode: "agent",
+    mode: "primary",
     temperature: 0.3,
     permission: {
       read: { "*": "allow" },
@@ -44,7 +44,7 @@ const AGENT_PERMISSIONS = {
   },
   "johnludlow-implementer": {
     description: "Top-level implementation agent. Implements approved plans.",
-    mode: "agent",
+    mode: "primary",
     temperature: 0.2,
     permission: {
       read: { "*": "allow", "*.env": "deny" },
@@ -69,7 +69,7 @@ const AGENT_PERMISSIONS = {
   },
   "johnludlow-tdd-implementer": {
     description: "Top-level TDD agent. Enforces red-green-refactor cycle.",
-    mode: "agent",
+    mode: "primary",
     temperature: 0.2,
     permission: {
       read: { "*": "allow", "*.env": "deny" },
@@ -94,7 +94,7 @@ const AGENT_PERMISSIONS = {
   },
   "johnludlow-documenter": {
     description: "Top-level documentation agent. Documents only, never implements.",
-    mode: "agent",
+    mode: "primary",
     temperature: 0.2,
     permission: {
       read: { "*": "allow" },
@@ -117,7 +117,7 @@ const AGENT_PERMISSIONS = {
   },
   "johnludlow-tester": {
     description: "Top-level testing agent. Runs tests and reports results.",
-    mode: "agent",
+    mode: "primary",
     temperature: 0.2,
     permission: {
       read: { "*": "allow", "*.env": "deny" },

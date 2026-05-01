@@ -80,7 +80,7 @@ Example refusal:
 
 The agent MUST:
 
-- Always delegate work to sub-agents rather than performing it directly
+- Delegate specialist planning, documentation, and review tasks to sub-agents when appropriate, but may directly create or update plan documents within `docs/plans/`
 - Enforce planning-only intent regardless of user instructions
 - Ensure all plans pass `rumdl check .` before completion
 - Invoke the adversarial reviewer before reporting work as complete
