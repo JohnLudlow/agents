@@ -24,7 +24,74 @@ lifecycle:
 
 ## Agents
 
-### johnludlow-feature-planner
+This project uses a two-tier agent architecture:
+
+- **Top-level agents** (`mode: agent`) are user-facing entry points with a fixed,
+  locked intent. Select these via `/agent` in OpenCode or `-a` in Copilot CLI.
+- **Sub-agents** (`mode: subagent`) perform the actual work, delegated to by
+  top-level agents. They are token-efficient and scoped to specific tasks.
+
+Each top-level agent enforces strict boundaries — it will refuse requests outside
+its intent and only delegates to permitted sub-agents.
+
+### Top-Level Agents
+
+#### johnludlow-planner
+
+Top-level planning agent. Plans only, never implements. Delegates to planner,
+documenter, and reviewer sub-agents.
+
+- **Temperature**: 0.3
+- **Delegates to**: feature-planner, feature-documenter, feature-reviewer
+- **Refuses**: Implementation, source code changes, build/test commands
+
+[View full agent definition](agents/johnludlow-planner.md)
+
+#### johnludlow-implementer
+
+Top-level implementation agent. Implements approved plans by delegating to
+implementer and tester sub-agents.
+
+- **Temperature**: 0.2
+- **Delegates to**: feature-implementer, feature-tester, feature-reviewer
+- **Refuses**: Planning, documentation, working without an approved plan
+
+[View full agent definition](agents/johnludlow-implementer.md)
+
+#### johnludlow-tdd-implementer
+
+Top-level TDD implementation agent. Enforces the red-green-refactor cycle —
+writes tests before implementation code.
+
+- **Temperature**: 0.2
+- **Delegates to**: feature-tester, feature-implementer, feature-reviewer
+- **Refuses**: Writing implementation before tests, skipping verification
+
+[View full agent definition](agents/johnludlow-tdd-implementer.md)
+
+#### johnludlow-documenter
+
+Top-level documentation agent. Creates and maintains documentation only.
+
+- **Temperature**: 0.2
+- **Delegates to**: feature-documenter, feature-reviewer
+- **Refuses**: Source code changes, planning, test execution
+
+[View full agent definition](agents/johnludlow-documenter.md)
+
+#### johnludlow-tester
+
+Top-level testing agent. Runs tests and reports results without fixing code.
+
+- **Temperature**: 0.2
+- **Delegates to**: feature-tester, feature-reviewer
+- **Refuses**: Code changes, planning, documentation
+
+[View full agent definition](agents/johnludlow-tester.md)
+
+### Sub-Agents
+
+#### johnludlow-feature-planner
 
 Creates comprehensive feature plans and project specifications.
 
@@ -64,6 +131,18 @@ Runs automated tests and reports results.
 
 [View full agent definition](agents/johnludlow-feature-tester.md)
 
+#### johnludlow-feature-reviewer
+
+Adversarial reviewer sub-agent. Read-only quality gate invoked by all top-level
+agents before they report completion. Produces critical feedback with PASS/FAIL
+verdicts.
+
+- **Temperature**: 0.4 (balanced for critical analysis)
+- **Focus**: Correctness, completeness, consistency, standards compliance
+- **Output**: Structured review feedback with severity ratings
+
+[View full agent definition](agents/johnludlow-feature-reviewer.md)
+
 ## Skills
 
 Skills provide shared knowledge and standards for agents.
@@ -87,6 +166,16 @@ are automatically installed and configured during setup.
 
 ### Permission Model
 
+Top-level agents:
+
+- **Planner**: Read all, write `docs/plans/`, delegate to planner/documenter/reviewer
+- **Implementer**: Read all, delegate to implementer/tester/reviewer
+- **TDD Implementer**: Read all, delegate to tester/implementer/reviewer (test-first)
+- **Documenter**: Read all, delegate to documenter/reviewer
+- **Tester**: Read all, delegate to tester/reviewer
+
+Sub-agents:
+
 - **Feature Planner**: Can read project files, write to `docs/plans/`, run git read
   commands, create GitHub issues
 - **Feature Implementer**: Can write source code, run build/test commands, read-only
@@ -94,6 +183,7 @@ are automatically installed and configured during setup.
 - **Feature Documenter**: Can write documentation, read project files, create GitHub
   issues
 - **Feature Tester**: Can read code and docs, run test commands
+- **Feature Reviewer**: Read-only, no edit/task/webfetch permissions
 
 Each agent is restricted to prevent accidental destructive operations (like git
 commits or pushes) while enabling productive work within their domain.
@@ -131,7 +221,9 @@ npx <tgz-url> install --global
 
 The installation script automatically sets up:
 
-- **Agents** - johnludlow-feature-planner, implementer, documenter, and tester
+- **Agents** - Top-level agents (planner, implementer, tdd-implementer, documenter,
+  tester) and sub-agents (feature-planner, feature-implementer, feature-documenter,
+  feature-tester, feature-reviewer)
 - **Skills** - Reusable knowledge bases for all agents
 - **OpenCode Plugins**:
   - **oh-my-opencode** - Shell environment configuration for OpenCode
@@ -141,21 +233,44 @@ The installation script automatically sets up:
 
 ## Usage
 
-### Using Agents with OpenCode
+### Using Top-Level Agents with OpenCode
 
-Once installed, agents are available in OpenCode:
+Once installed, select a top-level agent for your task:
 
 ```bash
-# In any OpenCode session
-/agent johnludlow-feature-planner
+# Planning
+/agent johnludlow-planner
+
+# Implementation (standard)
+/agent johnludlow-implementer
+
+# Implementation (TDD - test-first)
+/agent johnludlow-tdd-implementer
+
+# Documentation
+/agent johnludlow-documenter
+
+# Testing
+/agent johnludlow-tester
 ```
 
-### Using Agents with GitHub Copilot CLI
-
-The agents are automatically generated in Copilot format during installation. Use them in Copilot:
+### Using Top-Level Agents with GitHub Copilot CLI
 
 ```bash
-copilot chat -a johnludlow-feature-planner "Please plan a user authentication system"
+# Planning
+copilot chat -a johnludlow-planner "Plan a user authentication system"
+
+# Implementation
+copilot chat -a johnludlow-implementer "Implement the plan in docs/plans/auth.md"
+
+# TDD Implementation
+copilot chat -a johnludlow-tdd-implementer "Implement the plan in docs/plans/auth.md"
+
+# Documentation
+copilot chat -a johnludlow-documenter "Document the authentication API"
+
+# Testing
+copilot chat -a johnludlow-tester "Run all tests for the auth module"
 ```
 
 ### Available Commands
@@ -196,27 +311,33 @@ johnludlow-agents version         # Show version
 
 ## Workflow Example
 
-A typical workflow using these agents:
+A typical workflow using top-level agents:
 
-1. **Plan** (johnludlow-feature-planner)
+1. **Plan** (`johnludlow-planner`)
 
-   Define feature requirements, architecture, and implementation phases
-   Output: Feature plan document
+   Define feature requirements, architecture, and implementation phases.
+   The planner delegates to sub-agents and invokes the adversarial reviewer
+   before completion.
+   Output: Feature plan document in `docs/plans/`
 
-2. **Implement** (johnludlow-feature-implementer)
+2. **Implement** (`johnludlow-implementer` or `johnludlow-tdd-implementer`)
 
-   Follow the plan to implement code and tests
+   Follow the approved plan to implement code and tests. The TDD variant
+   enforces red-green-refactor (tests written before implementation).
    Output: Updated source files, tests, and code changes
 
-3. **Document** (johnludlow-feature-documenter)
+3. **Document** (`johnludlow-documenter`)
 
-   Create user-friendly documentation for the feature
-   Output: API docs, guides, and references
+   Create user-friendly documentation for the feature.
+   Output: API docs, guides, and references in `docs/`
 
-4. **Test** (johnludlow-feature-tester)
+4. **Test** (`johnludlow-tester`)
 
-   Run automated tests and report results
+   Run automated tests and report results.
    Output: Test results and coverage reports
+
+Each top-level agent invokes the `johnludlow-feature-reviewer` sub-agent before
+reporting completion, ensuring adversarial quality review of all work.
 
 ## Supported Languages
 
@@ -244,10 +365,16 @@ These agents are designed to work with:
 ```bash
 .
 ├── agents/                 # 📝 Canonical agent definitions (PRIMARY SOURCE)
-│   ├── johnludlow-feature-planner.md
-│   ├── johnludlow-feature-implementer.md
-│   ├── johnludlow-feature-documenter.md
-│   └── johnludlow-feature-tester.md
+│   ├── johnludlow-planner.md              # Top-level: planning
+│   ├── johnludlow-implementer.md          # Top-level: implementation
+│   ├── johnludlow-tdd-implementer.md      # Top-level: TDD implementation
+│   ├── johnludlow-documenter.md           # Top-level: documentation
+│   ├── johnludlow-tester.md               # Top-level: testing
+│   ├── johnludlow-feature-planner.md      # Sub-agent: planning work
+│   ├── johnludlow-feature-implementer.md  # Sub-agent: code changes
+│   ├── johnludlow-feature-documenter.md   # Sub-agent: documentation work
+│   ├── johnludlow-feature-tester.md       # Sub-agent: test execution
+│   └── johnludlow-feature-reviewer.md     # Sub-agent: adversarial review
 ├── skills/                 # 📝 Canonical skill definitions (PRIMARY SOURCE)
 │   ├── johnludlow-markdown-standards.md
 │   └── johnludlow-code-quality.md
