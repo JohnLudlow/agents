@@ -9,6 +9,13 @@ Each agent has specific permissions that control what actions it can perform. Th
 permissions are automatically installed to your OpenCode configuration and ensure
 agents operate within their intended scope.
 
+This project uses a two-tier architecture:
+
+- **Top-level agents** (`mode: agent`) are user-facing entry points with locked
+  intent and restricted delegation permissions
+- **Sub-agents** (`mode: subagent`) perform the actual work within their specific
+  domain
+
 ## Permission Levels
 
 Each permission can be set to:
@@ -17,7 +24,98 @@ Each permission can be set to:
 - **`ask`** — OpenCode prompts you for approval before running the action
 - **`deny`** — The action is blocked and cannot run
 
-## Agent Roles and Permissions
+## Top-Level Agent Permissions
+
+Top-level agents orchestrate work by delegating to sub-agents. They have restricted
+`task` permissions that control which sub-agents they can invoke.
+
+### Planner (`johnludlow-planner`)
+
+**Purpose**: Orchestrates planning work. Plans only, never implements.
+
+**Capabilities**:
+
+- Read all project files
+- Write to `docs/plans/` directory
+- Run read-only git commands
+- Create and update GitHub issues
+- Delegate to: feature-planner, feature-documenter, feature-reviewer
+
+**Restrictions**:
+
+- Cannot delegate to feature-implementer or feature-tester
+- Cannot modify source code
+- Cannot commit or push changes
+- Cannot run build or test commands
+
+### Implementer (`johnludlow-implementer`)
+
+**Purpose**: Orchestrates implementation of approved plans.
+
+**Capabilities**:
+
+- Read all project files (except .env)
+- Run read-only git commands
+- Delegate to: feature-implementer, feature-tester, feature-reviewer
+
+**Restrictions**:
+
+- Cannot delegate to feature-planner or feature-documenter
+- Cannot edit files directly (must delegate to sub-agents)
+- Cannot commit or push changes
+
+### TDD Implementer (`johnludlow-tdd-implementer`)
+
+**Purpose**: Orchestrates test-driven implementation (red-green-refactor).
+
+**Capabilities**:
+
+- Read all project files (except .env)
+- Run read-only git commands
+- Delegate to: feature-tester, feature-implementer, feature-reviewer
+
+**Restrictions**:
+
+- Cannot delegate to feature-planner or feature-documenter
+- Cannot edit files directly (must delegate to sub-agents)
+- Cannot commit or push changes
+- Enforces test-first ordering via system prompt
+
+### Documenter (`johnludlow-documenter`)
+
+**Purpose**: Orchestrates documentation work.
+
+**Capabilities**:
+
+- Read all project files
+- Run read-only git commands
+- Delegate to: feature-documenter, feature-reviewer
+
+**Restrictions**:
+
+- Cannot delegate to feature-planner, feature-implementer, or feature-tester
+- Cannot edit files directly (must delegate to sub-agents)
+- Cannot commit or push changes
+
+### Tester (`johnludlow-tester`)
+
+**Purpose**: Orchestrates test execution and reporting.
+
+**Capabilities**:
+
+- Read all project files (except .env)
+- Run read-only git commands
+- Delegate to: feature-tester, feature-reviewer
+
+**Restrictions**:
+
+- Cannot delegate to feature-planner, feature-implementer, or feature-documenter
+- Cannot edit files directly (must delegate to sub-agents)
+- Cannot commit or push changes
+
+## Sub-Agent Permissions
+
+Sub-agents perform the actual work delegated by top-level agents.
 
 ### Feature Planner (`johnludlow-feature-planner`)
 
@@ -135,6 +233,32 @@ Each permission can be set to:
 - Reporting test results
 - Analyzing test failures
 - Verifying features work correctly
+
+### Feature Reviewer (`johnludlow-feature-reviewer`)
+
+**Purpose**: Adversarial quality gate. Reviews all work before completion.
+
+**Capabilities**:
+
+- Read all project files
+- Run read-only git commands (log, status, diff, branch)
+- Analyse diffs and code changes
+
+**Restrictions**:
+
+- Cannot edit or write any files (strictly read-only)
+- Cannot run build or test commands
+- Cannot commit or push changes
+- Cannot delegate to other agents
+- Cannot fetch web content
+
+**Use cases**:
+
+- Reviewing plans for completeness and correctness
+- Reviewing code changes for quality and standards compliance
+- Reviewing documentation for accuracy
+- Reviewing test results for adequacy
+- Providing PASS/FAIL verdicts with severity-rated feedback
 
 ## Permission File Location
 
