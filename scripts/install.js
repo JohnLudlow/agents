@@ -773,8 +773,8 @@ async function writeCopilotMcpConfig(mode) {
  * - Global mode: writes to `~/.config/opencode/config.json`
  * - Local mode:  writes to `.opencode/config.json`
  *
- * Only context-7 and github-mcp-server have documented OpenCode configs
- * (per plan section "MCP Configuration Snippets"). gamecodex has no OpenCode config.
+ * Writes the documented OpenCode MCP configs for context-7, github-mcp-server,
+ * and gamecodex (per the MCP Configuration Snippets section).
  */
 async function writeOpenCodeMcpConfig(mode) {
   console.log("\n🧩 Writing OpenCode MCP config...");
