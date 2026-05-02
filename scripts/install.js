@@ -11,6 +11,8 @@
 
 const fs = require("fs");
 const path = require("path");
+const os = require("os");
+const net = require("net");
 const { spawnSync } = require("child_process");
 
 const {
@@ -210,6 +212,55 @@ const COPILOT_PLUGINS = [
   { name: "security-best-practices", scope: "awesome-copilot", version: "v1.0.0" },
 ];
 
+// Recommended MCP servers (installed alongside agents)
+// See docs/plans/add-mcps-alongside-agents.md for rationale.
+//
+// MCP types:
+//   "remote"       — accessed via remote URL; no local install or port needed
+//   "local-npx"    — launched on-demand via npx; no global install or port needed
+//   "local-npm"    — installed globally via npm; requires port assignment
+//   "local-dotnet" — installed via dotnet tool; requires port assignment
+//
+// Port range applies only to "local-npm" and "local-dotnet" MCPs.
+const MCP_PORT_RANGE = { start: 7001, end: 7099, fallbackStart: 7100 };
+
+const MCP_DEFS = [
+  // --- Remote MCPs (config-only, no local install or port) ---
+  {
+    name: "context-7",
+    type: "remote",
+    url: "https://mcp.context7.com/mcp/oauth",
+    manager: null,
+    healthz: null,
+    requiredEnvVars: [],
+    // Auth: run `opencode mcp auth context7` after config is in place
+  },
+  {
+    name: "github-mcp-server",
+    type: "remote",
+    url: "https://api.githubcopilot.com/mcp/",
+    manager: null,
+    healthz: null,
+    requiredEnvVars: ["OC_GITHUB_PAT"],
+    // Auth: set OC_GITHUB_PAT environment variable
+  },
+  // --- Local npx MCPs (on-demand via npx; no port) ---
+  {
+    name: "gamecodex",
+    type: "local-npx",
+    package: "gamecodex",
+    requiresGlobalInstall: true, // npx alone is unreliable; pre-install globally
+    command: "npx",
+    args: ["-y", "gamecodex"],
+    manager: "optional-pm2",
+    healthz: "/healthz",
+    requiredEnvVars: [],
+  },
+  // --- Local MCPs (see lobehub deployment guides for install/config details) ---
+  // mslearn: https://lobehub.com/mcp/microsoftdocs-mcp?activeTab=deployment
+  // nuget:   https://lobehub.com/mcp/dimonsmart-nugetmcpserver?activeTab=deployment
+];
+
 /**
  * Check whether the GitHub CLI (`gh`) is available on PATH
  */
@@ -230,6 +281,86 @@ function installCopilotPlugin(scope, name) {
    );
    return result.status === 0;
  }
+
+/**
+ * Check whether a TCP port is free on localhost.
+ * Uses Node's net module — no external dependency.
+ */
+function isPortFree(port) {
+  return new Promise(resolve => {
+    const server = net.createServer();
+    server.once("error", () => resolve(false));
+    server.once("listening", () => server.close(() => resolve(true)));
+    server.listen(port, "127.0.0.1");
+  });
+}
+
+/**
+ * Find the next free port in [start, end], falling back to fallbackStart on
+ * exhaustion. Returns { port, warning } where warning is non-null if fallback used.
+ */
+async function findFreePort(start, end, fallbackStart, used) {
+  for (let p = start; p <= end; p++) {
+    if (used.has(p)) continue;
+    if (await isPortFree(p)) return { port: p, warning: null };
+  }
+  // Fallback: scan from fallbackStart upward, capped at 7999
+  for (let p = fallbackStart; p < 8000; p++) {
+    if (used.has(p)) continue;
+    if (await isPortFree(p)) {
+      return {
+        port: p,
+        warning: `default range ${start}-${end} exhausted; using fallback ${p}`,
+      };
+    }
+  }
+  throw new Error(`No free port available in ${start}-${end} or fallback range`);
+}
+
+/**
+ * Install a single MCP server.
+ * - "remote":       no install needed; returns true immediately.
+ * - "local-npx":    no global install; npx handles on-demand execution. Returns true.
+ * - "local-npm":    installs globally via npm.
+ * - "local-dotnet": installs via dotnet tool.
+ */
+function installMcpPackage(mcp) {
+  if (mcp.type === "remote") {
+    return true;
+  }
+  if (mcp.type === "local-npx") {
+    // Some npx MCPs need a global pre-install to ensure the package is cached
+    // and available (npx -y can fail silently in some environments).
+    if (mcp.requiresGlobalInstall) {
+      const result = spawnSync("npm", ["install", "--global", mcp.package], {
+        encoding: "utf8",
+        stdio: "pipe",
+      });
+      return result.status === 0;
+    }
+    return true;
+  }
+  if (mcp.type === "local-npm") {
+    const pkgSpec = mcp.versionRange ? `${mcp.package}@${mcp.versionRange}` : mcp.package;
+    const result = spawnSync("npm", ["install", "-g", pkgSpec], {
+      encoding: "utf8",
+      stdio: "pipe",
+    });
+    return result.status === 0;
+  }
+  if (mcp.type === "local-dotnet") {
+    const result = spawnSync(
+      "dotnet",
+      ["tool", "install", "--global", mcp.package],
+      { encoding: "utf8", stdio: "pipe" },
+    );
+    // Treat "already installed" as success (exit code 1 with specific message)
+    if (result.status === 0) return true;
+    if (result.stderr && /already installed/i.test(result.stderr)) return true;
+    return false;
+  }
+  throw new Error(`Unknown MCP type: ${mcp.type}`);
+}
 
 /**
  * Install recommended Copilot plugins.
@@ -427,6 +558,272 @@ function installOpenCodePlugins(mode) {
 }
 
 /**
+ * Install MCP servers and write .mcps.json alongside the OpenCode config.
+ *
+ * Mirrors installCopilotPlugins / installOpenCodePlugins patterns:
+ * - Per-MCP success/failure tracking
+ * - Best-effort install (does not abort on first failure)
+ * - Returns failure count so caller can set non-zero exit code
+ */
+async function installMcps(mode) {
+  console.log("\n🧩 Installing MCP servers...");
+
+  const targetDir = getTargetDirectory("opencode", mode);
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+  const mcpsConfigPath = path.join(targetDir, ".mcps.json");
+
+  // Load or initialise .mcps.json (schema v2)
+  let mcpsConfig = { version: 2, mcps: [] };
+  let alreadyBacked = false;
+  if (fs.existsSync(mcpsConfigPath)) {
+    try {
+      mcpsConfig = JSON.parse(fs.readFileSync(mcpsConfigPath, "utf8"));
+      if (!Array.isArray(mcpsConfig.mcps)) mcpsConfig.mcps = [];
+    } catch {
+      const backup = mcpsConfigPath + BACKUP_SUFFIX;
+      fs.copyFileSync(mcpsConfigPath, backup);
+      console.warn(`   ⚠️  Could not parse ${mcpsConfigPath}; backed up to ${backup}`);
+      mcpsConfig = { version: 2, mcps: [] };
+      alreadyBacked = true;
+    }
+  }
+
+  const installed = [];
+  const failed = [];
+  const usedPorts = new Set(mcpsConfig.mcps.map(m => m.port).filter(Boolean));
+
+  for (const mcp of MCP_DEFS) {
+    const displayName = mcp.package ? `${mcp.name} (${mcp.package})` : mcp.name;
+    process.stdout.write(`   → ${displayName}... `);
+
+    if (!installMcpPackage(mcp)) {
+      process.stdout.write("✗ install failed\n");
+      failed.push({ ...mcp, reason: "package install" });
+      continue;
+    }
+
+    let entry;
+
+    if (mcp.type === "remote") {
+      // Remote MCPs: config-only, no port or process management needed.
+      entry = {
+        name: mcp.name,
+        type: "remote",
+        url: mcp.url,
+        manager: null,
+        healthz: null,
+        requiredEnvVars: mcp.requiredEnvVars || [],
+      };
+      process.stdout.write(`✓ remote → ${mcp.url}\n`);
+    } else if (mcp.type === "local-npx") {
+      // Local npx MCPs: on-demand via npx, no port assignment.
+      entry = {
+        name: mcp.name,
+        type: "local-npx",
+        package: mcp.package || null,
+        requiresGlobalInstall: mcp.requiresGlobalInstall || false,
+        command: mcp.command,
+        args: mcp.args,
+        manager: mcp.manager,
+        healthz: mcp.healthz,
+        requiredEnvVars: mcp.requiredEnvVars || [],
+      };
+      process.stdout.write(`✓ npx ${mcp.package}\n`);
+    } else {
+      // Local npm/dotnet MCPs: assign a free port.
+      let portInfo;
+      try {
+        portInfo = await findFreePort(
+          MCP_PORT_RANGE.start,
+          MCP_PORT_RANGE.end,
+          MCP_PORT_RANGE.fallbackStart,
+          usedPorts,
+        );
+      } catch (err) {
+        process.stdout.write(`✗ ${err.message}\n`);
+        failed.push({ ...mcp, reason: "no free port" });
+        continue;
+      }
+      usedPorts.add(portInfo.port);
+
+      entry = {
+        name: mcp.name,
+        type: mcp.type,
+        port: portInfo.port,
+        url: `http://localhost:${portInfo.port}`,
+        manager: mcp.manager,
+        healthz: mcp.healthz,
+        invoke: mcp.invoke,
+        requiredEnvVars: mcp.requiredEnvVars || [],
+      };
+      process.stdout.write(`✓ port ${portInfo.port}`);
+      if (portInfo.warning) process.stdout.write(` (${portInfo.warning})`);
+      process.stdout.write("\n");
+    }
+
+    // Update .mcps.json entry (replace any existing entry for this MCP)
+    const existingIdx = mcpsConfig.mcps.findIndex(m => m.name === mcp.name);
+    if (existingIdx >= 0) {
+      mcpsConfig.mcps[existingIdx] = entry;
+    } else {
+      mcpsConfig.mcps.push(entry);
+    }
+    installed.push(entry);
+  }
+
+  // Write .mcps.json (with backup of existing, unless already backed up in error path)
+  if (!alreadyBacked && fs.existsSync(mcpsConfigPath)) {
+    fs.copyFileSync(mcpsConfigPath, mcpsConfigPath + BACKUP_SUFFIX);
+  }
+  fs.writeFileSync(mcpsConfigPath, JSON.stringify(mcpsConfig, null, 2));
+
+  // Summary
+  if (installed.length > 0) {
+    console.log(`\n   ✓ Configured ${installed.length} MCP(s):`);
+    installed.forEach(m => {
+      const target = m.url || (m.command ? `${m.command} ${(m.args || []).join(" ")}` : m.name);
+      console.log(`     • ${m.name} → ${target}`);
+    });
+    console.log(`   📁 Config file: ${mcpsConfigPath}`);
+  }
+  if (failed.length > 0) {
+    console.log(`\n   ⚠️  ${failed.length} MCP(s) failed:`);
+    failed.forEach(m => console.log(`     • ${m.name} (${m.reason})`));
+    console.log("\n   See docs/plans/add-mcps-alongside-agents.md → Rollback and Error Handling");
+  }
+
+  // NOTE: Process supervision (pm2 / systemd) is the implementer's responsibility;
+  // see Process Management section. This installer registers MCPs in .mcps.json
+  // but does not start long-lived processes during `npm install`.
+
+  return { installed, failed };
+}
+
+/**
+ * Write (or merge) MCP entries into the Copilot CLI MCP config file.
+ *
+ * - Global mode: writes to `~/.copilot/mcp-config.json`
+ * - Local mode:  writes to `.mcp.json` in the project root
+ *
+ * Uses the same config snippets as the "MCP Configuration Snippets" section.
+ *
+ * NOTE: github-mcp-server has no Copilot config defined yet (see known gap in
+ * the MCP Configuration Snippets section). Only MCPs with a documented Copilot
+ * config (currently: context-7, gamecodex) are written here.
+ */
+async function writeCopilotMcpConfig(mode) {
+  console.log("\n🧩 Writing Copilot MCP config...");
+
+  // Global: ~/.copilot/mcp-config.json (same dir as agents/skills)
+  // Local:  .mcp.json at the project root (not inside .github/)
+  const configPath = mode === "local"
+    ? path.join(process.cwd(), ".mcp.json")
+    : path.join(PLATFORMS.copilot.globalDir, "mcp-config.json");
+
+  const configDir = path.dirname(configPath);
+  if (!fs.existsSync(configDir)) {
+    fs.mkdirSync(configDir, { recursive: true });
+  }
+
+  // Load or initialise the Copilot MCP config
+  let copilotMcpConfig = { mcpServers: {} };
+  if (fs.existsSync(configPath)) {
+    try {
+      copilotMcpConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
+      if (typeof copilotMcpConfig.mcpServers !== "object") copilotMcpConfig.mcpServers = {};
+    } catch {
+      const backup = configPath + BACKUP_SUFFIX;
+      fs.copyFileSync(configPath, backup);
+      console.warn(`   ⚠️  Could not parse ${configPath}; backed up to ${backup}`);
+      copilotMcpConfig = { mcpServers: {} };
+    }
+  }
+
+  // Merge entries for MCPs that have a documented Copilot config.
+  // context-7: OAuth-protected HTTP endpoint
+  copilotMcpConfig.mcpServers["context7"] = {
+    type: "http",
+    url: "https://mcp.context7.com/mcp/oauth",
+    tools: ["query-docs", "resolve-library-id"],
+  };
+
+  // gamecodex: launched on-demand via npx
+  copilotMcpConfig.mcpServers["gamedev"] = {
+    command: "npx",
+    args: ["-y", "gamecodex"],
+  };
+
+  // NOTE: github-mcp-server is intentionally omitted here — its Copilot config
+  // has not been specified in issue #15. See "known gap" note in the
+  // MCP Configuration Snippets section and the implementation checklist.
+
+  if (fs.existsSync(configPath)) {
+    fs.copyFileSync(configPath, configPath + BACKUP_SUFFIX);
+  }
+  fs.writeFileSync(configPath, JSON.stringify(copilotMcpConfig, null, 2));
+  console.log(`   ✓ Copilot MCP config written: ${configPath}`);
+}
+
+/**
+ * Merge MCP entries into the OpenCode config.json under the "mcp" key.
+ *
+ * - Global mode: writes to `~/.config/opencode/config.json`
+ * - Local mode:  writes to `.opencode/config.json`
+ *
+ * Only context-7 and github-mcp-server have documented OpenCode configs
+ * (per plan section "MCP Configuration Snippets"). gamecodex has no OpenCode config.
+ */
+async function writeOpenCodeMcpConfig(mode) {
+  console.log("\n🧩 Writing OpenCode MCP config...");
+
+  const configPath = getOpenCodeConfigPath(mode);
+  const { config, valid } = readOpenCodeConfig(configPath);
+  if (!valid) return;
+
+  if (typeof config.mcp !== "object" || config.mcp === null) {
+    config.mcp = {};
+  }
+
+  // context-7: OAuth-protected remote MCP
+  config.mcp["context7"] = {
+    type: "remote",
+    url: "https://mcp.context7.com/mcp/oauth",
+    enabled: true,
+  };
+
+  // github-mcp-server: remote MCP authenticated via PAT env var
+  config.mcp["github-mcp"] = {
+    type: "remote",
+    url: "https://api.githubcopilot.com/mcp/",
+    headers: {
+      Authorization: "Bearer {env:OC_GITHUB_PAT}",
+    },
+    enabled: true,
+  };
+
+  // gamecodex: on-demand via npx (OpenCode uses command array, not command+args)
+  config.mcp["gamecodex"] = {
+    type: "local",
+    command: ["npx", "-y", "gamecodex"],
+    enabled: true,
+  };
+
+  // Backup before writing
+  if (fs.existsSync(configPath)) {
+    fs.copyFileSync(configPath, configPath + BACKUP_SUFFIX);
+  }
+
+  const configDir = path.dirname(configPath);
+  if (!fs.existsSync(configDir)) {
+    fs.mkdirSync(configDir, { recursive: true });
+  }
+  writeOpenCodeConfig(configPath, config);
+  console.log(`   ✓ OpenCode MCP config written: ${configPath}`);
+}
+
+/**
  * Display next steps
  */
 function displayNextSteps(opencodePath, copilotPath, mode) {
@@ -443,12 +840,21 @@ function displayNextSteps(opencodePath, copilotPath, mode) {
   console.log("   - Agents and skills are ready to use immediately");
   console.log("   - Configure in: .github/copilot/config.yml");
 
-  console.log("\n4. Additional commands:");
+  console.log("\n4. For MCP servers:");
+  console.log(`   - MCP registry: ${path.join(opencodePath, ".mcps.json")}`);
+  console.log("   - Remote MCPs (context-7, github-mcp-server): no local process needed.");
+  console.log("   - For context-7: run `opencode mcp auth context7` to authenticate.");
+  console.log("   - For github-mcp-server: ensure OC_GITHUB_PAT environment variable is set.");
+  console.log("   - Local npx MCPs (gamecodex): launched on-demand by the host.");
+  console.log("   - Local MCPs (mslearn, nuget): start with pm2 or appropriate supervisor.");
+  console.log("   - Verify local MCPs with: curl http://localhost:<port>/healthz");
+
+  console.log("\n5. Additional commands:");
   console.log("   - npm run restore     : Restore from backup");
   console.log("   - npm run uninstall   : Remove installations");
   console.log("   - npm run list        : Show installed agents/skills");
 
-  console.log("\n5. Documentation:");
+  console.log("\n6. Documentation:");
   console.log("   - OpenCode: https://opencode.ai/docs");
   console.log("   - GitHub Copilot: https://github.com/features/copilot");
 }
@@ -498,8 +904,28 @@ async function main() {
     // Install recommended Copilot plugins
     installCopilotPlugins();
 
+    // Install MCP servers and write configs
+    const mcpResult = await installMcps(mode);
+    try {
+      await writeOpenCodeMcpConfig(mode);
+    } catch (err) {
+      console.warn(`\n⚠️  Failed to write OpenCode MCP config: ${err.message}`);
+      process.exitCode = 2;
+    }
+    try {
+      await writeCopilotMcpConfig(mode);
+    } catch (err) {
+      console.warn(`\n⚠️  Failed to write Copilot MCP config: ${err.message}`);
+      process.exitCode = 2;
+    }
+
     // Display next steps
     displayNextSteps(opencodePath, copilotPath, mode);
+
+    if (mcpResult.failed.length > 0) {
+      console.log(`\n⚠️  Installation completed with ${mcpResult.failed.length} MCP failure(s).`);
+      process.exitCode = 2;  // Non-zero so CI flags it; do not throw — partial success is acceptable.
+    }
 
     console.log("\n✨ Installation successful!");
   } catch (error) {
