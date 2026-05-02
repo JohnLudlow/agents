@@ -1,0 +1,26 @@
+{
+  "description": "Top-level planning agent. Plans only, never implements.",
+  "mode": "primary",
+  "temperature": 0.3,
+  "permission": {
+    "read": { "*": "allow" },
+    "edit": { "*": "deny", "docs/plans/*": "allow" },
+    "bash": {
+      "*": "deny",
+      "gh issue*": "ask",
+      "gh issue view*": "allow",
+      "git log*": "allow",
+      "git status*": "allow",
+      "git branch*": "allow",
+      "git diff*": "allow"
+    },
+    "grep": { "*": "allow" },
+    "webfetch": "ask",
+    "task": {
+      "*": "deny",
+      "johnludlow-feature-planner": "allow",
+      "johnludlow-feature-documenter": "allow",
+      "johnludlow-feature-reviewer": "allow"
+    }
+  }
+}

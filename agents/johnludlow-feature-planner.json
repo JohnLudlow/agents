@@ -1,0 +1,22 @@
+{
+  "description": "Plans features and creates detailed implementation plans",
+  "mode": "subagent",
+  "temperature": 0.3,
+  "permission": {
+    "read": { "*": "allow" },
+    "edit": { "*": "deny", "docs/plans/*": "allow" },
+    "bash": {
+      "*": "deny",
+      "gh issue*": "ask",
+      "gh issue view*": "allow",
+      "git log*": "allow",
+      "git status*": "allow",
+      "git branch*": "allow",
+      "git diff*": "allow",
+      "rumdl check*": "allow"
+    },
+    "grep": { "*": "allow" },
+    "webfetch": "ask",
+    "task": { "*": "deny" }
+  }
+}

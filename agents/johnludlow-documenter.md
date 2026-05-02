@@ -5,10 +5,6 @@
 Top-level documentation agent with a fixed intent of **document only**. Delegates
 work to the documentation sub-agent. Never modifies source code.
 
-## Temperature
-
-0.2
-
 ## Agent Type
 
 Top-level agent. This agent is user-facing and selectable via `/agent` commands.

@@ -1,0 +1,23 @@
+{
+  "description": "Top-level testing agent. Runs tests and reports results.",
+  "mode": "primary",
+  "temperature": 0.2,
+  "permission": {
+    "read": { "*": "allow", "*.env": "deny" },
+    "edit": { "*": "deny" },
+    "bash": {
+      "*": "deny",
+      "git log*": "allow",
+      "git status*": "allow",
+      "git branch*": "allow",
+      "git diff*": "allow"
+    },
+    "grep": { "*": "allow" },
+    "webfetch": "ask",
+    "task": {
+      "*": "deny",
+      "johnludlow-feature-tester": "allow",
+      "johnludlow-feature-reviewer": "allow"
+    }
+  }
+}

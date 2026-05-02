@@ -5,10 +5,6 @@
 Agent for implementing planned changes. Produces code and configuration changes
 based on well-formed plan documents created by johnludlow-feature-planner.
 
-## Temperature
-
-0.2
-
 ## Purpose
 
 The johnludlow-feature-implementer takes approved plans and translates them into

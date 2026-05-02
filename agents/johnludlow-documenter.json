@@ -1,0 +1,23 @@
+{
+  "description": "Top-level documentation agent. Documents only, never implements.",
+  "mode": "primary",
+  "temperature": 0.2,
+  "permission": {
+    "read": { "*": "allow" },
+    "edit": { "*": "deny" },
+    "bash": {
+      "*": "deny",
+      "git log*": "allow",
+      "git status*": "allow",
+      "git branch*": "allow",
+      "git diff*": "allow"
+    },
+    "grep": { "*": "allow" },
+    "webfetch": "ask",
+    "task": {
+      "*": "deny",
+      "johnludlow-feature-documenter": "allow",
+      "johnludlow-feature-reviewer": "allow"
+    }
+  }
+}

@@ -5,10 +5,6 @@
 Top-level planning agent with a fixed intent of **plan only**. Delegates work to
 planning and documentation sub-agents. Never implements source code.
 
-## Temperature
-
-0.3
-
 ## Agent Type
 
 Top-level agent. This agent is user-facing and selectable via `/agent` commands.

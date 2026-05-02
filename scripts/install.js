@@ -40,35 +40,31 @@ const SOURCE_DIRS = {
 // ============================================================================
 
 /**
- * Get source agents directory for a platform
+ * Get source agents directory for a platform.
  *
- * For OpenCode: Uses pre-built opencode/agents (with YAML frontmatter + permissions)
- * For Copilot: Uses generated .github/agents in global mode (with Copilot frontmatter),
- *              or canonical agents/ in local mode (build will add frontmatter before shipping)
+ * Always uses the pre-built format-specific output so installed agents
+ * include the correct YAML frontmatter and temperature guidance for each platform.
  */
-function getSourceAgentsDir(platform, mode) {
+function getSourceAgentsDir(platform) {
   if (platform === "opencode") {
     return SOURCE_DIRS.opencodeAgents;
   }
   if (platform === "copilot") {
-    // For global Copilot: use pre-built .github/agents with Copilot frontmatter
-    if (mode === "global") {
-      return path.join(__dirname, "..", ".github", "agents");
-    }
-    // For local Copilot: use canonical agents
-    // (Copilot CLI will use the canonical agents which are installed locally)
-    return SOURCE_DIRS.canonicalAgents;
+    return path.join(__dirname, "..", ".github", "agents");
   }
   throw new Error(`Unknown platform: ${platform}`);
 }
 
 /**
- * Get source skills directory for a platform
+ * Get source skills directory for a platform.
  *
- * For both OpenCode and Copilot: Uses canonical skills/ (plain markdown)
+ * Copilot uses the pre-built .github/skills output (includes description frontmatter).
+ * OpenCode uses canonical skills/ (plain markdown — no frontmatter needed).
  */
 function getSourceSkillsDir(platform) {
-  // Both platforms use canonical skills (plain markdown)
+  if (platform === "copilot") {
+    return path.join(__dirname, "..", ".github", "skills");
+  }
   return SOURCE_DIRS.canonicalSkills;
 }
 
@@ -98,7 +94,7 @@ function checkOpenCodeInstalled() {
 function installPlatform(platform, mode) {
   const config = PLATFORMS[platform];
   const targetDir = getTargetDirectory(platform, mode);
-  const sourceAgentsDir = getSourceAgentsDir(platform, mode);
+  const sourceAgentsDir = getSourceAgentsDir(platform);
   const sourceSkillsDir = getSourceSkillsDir(platform);
 
   console.log(`${config.emoji} Installing ${config.name} format...`);
@@ -134,7 +130,7 @@ function installPlatform(platform, mode) {
   // Install agents
   if (fs.existsSync(sourceAgentsDir)) {
     console.log("  → Installing agents...");
-    copyDirectory(sourceAgentsDir, agentsDir);
+    copyDirectory(sourceAgentsDir, agentsDir, { skipJson: true });
     const count = countMarkdownFiles(agentsDir);
     console.log(`    ✓ Installed ${count} agents`);
   }
@@ -142,7 +138,7 @@ function installPlatform(platform, mode) {
   // Install skills
   if (fs.existsSync(sourceSkillsDir)) {
     console.log("  → Installing skills...");
-    copyDirectory(sourceSkillsDir, skillsDir);
+    copyDirectory(sourceSkillsDir, skillsDir, { skipJson: true });
     const count = countMarkdownFiles(skillsDir);
     console.log(`    ✓ Installed ${count} skills`);
   }
@@ -473,13 +469,15 @@ async function main() {
     console.log(`📍 Installation mode: ${mode}`);
 
     // Build agent definitions from canonical source
-    console.log("\n🔨 Building agent definitions...");
+    console.log("\n🔨 Building agent and skill definitions...");
     try {
-      const { buildOpenCodeAgents, buildCopilotAgents } = require("./build-agents.js");
+      const { buildOpenCodeAgents, buildCopilotAgents, buildOpenCodeSkills, buildCopilotSkills } = require("./build-agents.js");
       buildOpenCodeAgents();
       buildCopilotAgents();
+      buildOpenCodeSkills();
+      buildCopilotSkills();
     } catch (buildError) {
-      console.warn("   ⚠️  Could not build agents, using pre-built versions");
+      console.warn("   ⚠️  Could not build agents/skills, using pre-built versions");
     }
 
     // Check if OpenCode is available

@@ -93,9 +93,11 @@ function removeDirectory(dir) {
 
 /**
  * Copy directory recursively.
- * By default skips README.md files (set skipReadme: false for backup copies).
+ * - skipReadme: skip README.md files (true for installs, false for backups)
+ * - skipJson: skip .json files (true for installs to exclude build-time sidecars,
+ *             false for backups so config.json and other runtime JSON are preserved)
  */
-function copyDirectory(source, target, { skipReadme = true } = {}) {
+function copyDirectory(source, target, { skipReadme = true, skipJson = false } = {}) {
   if (!fs.existsSync(source)) {
     return;
   }
@@ -109,12 +111,14 @@ function copyDirectory(source, target, { skipReadme = true } = {}) {
   files.forEach((file) => {
     // Skip README.md when installing into agent/skill directories, but not when backing up
     if (skipReadme && file === "README.md") return;
+    // Skip JSON sidecars during install (build-time metadata); preserve them during backups
+    if (skipJson && file.endsWith(".json")) return;
 
     const sourcePath = path.join(source, file);
     const targetPath = path.join(target, file);
 
     if (fs.statSync(sourcePath).isDirectory()) {
-      copyDirectory(sourcePath, targetPath, { skipReadme });
+      copyDirectory(sourcePath, targetPath, { skipReadme, skipJson });
     } else {
       fs.copyFileSync(sourcePath, targetPath);
     }

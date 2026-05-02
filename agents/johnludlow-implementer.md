@@ -5,10 +5,6 @@
 Top-level implementation agent with a fixed intent of **implement only**. Delegates
 work to implementer and tester sub-agents. Follows approved plans.
 
-## Temperature
-
-0.2
-
 ## Agent Type
 
 Top-level agent. This agent is user-facing and selectable via `/agent` commands.

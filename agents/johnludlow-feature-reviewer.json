@@ -1,0 +1,20 @@
+{
+  "description": "Adversarial reviewer. Read-only quality gate for all agents.",
+  "mode": "subagent",
+  "temperature": 0.4,
+  "permission": {
+    "read": { "*": "allow" },
+    "edit": { "*": "deny" },
+    "bash": {
+      "*": "deny",
+      "git log*": "allow",
+      "git status*": "allow",
+      "git branch*": "allow",
+      "git diff*": "allow",
+      "rumdl check*": "allow"
+    },
+    "grep": { "*": "allow" },
+    "webfetch": "deny",
+    "task": { "*": "deny" }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "description": "Tests features and reports results",
+  "mode": "subagent",
+  "temperature": 0.2,
+  "permission": {
+    "read": { "*": "allow", "*.env": "deny" },
+    "edit": { "*": "deny" },
+    "bash": {
+      "*": "deny",
+      "npm test*": "allow",
+      "npm run test*": "allow",
+      "dotnet test*": "allow",
+      "cargo test*": "allow",
+      "git log*": "allow",
+      "git status*": "allow",
+      "git branch*": "allow",
+      "git diff*": "allow"
+    },
+    "grep": { "*": "allow" },
+    "webfetch": "ask"
+  }
+}
