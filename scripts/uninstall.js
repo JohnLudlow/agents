@@ -136,8 +136,12 @@ function uninstallMcps(mode, { purge = false } = {}) {
 
   // Backup .mcps.json before removing
   const backup = mcpsConfigPath + BACKUP_SUFFIX;
-  fs.copyFileSync(mcpsConfigPath, backup);
-  console.log(`   → Backed up .mcps.json to ${path.basename(backup)}`);
+  try {
+    fs.copyFileSync(mcpsConfigPath, backup);
+    console.log(`   → Backed up .mcps.json to ${path.basename(backup)}`);
+  } catch (error) {
+    console.warn(`   ⚠️  Failed to back up .mcps.json: ${error.message}`);
+  }
 
   if (purge) {
     let mcps = [];
