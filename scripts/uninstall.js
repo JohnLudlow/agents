@@ -174,8 +174,12 @@ function uninstallMcps(mode, { purge = false } = {}) {
     console.log("   ℹ️  Skipping global package removal (use --purge to remove)");
   }
 
-  fs.unlinkSync(mcpsConfigPath);
-  console.log("   ✓ Removed .mcps.json");
+  try {
+    fs.unlinkSync(mcpsConfigPath);
+    console.log("   ✓ Removed .mcps.json");
+  } catch (err) {
+    console.log(`   ℹ️  Could not remove .mcps.json: ${err.message}`);
+  }
 
   // Remove Copilot CLI MCP config entries written by writeCopilotMcpConfig.
   // Global: ~/.copilot/mcp-config.json (same dir as agents/skills)
