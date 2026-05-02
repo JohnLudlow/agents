@@ -128,47 +128,53 @@ function uninstallMcps(mode, { purge = false } = {}) {
 
   const targetDir = getTargetDirectory("opencode", mode);
   const mcpsConfigPath = path.join(targetDir, ".mcps.json");
+  const mcpsConfigExists = fs.existsSync(mcpsConfigPath);
 
-  if (!fs.existsSync(mcpsConfigPath)) {
+  if (!mcpsConfigExists) {
     console.log("   ℹ️  No .mcps.json found");
-    return;
   }
 
-  // Backup .mcps.json before removing
-  const backup = mcpsConfigPath + BACKUP_SUFFIX;
-  try {
-    fs.copyFileSync(mcpsConfigPath, backup);
-    console.log(`   → Backed up .mcps.json to ${path.basename(backup)}`);
-  } catch (error) {
-    console.warn(`   ⚠️  Failed to back up .mcps.json: ${error.message}`);
+  if (mcpsConfigExists) {
+    // Backup .mcps.json before removing
+    const backup = mcpsConfigPath + BACKUP_SUFFIX;
+    try {
+      fs.copyFileSync(mcpsConfigPath, backup);
+      console.log(`   → Backed up .mcps.json to ${path.basename(backup)}`);
+    } catch (error) {
+      console.warn(`   ⚠️  Failed to back up .mcps.json: ${error.message}`);
+    }
   }
 
   if (purge) {
-    let mcps = [];
-    try {
-      mcps = JSON.parse(fs.readFileSync(mcpsConfigPath, "utf8")).mcps || [];
-    } catch { /* ignore parse errors on uninstall */ }
+    if (mcpsConfigExists) {
+      let mcps = [];
+      try {
+        mcps = JSON.parse(fs.readFileSync(mcpsConfigPath, "utf8")).mcps || [];
+      } catch { /* ignore parse errors on uninstall */ }
 
-    for (const mcp of mcps) {
-      // Remote MCPs have no package to remove.
-      if (mcp.type === "remote") {
-        process.stdout.write(`   → ${mcp.name}: remote — no package to remove, skipping\n`);
-        continue;
+      for (const mcp of mcps) {
+        // Remote MCPs have no package to remove.
+        if (mcp.type === "remote") {
+          process.stdout.write(`   → ${mcp.name}: remote — no package to remove, skipping\n`);
+          continue;
+        }
+        // npx MCPs: only remove if a global install was done at install time.
+        if (mcp.type === "local-npx" && !mcp.requiresGlobalInstall) {
+          process.stdout.write(`   → ${mcp.name}: npx on-demand — no global package to remove, skipping\n`);
+          continue;
+        }
+        process.stdout.write(`   → Removing ${mcp.name}... `);
+        // Best-effort; ignore failures (user may have removed manually)
+        // npm vs dotnet detection: try npm first then dotnet.
+        const pkgName = mcp.package || mcp.name;
+        let result = spawnSync("npm", ["uninstall", "-g", pkgName], { stdio: "pipe" });
+        if (result.status !== 0) {
+          result = spawnSync("dotnet", ["tool", "uninstall", "--global", pkgName], { stdio: "pipe" });
+        }
+        process.stdout.write(result.status === 0 ? "✓\n" : "skipped\n");
       }
-      // npx MCPs: only remove if a global install was done at install time.
-      if (mcp.type === "local-npx" && !mcp.requiresGlobalInstall) {
-        process.stdout.write(`   → ${mcp.name}: npx on-demand — no global package to remove, skipping\n`);
-        continue;
-      }
-      process.stdout.write(`   → Removing ${mcp.name}... `);
-      // Best-effort; ignore failures (user may have removed manually)
-      // npm vs dotnet detection: try npm first then dotnet.
-      const pkgName = mcp.package || mcp.name;
-      let result = spawnSync("npm", ["uninstall", "-g", pkgName], { stdio: "pipe" });
-      if (result.status !== 0) {
-        result = spawnSync("dotnet", ["tool", "uninstall", "--global", pkgName], { stdio: "pipe" });
-      }
-      process.stdout.write(result.status === 0 ? "✓\n" : "skipped\n");
+    } else {
+      console.log("   ℹ️  No .mcps.json found; skipping global package removal");
     }
   } else {
     console.log("   ℹ️  Skipping global package removal (use --purge to remove)");
