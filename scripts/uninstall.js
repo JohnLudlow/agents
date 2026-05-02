@@ -193,11 +193,24 @@ function uninstallMcps(mode, { purge = false } = {}) {
     return;
   }
 
+  // Expected shapes written by writeCopilotMcpConfig.
+  // Only remove entries whose key fields match so user-managed config is not clobbered.
+  const expectedCopilotEntries = {
+    "context7": (e) => e && e.type === "http" && e.url === "https://mcp.context7.com/mcp/oauth",
+    "gamedev":  (e) => e && e.command === "npx" && Array.isArray(e.args) && e.args[0] === "-y" && e.args[1] === "gamecodex",
+  };
+
   try {
     const copilotConfig = JSON.parse(fs.readFileSync(copilotMcpConfigPath, "utf8"));
     const servers = copilotConfig.mcpServers || {};
-    const installedKeys = ["context7", "gamedev"];
-    const removedKeys = installedKeys.filter(k => k in servers);
+    const removedKeys = Object.keys(expectedCopilotEntries).filter(k => {
+      if (!(k in servers)) return false;
+      if (!expectedCopilotEntries[k](servers[k])) {
+        console.log(`   ℹ️  Skipping '${k}' in Copilot MCP config — doesn't match installer-written shape`);
+        return false;
+      }
+      return true;
+    });
 
     if (removedKeys.length === 0) {
       console.log("   ℹ️  No installer-managed entries in Copilot MCP config");
@@ -227,8 +240,23 @@ function uninstallMcps(mode, { purge = false } = {}) {
   try {
     const ocConfig = JSON.parse(fs.readFileSync(opencodeCfgPath, "utf8"));
     const mcp = ocConfig.mcp || {};
-    const installedOcKeys = ["context7", "github-mcp", "gamecodex"];
-    const removedOcKeys = installedOcKeys.filter(k => k in mcp);
+
+    // Expected shapes written by writeOpenCodeMcpConfig.
+    // Only remove entries whose key fields match so user-managed config is not clobbered.
+    const expectedOcEntries = {
+      "context7":  (e) => e && e.type === "remote" && e.url === "https://mcp.context7.com/mcp/oauth",
+      "github-mcp": (e) => e && e.type === "remote" && e.url === "https://api.githubcopilot.com/mcp/",
+      "gamecodex":  (e) => e && e.type === "local" && Array.isArray(e.command) && e.command[0] === "npx" && e.command[1] === "-y" && e.command[2] === "gamecodex",
+    };
+
+    const removedOcKeys = Object.keys(expectedOcEntries).filter(k => {
+      if (!(k in mcp)) return false;
+      if (!expectedOcEntries[k](mcp[k])) {
+        console.log(`   ℹ️  Skipping '${k}' in OpenCode config — doesn't match installer-written shape`);
+        return false;
+      }
+      return true;
+    });
 
     if (removedOcKeys.length === 0) {
       console.log("   ℹ️  No installer-managed entries in OpenCode config.json");
