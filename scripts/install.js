@@ -11,7 +11,6 @@
 
 const fs = require("fs");
 const path = require("path");
-const os = require("os");
 const net = require("net");
 const { spawnSync } = require("child_process");
 
