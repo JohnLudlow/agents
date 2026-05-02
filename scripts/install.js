@@ -134,7 +134,7 @@ function installPlatform(platform, mode) {
   // Install agents
   if (fs.existsSync(sourceAgentsDir)) {
     console.log("  → Installing agents...");
-    copyDirectory(sourceAgentsDir, agentsDir);
+    copyDirectory(sourceAgentsDir, agentsDir, { skipJson: true });
     const count = countMarkdownFiles(agentsDir);
     console.log(`    ✓ Installed ${count} agents`);
   }
@@ -142,7 +142,7 @@ function installPlatform(platform, mode) {
   // Install skills
   if (fs.existsSync(sourceSkillsDir)) {
     console.log("  → Installing skills...");
-    copyDirectory(sourceSkillsDir, skillsDir);
+    copyDirectory(sourceSkillsDir, skillsDir, { skipJson: true });
     const count = countMarkdownFiles(skillsDir);
     console.log(`    ✓ Installed ${count} skills`);
   }

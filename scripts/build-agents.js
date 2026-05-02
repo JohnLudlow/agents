@@ -146,11 +146,7 @@ function generateCopilotFrontmatter(config) {
  * Generate YAML frontmatter for a Copilot skill.
  */
 function generateCopilotSkillFrontmatter(config, skillName) {
-  const description = config ? config.description : `Skill: ${skillName}`;
-  if (!config) {
-    console.warn(`⚠️  No JSON sidecar found for skill ${skillName}; using fallback description`);
-  }
-  return ["---", `description: ${yamlQuote(description)}`, "---"].join("\n");
+  return ["---", `description: ${yamlQuote(config.description)}`, "---"].join("\n");
 }
 
 // ============================================================================
@@ -288,7 +284,7 @@ function buildCopilotSkills() {
 
   if (!fs.existsSync(sourceDir)) {
     console.log(`  ℹ️  No skills directory found at ${sourceDir}`);
-    return;
+    return 0;
   }
 
   if (!fs.existsSync(targetDir)) {
@@ -299,8 +295,10 @@ function buildCopilotSkills() {
 
   if (skillFiles.length === 0) {
     console.log("  ℹ️  No skill files found");
-    return;
+    return 0;
   }
+
+  let skipped = 0;
 
   skillFiles.forEach((file) => {
     const sourcePath = path.join(sourceDir, file);
@@ -308,6 +306,12 @@ function buildCopilotSkills() {
     const skillName = path.basename(file, ".md");
 
     const config = loadConfig(skillName, sourceDir);
+    if (!config) {
+      console.warn(`  ⚠️  Skipping ${file} — no valid JSON sidecar`);
+      skipped++;
+      return;
+    }
+
     const content = fs.readFileSync(sourcePath, "utf8");
     const frontmatter = generateCopilotSkillFrontmatter(config, skillName);
     fs.writeFileSync(targetPath, `${frontmatter}\n\n${content}`);
@@ -315,6 +319,7 @@ function buildCopilotSkills() {
   });
 
   console.log(`✓ Copilot skill definitions built to ${targetDir}\n`);
+  return skipped;
 }
 
 // ============================================================================
@@ -328,12 +333,11 @@ function build() {
   try {
     console.log("🔨 Building @johnludlow/agents agent and skill definitions\n");
 
-    const skipped = buildOpenCodeAgents() + buildCopilotAgents();
+    const skipped = buildOpenCodeAgents() + buildCopilotAgents() + buildCopilotSkills();
     buildOpenCodeSkills();
-    buildCopilotSkills();
 
     if (skipped > 0) {
-      console.error(`\n❌ Build incomplete: ${skipped} agent(s) were skipped due to missing JSON sidecars.`);
+      console.error(`\n❌ Build incomplete: ${skipped} agent(s)/skill(s) were skipped due to missing JSON sidecars.`);
       console.error("   Add the missing .json sidecar file(s) and re-run the build.");
       process.exit(1);
     }
