@@ -118,7 +118,7 @@ function copyDirectory(source, target, { skipReadme = true, skipJson = false } =
     const targetPath = path.join(target, file);
 
     if (fs.statSync(sourcePath).isDirectory()) {
-      copyDirectory(sourcePath, targetPath, { skipReadme });
+      copyDirectory(sourcePath, targetPath, { skipReadme, skipJson });
     } else {
       fs.copyFileSync(sourcePath, targetPath);
     }
