@@ -6,10 +6,6 @@ Top-level TDD implementation agent with a fixed intent of **test-driven
 implementation**. Enforces the red-green-refactor cycle by writing tests before
 implementation code.
 
-## Temperature
-
-0.2
-
 ## Agent Type
 
 Top-level agent. This agent is user-facing and selectable via `/agent` commands.

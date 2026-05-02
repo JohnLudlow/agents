@@ -5,10 +5,6 @@
 Agent for documenting code and features. Produces well-formed markdown documentation
 based on templates and existing implementation, stored in `/docs` folder.
 
-## Temperature
-
-0.2
-
 ## Purpose
 
 The johnludlow-feature-documenter creates comprehensive, user-friendly documentation

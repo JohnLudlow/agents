@@ -6,10 +6,6 @@ Adversarial reviewer sub-agent. Read-only. Critically reviews work product for
 flaws, omissions, and standards violations. Invoked by all top-level agents before
 they report completion.
 
-## Temperature
-
-0.4
-
 ## Agent Type
 
 Sub-agent. This agent is not user-facing — it is invoked by top-level agents as a

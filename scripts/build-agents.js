@@ -8,286 +8,105 @@
  * - agents/*.md (canonical source) → .github/agents/*.md (with Copilot YAML frontmatter)
  * - skills/*.md (canonical source) → opencode/skills/*.md (plain markdown)
  * - skills/*.md (canonical source) → .github/skills/*.md (with Copilot YAML frontmatter)
+ *
+ * Per-agent/skill configuration lives in JSON sidecar files next to each markdown:
+ *   agents/johnludlow-planner.json  ← description, mode, temperature, permissions
+ *   skills/johnludlow-code-quality.json ← description
  */
 
 const fs = require("fs");
 const path = require("path");
 
-// Permissions mapping - extracted from config.json
-const AGENT_PERMISSIONS = {
-  // Top-level agents (mode: agent) - user-facing, intent-locked
-  "johnludlow-planner": {
-    description: "Top-level planning agent. Plans only, never implements.",
-    mode: "primary",
-    temperature: 0.3,
-    permission: {
-      read: { "*": "allow" },
-      edit: { "*": "deny", "docs/plans/*": "allow" },
-      bash: {
-        "*": "deny",
-        "gh issue*": "ask",
-        "gh issue view*": "allow",
-        "git log*": "allow",
-        "git status*": "allow",
-        "git branch*": "allow",
-        "git diff*": "allow",
-      },
-      grep: { "*": "allow" },
-      webfetch: "ask",
-      task: {
-        "*": "deny",
-        "johnludlow-feature-planner": "allow",
-        "johnludlow-feature-documenter": "allow",
-        "johnludlow-feature-reviewer": "allow",
-      },
-    },
-  },
-  "johnludlow-implementer": {
-    description: "Top-level implementation agent. Implements approved plans.",
-    mode: "primary",
-    temperature: 0.2,
-    permission: {
-      read: { "*": "allow", "*.env": "deny" },
-      edit: { "*": "deny" },
-      bash: {
-        "*": "deny",
-        "gh issue view*": "allow",
-        "git log*": "allow",
-        "git status*": "allow",
-        "git branch*": "allow",
-        "git diff*": "allow",
-      },
-      grep: { "*": "allow" },
-      webfetch: "ask",
-      task: {
-        "*": "deny",
-        "johnludlow-feature-implementer": "allow",
-        "johnludlow-feature-tester": "allow",
-        "johnludlow-feature-reviewer": "allow",
-      },
-    },
-  },
-  "johnludlow-tdd-implementer": {
-    description: "Top-level TDD agent. Enforces red-green-refactor cycle.",
-    mode: "primary",
-    temperature: 0.2,
-    permission: {
-      read: { "*": "allow", "*.env": "deny" },
-      edit: { "*": "deny" },
-      bash: {
-        "*": "deny",
-        "gh issue view*": "allow",
-        "git log*": "allow",
-        "git status*": "allow",
-        "git branch*": "allow",
-        "git diff*": "allow",
-      },
-      grep: { "*": "allow" },
-      webfetch: "ask",
-      task: {
-        "*": "deny",
-        "johnludlow-feature-tester": "allow",
-        "johnludlow-feature-implementer": "allow",
-        "johnludlow-feature-reviewer": "allow",
-      },
-    },
-  },
-  "johnludlow-documenter": {
-    description: "Top-level documentation agent. Documents only, never implements.",
-    mode: "primary",
-    temperature: 0.2,
-    permission: {
-      read: { "*": "allow" },
-      edit: { "*": "deny" },
-      bash: {
-        "*": "deny",
-        "git log*": "allow",
-        "git status*": "allow",
-        "git branch*": "allow",
-        "git diff*": "allow",
-      },
-      grep: { "*": "allow" },
-      webfetch: "ask",
-      task: {
-        "*": "deny",
-        "johnludlow-feature-documenter": "allow",
-        "johnludlow-feature-reviewer": "allow",
-      },
-    },
-  },
-  "johnludlow-tester": {
-    description: "Top-level testing agent. Runs tests and reports results.",
-    mode: "primary",
-    temperature: 0.2,
-    permission: {
-      read: { "*": "allow", "*.env": "deny" },
-      edit: { "*": "deny" },
-      bash: {
-        "*": "deny",
-        "git log*": "allow",
-        "git status*": "allow",
-        "git branch*": "allow",
-        "git diff*": "allow",
-      },
-      grep: { "*": "allow" },
-      webfetch: "ask",
-      task: {
-        "*": "deny",
-        "johnludlow-feature-tester": "allow",
-        "johnludlow-feature-reviewer": "allow",
-      },
-    },
-  },
-  // Sub-agents (mode: subagent) - delegated to by top-level agents
-  "johnludlow-feature-planner": {
-    description: "Plans features and creates detailed implementation plans",
-    mode: "subagent",
-    temperature: 0.3,
-    permission: {
-      read: { "*": "allow" },
-      edit: { "*": "deny", "docs/plans/*": "allow" },
-      bash: {
-        "*": "deny",
-        "gh issue*": "ask",
-        "gh issue view*": "allow",
-        "git log*": "allow",
-        "git status*": "allow",
-        "git branch*": "allow",
-        "git diff*": "allow",
-        "rumdl check*": "allow",
-      },
-      grep: { "*": "allow" },
-      webfetch: "ask",
-      task: { "*": "deny" },
-    },
-  },
-  "johnludlow-feature-implementer": {
-    description: "Implements features and makes code changes",
-    mode: "subagent",
-    temperature: 0.2,
-    permission: {
-      read: { "*": "allow", "*.env": "deny" },
-      edit: {
-        "*": "deny",
-        "src/**": "allow",
-        "lib/**": "allow",
-        "components/**": "allow",
-        "*.ts": "allow",
-        "*.tsx": "allow",
-        "*.cs": "allow",
-        "*.cpp": "allow",
-        "*.h": "allow",
-      },
-      bash: {
-        "*": "deny",
-        "gh issue view*": "allow",
-        "git log*": "allow",
-        "git status*": "allow",
-        "git branch*": "allow",
-        "git diff*": "allow",
-        "npm run build*": "allow",
-        "npm run test*": "allow",
-        "npm run lint*": "allow",
-        "dotnet build*": "allow",
-        "dotnet test*": "allow",
-        "cargo build*": "allow",
-        "cargo test*": "allow",
-      },
-      grep: { "*": "allow" },
-      lsp: "allow",
-      webfetch: "ask",
-    },
-  },
-  "johnludlow-feature-documenter": {
-    description: "Writes and maintains project documentation",
-    mode: "subagent",
-    temperature: 0.2,
-    permission: {
-      read: { "*": "allow" },
-      edit: {
-        "*": "deny",
-        "docs/**": "allow",
-        "docs/plans/*": "allow",
-        "README.md": "allow",
-        "*.md": "ask",
-      },
-      bash: {
-        "*": "deny",
-        "git log*": "allow",
-        "git status*": "allow",
-        "git branch*": "allow",
-        "git diff*": "allow",
-        "rumdl check*": "allow",
-      },
-      grep: { "*": "allow" },
-      webfetch: "ask",
-      task: { "*": "deny" },
-    },
-  },
-  "johnludlow-feature-tester": {
-    description: "Tests features and reports results",
-    mode: "subagent",
-    temperature: 0.2,
-    permission: {
-      read: { "*": "allow", "*.env": "deny" },
-      edit: { "*": "deny" },
-      bash: {
-        "*": "deny",
-        "npm test*": "allow",
-        "npm run test*": "allow",
-        "dotnet test*": "allow",
-        "cargo test*": "allow",
-        "git log*": "allow",
-        "git status*": "allow",
-        "git branch*": "allow",
-        "git diff*": "allow",
-      },
-      grep: { "*": "allow" },
-      webfetch: "ask",
-    },
-  },
-  "johnludlow-feature-reviewer": {
-    description: "Adversarial reviewer. Read-only quality gate for all agents.",
-    mode: "subagent",
-    temperature: 0.4,
-    permission: {
-      read: { "*": "allow" },
-      edit: { "*": "deny" },
-      bash: {
-        "*": "deny",
-        "git log*": "allow",
-        "git status*": "allow",
-        "git branch*": "allow",
-        "git diff*": "allow",
-        "rumdl check*": "allow",
-      },
-      grep: { "*": "allow" },
-      webfetch: "deny",
-      task: { "*": "deny" },
-    },
-  },
-};
+// ============================================================================
+// SIDECAR LOADING
+// ============================================================================
 
 /**
- * Generate YAML frontmatter for OpenCode format
+ * Load the JSON sidecar config for an agent or skill.
+ * Returns null (with a warning) if the sidecar is missing or unparseable.
  */
-function generateOpenCodeFrontmatter(agentName) {
-  const config = AGENT_PERMISSIONS[agentName];
-  if (!config) {
-    console.warn(`⚠️  No permission config found for ${agentName}`);
-    return "";
+function loadConfig(name, sourceDir) {
+  const jsonPath = path.join(sourceDir, `${name}.json`);
+  if (!fs.existsSync(jsonPath)) {
+    console.warn(`⚠️  No JSON sidecar found for ${name} (expected ${jsonPath})`);
+    return null;
+  }
+  try {
+    return JSON.parse(fs.readFileSync(jsonPath, "utf8"));
+  } catch (err) {
+    console.warn(`⚠️  Could not parse ${jsonPath}: ${err.message}`);
+    return null;
+  }
+}
+
+// ============================================================================
+// TEMPERATURE TEXT INJECTION
+// ============================================================================
+
+/**
+ * Generate a human-readable temperature guidance block.
+ * Injected into generated output so agents behave correctly on platforms
+ * that do not honour the frontmatter temperature field natively.
+ */
+function temperatureGuidance(temperature) {
+  if (temperature <= 0.1) {
+    return (
+      `Your temperature setting is ${temperature}. Be extremely precise and deterministic. ` +
+      `Follow instructions exactly as given. Do not improvise, infer intent beyond what is ` +
+      `stated, or fill in gaps. If the instructions are incomplete, stop and ask for clarification.`
+    );
+  }
+  if (temperature <= 0.25) {
+    return (
+      `Your temperature setting is ${temperature}. Be precise and conservative. ` +
+      `Stick closely to the provided instructions and established patterns in the codebase. ` +
+      `Prefer safe, well-understood approaches over creative ones. ` +
+      `If there is a gap in the instructions, report it and ask rather than guessing.`
+    );
+  }
+  if (temperature <= 0.4) {
+    return (
+      `Your temperature setting is ${temperature}. Apply measured judgement. ` +
+      `Follow instructions faithfully while using reasonable discretion to fill small gaps. ` +
+      `Prefer conventional, well-tested solutions. ` +
+      `Flag significant ambiguities rather than resolving them silently.`
+    );
+  }
+  return (
+    `Your temperature setting is ${temperature}. You may apply broader judgement and ` +
+    `consider multiple approaches before choosing one. Be thoughtful and thorough, ` +
+    `but still ground your reasoning in the provided instructions and codebase context.`
+  );
+}
+
+// ============================================================================
+// FRONTMATTER GENERATORS
+// ============================================================================
+
+/**
+ * Escape a string for use as a YAML double-quoted scalar value.
+ */
+function yamlQuote(str) {
+  return `"${String(str).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+}
+
+/**
+ * Generate YAML frontmatter for OpenCode format.
+ */
+function generateOpenCodeFrontmatter(config) {
+  if (!config.permission) {
+    console.warn(`⚠️  Config for ${config.description ?? "unknown"} has no 'permission' field; using empty permissions`);
   }
 
   const yamlLines = [
     "---",
-    `description: ${config.description}`,
+    `description: ${yamlQuote(config.description)}`,
     `mode: ${config.mode}`,
     `temperature: ${config.temperature}`,
     "permission:",
   ];
 
-  // Add permissions
-  for (const [key, value] of Object.entries(config.permission)) {
+  for (const [key, value] of Object.entries(config.permission ?? {})) {
     if (typeof value === "string") {
       yamlLines.push(`  ${key}: ${value}`);
     } else if (typeof value === "object") {
@@ -307,47 +126,40 @@ function generateOpenCodeFrontmatter(agentName) {
 }
 
 /**
- * Generate YAML frontmatter for Copilot CLI format
- * 
- * Copilot CLI uses a simplified frontmatter format with:
- * - description: brief description of the agent
- * - temperature: model temperature (0-1)
+ * Generate YAML frontmatter for Copilot CLI format.
+ *
+ * Copilot CLI uses a simplified frontmatter with description and temperature.
+ * Permissions and mode are not supported natively; temperature guidance is
+ * injected as text into the body instead.
  */
-function generateCopilotFrontmatter(agentName) {
-  const config = AGENT_PERMISSIONS[agentName];
-  if (!config) {
-    console.warn(`⚠️  No permission config found for ${agentName}`);
-    return "";
-  }
-
+function generateCopilotFrontmatter(config) {
   const yamlLines = [
     "---",
-    `description: ${config.description}`,
+    `description: ${yamlQuote(config.description)}`,
     `temperature: ${config.temperature}`,
     "---",
   ];
-
-  return yamlLines.join("\n");
-}
-
-const COPILOT_SKILL_DESCRIPTIONS = {
-  "johnludlow-markdown-standards": "Markdown and documentation standards (rumdl, structure, links, code blocks)",
-  "johnludlow-code-quality": "Code quality standards across C#, TypeScript, and C++ (SOLID, testing, performance)",
-};
-
-function generateCopilotSkillFrontmatter(skillName) {
-  let description = COPILOT_SKILL_DESCRIPTIONS[skillName];
-  if (!description) {
-    console.warn(`⚠️  No Copilot skill description found for ${skillName}; using fallback`);
-    description = `Skill: ${skillName}`;
-  }
-
-  const yamlLines = ["---", `description: ${description}`, "---"];
   return yamlLines.join("\n");
 }
 
 /**
- * Build OpenCode agent definitions from canonical source
+ * Generate YAML frontmatter for a Copilot skill.
+ */
+function generateCopilotSkillFrontmatter(config, skillName) {
+  const description = config ? config.description : `Skill: ${skillName}`;
+  if (!config) {
+    console.warn(`⚠️  No JSON sidecar found for skill ${skillName}; using fallback description`);
+  }
+  return ["---", `description: ${yamlQuote(description)}`, "---"].join("\n");
+}
+
+// ============================================================================
+// BUILD FUNCTIONS
+// ============================================================================
+
+/**
+ * Build OpenCode agent definitions from canonical source.
+ * Reads config from each agent's JSON sidecar and prepends OpenCode frontmatter.
  */
 function buildOpenCodeAgents() {
   console.log("📦 Building OpenCode agent definitions...");
@@ -355,38 +167,40 @@ function buildOpenCodeAgents() {
   const sourceDir = path.join(__dirname, "..", "agents");
   const targetDir = path.join(__dirname, "..", "opencode", "agents");
 
-  // Ensure target directory exists
   if (!fs.existsSync(targetDir)) {
     fs.mkdirSync(targetDir, { recursive: true });
   }
 
   const agentFiles = fs.readdirSync(sourceDir).filter((f) => f.endsWith(".md"));
+  let skipped = 0;
 
   agentFiles.forEach((file) => {
     const sourcePath = path.join(sourceDir, file);
     const targetPath = path.join(targetDir, file);
     const agentName = path.basename(file, ".md");
 
-    // Read canonical source
+    const config = loadConfig(agentName, sourceDir);
+    if (!config) {
+      console.warn(`  ⚠️  Skipping ${file} — no valid JSON sidecar`);
+      skipped++;
+      return;
+    }
+
     const content = fs.readFileSync(sourcePath, "utf8");
-
-    // Generate OpenCode version with frontmatter
-    const frontmatter = generateOpenCodeFrontmatter(agentName);
-    const opencodeContent = `${frontmatter}\n\n${content}`;
-
-    // Write to OpenCode directory
-    fs.writeFileSync(targetPath, opencodeContent);
+    const frontmatter = generateOpenCodeFrontmatter(config);
+    const guidance = temperatureGuidance(config.temperature);
+    fs.writeFileSync(targetPath, `${frontmatter}\n\n${content}\n\n## Temperature Guidance\n\n${guidance}\n`);
     console.log(`  ✓ Generated ${file}`);
   });
 
   console.log(`✓ OpenCode agent definitions built to ${targetDir}\n`);
+  return skipped;
 }
 
 /**
- * Build Copilot agent definitions from canonical source
- * 
- * Generates agents with Copilot CLI-compatible YAML frontmatter
- * containing description and temperature settings
+ * Build Copilot agent definitions from canonical source.
+ * Reads config from each agent's JSON sidecar and prepends Copilot frontmatter.
+ * Temperature guidance is injected as a text block in the body.
  */
 function buildCopilotAgents() {
   console.log("🔌 Building GitHub Copilot agent definitions...");
@@ -394,35 +208,39 @@ function buildCopilotAgents() {
   const sourceDir = path.join(__dirname, "..", "agents");
   const targetDir = path.join(__dirname, "..", ".github", "agents");
 
-  // Ensure target directory exists
   if (!fs.existsSync(targetDir)) {
     fs.mkdirSync(targetDir, { recursive: true });
   }
 
   const agentFiles = fs.readdirSync(sourceDir).filter((f) => f.endsWith(".md"));
+  let skipped = 0;
 
   agentFiles.forEach((file) => {
     const sourcePath = path.join(sourceDir, file);
     const targetPath = path.join(targetDir, file);
     const agentName = path.basename(file, ".md");
 
-    // Read canonical source
+    const config = loadConfig(agentName, sourceDir);
+    if (!config) {
+      console.warn(`  ⚠️  Skipping ${file} — no valid JSON sidecar`);
+      skipped++;
+      return;
+    }
+
     const content = fs.readFileSync(sourcePath, "utf8");
-
-    // Generate Copilot version with frontmatter
-    const frontmatter = generateCopilotFrontmatter(agentName);
-    const copilotContent = `${frontmatter}\n\n${content}`;
-
-    // Write to Copilot directory
-    fs.writeFileSync(targetPath, copilotContent);
+    const frontmatter = generateCopilotFrontmatter(config);
+    const guidance = temperatureGuidance(config.temperature);
+    fs.writeFileSync(targetPath, `${frontmatter}\n\n${content}\n\n## Temperature Guidance\n\n${guidance}\n`);
     console.log(`  ✓ Generated ${file}`);
   });
 
   console.log(`✓ Copilot agent definitions built to ${targetDir}\n`);
+  return skipped;
 }
 
 /**
- * Build OpenCode skill definitions from canonical source
+ * Build OpenCode skill definitions from canonical source.
+ * Skills are plain markdown for OpenCode — no frontmatter added.
  */
 function buildOpenCodeSkills() {
   console.log("📚 Building OpenCode skill definitions...");
@@ -430,13 +248,11 @@ function buildOpenCodeSkills() {
   const sourceDir = path.join(__dirname, "..", "skills");
   const targetDir = path.join(__dirname, "..", "opencode", "skills");
 
-  // Ensure source directory exists
   if (!fs.existsSync(sourceDir)) {
     console.log(`  ℹ️  No skills directory found at ${sourceDir}`);
     return;
   }
 
-  // Ensure target directory exists
   if (!fs.existsSync(targetDir)) {
     fs.mkdirSync(targetDir, { recursive: true });
   }
@@ -452,10 +268,7 @@ function buildOpenCodeSkills() {
     const sourcePath = path.join(sourceDir, file);
     const targetPath = path.join(targetDir, file);
 
-    // Read canonical source
     const content = fs.readFileSync(sourcePath, "utf8");
-
-    // Copy as-is for OpenCode (plain markdown)
     fs.writeFileSync(targetPath, content);
     console.log(`  ✓ Generated ${file}`);
   });
@@ -464,7 +277,8 @@ function buildOpenCodeSkills() {
 }
 
 /**
- * Build Copilot skill definitions from canonical source
+ * Build Copilot skill definitions from canonical source.
+ * Reads description from each skill's JSON sidecar and prepends Copilot frontmatter.
  */
 function buildCopilotSkills() {
   console.log("🔌 Building GitHub Copilot skill definitions...");
@@ -472,13 +286,11 @@ function buildCopilotSkills() {
   const sourceDir = path.join(__dirname, "..", "skills");
   const targetDir = path.join(__dirname, "..", ".github", "skills");
 
-  // Ensure source directory exists
   if (!fs.existsSync(sourceDir)) {
     console.log(`  ℹ️  No skills directory found at ${sourceDir}`);
     return;
   }
 
-  // Ensure target directory exists
   if (!fs.existsSync(targetDir)) {
     fs.mkdirSync(targetDir, { recursive: true });
   }
@@ -495,19 +307,19 @@ function buildCopilotSkills() {
     const targetPath = path.join(targetDir, file);
     const skillName = path.basename(file, ".md");
 
-    // Read canonical source
+    const config = loadConfig(skillName, sourceDir);
     const content = fs.readFileSync(sourcePath, "utf8");
-
-    // Generate Copilot version with simplified frontmatter
-    const frontmatter = generateCopilotSkillFrontmatter(skillName);
-    const copilotContent = `${frontmatter}\n\n${content}`;
-
-    fs.writeFileSync(targetPath, copilotContent);
+    const frontmatter = generateCopilotSkillFrontmatter(config, skillName);
+    fs.writeFileSync(targetPath, `${frontmatter}\n\n${content}`);
     console.log(`  ✓ Generated ${file}`);
   });
 
   console.log(`✓ Copilot skill definitions built to ${targetDir}\n`);
 }
+
+// ============================================================================
+// MAIN
+// ============================================================================
 
 /**
  * Main build function
@@ -516,10 +328,15 @@ function build() {
   try {
     console.log("🔨 Building @johnludlow/agents agent and skill definitions\n");
 
-    buildOpenCodeAgents();
-    buildCopilotAgents();
+    const skipped = buildOpenCodeAgents() + buildCopilotAgents();
     buildOpenCodeSkills();
     buildCopilotSkills();
+
+    if (skipped > 0) {
+      console.error(`\n❌ Build incomplete: ${skipped} agent(s) were skipped due to missing JSON sidecars.`);
+      console.error("   Add the missing .json sidecar file(s) and re-run the build.");
+      process.exit(1);
+    }
 
     console.log("✨ Build complete!");
     console.log("\n📁 Generated files:");

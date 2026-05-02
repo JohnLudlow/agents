@@ -109,6 +109,8 @@ function copyDirectory(source, target, { skipReadme = true } = {}) {
   files.forEach((file) => {
     // Skip README.md when installing into agent/skill directories, but not when backing up
     if (skipReadme && file === "README.md") return;
+    // JSON sidecars are build-time metadata — never copy them to install targets
+    if (file.endsWith(".json")) return;
 
     const sourcePath = path.join(source, file);
     const targetPath = path.join(target, file);

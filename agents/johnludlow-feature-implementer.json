@@ -1,0 +1,37 @@
+{
+  "description": "Implements features and makes code changes",
+  "mode": "subagent",
+  "temperature": 0.2,
+  "permission": {
+    "read": { "*": "allow", "*.env": "deny" },
+    "edit": {
+      "*": "deny",
+      "src/**": "allow",
+      "lib/**": "allow",
+      "components/**": "allow",
+      "*.ts": "allow",
+      "*.tsx": "allow",
+      "*.cs": "allow",
+      "*.cpp": "allow",
+      "*.h": "allow"
+    },
+    "bash": {
+      "*": "deny",
+      "gh issue view*": "allow",
+      "git log*": "allow",
+      "git status*": "allow",
+      "git branch*": "allow",
+      "git diff*": "allow",
+      "npm run build*": "allow",
+      "npm run test*": "allow",
+      "npm run lint*": "allow",
+      "dotnet build*": "allow",
+      "dotnet test*": "allow",
+      "cargo build*": "allow",
+      "cargo test*": "allow"
+    },
+    "grep": { "*": "allow" },
+    "lsp": "allow",
+    "webfetch": "ask"
+  }
+}

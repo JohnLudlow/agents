@@ -5,10 +5,6 @@
 Top-level testing agent with a fixed intent of **test only**. Delegates work to the
 tester sub-agent. Reports results but does not fix failing code.
 
-## Temperature
-
-0.2
-
 ## Agent Type
 
 Top-level agent. This agent is user-facing and selectable via `/agent` commands.

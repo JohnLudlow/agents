@@ -1,0 +1,25 @@
+{
+  "description": "Top-level implementation agent. Implements approved plans.",
+  "mode": "primary",
+  "temperature": 0.2,
+  "permission": {
+    "read": { "*": "allow", "*.env": "deny" },
+    "edit": { "*": "deny" },
+    "bash": {
+      "*": "deny",
+      "gh issue view*": "allow",
+      "git log*": "allow",
+      "git status*": "allow",
+      "git branch*": "allow",
+      "git diff*": "allow"
+    },
+    "grep": { "*": "allow" },
+    "webfetch": "ask",
+    "task": {
+      "*": "deny",
+      "johnludlow-feature-implementer": "allow",
+      "johnludlow-feature-tester": "allow",
+      "johnludlow-feature-reviewer": "allow"
+    }
+  }
+}

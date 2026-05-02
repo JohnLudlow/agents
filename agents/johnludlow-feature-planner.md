@@ -5,10 +5,6 @@
 Agent for planning projects and large changes. Produces well-formed markdown
 documents in `docs/plans` or in GitHub issues/work items based on templates.
 
-## Temperature
-
-0.3
-
 ## Purpose
 
 The johnludlow-feature-planner creates comprehensive, well-structured plan

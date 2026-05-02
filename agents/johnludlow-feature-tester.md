@@ -5,10 +5,6 @@
 Agent for running and validating automated tests. Produces test results and validation
 reports based on test execution.
 
-## Temperature
-
-0.2
-
 ## Purpose
 
 The johnludlow-feature-tester ensures that implemented features work correctly by

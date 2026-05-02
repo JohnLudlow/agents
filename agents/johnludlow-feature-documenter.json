@@ -1,0 +1,26 @@
+{
+  "description": "Writes and maintains project documentation",
+  "mode": "subagent",
+  "temperature": 0.2,
+  "permission": {
+    "read": { "*": "allow" },
+    "edit": {
+      "*": "deny",
+      "docs/**": "allow",
+      "docs/plans/*": "allow",
+      "README.md": "allow",
+      "*.md": "ask"
+    },
+    "bash": {
+      "*": "deny",
+      "git log*": "allow",
+      "git status*": "allow",
+      "git branch*": "allow",
+      "git diff*": "allow",
+      "rumdl check*": "allow"
+    },
+    "grep": { "*": "allow" },
+    "webfetch": "ask",
+    "task": { "*": "deny" }
+  }
+}
