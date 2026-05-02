@@ -9,7 +9,6 @@
 
 const fs = require("fs");
 const path = require("path");
-const os = require("os");
 const { spawnSync } = require("child_process");
 
 const {
@@ -195,47 +194,46 @@ function uninstallMcps(mode, { purge = false } = {}) {
     : path.join(PLATFORMS.copilot.globalDir, "mcp-config.json");
 
   if (!fs.existsSync(copilotMcpConfigPath)) {
-    console.log("   ℹ️  No Copilot MCP config file found");
-    return;
-  }
+    console.log("   ℹ️  No Copilot MCP config file found, skipping Copilot cleanup");
+  } else {
+    // Expected shapes written by writeCopilotMcpConfig.
+    // Only remove entries whose key fields match so user-managed config is not clobbered.
+    const expectedCopilotEntries = {
+      "context7": (e) => e && e.type === "http" && e.url === "https://mcp.context7.com/mcp/oauth",
+      "gamedev":  (e) => e && e.command === "npx" && Array.isArray(e.args) && e.args[0] === "-y" && e.args[1] === "gamecodex",
+    };
 
-  // Expected shapes written by writeCopilotMcpConfig.
-  // Only remove entries whose key fields match so user-managed config is not clobbered.
-  const expectedCopilotEntries = {
-    "context7": (e) => e && e.type === "http" && e.url === "https://mcp.context7.com/mcp/oauth",
-    "gamedev":  (e) => e && e.command === "npx" && Array.isArray(e.args) && e.args[0] === "-y" && e.args[1] === "gamecodex",
-  };
+    try {
+      const copilotConfig = JSON.parse(fs.readFileSync(copilotMcpConfigPath, "utf8"));
+      const servers = copilotConfig.mcpServers || {};
+      const removedKeys = Object.keys(expectedCopilotEntries).filter(k => {
+        if (!(k in servers)) return false;
+        if (!expectedCopilotEntries[k](servers[k])) {
+          console.log(`   ℹ️  Skipping '${k}' in Copilot MCP config — doesn't match installer-written shape`);
+          return false;
+        }
+        return true;
+      });
 
-  try {
-    const copilotConfig = JSON.parse(fs.readFileSync(copilotMcpConfigPath, "utf8"));
-    const servers = copilotConfig.mcpServers || {};
-    const removedKeys = Object.keys(expectedCopilotEntries).filter(k => {
-      if (!(k in servers)) return false;
-      if (!expectedCopilotEntries[k](servers[k])) {
-        console.log(`   ℹ️  Skipping '${k}' in Copilot MCP config — doesn't match installer-written shape`);
-        return false;
+      if (removedKeys.length === 0) {
+        console.log("   ℹ️  No installer-managed entries in Copilot MCP config");
+      } else {
+        // Backup before modifying
+        fs.copyFileSync(copilotMcpConfigPath, copilotMcpConfigPath + BACKUP_SUFFIX);
+        removedKeys.forEach(k => delete servers[k]);
+        copilotConfig.mcpServers = servers;
+        fs.writeFileSync(copilotMcpConfigPath, JSON.stringify(copilotConfig, null, 2));
+        console.log(`   ✓ Removed ${removedKeys.length} entry/entries from Copilot MCP config: ${removedKeys.join(", ")}`);
       }
-      return true;
-    });
-
-    if (removedKeys.length === 0) {
-      console.log("   ℹ️  No installer-managed entries in Copilot MCP config");
-    } else {
-      // Backup before modifying
-      fs.copyFileSync(copilotMcpConfigPath, copilotMcpConfigPath + BACKUP_SUFFIX);
-      removedKeys.forEach(k => delete servers[k]);
-      copilotConfig.mcpServers = servers;
-      fs.writeFileSync(copilotMcpConfigPath, JSON.stringify(copilotConfig, null, 2));
-      console.log(`   ✓ Removed ${removedKeys.length} entry/entries from Copilot MCP config: ${removedKeys.join(", ")}`);
+    } catch (err) {
+      console.warn(`   ⚠️  Could not clean Copilot MCP config: ${err.message}`);
     }
-  } catch (err) {
-    console.warn(`   ⚠️  Could not clean Copilot MCP config: ${err.message}`);
   }
 
   // Remove MCP entries from OpenCode config.json written by writeOpenCodeMcpConfig.
   const opencodeCfgDir = mode === "local"
-    ? path.join(process.cwd(), ".opencode")
-    : path.join(os.homedir(), ".config", "opencode");
+    ? PLATFORMS.opencode.localDir(process.cwd())
+    : PLATFORMS.opencode.globalDir;
   const opencodeCfgPath = path.join(opencodeCfgDir, "config.json");
 
   if (!fs.existsSync(opencodeCfgPath)) {
