@@ -927,7 +927,11 @@ async function main() {
       process.exitCode = 2;  // Non-zero so CI flags it; do not throw — partial success is acceptable.
     }
 
-    console.log("\n✨ Installation successful!");
+    if (process.exitCode && process.exitCode !== 0) {
+      console.log("\n⚠️  Installation completed with warnings.");
+    } else {
+      console.log("\n✨ Installation successful!");
+    }
   } catch (error) {
     console.error("\n❌ Installation failed:");
     console.error(error.message);
