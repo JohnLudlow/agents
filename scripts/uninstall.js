@@ -193,15 +193,14 @@ function uninstallMcps(mode, { purge = false } = {}) {
 
     if (removedKeys.length === 0) {
       console.log("   ℹ️  No installer-managed entries in Copilot MCP config");
-      return;
+    } else {
+      // Backup before modifying
+      fs.copyFileSync(copilotMcpConfigPath, copilotMcpConfigPath + BACKUP_SUFFIX);
+      removedKeys.forEach(k => delete servers[k]);
+      copilotConfig.mcpServers = servers;
+      fs.writeFileSync(copilotMcpConfigPath, JSON.stringify(copilotConfig, null, 2));
+      console.log(`   ✓ Removed ${removedKeys.length} entry/entries from Copilot MCP config: ${removedKeys.join(", ")}`);
     }
-
-    // Backup before modifying
-    fs.copyFileSync(copilotMcpConfigPath, copilotMcpConfigPath + BACKUP_SUFFIX);
-    removedKeys.forEach(k => delete servers[k]);
-    copilotConfig.mcpServers = servers;
-    fs.writeFileSync(copilotMcpConfigPath, JSON.stringify(copilotConfig, null, 2));
-    console.log(`   ✓ Removed ${removedKeys.length} entry/entries from Copilot MCP config: ${removedKeys.join(", ")}`);
   } catch (err) {
     console.warn(`   ⚠️  Could not clean Copilot MCP config: ${err.message}`);
   }
