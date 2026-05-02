@@ -25,18 +25,44 @@ const path = require("path");
  * Load the JSON sidecar config for an agent or skill.
  * Returns null (with a warning) if the sidecar is missing or unparseable.
  */
-function loadConfig(name, sourceDir) {
+/**
+ * Load and validate the JSON sidecar config for an agent or skill.
+ * Returns null (with warnings) if the sidecar is missing, unparseable, or has invalid fields.
+ * @param {string} name - file base name (without extension)
+ * @param {string} sourceDir - directory containing the sidecar
+ * @param {"agent"|"skill"} type - used to determine which fields are required
+ */
+function loadConfig(name, sourceDir, type = "agent") {
   const jsonPath = path.join(sourceDir, `${name}.json`);
   if (!fs.existsSync(jsonPath)) {
     console.warn(`⚠️  No JSON sidecar found for ${name} (expected ${jsonPath})`);
     return null;
   }
+  let config;
   try {
-    return JSON.parse(fs.readFileSync(jsonPath, "utf8"));
+    config = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
   } catch (err) {
     console.warn(`⚠️  Could not parse ${jsonPath}: ${err.message}`);
     return null;
   }
+
+  const errors = [];
+  if (typeof config.description !== "string" || !config.description.trim()) {
+    errors.push('"description" must be a non-empty string');
+  }
+  if (type === "agent") {
+    if (typeof config.mode !== "string") errors.push('"mode" must be a string');
+    if (typeof config.temperature !== "number") errors.push('"temperature" must be a number');
+    if (typeof config.permission !== "object" || config.permission === null || Array.isArray(config.permission)) {
+      errors.push('"permission" must be an object');
+    }
+  }
+  if (errors.length > 0) {
+    errors.forEach((e) => console.warn(`⚠️  ${jsonPath}: ${e}`));
+    return null;
+  }
+
+  return config;
 }
 
 // ============================================================================
@@ -168,19 +194,14 @@ function buildOpenCodeAgents() {
   }
 
   const agentFiles = fs.readdirSync(sourceDir).filter((f) => f.endsWith(".md"));
-  let skipped = 0;
 
   agentFiles.forEach((file) => {
     const sourcePath = path.join(sourceDir, file);
     const targetPath = path.join(targetDir, file);
     const agentName = path.basename(file, ".md");
 
-    const config = loadConfig(agentName, sourceDir);
-    if (!config) {
-      console.warn(`  ⚠️  Skipping ${file} — no valid JSON sidecar`);
-      skipped++;
-      return;
-    }
+    const config = loadConfig(agentName, sourceDir, "agent");
+    if (!config) throw new Error(`Missing or invalid sidecar for agent: ${agentName}`);
 
     const content = fs.readFileSync(sourcePath, "utf8");
     const frontmatter = generateOpenCodeFrontmatter(config);
@@ -190,7 +211,6 @@ function buildOpenCodeAgents() {
   });
 
   console.log(`✓ OpenCode agent definitions built to ${targetDir}\n`);
-  return skipped;
 }
 
 /**
@@ -209,19 +229,14 @@ function buildCopilotAgents() {
   }
 
   const agentFiles = fs.readdirSync(sourceDir).filter((f) => f.endsWith(".md"));
-  let skipped = 0;
 
   agentFiles.forEach((file) => {
     const sourcePath = path.join(sourceDir, file);
     const targetPath = path.join(targetDir, file);
     const agentName = path.basename(file, ".md");
 
-    const config = loadConfig(agentName, sourceDir);
-    if (!config) {
-      console.warn(`  ⚠️  Skipping ${file} — no valid JSON sidecar`);
-      skipped++;
-      return;
-    }
+    const config = loadConfig(agentName, sourceDir, "agent");
+    if (!config) throw new Error(`Missing or invalid sidecar for agent: ${agentName}`);
 
     const content = fs.readFileSync(sourcePath, "utf8");
     const frontmatter = generateCopilotFrontmatter(config);
@@ -231,7 +246,6 @@ function buildCopilotAgents() {
   });
 
   console.log(`✓ Copilot agent definitions built to ${targetDir}\n`);
-  return skipped;
 }
 
 /**
@@ -284,7 +298,7 @@ function buildCopilotSkills() {
 
   if (!fs.existsSync(sourceDir)) {
     console.log(`  ℹ️  No skills directory found at ${sourceDir}`);
-    return 0;
+    return;
   }
 
   if (!fs.existsSync(targetDir)) {
@@ -295,22 +309,16 @@ function buildCopilotSkills() {
 
   if (skillFiles.length === 0) {
     console.log("  ℹ️  No skill files found");
-    return 0;
+    return;
   }
-
-  let skipped = 0;
 
   skillFiles.forEach((file) => {
     const sourcePath = path.join(sourceDir, file);
     const targetPath = path.join(targetDir, file);
     const skillName = path.basename(file, ".md");
 
-    const config = loadConfig(skillName, sourceDir);
-    if (!config) {
-      console.warn(`  ⚠️  Skipping ${file} — no valid JSON sidecar`);
-      skipped++;
-      return;
-    }
+    const config = loadConfig(skillName, sourceDir, "skill");
+    if (!config) throw new Error(`Missing or invalid sidecar for skill: ${skillName}`);
 
     const content = fs.readFileSync(sourcePath, "utf8");
     const frontmatter = generateCopilotSkillFrontmatter(config, skillName);
@@ -319,7 +327,6 @@ function buildCopilotSkills() {
   });
 
   console.log(`✓ Copilot skill definitions built to ${targetDir}\n`);
-  return skipped;
 }
 
 // ============================================================================
@@ -333,14 +340,41 @@ function build() {
   try {
     console.log("🔨 Building @johnludlow/agents agent and skill definitions\n");
 
-    const skipped = buildOpenCodeAgents() + buildCopilotAgents() + buildCopilotSkills();
-    buildOpenCodeSkills();
+    // Pre-validate all sidecars before writing any output files.
+    // This ensures a missing/invalid sidecar fails fast with a clear list of
+    // problems rather than silently skipping or double-counting across outputs.
+    const agentsDir = path.join(__dirname, "..", "agents");
+    const skillsDir = path.join(__dirname, "..", "skills");
 
-    if (skipped > 0) {
-      console.error(`\n❌ Build incomplete: ${skipped} agent(s)/skill(s) were skipped due to missing JSON sidecars.`);
-      console.error("   Add the missing .json sidecar file(s) and re-run the build.");
+    const invalid = [];
+
+    fs.readdirSync(agentsDir)
+      .filter((f) => f.endsWith(".md"))
+      .forEach((file) => {
+        const name = path.basename(file, ".md");
+        if (!loadConfig(name, agentsDir, "agent")) invalid.push(`agents/${file}`);
+      });
+
+    if (fs.existsSync(skillsDir)) {
+      fs.readdirSync(skillsDir)
+        .filter((f) => f.endsWith(".md"))
+        .forEach((file) => {
+          const name = path.basename(file, ".md");
+          if (!loadConfig(name, skillsDir, "skill")) invalid.push(`skills/${file}`);
+        });
+    }
+
+    if (invalid.length > 0) {
+      console.error(`\n❌ Build aborted: missing or invalid JSON sidecar(s):`);
+      invalid.forEach((f) => console.error(`   - ${f}`));
+      console.error("\n   Add the missing .json sidecar file(s) and re-run the build.");
       process.exit(1);
     }
+
+    buildOpenCodeAgents();
+    buildCopilotAgents();
+    buildOpenCodeSkills();
+    buildCopilotSkills();
 
     console.log("✨ Build complete!");
     console.log("\n📁 Generated files:");
