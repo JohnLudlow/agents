@@ -213,7 +213,8 @@ const COPILOT_PLUGINS = [
 ];
 
 // Recommended MCP servers (installed alongside agents)
-// See docs/plans/add-mcps-alongside-agents.md for rationale.
+// These definitions are kept here so the installer can provision recommended
+// MCP tooling together with agents without requiring separate setup docs.
 //
 // MCP types:
 //   "remote"       — accessed via remote URL; no local install or port needed
