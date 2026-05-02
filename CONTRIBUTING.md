@@ -121,38 +121,86 @@ When creating or updating templates:
 
 Before submitting a pull request:
 
-1. **Markdown Validation**
+1. **Markdown validation** — run `rumdl check .` to catch formatting issues in all source markdown files:
+
+   ```bash
+   npx rumdl check .
+   ```
+
+2. **Build validation** — run the build to confirm every agent and skill generates clean output with no warnings:
+
+   ```bash
+   npm run build:agents
+   ```
+
+3. **Agent definition review** — ensure all required sections are present, file names
+   match agent/skill names, and links are valid.
+
+### Installing and Testing Locally
+
+Use the following workflow to test your changes in GitHub Copilot and OpenCode before submitting.
+
+#### Step 1 — Build
+
+Generate format-specific output from all source files:
 
 ```bash
-npm install -g rumdl
-rumdl check .
+npm run build:agents
 ```
 
-1. **Installation Testing**
+This produces:
 
-- Test installation on any platform:
+| Directory | Platform | Contents |
+|-----------|----------|----------|
+| `.github/agents/` | GitHub Copilot | Copilot frontmatter (description + temperature) |
+| `opencode/agents/` | OpenCode | Full YAML frontmatter with mode and permissions |
+| `.github/skills/` | GitHub Copilot | Skill frontmatter (description) |
+| `opencode/skills/` | OpenCode | Plain markdown |
+
+A clean build prints no `⚠️` warnings and exits with code 0. If any `.md` source
+file is missing its `.json` sidecar the build fails with exit code 1.
+
+#### Step 2 — Test in GitHub Copilot
+
+After building, `.github/agents/` already contains correctly formatted agent files
+for this repository. No additional install step is needed for in-repository testing:
+
+1. Open Copilot Chat in this repository (VS Code or GitHub.com)
+2. Select your agent from the agent picker, or reference it with `@agent-name`
+3. Verify the description is correct and the agent behaves as expected
+
+To inspect the generated frontmatter:
 
 ```bash
-npm install
+# Windows (PowerShell)
+Get-Content .github\agents\johnludlow-[name].md | Select-Object -First 5
+
+# macOS / Linux
+head -5 .github/agents/johnludlow-[name].md
 ```
 
-- Or run the install script directly:
+#### Step 3 — Test in OpenCode
 
-```bash
-node scripts/install.js
-```
-
-- For local testing without global install:
+Copy the built agents and skills into the local `.opencode/` directory:
 
 ```bash
 npm run install:local
 ```
 
-1. **Agent Definition Validation**
+Then:
 
-- Ensure all required sections are present
-- Check that file names match agent/skill names
-- Verify links are valid and properly formatted
+1. Launch OpenCode in this repository
+2. Switch to the agent with `/agent johnludlow-[name]`
+3. Confirm it loads with the expected permissions and temperature
+
+#### Restoring a previous installation
+
+The install script backs up your existing installation before writing. To roll back:
+
+```bash
+npm run restore    # restore from the most recent backup
+npm run uninstall  # remove installed files without restoring
+```
 
 ## Pull Request Guidelines
 
@@ -182,18 +230,18 @@ npm run install:local
 1. Create `agents/johnludlow-[agent-name].md` — write provider-agnostic instructions
 2. Create `agents/johnludlow-[agent-name].json` — add description, mode, temperature, and permissions
 3. Follow the standard agent definition structure (see [Agent Definitions](#agent-definitions) above)
-4. Run `node scripts/build-agents.js` to verify the build generates correct output
-5. Update the README.md with the new agent
-6. Run `node scripts/install.js` to verify it installs correctly
+4. Run `npm run build:agents` and confirm there are no `⚠️` warnings
+5. Test the agent in Copilot and/or OpenCode (see [Installing and Testing Locally](#installing-and-testing-locally) above)
+6. Update `README.md` with the new agent
 
 ### Adding a New Skill
 
 1. Create `skills/johnludlow-[skill-name].md` — write provider-agnostic content
 2. Create `skills/johnludlow-[skill-name].json` — add a `description` field
 3. Follow the standard skill definition structure (see [Skill Definitions](#skill-definitions) above)
-4. Run `node scripts/build-agents.js` to verify the build generates correct output
-5. Link from relevant agent definitions
-6. Update the README.md with the new skill
+4. Run `npm run build:agents` and confirm there are no `⚠️` warnings
+5. Test the skill in Copilot and/or OpenCode (see [Installing and Testing Locally](#installing-and-testing-locally) above)
+6. Update `README.md` with the new skill
 
 ### Adding a New Template
 
