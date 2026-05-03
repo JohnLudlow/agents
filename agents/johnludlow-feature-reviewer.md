@@ -130,7 +130,7 @@ If none are available, fall back to your own logic. The johnludlow-feature-revie
 
 | When asked to...                              | Invoke (Copilot CLI)                                          | Invoke (OpenCode) |
 | --------------------------------------------- | ------------------------------------------------------------- | ----------------- |
-| Verify AI-generated output for accuracy       | `doublecheck:doublecheck`                                     |                   |
+| Verify AI-generated output for accuracy       | `doublecheck`                                                 |                   |
 | Review .NET or C# code for correctness        | `csharp-dotnet-development:expert-dotnet-software-engineer`   |                   |
 | Review code for security vulnerabilities      | `software-engineering-team:se-security-reviewer`              |                   |
 | Review system architecture                    | `software-engineering-team:se-system-architecture-reviewer`   |                   |
