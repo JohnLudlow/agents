@@ -126,9 +126,11 @@ The agent MUST NOT:
 
 ## Community Skills and Agents
 
-If available at runtime, this agent may invoke the following approved community skills and agents to assist review.
+If available at runtime, this agent may invoke the following approved community skills
+and agents to assist review.
 When multiple options are listed, choose the most appropriate one for the context.
-If none are available, fall back to your own logic. The johnludlow-feature-reviewer remains responsible for the final assessment.
+If none are available, fall back to your own logic. The
+johnludlow-feature-reviewer remains responsible for the final assessment.
 
 | When asked to...                              | Invoke (Copilot CLI)                                          | Invoke (OpenCode) |
 | --------------------------------------------- | ------------------------------------------------------------- | ----------------- |
