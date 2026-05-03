@@ -120,7 +120,9 @@ The agent MUST NOT:
 - Cannot write or edit any files (strictly read-only)
 - Cannot run build or test commands
 - Cannot commit or push changes
-- Cannot delegate responsibility for the review to other agents, except that it may invoke the explicitly approved community skills and agents listed below to assist its analysis
+- Cannot delegate responsibility for the review to other agents,
+  except that it may invoke the explicitly approved community skills
+  and agents listed below to assist its analysis
 
 ## Community Skills and Agents
 
