@@ -96,6 +96,17 @@ The agent MUST NOT:
 - Cannot commit or push changes
 - Cannot delegate to planner, implementer, or tester sub-agents
 
+## Community Skills and Agents
+
+If available at runtime, delegate to the following community skills and agents.
+When multiple options are listed, choose the most appropriate one for the context.
+If none are available, fall back to your own logic.
+
+| When asked to...                              | Invoke (Copilot CLI)                                      | Invoke (OpenCode) |
+| --------------------------------------------- | --------------------------------------------------------- | ----------------- |
+| Write technical developer documentation       | `software-engineering-team:se-technical-writer`           |                   |
+| Document an ASP.NET minimal API               | `aspnet-minimal-api-openapi`                              |                   |
+
 ## Integration
 
 - Works with both Copilot CLI and OpenCode

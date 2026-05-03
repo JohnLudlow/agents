@@ -63,6 +63,20 @@ The agent MUST NOT:
 - Cannot commit files under any circumstances
 - Cannot run write-like git commands
 
+## Community Skills and Agents
+
+If available at runtime, delegate to the following community skills and agents.
+When multiple options are listed, choose the most appropriate one for the context.
+If none are available, fall back to your own logic.
+
+| When asked to...                              | Invoke (Copilot CLI)                                                                    | Invoke (OpenCode) |
+| --------------------------------------------- | --------------------------------------------------------------------------------------- | ----------------- |
+| Generate a product requirements document      | `project-planning:prd`                                                                  |                   |
+| Create an implementation plan                 | `project-planning:implementation-plan`, `project-planning:plan`                         |                   |
+| Plan tasks and break down a feature           | `project-planning:task-planner`                                                         |                   |
+| Research a technical spike                    | `project-planning:research-technical-spike`, `technical-spike:research-technical-spike` |                   |
+| Assess codebase context before planning       | `context-engineering:context-architect`                                                 |                   |
+
 ## Integration
 
 - Works with both Copilot CLI and OpenCode

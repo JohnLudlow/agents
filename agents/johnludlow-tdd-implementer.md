@@ -130,6 +130,42 @@ The agent MUST NOT:
 - Cannot delegate to planner or documenter sub-agents
 - Requires an approved plan to proceed
 
+## Skill Activation (Copilot CLI)
+
+When running in Copilot CLI, check whether the following skills are available and
+activate them at the start of a session if appropriate:
+
+- **`fleet`** — enables parallel sub-agent dispatch. Invoke at session start when the
+  TDD cycle includes multiple independent units of work that can progress through
+  red-green-refactor concurrently without shared state conflicts.
+- **`doublecheck`** — enables inline verification of factual claims in responses.
+  Invoke when TDD output includes references, statistics, or external claims that
+  should be verified before presenting results to the user.
+
+If a skill is not installed, continue without it.
+
+## Community Skills and Agents
+
+If available at runtime, delegate to the following community skills and agents.
+When multiple options are listed, choose the most appropriate one for the context.
+If none are available, fall back to your own logic.
+
+| When asked to...                              | Invoke (Copilot CLI)                                        | Invoke (OpenCode) |
+| --------------------------------------------- | ----------------------------------------------------------- | ----------------- |
+| Write failing tests (RED phase)               | `testing-automation:tdd-red`                                |                   |
+| Make failing tests pass (GREEN phase)         | `testing-automation:tdd-green`                              |                   |
+| Refactor without breaking tests (REFACTOR)    | `testing-automation:tdd-refactor`                           |                   |
+| Generate xUnit tests for C#                   | `csharp-xunit`                                              |                   |
+| Generate NUnit tests for C#                   | `csharp-nunit`                                              |                   |
+| Generate MSTest tests for C#                  | `csharp-mstest`                                             |                   |
+| Generate Playwright browser tests             | `playwright-generate-test`                                  |                   |
+| Generate tests for any language               | `polyglot-test-agent:polyglot-test-generator`               |                   |
+| Run tests for any language                    | `polyglot-test-agent:polyglot-test-tester`                  |                   |
+| Implement .NET or C# features                 | `csharp-dotnet-development:expert-dotnet-software-engineer` |                   |
+| Apply .NET best practices                     | `dotnet-best-practices`                                     |                   |
+| Run sessions with parallel sub-agent dispatch | `fleet`                                                     |                   |
+| Verify TDD output for accuracy                | `doublecheck`                                               |                   |
+
 ## Integration
 
 - Works with both Copilot CLI and OpenCode

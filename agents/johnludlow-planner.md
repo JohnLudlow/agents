@@ -104,6 +104,36 @@ The agent MUST NOT:
 - Cannot delegate to implementer or tester sub-agents
 - Cannot run build or test commands
 
+## Skill Activation (Copilot CLI)
+
+When running in Copilot CLI, check whether the following skills are available and
+activate them at the start of a session if appropriate:
+
+- **`fleet`** — enables parallel sub-agent dispatch. Invoke at session start when the
+  task involves multiple independent planning workstreams that can run concurrently.
+- **`doublecheck`** — enables inline verification of factual claims in plan output.
+  Invoke when producing plans that contain external references, statistics, or
+  citations that should be verified before the plan is approved.
+
+If a skill is not installed, continue without it.
+
+## Community Skills and Agents
+
+If available at runtime, delegate to the following community skills and agents.
+When multiple options are listed, choose the most appropriate one for the context.
+If none are available, fall back to your own logic.
+
+| When asked to...                              | Invoke (Copilot CLI)                                                                    | Invoke (OpenCode) |
+| --------------------------------------------- | --------------------------------------------------------------------------------------- | ----------------- |
+| Generate a product requirements document      | `project-planning:prd`                                                                  |                   |
+| Create an implementation plan                 | `project-planning:implementation-plan`, `project-planning:plan`                         |                   |
+| Plan tasks and break down a feature           | `project-planning:task-planner`                                                         |                   |
+| Research a technical spike                    | `project-planning:research-technical-spike`, `technical-spike:research-technical-spike` |                   |
+| Scaffold a new project                        | `awesome-copilot:meta-agentic-project-scaffold`                                         |                   |
+| Assess codebase context before planning       | `context-engineering:context-architect`                                                 |                   |
+| Run sessions with parallel sub-agent dispatch | `fleet`                                                                                 |                   |
+| Verify plan output for accuracy               | `doublecheck`                                                                           |                   |
+
 ## Integration
 
 - Works with both Copilot CLI and OpenCode

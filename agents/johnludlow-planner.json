@@ -1,7 +1,7 @@
 {
   "description": "Top-level planning agent. Plans only, never implements.",
   "mode": "primary",
-  "temperature": 0.3,
+  "temperature": 0.5,
   "permission": {
     "read": { "*": "allow" },
     "edit": { "*": "deny", "docs/plans/*": "allow" },

@@ -1,7 +1,7 @@
 {
   "description": "Adversarial reviewer. Read-only quality gate for all agents.",
   "mode": "subagent",
-  "temperature": 0.4,
+  "temperature": 0.2,
   "permission": {
     "read": { "*": "allow" },
     "edit": { "*": "deny" },
