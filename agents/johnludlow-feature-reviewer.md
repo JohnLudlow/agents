@@ -136,7 +136,7 @@ If none are available, fall back to your own logic. The johnludlow-feature-revie
 | Review .NET or C# code for correctness        | `csharp-dotnet-development:expert-dotnet-software-engineer`   |                   |
 | Review code for security vulnerabilities      | `software-engineering-team:se-security-reviewer`              |                   |
 | Review system architecture                    | `software-engineering-team:se-system-architecture-reviewer`   |                   |
-| Analyse .NET performance issues               | `dotnet-diag:optimizing-dotnet-performance`, `analyzing-dotnet-performance` |      |
+| Analyse .NET performance issues               | `dotnet-diag:optimizing-dotnet-performance`, `dotnet-diag:analyzing-dotnet-performance` |                   |
 
 ## Integration
 
