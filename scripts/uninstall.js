@@ -9,8 +9,10 @@
 
 const fs = require("fs");
 const path = require("path");
+const { spawnSync } = require("child_process");
 
 const {
+  BACKUP_SUFFIX,
   PLATFORMS,
   getInstallMode,
   getTargetDirectory,
@@ -114,6 +116,172 @@ function uninstallPlatform(platform, mode) {
 }
 
 /**
+ * Uninstall MCP servers (best-effort) and remove .mcps.json.
+ *
+ * - Always removes .mcps.json (with backup).
+ * - Only removes globally installed packages when --purge is passed,
+ *   to avoid clobbering shared developer environments.
+ */
+function uninstallMcps(mode, { purge = false } = {}) {
+  console.log("\n🧩 Uninstalling MCP servers...");
+
+  const targetDir = getTargetDirectory("opencode", mode);
+  const mcpsConfigPath = path.join(targetDir, ".mcps.json");
+  const mcpsConfigExists = fs.existsSync(mcpsConfigPath);
+
+  if (!mcpsConfigExists) {
+    console.log("   ℹ️  No .mcps.json found");
+  }
+
+  if (mcpsConfigExists) {
+    // Backup .mcps.json before removing
+    const backup = mcpsConfigPath + BACKUP_SUFFIX;
+    try {
+      fs.copyFileSync(mcpsConfigPath, backup);
+      console.log(`   → Backed up .mcps.json to ${path.basename(backup)}`);
+    } catch (error) {
+      console.warn(`   ⚠️  Failed to back up .mcps.json: ${error.message}`);
+    }
+  }
+
+  if (purge) {
+    if (mcpsConfigExists) {
+      let mcps = [];
+      try {
+        mcps = JSON.parse(fs.readFileSync(mcpsConfigPath, "utf8")).mcps || [];
+      } catch { /* ignore parse errors on uninstall */ }
+
+      for (const mcp of mcps) {
+        // Remote MCPs have no package to remove.
+        if (mcp.type === "remote") {
+          process.stdout.write(`   → ${mcp.name}: remote — no package to remove, skipping\n`);
+          continue;
+        }
+        // npx MCPs: only remove if a global install was done at install time.
+        if (mcp.type === "local-npx" && !mcp.requiresGlobalInstall) {
+          process.stdout.write(`   → ${mcp.name}: npx on-demand — no global package to remove, skipping\n`);
+          continue;
+        }
+        process.stdout.write(`   → Removing ${mcp.name}... `);
+        // Best-effort; ignore failures (user may have removed manually)
+        // npm vs dotnet detection: try npm first then dotnet.
+        const pkgName = mcp.package || mcp.name;
+        let result = spawnSync("npm", ["uninstall", "-g", pkgName], { stdio: "pipe" });
+        if (result.status !== 0) {
+          result = spawnSync("dotnet", ["tool", "uninstall", "--global", pkgName], { stdio: "pipe" });
+        }
+        process.stdout.write(result.status === 0 ? "✓\n" : "skipped\n");
+      }
+    } else {
+      console.log("   ℹ️  No .mcps.json found; skipping global package removal");
+    }
+  } else {
+    console.log("   ℹ️  Skipping global package removal (use --purge to remove)");
+  }
+
+  try {
+    fs.unlinkSync(mcpsConfigPath);
+    console.log("   ✓ Removed .mcps.json");
+  } catch (err) {
+    console.log(`   ℹ️  Could not remove .mcps.json: ${err.message}`);
+  }
+
+  // Remove Copilot CLI MCP config entries written by writeCopilotMcpConfig.
+  // Global: ~/.copilot/mcp-config.json (same dir as agents/skills)
+  // Local:  .mcp.json at the project root
+  const copilotMcpConfigPath = mode === "local"
+    ? path.join(process.cwd(), ".mcp.json")
+    : path.join(PLATFORMS.copilot.globalDir, "mcp-config.json");
+
+  if (!fs.existsSync(copilotMcpConfigPath)) {
+    console.log("   ℹ️  No Copilot MCP config file found, skipping Copilot cleanup");
+  } else {
+    // Expected shapes written by writeCopilotMcpConfig.
+    // Only remove entries whose key fields match so user-managed config is not clobbered.
+    const expectedCopilotEntries = {
+      "context7": (e) => e && e.type === "http" && e.url === "https://mcp.context7.com/mcp/oauth",
+      "gamedev":  (e) => e && e.command === "npx" && Array.isArray(e.args) && e.args[0] === "-y" && e.args[1] === "gamecodex",
+    };
+
+    try {
+      const copilotConfig = JSON.parse(fs.readFileSync(copilotMcpConfigPath, "utf8"));
+      const servers = copilotConfig.mcpServers || {};
+      const removedKeys = Object.keys(expectedCopilotEntries).filter(k => {
+        if (!(k in servers)) return false;
+        if (!expectedCopilotEntries[k](servers[k])) {
+          console.log(`   ℹ️  Skipping '${k}' in Copilot MCP config — doesn't match installer-written shape`);
+          return false;
+        }
+        return true;
+      });
+
+      if (removedKeys.length === 0) {
+        console.log("   ℹ️  No installer-managed entries in Copilot MCP config");
+      } else {
+        // Backup before modifying
+        fs.copyFileSync(copilotMcpConfigPath, copilotMcpConfigPath + BACKUP_SUFFIX);
+        removedKeys.forEach(k => delete servers[k]);
+        copilotConfig.mcpServers = servers;
+        fs.writeFileSync(copilotMcpConfigPath, JSON.stringify(copilotConfig, null, 2));
+        console.log(`   ✓ Removed ${removedKeys.length} entry/entries from Copilot MCP config: ${removedKeys.join(", ")}`);
+      }
+    } catch (err) {
+      console.warn(`   ⚠️  Could not clean Copilot MCP config: ${err.message}`);
+    }
+  }
+
+  // Remove MCP entries from OpenCode config.json written by writeOpenCodeMcpConfig.
+  const opencodeCfgDir = mode === "local"
+    ? PLATFORMS.opencode.localDir(process.cwd())
+    : PLATFORMS.opencode.globalDir;
+  const opencodeCfgPath = path.join(opencodeCfgDir, "config.json");
+
+  if (!fs.existsSync(opencodeCfgPath)) {
+    console.log("   ℹ️  No OpenCode config.json found");
+    return;
+  }
+
+  try {
+    const ocConfig = JSON.parse(fs.readFileSync(opencodeCfgPath, "utf8"));
+    const mcp = ocConfig.mcp || {};
+
+    // Expected shapes written by writeOpenCodeMcpConfig.
+    // Only remove entries whose key fields match so user-managed config is not clobbered.
+    const expectedOcEntries = {
+      "context7":  (e) => e && e.type === "remote" && e.url === "https://mcp.context7.com/mcp/oauth",
+      "github-mcp": (e) => e && e.type === "remote" && e.url === "https://api.githubcopilot.com/mcp/",
+      "gamecodex":  (e) => e && e.type === "local" && Array.isArray(e.command) && e.command[0] === "npx" && e.command[1] === "-y" && e.command[2] === "gamecodex",
+    };
+
+    const removedOcKeys = Object.keys(expectedOcEntries).filter(k => {
+      if (!(k in mcp)) return false;
+      if (!expectedOcEntries[k](mcp[k])) {
+        console.log(`   ℹ️  Skipping '${k}' in OpenCode config — doesn't match installer-written shape`);
+        return false;
+      }
+      return true;
+    });
+
+    if (removedOcKeys.length === 0) {
+      console.log("   ℹ️  No installer-managed entries in OpenCode config.json");
+      return;
+    }
+
+    fs.copyFileSync(opencodeCfgPath, opencodeCfgPath + BACKUP_SUFFIX);
+    removedOcKeys.forEach(k => delete mcp[k]);
+    if (Object.keys(mcp).length === 0) {
+      delete ocConfig.mcp;
+    } else {
+      ocConfig.mcp = mcp;
+    }
+    fs.writeFileSync(opencodeCfgPath, JSON.stringify(ocConfig, null, 2));
+    console.log(`   ✓ Removed ${removedOcKeys.length} entry/entries from OpenCode MCP config: ${removedOcKeys.join(", ")}`);
+  } catch (err) {
+    console.warn(`   ⚠️  Could not clean OpenCode MCP config: ${err.message}`);
+  }
+}
+
+/**
  * Main uninstallation function
  */
 function uninstall() {
@@ -127,6 +295,9 @@ function uninstall() {
     // Uninstall both platforms
     uninstallPlatform("opencode", mode);
     uninstallPlatform("copilot", mode);
+
+    const purge = process.argv.includes("--purge");
+    uninstallMcps(mode, { purge });
 
     console.log("\n✨ Uninstallation complete!");
     console.log("\n📚 Note:");
