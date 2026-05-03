@@ -120,7 +120,25 @@ The agent MUST NOT:
 - Cannot write or edit any files (strictly read-only)
 - Cannot run build or test commands
 - Cannot commit or push changes
-- Cannot delegate to other agents
+- Cannot delegate responsibility for the review to other agents,
+  except that it may invoke the explicitly approved community skills
+  and agents listed below to assist its analysis
+
+## Community Skills and Agents
+
+If available at runtime, this agent may invoke the following approved community skills
+and agents to assist review.
+When multiple options are listed, choose the most appropriate one for the context.
+If none are available, fall back to your own logic. The
+johnludlow-feature-reviewer remains responsible for the final assessment.
+
+| When asked to...                              | Invoke (Copilot CLI)                                          | Invoke (OpenCode) |
+| --------------------------------------------- | ------------------------------------------------------------- | ----------------- |
+| Verify AI-generated output for accuracy       | `doublecheck`                                                 |                   |
+| Review .NET or C# code for correctness        | `csharp-dotnet-development:expert-dotnet-software-engineer`   |                   |
+| Review code for security vulnerabilities      | `software-engineering-team:se-security-reviewer`              |                   |
+| Review system architecture                    | `software-engineering-team:se-system-architecture-reviewer`   |                   |
+| Analyse .NET performance issues               | `dotnet-diag:optimizing-dotnet-performance`, `dotnet-diag:analyzing-dotnet-performance` |                   |
 
 ## Integration
 

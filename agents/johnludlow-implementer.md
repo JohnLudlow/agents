@@ -97,6 +97,35 @@ The agent MUST NOT:
 - Cannot delegate to planner or documenter sub-agents
 - Requires an approved plan to proceed
 
+## Skill Activation (Copilot CLI)
+
+When running in Copilot CLI, check whether the following skills are available and
+activate them at the start of a session if appropriate:
+
+- **`fleet`** — enables parallel sub-agent dispatch. Invoke at session start when the
+  implementation involves multiple independent workstreams that can run concurrently
+  (e.g., separate modules, files, or components with no shared dependencies).
+- **`doublecheck`** — enables inline verification of factual claims in responses.
+  Invoke when implementation output includes references, statistics, or external
+  claims that should be verified before presenting results to the user.
+
+If a skill is not installed, continue without it.
+
+## Community Skills and Agents
+
+If available at runtime, delegate to the following community skills and agents.
+When multiple options are listed, choose the most appropriate one for the context.
+If none are available, fall back to your own logic.
+
+| When asked to...                              | Invoke (Copilot CLI)                                        | Invoke (OpenCode) |
+| --------------------------------------------- | ----------------------------------------------------------- | ----------------- |
+| Implement .NET or C# features                 | `csharp-dotnet-development:expert-dotnet-software-engineer` |                   |
+| Build a multi-stage Dockerfile                | `multi-stage-dockerfile`                                    |                   |
+| Create a C# MCP server                        | `csharp-mcp-development:csharp-mcp-expert`                  |                   |
+| Apply .NET best practices                     | `dotnet-best-practices`                                     |                   |
+| Run sessions with parallel sub-agent dispatch | `fleet`                                                     |                   |
+| Verify implementation output for accuracy     | `doublecheck`                                               |                   |
+
 ## Integration
 
 - Works with both Copilot CLI and OpenCode

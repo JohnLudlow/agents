@@ -1,7 +1,7 @@
 {
   "description": "Plans features and creates detailed implementation plans",
   "mode": "subagent",
-  "temperature": 0.3,
+  "temperature": 0.5,
   "permission": {
     "read": { "*": "allow" },
     "edit": { "*": "deny", "docs/plans/*": "allow" },

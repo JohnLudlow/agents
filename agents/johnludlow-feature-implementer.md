@@ -67,6 +67,23 @@ The agent MUST NOT:
 - Cannot commit or push changes
 - Cannot modify git history
 
+## Community Skills and Agents
+
+If available at runtime, delegate to the following community skills and agents.
+When multiple options are listed, choose the most appropriate one for the context.
+If none are available, fall back to your own logic.
+
+| When asked to...                              | Invoke (Copilot CLI)                                                                           | Invoke (OpenCode) |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------- |
+| Implement .NET or C# features                 | `csharp-dotnet-development:expert-dotnet-software-engineer`                                    |                   |
+| Generate C# async code patterns               | `csharp-async`                                                                                 |                   |
+| Generate an ASP.NET minimal API               | `aspnet-minimal-api-openapi`                                                                   |                   |
+| Generate an application from an OpenAPI spec  | `openapi-to-application-csharp-dotnet:openapi-to-application`, `openapi-to-application-code`  |                   |
+| Build a multi-stage Dockerfile                | `multi-stage-dockerfile`                                                                       |                   |
+| Create a C# MCP server                        | `csharp-mcp-server-generator`, `csharp-mcp-development:csharp-mcp-expert`                     |                   |
+| Apply .NET best practices                     | `dotnet-best-practices`                                                                        |                   |
+| Upgrade a .NET project                        | `dotnet-upgrade`                                                                               |                   |
+
 ## Integration
 
 - Works with both Copilot CLI and OpenCode
