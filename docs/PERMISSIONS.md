@@ -390,13 +390,14 @@ All agents now include automatic token and context usage reporting capabilities:
 **Sub-agents** report their usage as a single-line summary after completing work:
 
 - OpenCode: Use the `tokenscope` tool or fall back to session tools
-- Copilot CLI: Use `/usage` and `/context` commands
+- Copilot CLI: Use built-in `/usage` and `/context` commands
 
 **Top-level agents** collect sub-agent summaries, add their own platform usage
 data, and present an aggregated report before reporting completion.
 
-No additional permissions are required — the session tools are native tool calls
-and `/tokenscope` is provided by the already-installed plugin.
+No additional permissions are required — session tools are native tool calls,
+`/tokenscope` is provided by the already-installed plugin, and `/usage` and
+`/context` are built into Copilot CLI.
 
 ## Safety Guidelines
 
