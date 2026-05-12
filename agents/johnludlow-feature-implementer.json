@@ -6,7 +6,6 @@
     "read": { "*": "allow", "*.env": "deny" },
     "edit": {
       "*": "deny",
-      "agents/**": "allow",
       "src/**": "allow",
       "lib/**": "allow",
       "components/**": "allow",
