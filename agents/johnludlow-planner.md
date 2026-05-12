@@ -147,9 +147,12 @@ If none are available, fall back to your own logic.
 ## Usage Reporting
 
 The `johnludlow-planner` MUST collect usage summaries from its delegated
-sub-agents and present a concise aggregated snapshot before completing. Use
-OpenCode's `/tokenscope` when possible; otherwise collect sub-agent one-line
-summaries and present them in the structured report format.
+sub-agents and present a concise aggregated snapshot before completing. In
+OpenCode, use `/tokenscope` when possible. In Copilot CLI, capture the primary
+agent's own usage with `/usage` and `/context`, then combine that with delegated
+sub-agent usage summaries in the structured report format. If platform-native
+telemetry is unavailable, collect sub-agent one-line summaries and present the
+best available aggregated report without blocking completion.
 
 Example:
 
