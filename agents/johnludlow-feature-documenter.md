@@ -89,8 +89,9 @@ If none are available, fall back to your own logic.
 ## Usage Reporting
 
 After documenting work, this agent SHOULD report its token usage to the
-delegating agent in a single-line summary. Prefer using OpenCode's `tokenscope`
-when available:
+delegating agent in a single-line summary. Prefer platform-native commands:
+run `/tokenscope` on OpenCode, or run built-in `/usage` and `/context` on
+Copilot CLI and return a combined single-line summary:
 
 ```text
 /tokenscope
