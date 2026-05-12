@@ -91,14 +91,15 @@ Top-level testing agent. Runs tests and reports results without fixing code.
 
 ### Usage Reporting
 
-All agents now include automatic token and context usage reporting. After every
-session, agents generate a structured report showing:
+Agents support structured token and context usage reporting. After every
+session, the reported details depend on the specific agent and platform:
 
 - **Sub-agents**: Emit a single-line summary with input/output/cached token counts
-- **Top-level agents**: Aggregate sub-agent reports with their own usage into a
+- **Top-level agents**: Aggregate available sub-agent usage summaries into a
   structured final report presented to the user
-- **Platform-native**: Uses `/tokenscope` (OpenCode) or built-in `/usage` +
-  `/context` commands (Copilot CLI) for accurate telemetry data
+- **Platform-native**: Agents use the telemetry commands documented in their
+  definitions, such as `/tokenscope` (OpenCode), and some Copilot CLI agents may
+  use built-in `/usage` and `/context` commands where supported
 
 This feature is non-blocking — usage reporting is informational and does not
 interrupt the agent's primary workflow.
