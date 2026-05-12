@@ -109,6 +109,11 @@ If none are available, fall back to your own logic.
 
 ## Integration
 
+- Works with both Copilot CLI and OpenCode
+- In Copilot CLI: selectable via `copilot chat -a johnludlow-documenter`
+- In OpenCode: selectable via `/agent johnludlow-documenter`
+- Delegates to `johnludlow-feature-documenter`, `johnludlow-feature-reviewer`
+
 ## Usage Reporting
 
 The top-level `johnludlow-documenter` MUST collect usage summaries from any

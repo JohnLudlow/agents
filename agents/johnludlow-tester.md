@@ -19,6 +19,10 @@ and analysis.
 
 ## Inputs
 
+- A prompt describing what to test
+- Optionally, specific test files or suites to run
+- Optionally, a plan or implementation to validate
+
 ## Usage Reporting
 
 The top-level `johnludlow-tester` MUST collect usage summaries from test-run
