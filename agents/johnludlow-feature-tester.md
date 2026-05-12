@@ -85,6 +85,8 @@ If none are available, fall back to your own logic.
 
 After running tests, this agent SHOULD report its usage summary to the caller.
 For OpenCode, prefer `/tokenscope` to capture session-level token/cost details.
+For Copilot CLI, use `/usage` for token usage and `/context` for context-window details, and
+return the available numbers in the summary to the delegating agent.
 
 Example summary line to return to the delegating agent:
 
