@@ -33,6 +33,11 @@ on OpenCode; otherwise aggregate returned summaries. Example:
 
 ## Outputs
 
+- A concise summary of the tests that were run and their outcomes
+- Analysis of any failing tests, including likely causes where identifiable
+- Adversarial reviewer feedback on test coverage and adequacy
+- A usage summary covering both delegated sub-agents and the primary agent
+
 ## Delegation Rules
 
 This agent delegates to:
