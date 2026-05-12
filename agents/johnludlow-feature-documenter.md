@@ -97,6 +97,12 @@ Copilot CLI and return a combined single-line summary:
 /tokenscope
 ```
 
+Copilot CLI combined summary example:
+
+```text
+[feature-documenter] Input: 1.2k · Output: 0.6k · Cached: 0.2k · Context: 38%
+```
+
 Example summary:
 
 ```text
