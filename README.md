@@ -373,7 +373,7 @@ These agents are designed to work with:
 - ✅ Automatic backup and restore functionality
 - ✅ Semantic versioning with npm
 - ✅ Easy uninstall with `npm uninstall`
-- ✅ Automatic token usage and cost reporting after every session
+- ✅ Automatic token usage reporting after every session
 
 ## Project Structure
 
