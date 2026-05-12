@@ -180,9 +180,12 @@ If none are available, fall back to your own logic.
 
 The TDD implementer MUST collect concise usage summaries from its sub-agents
 after the RED/GREEN/REFACTOR cycle completes and before final completion.
-Prefer `/tokenscope` on OpenCode for an authoritative recursive breakdown; if
-unavailable, aggregate sub-agent one-line summaries and present a final
-report. Do not block completion on telemetry availability.
+On OpenCode, prefer `/tokenscope` for an authoritative recursive breakdown.
+On Copilot CLI, collect the primary agent's usage with `/usage`; use
+`/context` first if needed to confirm the active conversation/session before
+reporting. If platform-native telemetry is unavailable, aggregate sub-agent
+one-line summaries and present a final report. Do not block completion on
+telemetry availability.
 
 Example final report:
 
