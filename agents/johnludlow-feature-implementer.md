@@ -90,3 +90,22 @@ If none are available, fall back to your own logic.
 - Depends on plans from johnludlow-feature-planner
 - Delegates documentation to johnludlow-feature-documenter
 - Should run johnludlow-feature-tester for validation
+
+## Usage Reporting
+
+After implementing work, this agent SHOULD emit a concise usage summary to its
+caller. Prefer platform-native tools when available.
+
+### OpenCode
+
+```text
+/tokenscope
+```
+
+Parse the top-level session summary and emit a single-line summary such as:
+
+```text
+[feature-implementer] Input: 8.1k · Output: 2.2k · Cached: 3.4k
+```
+
+If detailed data is unavailable, report `Usage data unavailable`.

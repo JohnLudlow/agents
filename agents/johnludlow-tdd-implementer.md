@@ -73,9 +73,10 @@ This agent MUST NOT delegate to:
 8. Repeat steps 1-7 for each unit of work in the plan
 9. Before reporting completion, delegate to `johnludlow-feature-reviewer` for
    adversarial review
-10. Address reviewer feedback, maintaining the red-green-refactor cycle for any
-    additional changes
-11. Report completion to the user
+10. Address reviewer feedback, maintaining the red-green-refactor cycle for any additional changes
+11. Collect usage summaries from sub-agents
+12. Aggregate into a structured usage report
+13. Report completion to the user
 
 ## Refusal Instructions
 
@@ -173,3 +174,24 @@ If none are available, fall back to your own logic.
 - In OpenCode: selectable via `/agent johnludlow-tdd-implementer`
 - Delegates to `johnludlow-feature-tester`, `johnludlow-feature-implementer`,
   `johnludlow-feature-reviewer`
+
+## Usage Reporting
+
+The TDD implementer MUST collect concise usage summaries from its sub-agents
+after the RED/GREEN/REFACTOR cycle completes and before final completion.
+Prefer `/tokenscope` on OpenCode for an authoritative recursive breakdown; if
+unavailable, aggregate sub-agent one-line summaries and present a final
+report. Do not block completion on telemetry availability.
+
+Example final report:
+
+```text
+── Usage Report ──────────────────────────────────
+ Sub-agent (feature-tester):       2.0k in · 0.3k out · 0.1k cached
+ Sub-agent (feature-implementer):  8.1k in · 2.2k out · 3.4k cached
+ ─────────────────────────────────────────────────
+ Primary (johnludlow-tdd-implementer): 12.3k in · 2.8k out · 3.5k cached
+ ─────────────────────────────────────────────────
+ Total:                               22.4k in · 5.3k out · 7.0k cached
+ ─────────────────────────────────────────────────
+```

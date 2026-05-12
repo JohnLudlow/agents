@@ -53,7 +53,9 @@ This agent MUST NOT delegate to:
 4. Before reporting completion, delegate to `johnludlow-feature-reviewer` for
    adversarial review
 5. Address reviewer feedback by delegating corrections to the appropriate sub-agent
-6. Report completion to the user
+6. Collect usage summaries from sub-agents
+7. Aggregate into a structured usage report
+8. Report completion to the user
 
 ## Refusal Instructions
 
@@ -141,3 +143,26 @@ If none are available, fall back to your own logic.
 - In OpenCode: selectable via `/agent johnludlow-planner`
 - Delegates to `johnludlow-feature-planner`, `johnludlow-feature-documenter`,
   `johnludlow-feature-reviewer`
+
+## Usage Reporting
+
+The `johnludlow-planner` MUST collect usage summaries from its delegated
+sub-agents and present a concise aggregated snapshot before completing. Use
+OpenCode's `/tokenscope` when possible; otherwise collect sub-agent one-line
+summaries and present them in the structured report format.
+
+Example:
+
+```text
+── Usage Report ──────────────────────────────────
+ Sub-agent (feature-planner):     4.2k in · 0.8k out · 1.0k cached
+ Sub-agent (feature-documenter):  1.2k in · 0.6k out · 0.2k cached
+ ─────────────────────────────────────────────────
+ Primary (johnludlow-planner):    6.0k in · 1.5k out · 1.8k cached
+ ─────────────────────────────────────────────────
+ Total:                            11.4k in · 2.9k out · 3.0k cached
+ ─────────────────────────────────────────────────
+```
+
+If any sub-agent reports `Usage data unavailable`, note it and proceed; do not
+block plan completion on unavailable telemetry.

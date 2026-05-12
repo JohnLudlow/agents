@@ -80,3 +80,17 @@ If none are available, fall back to your own logic.
 
 - Can be called by johnludlow-feature-implementer for validation
 - Works with both Copilot CLI and OpenCode
+
+## Usage Reporting
+
+After running tests, this agent SHOULD report its usage summary to the caller.
+For OpenCode, prefer `/tokenscope` to capture session-level token/cost details.
+
+Example summary line to return to the delegating agent:
+
+```text
+[feature-tester] Input: 2.0k · Output: 0.3k · Cached: 0.1k
+```
+
+If no usable reporting mechanism is available, return
+`[feature-tester] Usage data unavailable`.

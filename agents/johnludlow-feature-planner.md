@@ -82,3 +82,26 @@ If none are available, fall back to your own logic.
 - Works with both Copilot CLI and OpenCode
 - Should delegate documentation tasks to johnludlow-feature-documenter
 - Coordinates with johnludlow-feature-implementer for implementation details
+
+## Usage Reporting
+
+After completing work, this agent MUST emit a concise usage summary to its
+caller using the platform's native reporting tools when available.
+
+### OpenCode
+
+Invoke the `tokenscope` plugin to obtain a session snapshot:
+
+```text
+/tokenscope
+```
+
+Extract the main token counts (input/output/cached) and present a single-line
+summary to the caller, for example:
+
+```text
+[feature-planner] Input: 4.2k · Output: 0.8k · Cached: 1.0k
+```
+
+If the tool is unavailable, fall back to reading session metadata via
+`session_info` and report `Usage data unavailable` if no usable data is present.

@@ -349,3 +349,64 @@ The implementation successfully delivers:
 
 The system is ready for production use and will simplify installation for users while automating the release process for
 maintainers.
+
+## Token and Context Usage Reporting - Implementation Summary
+
+## Token Usage Reporting — Overview
+
+Implemented automatic token and context usage reporting across all agent definitions,
+enabling structured cost and telemetry tracking for every session.
+
+**Completion Date**: May 12, 2026
+
+## Token Usage Reporting — Implementation Details
+
+### Changes Made
+
+#### 1. Agent Definition Updates
+
+Added `Usage Reporting` section to all 10 agent definitions (5 top-level, 5 sub-agents):
+
+- **Sub-agents**: Instructed to emit a single-line summary with input/output/cached
+  token counts after completing work. Platform-native telemetry commands are used:
+  `/tokenscope` (OpenCode) or `/usage` + `/context` (Copilot CLI).
+- **Top-level agents**: Updated workflows to collect sub-agent usage summaries,
+  aggregate with the agent's own platform usage data, and present a structured
+  final report to the user.
+- All reporting is non-blocking — usage reporting is informational and does not
+  interrupt the agent's primary workflow.
+
+#### 2. Documentation Updates
+
+- **README.md**: Added feature entry to Key Features list. Added new `### Usage
+  Reporting` subsection under the Agents section documenting how the feature works
+  for sub-agents, top-level agents, and both platforms.
+- **docs/PERMISSIONS.md**: Added `### Usage Reporting` section documenting that no
+  additional permissions are required — session tools are native and `/tokenscope`
+  is provided by the already-installed plugin.
+
+#### 3. Documentation Summary File
+
+- **docs/IMPLEMENTATION-SUMMARY.md**: This entry.
+
+## Files Modified
+
+### Agent Definitions (10 files)
+
+- `agents/johnludlow-planner.md` - Added usage reporting section
+- `agents/johnludlow-implementer.md` - Added usage reporting section
+- `agents/johnludlow-tdd-implementer.md` - Added usage reporting section
+- `agents/johnludlow-documenter.md` - Added usage reporting section
+- `agents/johnludlow-tester.md` - Added usage reporting section
+- `agents/johnludlow-feature-planner.md` - Added usage reporting section
+- `agents/johnludlow-feature-implementer.md` - Added usage reporting section
+- `agents/johnludlow-feature-documenter.md` - Added usage reporting section
+- `agents/johnludlow-feature-tester.md` - Added usage reporting section
+- `agents/johnludlow-feature-reviewer.md` - Added usage reporting section
+
+### Documentation (2 files)
+
+- `README.md` - Updated Key Features and added Usage Reporting section
+- `docs/PERMISSIONS.md` - Added Usage Reporting section
+
+### Total: 12 files modified

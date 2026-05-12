@@ -109,7 +109,17 @@ If none are available, fall back to your own logic.
 
 ## Integration
 
-- Works with both Copilot CLI and OpenCode
-- In Copilot CLI: selectable via `copilot chat -a johnludlow-documenter`
-- In OpenCode: selectable via `/agent johnludlow-documenter`
-- Delegates to `johnludlow-feature-documenter`, `johnludlow-feature-reviewer`
+## Usage Reporting
+
+The top-level `johnludlow-documenter` MUST collect usage summaries from any
+delegated sub-agents and produce a concise aggregated usage snapshot before
+reporting completion. When OpenCode's `tokenscope` is available prefer it; if
+not, aggregate returned one-line summaries.
+
+Example:
+
+```text
+ Sub-agent (feature-documenter):  1.2k in · 0.6k out · 0.2k cached
+ Primary (johnludlow-documenter): 2.0k in · 0.7k out · 0.3k cached
+ Total:                           3.2k in · 1.3k out · 0.5k cached
+```

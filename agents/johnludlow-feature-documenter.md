@@ -85,3 +85,21 @@ If none are available, fall back to your own logic.
 - Works with both Copilot CLI and OpenCode
 - Can be delegated to by johnludlow-feature-implementer
 - Coordinates with johnludlow-feature-planner for plan documentation
+
+## Usage Reporting
+
+After documenting work, this agent SHOULD report its token usage to the
+delegating agent in a single-line summary. Prefer using OpenCode's `tokenscope`
+when available:
+
+```text
+/tokenscope
+```
+
+Example summary:
+
+```text
+[feature-documenter] Input: 1.2k · Output: 0.6k · Cached: 0.2k
+```
+
+If reporting tools are unavailable, return `Usage data unavailable`.

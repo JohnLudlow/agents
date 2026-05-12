@@ -145,3 +145,13 @@ johnludlow-feature-reviewer remains responsible for the final assessment.
 - Invoked by all top-level agents before they report completion
 - Works with both Copilot CLI and OpenCode
 - Intended to be used as a sub-agent quality gate rather than a primary user-facing agent
+
+## Usage Reporting
+
+As a read-only reviewer, this agent SHOULD include a concise usage summary if the
+invoking context provides it. The reviewer MUST NOT run tools that modify state
+to collect usage data.
+
+If the delegating agent supplies a usage line, the reviewer SHOULD echo it back
+in its report. If no usage information is available, the reviewer SHOULD note
+`Usage data unavailable` in its feedback.

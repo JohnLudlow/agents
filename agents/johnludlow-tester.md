@@ -19,16 +19,19 @@ and analysis.
 
 ## Inputs
 
-- A prompt describing what to test
-- Optionally, specific test files or suites to run
-- Optionally, a plan or implementation to validate
+## Usage Reporting
+
+The top-level `johnludlow-tester` MUST collect usage summaries from test-run
+sub-agents and present a concise summary before completion. Prefer `/tokenscope`
+on OpenCode; otherwise aggregate returned summaries. Example:
+
+```text
+ Sub-agent (feature-tester): 2.0k in · 0.3k out · 0.1k cached
+ Primary (johnludlow-tester): 2.5k in · 0.4k out · 0.1k cached
+ Total:                      4.5k in · 0.7k out · 0.2k cached
+```
 
 ## Outputs
-
-- Test execution results (pass/fail)
-- Coverage metrics
-- Failure analysis with root cause suggestions
-- Recommendations for additional test coverage
 
 ## Delegation Rules
 
