@@ -38,6 +38,7 @@ __pycache__/
 # Generated files
 *.backup
 *.tmp
+token-usage-output.txt
 
 # Agent-specific
 docs/plans/**/*.md
