@@ -163,3 +163,10 @@ If `tokenscope` is unavailable, collect whatever sub-agent summaries were
 returned and call `session_info`/`session_list` as a best-effort fallback. Do
 not block completion if authoritative data is not available; note missing data
 in the report.
+
+### Copilot CLI
+
+Run `/usage` and `/context` near the end of the session to gather primary-agent
+token/context metrics, then combine those values with sub-agent summary lines
+into a single final report. Do not block completion if either command is
+unavailable; include available data and note any missing fields.
