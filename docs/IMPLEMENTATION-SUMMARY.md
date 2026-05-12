@@ -352,16 +352,16 @@ maintainers.
 
 ## Token and Context Usage Reporting - Implementation Summary
 
-## Token Usage Reporting — Overview
+### Token Usage Reporting — Overview
 
 Implemented automatic token and context usage reporting across all agent definitions,
 enabling structured cost and telemetry tracking for every session.
 
 **Completion Date**: May 12, 2026
 
-## Token Usage Reporting — Implementation Details
+### Token Usage Reporting — Implementation Details
 
-### Changes Made
+#### Changes Made
 
 #### 1. Agent Definition Updates
 
