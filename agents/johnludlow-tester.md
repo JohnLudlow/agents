@@ -26,8 +26,10 @@ and analysis.
 ## Usage Reporting
 
 The top-level `johnludlow-tester` MUST collect usage summaries from test-run
-sub-agents and present a concise summary before completion. Prefer `/tokenscope`
-on OpenCode; otherwise aggregate returned summaries. Example:
+sub-agents and present a concise summary before completion. Prefer platform-native
+commands: run `/tokenscope` on OpenCode, or run built-in `/usage` and `/context`
+on Copilot CLI and combine those values with sub-agent summaries. If unavailable,
+aggregate returned summaries. Example:
 
 ```text
  Sub-agent (feature-tester): 2.0k in · 0.3k out · 0.1k cached
