@@ -383,6 +383,22 @@ Add to `config.json` in the `johnludlow-feature-implementer` agent:
 }
 ```
 
+### Usage Reporting
+
+All agents now include automatic token and context usage reporting capabilities:
+
+**Sub-agents** report their usage as a single-line summary after completing work:
+
+- OpenCode: Run `/tokenscope`, or if unavailable, fall back to native session tool calls
+- Copilot CLI: Run the built-in `/usage` and `/context` commands
+
+**Top-level agents** collect sub-agent summaries, add their own platform usage
+data, and present an aggregated report before reporting completion.
+
+No additional permissions are required — session tools are native tool calls,
+`/tokenscope` is provided by the already-installed plugin, and `/usage` and
+`/context` are built into Copilot CLI.
+
 ## Safety Guidelines
 
 These permissions are designed to:

@@ -50,7 +50,9 @@ This agent MUST NOT delegate to:
 4. Before reporting completion, delegate to `johnludlow-feature-reviewer` for
    adversarial review
 5. Address reviewer feedback by delegating corrections to the appropriate sub-agent
-6. Report completion to the user
+6. Collect usage summaries from sub-agents
+7. Aggregate into a structured usage report
+8. Report completion to the user
 
 ## Refusal Instructions
 
@@ -133,3 +135,7 @@ If none are available, fall back to your own logic.
 - In OpenCode: selectable via `/agent johnludlow-implementer`
 - Delegates to `johnludlow-feature-implementer`, `johnludlow-feature-tester`,
   `johnludlow-feature-reviewer`
+
+## Usage Reporting
+
+See [Token Usage Reporting](../docs/plans/token-usage-reporting.md) — Primary Agent pattern.

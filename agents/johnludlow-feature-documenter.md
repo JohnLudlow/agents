@@ -85,3 +85,7 @@ If none are available, fall back to your own logic.
 - Works with both Copilot CLI and OpenCode
 - Can be delegated to by johnludlow-feature-implementer
 - Coordinates with johnludlow-feature-planner for plan documentation
+
+## Usage Reporting
+
+See [Token Usage Reporting](../docs/plans/token-usage-reporting.md) — Sub-Agent pattern.

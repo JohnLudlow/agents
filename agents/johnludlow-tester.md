@@ -23,12 +23,16 @@ and analysis.
 - Optionally, specific test files or suites to run
 - Optionally, a plan or implementation to validate
 
+## Usage Reporting
+
+See [Token Usage Reporting](../docs/plans/token-usage-reporting.md) — Primary Agent pattern.
+
 ## Outputs
 
-- Test execution results (pass/fail)
-- Coverage metrics
-- Failure analysis with root cause suggestions
-- Recommendations for additional test coverage
+- A concise summary of the tests that were run and their outcomes
+- Analysis of any failing tests, including likely causes where identifiable
+- Adversarial reviewer feedback on test coverage and adequacy
+- A usage summary covering both delegated sub-agents and the primary agent
 
 ## Delegation Rules
 

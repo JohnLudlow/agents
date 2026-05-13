@@ -12,7 +12,8 @@
       "git log*": "allow",
       "git status*": "allow",
       "git branch*": "allow",
-      "git diff*": "allow"
+      "git diff*": "allow",
+      "rumdl check*": "allow"
     },
     "grep": { "*": "allow" },
     "webfetch": "ask",

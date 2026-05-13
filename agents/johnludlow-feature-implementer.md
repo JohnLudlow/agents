@@ -90,3 +90,7 @@ If none are available, fall back to your own logic.
 - Depends on plans from johnludlow-feature-planner
 - Delegates documentation to johnludlow-feature-documenter
 - Should run johnludlow-feature-tester for validation
+
+## Usage Reporting
+
+See [Token Usage Reporting](../docs/plans/token-usage-reporting.md) — Sub-Agent pattern.

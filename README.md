@@ -89,6 +89,21 @@ Top-level testing agent. Runs tests and reports results without fixing code.
 
 [View full agent definition](agents/johnludlow-tester.md)
 
+### Usage Reporting
+
+Agents support structured token and context usage reporting. After every
+session, the reported details depend on the specific agent and platform:
+
+- **Sub-agents**: Emit a single-line summary with input/output/cached token counts
+- **Top-level agents**: Aggregate available sub-agent usage summaries into a
+  structured final report presented to the user
+- **Platform-native**: Agents use the telemetry commands documented in their
+  definitions, such as `/tokenscope` (OpenCode), and some Copilot CLI agents may
+  use built-in `/usage` and `/context` commands where supported
+
+This feature is non-blocking — usage reporting is informational and does not
+interrupt the agent's primary workflow.
+
 ### Sub-Agents
 
 #### johnludlow-feature-planner
@@ -359,6 +374,7 @@ These agents are designed to work with:
 - ✅ Automatic backup and restore functionality
 - ✅ Semantic versioning with npm
 - ✅ Easy uninstall with `npm uninstall`
+- ✅ Automatic token usage reporting after every session
 
 ## Project Structure
 

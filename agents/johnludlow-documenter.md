@@ -113,3 +113,7 @@ If none are available, fall back to your own logic.
 - In Copilot CLI: selectable via `copilot chat -a johnludlow-documenter`
 - In OpenCode: selectable via `/agent johnludlow-documenter`
 - Delegates to `johnludlow-feature-documenter`, `johnludlow-feature-reviewer`
+
+## Usage Reporting
+
+See [Token Usage Reporting](../docs/plans/token-usage-reporting.md) — Primary Agent pattern.

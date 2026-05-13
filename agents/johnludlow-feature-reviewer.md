@@ -145,3 +145,7 @@ johnludlow-feature-reviewer remains responsible for the final assessment.
 - Invoked by all top-level agents before they report completion
 - Works with both Copilot CLI and OpenCode
 - Intended to be used as a sub-agent quality gate rather than a primary user-facing agent
+
+## Usage Reporting
+
+See [Token Usage Reporting](../docs/plans/token-usage-reporting.md) — Sub-Agent pattern.

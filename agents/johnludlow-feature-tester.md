@@ -80,3 +80,7 @@ If none are available, fall back to your own logic.
 
 - Can be called by johnludlow-feature-implementer for validation
 - Works with both Copilot CLI and OpenCode
+
+## Usage Reporting
+
+See [Token Usage Reporting](../docs/plans/token-usage-reporting.md) — Sub-Agent pattern.

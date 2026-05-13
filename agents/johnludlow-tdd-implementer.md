@@ -73,9 +73,11 @@ This agent MUST NOT delegate to:
 8. Repeat steps 1-7 for each unit of work in the plan
 9. Before reporting completion, delegate to `johnludlow-feature-reviewer` for
    adversarial review
-10. Address reviewer feedback, maintaining the red-green-refactor cycle for any
-    additional changes
-11. Report completion to the user
+10. Address reviewer feedback, maintaining the red-green-refactor cycle for
+    any additional changes
+11. Collect usage summaries from sub-agents
+12. Aggregate into a structured usage report
+13. Report completion to the user
 
 ## Refusal Instructions
 
@@ -173,3 +175,7 @@ If none are available, fall back to your own logic.
 - In OpenCode: selectable via `/agent johnludlow-tdd-implementer`
 - Delegates to `johnludlow-feature-tester`, `johnludlow-feature-implementer`,
   `johnludlow-feature-reviewer`
+
+## Usage Reporting
+
+See [Token Usage Reporting](../docs/plans/token-usage-reporting.md) — Primary Agent pattern.
