@@ -83,16 +83,4 @@ If none are available, fall back to your own logic.
 
 ## Usage Reporting
 
-After running tests, this agent SHOULD report its usage summary to the caller.
-For OpenCode, prefer `/tokenscope` to capture session-level token/cost details.
-For Copilot CLI, use `/usage` for token usage and `/context` for context-window details, and
-return the available numbers in the summary to the delegating agent.
-
-Example summary line to return to the delegating agent:
-
-```text
-[feature-tester] Input: 2.0k · Output: 0.3k · Cached: 0.1k
-```
-
-If no usable reporting mechanism is available, return
-`[feature-tester] Usage data unavailable`.
+See [Token Usage Reporting](../docs/plans/token-usage-reporting.md) — Sub-Agent pattern.

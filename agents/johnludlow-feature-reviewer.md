@@ -148,10 +148,4 @@ johnludlow-feature-reviewer remains responsible for the final assessment.
 
 ## Usage Reporting
 
-As a read-only reviewer, this agent SHOULD include a concise usage summary if the
-invoking context provides it. The reviewer MUST NOT run tools that modify state
-to collect usage data.
-
-If the delegating agent supplies a usage line, the reviewer SHOULD echo it back
-in its report. If no usage information is available, the reviewer SHOULD note
-`Usage data unavailable` in its feedback.
+See [Token Usage Reporting](../docs/plans/token-usage-reporting.md) — Sub-Agent pattern.

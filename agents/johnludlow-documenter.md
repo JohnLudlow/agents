@@ -116,17 +116,4 @@ If none are available, fall back to your own logic.
 
 ## Usage Reporting
 
-The top-level `johnludlow-documenter` MUST collect usage summaries from any
-delegated sub-agents and produce a concise aggregated usage snapshot before
-reporting completion. In Copilot CLI, use `/usage` together with `/context` to
-gather and attribute usage across the primary agent and any delegated
-sub-agents. In OpenCode, prefer `/tokenscope` when it is available. If neither
-runtime path is available, aggregate returned one-line summaries.
-
-Example:
-
-```text
- Sub-agent (feature-documenter):  1.2k in · 0.6k out · 0.2k cached
- Primary (johnludlow-documenter): 2.0k in · 0.7k out · 0.3k cached
- Total:                           3.2k in · 1.3k out · 0.5k cached
-```
+See [Token Usage Reporting](../docs/plans/token-usage-reporting.md) — Primary Agent pattern.

@@ -178,24 +178,4 @@ If none are available, fall back to your own logic.
 
 ## Usage Reporting
 
-The TDD implementer MUST collect concise usage summaries from its sub-agents
-after the RED/GREEN/REFACTOR cycle completes and before final completion.
-On OpenCode, prefer `/tokenscope` for an authoritative recursive breakdown.
-On Copilot CLI, collect the primary agent's usage with `/usage`; use
-`/context` first if needed to confirm the active conversation/session before
-reporting. If platform-native telemetry is unavailable, aggregate sub-agent
-one-line summaries and present a final report. Do not block completion on
-telemetry availability.
-
-Example final report:
-
-```text
-── Usage Report ──────────────────────────────────
- Sub-agent (feature-tester):       2.0k in · 0.3k out · 0.1k cached
- Sub-agent (feature-implementer):  8.1k in · 2.2k out · 3.4k cached
- ─────────────────────────────────────────────────
- Primary (johnludlow-tdd-implementer): 12.3k in · 2.8k out · 3.5k cached
- ─────────────────────────────────────────────────
- Total:                               22.4k in · 5.3k out · 7.0k cached
- ─────────────────────────────────────────────────
-```
+See [Token Usage Reporting](../docs/plans/token-usage-reporting.md) — Primary Agent pattern.

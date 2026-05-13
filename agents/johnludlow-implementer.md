@@ -138,35 +138,4 @@ If none are available, fall back to your own logic.
 
 ## Usage Reporting
 
-This top-level agent MUST collect sub-agent usage summary lines and produce a
-final aggregated report prior to reporting completion. When available, prefer
-platform-native commands to obtain authoritative session metrics.
-
-### OpenCode
-
-Invoke `/tokenscope` for an aggregated session view. If `tokenscope` is
-available it will include recursive sub-agent analysis and a per-agent
-breakdown. Present a concise human-readable report such as:
-
-```text
-── Usage Report ──────────────────────────────────
- Sub-agent (feature-implementer):  8.1k in · 2.2k out · 3.4k cached
- Sub-agent (feature-tester):       2.0k in · 0.3k out · 0.1k cached
- ─────────────────────────────────────────────────
- Primary (johnludlow-implementer): 12.0k in · 3.0k out · 4.0k cached
- ─────────────────────────────────────────────────
- Total:                            22.1k in · 5.5k out · 7.5k cached
- ─────────────────────────────────────────────────
-```
-
-If `tokenscope` is unavailable, collect whatever sub-agent summaries were
-returned and call `session_info`/`session_list` as a best-effort fallback. Do
-not block completion if authoritative data is not available; note missing data
-in the report.
-
-### Copilot CLI
-
-Run `/usage` and `/context` near the end of the session to gather primary-agent
-token/context metrics, then combine those values with sub-agent summary lines
-into a single final report. Do not block completion if either command is
-unavailable; include available data and note any missing fields.
+See [Token Usage Reporting](../docs/plans/token-usage-reporting.md) — Primary Agent pattern.

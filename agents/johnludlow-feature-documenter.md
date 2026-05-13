@@ -88,25 +88,4 @@ If none are available, fall back to your own logic.
 
 ## Usage Reporting
 
-After documenting work, this agent SHOULD report its token usage to the
-delegating agent in a single-line summary. Prefer platform-native commands:
-run `/tokenscope` on OpenCode, or run built-in `/usage` and `/context` on
-Copilot CLI and return a combined single-line summary:
-
-```text
-/tokenscope
-```
-
-Copilot CLI combined summary example:
-
-```text
-[feature-documenter] Input: 1.2k · Output: 0.6k · Cached: 0.2k · Context: 38%
-```
-
-Example summary:
-
-```text
-[feature-documenter] Input: 1.2k · Output: 0.6k · Cached: 0.2k
-```
-
-If reporting tools are unavailable, return `Usage data unavailable`.
+See [Token Usage Reporting](../docs/plans/token-usage-reporting.md) — Sub-Agent pattern.

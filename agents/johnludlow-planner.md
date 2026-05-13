@@ -146,26 +146,4 @@ If none are available, fall back to your own logic.
 
 ## Usage Reporting
 
-The `johnludlow-planner` MUST collect usage summaries from its delegated
-sub-agents and present a concise aggregated snapshot before completing. In
-OpenCode, use `/tokenscope` when possible. In Copilot CLI, capture the primary
-agent's own usage with `/usage` and `/context`, then combine that with delegated
-sub-agent usage summaries in the structured report format. If platform-native
-telemetry is unavailable, collect sub-agent one-line summaries and present the
-best available aggregated report without blocking completion.
-
-Example:
-
-```text
-── Usage Report ──────────────────────────────────
- Sub-agent (feature-planner):     4.2k in · 0.8k out · 1.0k cached
- Sub-agent (feature-documenter):  1.2k in · 0.6k out · 0.2k cached
- ─────────────────────────────────────────────────
- Primary (johnludlow-planner):    6.0k in · 1.5k out · 1.8k cached
- ─────────────────────────────────────────────────
- Total:                            11.4k in · 2.9k out · 3.0k cached
- ─────────────────────────────────────────────────
-```
-
-If any sub-agent reports `Usage data unavailable`, note it and proceed; do not
-block plan completion on unavailable telemetry.
+See [Token Usage Reporting](../docs/plans/token-usage-reporting.md) — Primary Agent pattern.
