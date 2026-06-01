@@ -383,19 +383,29 @@ function mapPermissionToToolsSettings(permission) {
   if (permission.edit) {
     const allowedPaths = [];
     const deniedPaths = [];
+    let allowAll = false;
+
     for (const [pattern, action] of Object.entries(permission.edit)) {
       if (pattern === "*" && action === "allow") {
-        allowedPaths.length = 0;
-        allowedPaths.push("**");
-        break;
-      } else if (action === "allow") {
-        const converted = convertGlobToPath(pattern);
-        if (converted) allowedPaths.push(converted);
-      } else if (action === "deny") {
-        const converted = convertGlobToPath(pattern);
-        if (converted) deniedPaths.push(converted);
+        allowAll = true;
+        continue;
+      }
+
+      const converted = convertGlobToPath(pattern);
+      if (!converted) continue;
+
+      if (action === "deny") {
+        deniedPaths.push(converted);
+      } else if (action === "allow" && !allowAll) {
+        allowedPaths.push(converted);
       }
     }
+
+    if (allowAll) {
+      allowedPaths.length = 0;
+      allowedPaths.push("**");
+    }
+
     if (allowedPaths.length > 0 || deniedPaths.length > 0) {
       toolsSettings.fs_write = {};
       if (allowedPaths.length > 0) toolsSettings.fs_write.allowedPaths = allowedPaths;
@@ -407,14 +417,27 @@ function mapPermissionToToolsSettings(permission) {
   if (permission.bash) {
     const allowedCommands = [];
     const deniedCommands = [];
+    let allowAll = false;
+
     for (const [cmd, action] of Object.entries(permission.bash)) {
       // Convert cmd pattern (e.g., "git log*" → "git log*")
-      if (action === "allow") {
-        allowedCommands.push(cmd);
-      } else if (action === "deny") {
+      if (cmd === "*" && action === "allow") {
+        allowAll = true;
+        continue;
+      }
+
+      if (action === "deny") {
         deniedCommands.push(cmd);
+      } else if (action === "allow" && !allowAll) {
+        allowedCommands.push(cmd);
       }
     }
+
+    if (allowAll) {
+      allowedCommands.length = 0;
+      allowedCommands.push("*");
+    }
+
     if (allowedCommands.length > 0 || deniedCommands.length > 0) {
       toolsSettings.shell = {};
       if (allowedCommands.length > 0) toolsSettings.shell.allowedCommands = allowedCommands;
@@ -425,19 +448,34 @@ function mapPermissionToToolsSettings(permission) {
   // Map grep permission → grep_search allowedPaths
   if (permission.grep) {
     const allowedPaths = [];
+    const deniedPaths = [];
+    let allowAll = false;
+
     for (const [pattern, action] of Object.entries(permission.grep)) {
       if (pattern === "*" && action === "allow") {
-        allowedPaths.length = 0;
-        allowedPaths.push("**");
-        break;
+        allowAll = true;
+        continue;
       }
-      if (action === "allow") {
-        const converted = convertGlobToPath(pattern);
-        if (converted) allowedPaths.push(converted);
+
+      const converted = convertGlobToPath(pattern);
+      if (!converted) continue;
+
+      if (action === "deny") {
+        deniedPaths.push(converted);
+      } else if (action === "allow" && !allowAll) {
+        allowedPaths.push(converted);
       }
     }
-    if (allowedPaths.length > 0) {
-      toolsSettings.grep_search = { allowedPaths };
+
+    if (allowAll) {
+      allowedPaths.length = 0;
+      allowedPaths.push("**");
+    }
+
+    if (allowedPaths.length > 0 || deniedPaths.length > 0) {
+      toolsSettings.grep_search = {};
+      if (allowedPaths.length > 0) toolsSettings.grep_search.allowedPaths = allowedPaths;
+      if (deniedPaths.length > 0) toolsSettings.grep_search.deniedPaths = deniedPaths;
     }
   }
 
@@ -468,6 +506,13 @@ function convertGlobToPath(pattern) {
   }
   return pattern;
 }
+
+/**
+ * Check if a permission object has any non-deny rules.
+ * Used to determine if a tool should be included at all.
+ */
+const hasNonDenyRule = (obj) =>
+  obj && typeof obj === "object" && !Array.isArray(obj) && Object.values(obj).some((v) => v !== "deny");
 
 /**
  * Determine allowedTools based on permission keys present.
@@ -519,23 +564,29 @@ function determineAllowedTools(permission) {
 
 /**
  * Determine all tools the agent can use (for tools array).
+ * Only includes tools if there's at least one non-deny rule in the permission.
  * @param {object} permission - the permission object
  * @returns {string[]} array of tool names
  */
 function determineTools(permission) {
   const tools = [];
   
-  if (permission.read) tools.push("fs_read");
-  if (permission.edit || permission.write) tools.push("fs_write");
-  if (permission.bash) tools.push("shell");
-  if (permission.grep || permission.search) tools.push("grep_search");
-  if (permission.lsp) tools.push("lsp");
+  if (hasNonDenyRule(permission.read)) tools.push("fs_read");
+  if (hasNonDenyRule(permission.edit) || hasNonDenyRule(permission.write)) tools.push("fs_write");
+  if (hasNonDenyRule(permission.bash)) tools.push("shell");
+  if (hasNonDenyRule(permission.grep) || hasNonDenyRule(permission.search)) tools.push("grep_search");
+  if (permission.lsp && permission.lsp !== "deny") tools.push("lsp");
+  
   if (permission.webfetch && permission.webfetch !== "deny") {
     tools.push("web_fetch");
     tools.push("web_search");
     tools.push("remote_web_search");
   }
-  if (permission.task) tools.push("invoke_sub_agent");
+  
+  // Only enable sub-agent invocation if at least one target is explicitly allowed
+  if (hasNonDenyRule(permission.task) && Object.values(permission.task).some((v) => v === "allow")) {
+    tools.push("invoke_sub_agent");
+  }
   
   return tools;
 }
