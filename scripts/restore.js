@@ -24,13 +24,12 @@ const {
 function restorePlatform(platform, mode) {
   const config = PLATFORMS[platform];
   const targetDir = getTargetDirectory(platform, mode);
-  const isCopilot = platform === "copilot";
-  const managedSubDirs = isCopilot ? config.localManagedSubDirs : null;
+  const managedSubDirs = config.localManagedSubDirs || null;
 
   console.log(`\n${config.emoji} ${config.name}:`);
 
-  if (isCopilot && managedSubDirs) {
-    // For Copilot (local and global): handle managed subdirectories individually
+  if (managedSubDirs) {
+    // For platforms with managed subdirs (Copilot, Kiro): handle subdirectories individually
     let anyRestored = false;
 
     for (const subDirName of managedSubDirs) {
@@ -117,8 +116,9 @@ function restore() {
     // Restore both platforms
     const opencodePath = restorePlatform("opencode", mode);
     const copilotPath = restorePlatform("copilot", mode);
+    const kiroPath = restorePlatform("kiro", mode);
 
-    if (!opencodePath && !copilotPath) {
+    if (!opencodePath && !copilotPath && !kiroPath) {
       console.log("\nℹ️  No backups found for any platform");
       return;
     }
@@ -131,6 +131,9 @@ function restore() {
     }
     if (copilotPath) {
       console.log("   - GitHub Copilot: https://github.com/features/copilot");
+    }
+    if (kiroPath) {
+      console.log("   - Kiro: https://kiro.dev/docs/");
     }
   } catch (error) {
     console.error("\n❌ Restore failed:");

@@ -3,31 +3,18 @@
 /**
  * @johnludlow/agents List Script
  *
- * Lists all installed agents and skills in both OpenCode and GitHub Copilot formats.
+ * Lists all installed agents and skills in OpenCode, GitHub Copilot, and Kiro formats.
  */
 
 const fs = require("fs");
 const path = require("path");
-const os = require("os");
 
-// Configuration
-const OPENCODE_GLOBAL_DIR = path.join(os.homedir(), ".config", "opencode");
-const OPENCODE_LOCAL_DIR = path.join(process.cwd(), ".opencode");
-const COPILOT_GLOBAL_DIR = path.join(os.homedir(), ".copilot");
-const COPILOT_LOCAL_DIR = path.join(process.cwd(), ".github");
-
-/**
- * Determine installation mode (global vs local)
- */
-function getInstallMode() {
-  const isGlobalInstall = process.env.npm_config_global === "true";
-  return isGlobalInstall ? "global" : "local";
-}
+const { PLATFORMS, getInstallMode, getTargetDirectory } = require("./platform-utils.js");
 
 /**
  * List agents and skills in a directory
  */
-function listAgentsAndSkills(baseDir, agentType) {
+function listAgentsAndSkills(baseDir) {
   const agents = [];
   const agentsDir = path.join(baseDir, "agents");
   const skillsDir = path.join(baseDir, "skills");
@@ -54,6 +41,32 @@ function listAgentsAndSkills(baseDir, agentType) {
 }
 
 /**
+ * List installed components for a platform
+ */
+function listPlatform(platform, mode) {
+  const config = PLATFORMS[platform];
+  const targetDir = getTargetDirectory(platform, mode);
+
+  console.log(`${config.emoji} ${config.name}:`);
+  if (fs.existsSync(targetDir)) {
+    const items = listAgentsAndSkills(targetDir);
+    if (items.length > 0) {
+      items.forEach(item => {
+        console.log(`   📦 ${item.type.toUpperCase()} (${item.count})`);
+        item.files.forEach(file => {
+          console.log(`      • ${path.basename(file, ".md")}`);
+        });
+      });
+      console.log(`   📁 Location: ${targetDir}\n`);
+    } else {
+      console.log(`   ℹ️  No agents or skills installed\n`);
+    }
+  } else {
+    console.log(`   ℹ️  ${config.name} directory not found: ${targetDir}\n`);
+  }
+}
+
+/**
  * Main list function
  */
 function list() {
@@ -64,45 +77,9 @@ function list() {
     const mode = getInstallMode();
     console.log(`📍 Installation mode: ${mode}\n`);
 
-    // List OpenCode installation
-    console.log("🎯 OpenCode Format:");
-    const opencodeDir = mode === "global" ? OPENCODE_GLOBAL_DIR : OPENCODE_LOCAL_DIR;
-    if (fs.existsSync(opencodeDir)) {
-      const opencodeItems = listAgentsAndSkills(opencodeDir);
-      if (opencodeItems.length > 0) {
-        opencodeItems.forEach(item => {
-          console.log(`   📦 ${item.type.toUpperCase()} (${item.count})`);
-          item.files.forEach(file => {
-            console.log(`      • ${path.basename(file, ".md")}`);
-          });
-        });
-        console.log(`   📁 Location: ${opencodeDir}\n`);
-      } else {
-        console.log(`   ℹ️  No agents or skills installed\n`);
-      }
-    } else {
-      console.log(`   ℹ️  OpenCode directory not found: ${opencodeDir}\n`);
-    }
-
-    // List Copilot installation
-    console.log("🔌 GitHub Copilot Format:");
-    const copilotDir = mode === "global" ? COPILOT_GLOBAL_DIR : COPILOT_LOCAL_DIR;
-    if (fs.existsSync(copilotDir)) {
-      const copilotItems = listAgentsAndSkills(copilotDir);
-      if (copilotItems.length > 0) {
-        copilotItems.forEach(item => {
-          console.log(`   📦 ${item.type.toUpperCase()} (${item.count})`);
-          item.files.forEach(file => {
-            console.log(`      • ${path.basename(file, ".md")}`);
-          });
-        });
-        console.log(`   📁 Location: ${copilotDir}\n`);
-      } else {
-        console.log(`   ℹ️  No agents or skills installed\n`);
-      }
-    } else {
-      console.log(`   ℹ️  Copilot directory not found: ${copilotDir}\n`);
-    }
+    listPlatform("opencode", mode);
+    listPlatform("copilot", mode);
+    listPlatform("kiro", mode);
 
     // Summary and next steps
     console.log("📚 Management Commands:");
