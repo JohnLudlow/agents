@@ -517,7 +517,7 @@ function determineTools(permission) {
   if (permission.bash) tools.push("shell");
   if (permission.grep || permission.search) tools.push("grep_search");
   if (permission.lsp) tools.push("lsp");
-  if (permission.webfetch) {
+  if (permission.webfetch && permission.webfetch !== "deny") {
     tools.push("web_fetch");
     tools.push("web_search");
     tools.push("remote_web_search");
