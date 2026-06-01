@@ -346,7 +346,6 @@ function mapPermissionToToolsSettings(permission) {
   const toolsSettings = {};
 
   // Map read permission → fs_read allowedPaths
-  // Map read permission → fs_read allowedPaths
   if (permission.read) {
     const allowedPaths = [];
     const deniedPaths = [];
@@ -373,12 +372,6 @@ function mapPermissionToToolsSettings(permission) {
       allowedPaths.push("**");
     }
 
-    if (allowedPaths.length > 0 || deniedPaths.length > 0) {
-      toolsSettings.fs_read = {};
-      if (allowedPaths.length > 0) toolsSettings.fs_read.allowedPaths = allowedPaths;
-      if (deniedPaths.length > 0) toolsSettings.fs_read.deniedPaths = deniedPaths;
-    }
-  }
     if (allowedPaths.length > 0 || deniedPaths.length > 0) {
       toolsSettings.fs_read = {};
       if (allowedPaths.length > 0) toolsSettings.fs_read.allowedPaths = allowedPaths;
@@ -596,7 +589,6 @@ function buildKiroAgents() {
       prompt: `./${agentName}.md`,
       tools,
       allowedTools: allowedTools,
-    };
     };
 
     // Add toolsSettings if there are any path/command restrictions
