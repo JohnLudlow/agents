@@ -435,8 +435,9 @@ function mapPermissionToToolsSettings(permission) {
 
   // Map webfetch permission
   if (permission.webfetch) {
-    toolsSettings.web_fetch = { enabled: permission.webfetch === "allow" || permission.webfetch === true };
-    toolsSettings.web_search = { enabled: permission.webfetch === "allow" || permission.webfetch === true };
+    const enabled = permission.webfetch !== "deny";
+    toolsSettings.web_fetch = { enabled };
+    toolsSettings.web_search = { enabled };
   }
 
   return toolsSettings;
