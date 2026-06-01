@@ -574,8 +574,9 @@ function buildKiroAgents() {
       name: agentName,
       description: config.description,
       prompt: `./${agentName}.md`,
-      tools: tools.length > 0 ? tools : ["fs_read", "fs_write", "shell"],
+      tools,
       allowedTools: allowedTools,
+    };
     };
 
     // Add toolsSettings if there are any path/command restrictions
