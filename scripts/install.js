@@ -494,17 +494,13 @@ async function main() {
 
     // Build agent definitions from canonical source
     console.log("\n🔨 Building agent and skill definitions...");
-    try {
-      const { buildOpenCodeAgents, buildCopilotAgents, buildKiroAgents, buildOpenCodeSkills, buildCopilotSkills, buildKiroSkills } = require("./build-agents.js");
-      buildOpenCodeAgents();
-      buildCopilotAgents();
-      buildKiroAgents();
-      buildOpenCodeSkills();
-      buildCopilotSkills();
-      buildKiroSkills();
-    } catch (buildError) {
-      console.warn("   ⚠️  Could not build agents/skills, using pre-built versions");
-    }
+    const { buildOpenCodeAgents, buildCopilotAgents, buildKiroAgents, buildOpenCodeSkills, buildCopilotSkills, buildKiroSkills } = require("./build-agents.js");
+    buildOpenCodeAgents();
+    buildCopilotAgents();
+    buildKiroAgents();
+    buildOpenCodeSkills();
+    buildCopilotSkills();
+    buildKiroSkills();
 
     // Check if OpenCode is available
     const openCodeAvailable = checkOpenCodeInstalled();
