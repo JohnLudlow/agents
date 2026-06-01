@@ -47,13 +47,13 @@ function removeEmptyParentDirectory(targetDir) {
 function uninstallPlatform(platform, mode) {
   const config = PLATFORMS[platform];
   const targetDir = getTargetDirectory(platform, mode);
-  const isCopilot = platform === "copilot";
-  const managedSubDirs = isCopilot ? config.localManagedSubDirs : null;
+  const managedSubDirs = config.localManagedSubDirs || null;
 
   console.log(`\n${config.emoji} Uninstalling from ${config.name}...`);
 
-  if (isCopilot && managedSubDirs) {
-    // For Copilot (local and global): only remove managed subdirs to avoid deleting other platform content
+  if (managedSubDirs) {
+    // For platforms with managed subdirs (Copilot, Kiro): only remove managed subdirs
+    // to avoid deleting other platform content
     let anyRemoved = false;
     for (const subDirName of managedSubDirs) {
       const subDir = path.join(targetDir, subDirName);
@@ -124,9 +124,10 @@ function uninstall() {
     const mode = getInstallMode();
     console.log(`\n📍 Installation mode: ${mode}`);
 
-    // Uninstall both platforms
+    // Uninstall all platforms
     uninstallPlatform("opencode", mode);
     uninstallPlatform("copilot", mode);
+    uninstallPlatform("kiro", mode);
 
     console.log("\n✨ Uninstallation complete!");
     console.log("\n📚 Note:");

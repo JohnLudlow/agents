@@ -147,22 +147,20 @@ function copyDirectory(source, target, { skipReadme = true, skipJson = false } =
 /**
  * Backup existing directory or subdirectories
  *
- * For Copilot (both local and global): backs up only managed subdirectories
- * individually to avoid affecting workflows, issue templates, and other
- * platform metadata.
+ * For platforms with localManagedSubDirs (Copilot, Kiro): backs up only managed
+ * subdirectories individually to avoid affecting other platform metadata.
  *
  * For other platforms: backs up by copying the entire directory.
  * Uses copy instead of move to preserve originals during backup.
  */
 function backupExistingDirectory(targetDir, platform, mode) {
   const platformConfig = PLATFORMS[platform];
-  const isCopilot = platform === "copilot";
-  const managedSubDirs = isCopilot ? platformConfig.localManagedSubDirs : null;
+  const managedSubDirs = platformConfig.localManagedSubDirs || null;
 
-  if (isCopilot && managedSubDirs) {
-    // For Copilot (both local and global): backup only managed subdirectories
-    // individually. This preserves other content like config.json, IDE settings,
-    // plugins, etc.
+  if (managedSubDirs) {
+    // For platforms with managed subdirs (Copilot, Kiro): backup only those
+    // subdirectories individually. This preserves other content like config.json,
+    // IDE settings, plugins, etc.
     const backups = [];
     for (const subDir of managedSubDirs) {
       const subDirPath = path.join(targetDir, subDir);

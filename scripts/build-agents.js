@@ -618,10 +618,7 @@ function buildKiroAgents() {
 
     // Load the standard config (contains permission, description, etc.)
     const config = loadConfig(agentName, sourceDir, "agent");
-    if (!config) {
-      console.warn(`  ⚠️  Skipping ${file} - missing or invalid config`);
-      return;
-    }
+    if (!config) throw new Error(`Missing or invalid sidecar for agent: ${agentName}`);
 
     // Read the canonical markdown content
     const content = fs.readFileSync(sourcePath, "utf8");
