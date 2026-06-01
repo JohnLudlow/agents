@@ -6,10 +6,10 @@
  * Generates format-specific agent and skill definitions from canonical sources:
  * - agents/*.md (canonical source) → opencode/agents/*.md (with OpenCode YAML frontmatter)
  * - agents/*.md (canonical source) → .github/agents/*.md (with Copilot YAML frontmatter)
- * - agents/*.md (canonical source) → kiro-ide/agents/*.json + kiro-ide/agents/*.md (Kiro JSON config + markdown prompt)
+ * - agents/*.md (canonical source) → kiro/agents/*.json + kiro/agents/*.md (Kiro CLI JSON config + IDE markdown prompt)
  * - skills/*.md (canonical source) → opencode/skills/*.md (plain markdown)
  * - skills/*.md (canonical source) → .github/skills/*.md (with Copilot YAML frontmatter)
- * - skills/*.md (canonical source) → kiro-ide/skills/*.md (Kiro skills)
+ * - skills/*.md (canonical source) → kiro/skills/*.md (Kiro skills)
  *
  * Per-agent/skill configuration lives in JSON sidecar files next to each markdown:
  *   agents/johnludlow-planner.json  ← description, mode, temperature, permissions
