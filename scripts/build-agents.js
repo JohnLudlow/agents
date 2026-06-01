@@ -346,24 +346,39 @@ function mapPermissionToToolsSettings(permission) {
   const toolsSettings = {};
 
   // Map read permission → fs_read allowedPaths
+  // Map read permission → fs_read allowedPaths
   if (permission.read) {
     const allowedPaths = [];
     const deniedPaths = [];
+    let allowAll = false;
+
     for (const [pattern, action] of Object.entries(permission.read)) {
       if (pattern === "*" && action === "allow") {
-        // Special case: "*": "allow" means allow all paths
-        allowedPaths.length = 0; // Clear any specific paths
-        allowedPaths.push("**");
-        break;
-      } else if (action === "allow") {
-        // Convert glob pattern to path format
-        const converted = convertGlobToPath(pattern);
-        if (converted) allowedPaths.push(converted);
-      } else if (action === "deny") {
-        const converted = convertGlobToPath(pattern);
-        if (converted) deniedPaths.push(converted);
+        allowAll = true;
+        continue;
+      }
+
+      const converted = convertGlobToPath(pattern);
+      if (!converted) continue;
+
+      if (action === "deny") {
+        deniedPaths.push(converted);
+      } else if (action === "allow" && !allowAll) {
+        allowedPaths.push(converted);
       }
     }
+
+    if (allowAll) {
+      allowedPaths.length = 0;
+      allowedPaths.push("**");
+    }
+
+    if (allowedPaths.length > 0 || deniedPaths.length > 0) {
+      toolsSettings.fs_read = {};
+      if (allowedPaths.length > 0) toolsSettings.fs_read.allowedPaths = allowedPaths;
+      if (deniedPaths.length > 0) toolsSettings.fs_read.deniedPaths = deniedPaths;
+    }
+  }
     if (allowedPaths.length > 0 || deniedPaths.length > 0) {
       toolsSettings.fs_read = {};
       if (allowedPaths.length > 0) toolsSettings.fs_read.allowedPaths = allowedPaths;
