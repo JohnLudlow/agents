@@ -199,8 +199,19 @@ function uninstallMcps(mode, { purge = false } = {}) {
     // Expected shapes written by writeCopilotMcpConfig.
     // Only remove entries whose key fields match so user-managed config is not clobbered.
     const expectedCopilotEntries = {
-      "context7": (e) => e && e.type === "http" && e.url === "https://mcp.context7.com/mcp/oauth",
-      "gamedev":  (e) => e && e.command === "npx" && Array.isArray(e.args) && e.args[0] === "-y" && e.args[1] === "gamecodex",
+      "context7": (e) => e
+        && e.type === "http"
+        && e.url === "https://mcp.context7.com/mcp/oauth"
+        && Array.isArray(e.tools)
+        && e.tools.length === 2
+        && e.tools[0] === "query-docs"
+        && e.tools[1] === "resolve-library-id",
+      "gamedev": (e) => e
+        && e.command === "npx"
+        && Array.isArray(e.args)
+        && e.args.length === 2
+        && e.args[0] === "-y"
+        && e.args[1] === "gamecodex",
     };
 
     try {
@@ -248,9 +259,24 @@ function uninstallMcps(mode, { purge = false } = {}) {
     // Expected shapes written by writeOpenCodeMcpConfig.
     // Only remove entries whose key fields match so user-managed config is not clobbered.
     const expectedOcEntries = {
-      "context7":  (e) => e && e.type === "remote" && e.url === "https://mcp.context7.com/mcp/oauth",
-      "github-mcp": (e) => e && e.type === "remote" && e.url === "https://api.githubcopilot.com/mcp/",
-      "gamecodex":  (e) => e && e.type === "local" && Array.isArray(e.command) && e.command[0] === "npx" && e.command[1] === "-y" && e.command[2] === "gamecodex",
+      "context7": (e) => e
+        && e.type === "remote"
+        && e.url === "https://mcp.context7.com/mcp/oauth"
+        && e.enabled === true,
+      "github-mcp": (e) => e
+        && e.type === "remote"
+        && e.url === "https://api.githubcopilot.com/mcp/"
+        && e.enabled === true
+        && e.headers
+        && typeof e.headers.Authorization === "string",
+      "gamecodex": (e) => e
+        && e.type === "local"
+        && e.enabled === true
+        && Array.isArray(e.command)
+        && e.command.length === 3
+        && e.command[0] === "npx"
+        && e.command[1] === "-y"
+        && e.command[2] === "gamecodex",
     };
 
     const removedOcKeys = Object.keys(expectedOcEntries).filter(k => {
