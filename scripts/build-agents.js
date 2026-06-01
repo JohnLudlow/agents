@@ -335,22 +335,7 @@ function buildCopilotSkills() {
 // KIRO BUILD FUNCTIONS
 // ============================================================================
 
-/**
- * Tool name mapping from our permission keys to Kiro tool names
- */
-const TOOL_MAPPING = {
-  read: "fs_read",
-  edit: "fs_write",
-  write: "fs_write",
-  bash: "shell",
-  shell: "shell",
-  grep: "grep_search",
-  search: "grep_search",
-  lsp: "lsp",
-  webfetch: "web_fetch",
-  web: "web_search",
-  task: "invoke_sub_agent",
-};
+// (No tool-name mapping table needed here; the Kiro tool names are emitted directly below.)
 
 /**
  * Map our permission object to Kiro toolsSettings.
