@@ -6,8 +6,10 @@
  * Generates format-specific agent and skill definitions from canonical sources:
  * - agents/*.md (canonical source) → opencode/agents/*.md (with OpenCode YAML frontmatter)
  * - agents/*.md (canonical source) → .github/agents/*.md (with Copilot YAML frontmatter)
+ * - agents/*.md (canonical source) → kiro-ide/agents/*.json + kiro-ide/agents/*.md (Kiro JSON config + markdown prompt)
  * - skills/*.md (canonical source) → opencode/skills/*.md (plain markdown)
  * - skills/*.md (canonical source) → .github/skills/*.md (with Copilot YAML frontmatter)
+ * - skills/*.md (canonical source) → kiro-ide/skills/*.md (Kiro skills)
  *
  * Per-agent/skill configuration lives in JSON sidecar files next to each markdown:
  *   agents/johnludlow-planner.json  ← description, mode, temperature, permissions
@@ -330,6 +332,469 @@ function buildCopilotSkills() {
 }
 
 // ============================================================================
+// KIRO BUILD FUNCTIONS
+// ============================================================================
+
+/**
+ * Tool name mapping from our permission keys to Kiro tool names
+ */
+const TOOL_MAPPING = {
+  read: "fs_read",
+  edit: "fs_write",
+  write: "fs_write",
+  bash: "shell",
+  shell: "shell",
+  grep: "grep_search",
+  search: "grep_search",
+  lsp: "lsp",
+  webfetch: "web_fetch",
+  web: "web_search",
+  task: "invoke_sub_agent",
+};
+
+/**
+ * Map our permission object to Kiro toolsSettings.
+ * @param {object} permission - the permission object from the sidecar
+ * @returns {object} toolsSettings for Kiro
+ */
+function mapPermissionToToolsSettings(permission) {
+  const toolsSettings = {};
+
+  // Map read permission → fs_read allowedPaths
+  if (permission.read) {
+    const allowedPaths = [];
+    const deniedPaths = [];
+    for (const [pattern, action] of Object.entries(permission.read)) {
+      if (pattern === "*" && action === "allow") {
+        // Special case: "*": "allow" means allow all paths
+        allowedPaths.length = 0; // Clear any specific paths
+        allowedPaths.push("**");
+        break;
+      } else if (action === "allow") {
+        // Convert glob pattern to path format
+        const converted = convertGlobToPath(pattern);
+        if (converted) allowedPaths.push(converted);
+      } else if (action === "deny") {
+        const converted = convertGlobToPath(pattern);
+        if (converted) deniedPaths.push(converted);
+      }
+    }
+    if (allowedPaths.length > 0 || deniedPaths.length > 0) {
+      toolsSettings.fs_read = {};
+      if (allowedPaths.length > 0) toolsSettings.fs_read.allowedPaths = allowedPaths;
+      if (deniedPaths.length > 0) toolsSettings.fs_read.deniedPaths = deniedPaths;
+    }
+  }
+
+  // Map edit permission → fs_write allowedPaths
+  if (permission.edit) {
+    const allowedPaths = [];
+    const deniedPaths = [];
+    for (const [pattern, action] of Object.entries(permission.edit)) {
+      if (pattern === "*" && action === "allow") {
+        allowedPaths.length = 0;
+        allowedPaths.push("**");
+        break;
+      } else if (action === "allow") {
+        const converted = convertGlobToPath(pattern);
+        if (converted) allowedPaths.push(converted);
+      } else if (action === "deny") {
+        const converted = convertGlobToPath(pattern);
+        if (converted) deniedPaths.push(converted);
+      }
+    }
+    if (allowedPaths.length > 0 || deniedPaths.length > 0) {
+      toolsSettings.fs_write = {};
+      if (allowedPaths.length > 0) toolsSettings.fs_write.allowedPaths = allowedPaths;
+      if (deniedPaths.length > 0) toolsSettings.fs_write.deniedPaths = deniedPaths;
+    }
+  }
+
+  // Map bash/shell permission → shell allowedCommands
+  if (permission.bash) {
+    const allowedCommands = [];
+    const deniedCommands = [];
+    for (const [cmd, action] of Object.entries(permission.bash)) {
+      // Convert cmd pattern (e.g., "git log*" → "git log*")
+      if (action === "allow") {
+        allowedCommands.push(cmd);
+      } else if (action === "deny") {
+        deniedCommands.push(cmd);
+      }
+    }
+    if (allowedCommands.length > 0 || deniedCommands.length > 0) {
+      toolsSettings.shell = {};
+      if (allowedCommands.length > 0) toolsSettings.shell.allowedCommands = allowedCommands;
+      if (deniedCommands.length > 0) toolsSettings.shell.deniedCommands = deniedCommands;
+    }
+  }
+
+  // Map grep permission → grep_search allowedPaths
+  if (permission.grep) {
+    const allowedPaths = [];
+    for (const [pattern, action] of Object.entries(permission.grep)) {
+      if (action === "allow") {
+        const converted = convertGlobToPath(pattern);
+        if (converted) allowedPaths.push(converted);
+      }
+    }
+    if (allowedPaths.length > 0) {
+      toolsSettings.grep_search = { allowedPaths };
+    }
+  }
+
+  // Map lsp permission
+  if (permission.lsp) {
+    toolsSettings.lsp = { enabled: permission.lsp === "allow" || permission.lsp === true };
+  }
+
+  // Map webfetch permission
+  if (permission.webfetch) {
+    toolsSettings.web_fetch = { enabled: permission.webfetch === "allow" || permission.webfetch === true };
+    toolsSettings.web_search = { enabled: permission.webfetch === "allow" || permission.webfetch === true };
+  }
+
+  return toolsSettings;
+}
+
+/**
+ * Convert glob patterns to path patterns for Kiro.
+ * E.g., "docs/plans/*" → "docs/plans/**", "*.env" → "*.env"
+ */
+function convertGlobToPath(pattern) {
+  if (!pattern) return null;
+  // If it ends with /*, convert to /** for directory matching
+  if (pattern.endsWith("/*")) {
+    return pattern.slice(0, -1) + "**";
+  }
+  return pattern;
+}
+
+/**
+ * Determine allowedTools based on permission keys present.
+ * @param {object} permission - the permission object
+ * @returns {string[]} array of tool names that don't require prompting
+ */
+function determineAllowedTools(permission) {
+  const tools = [];
+  
+  // If read has "*": "allow", add fs_read
+  if (permission.read && permission.read["*"] === "allow") {
+    tools.push("fs_read");
+  }
+  
+  // If edit has "*": "allow", add fs_write
+  if (permission.edit && permission.edit["*"] === "allow") {
+    tools.push("fs_write");
+  }
+  
+  // If bash has "*": "allow", add shell
+  if (permission.bash && permission.bash["*"] === "allow") {
+    tools.push("shell");
+  }
+  
+  // If grep has "*": "allow", add grep_search
+  if (permission.grep && permission.grep["*"] === "allow") {
+    tools.push("grep_search");
+  }
+  
+  // If lsp is allow, add lsp
+  if (permission.lsp === "allow") {
+    tools.push("lsp");
+  }
+  
+  // If webfetch is allow, add web tools
+  if (permission.webfetch === "allow") {
+    tools.push("web_fetch");
+    tools.push("web_search");
+    tools.push("remote_web_search");
+  }
+  
+  // If task is present with any "*": "allow", add invoke_sub_agent
+  if (permission.task && permission.task["*"] === "allow") {
+    tools.push("invoke_sub_agent");
+  }
+  
+  return tools;
+}
+
+/**
+ * Determine all tools the agent can use (for tools array).
+ * @param {object} permission - the permission object
+ * @returns {string[]} array of tool names
+ */
+function determineTools(permission) {
+  const tools = [];
+  
+  if (permission.read) tools.push("fs_read");
+  if (permission.edit || permission.write) tools.push("fs_write");
+  if (permission.bash) tools.push("shell");
+  if (permission.grep || permission.search) tools.push("grep_search");
+  if (permission.lsp) tools.push("lsp");
+  if (permission.webfetch) {
+    tools.push("web_fetch");
+    tools.push("web_search");
+    tools.push("remote_web_search");
+  }
+  if (permission.task) tools.push("invoke_sub_agent");
+  
+  return tools;
+}
+
+/**
+ * Build Kiro agent definitions (both CLI and IDE formats).
+ * Generates into a single kiro/ directory:
+ * - kiro/agents/{name}.json - Kiro CLI configuration
+ * - kiro/agents/{name}.md - Agent prompt with YAML frontmatter (works for both CLI and IDE)
+ * 
+ * Kiro CLI reads the .json files, Kiro IDE reads .md files with frontmatter.
+ */
+function buildKiroAgents() {
+  console.log("🧠 Building Kiro agent definitions (CLI + IDE)...\n");
+
+  const sourceDir = path.join(__dirname, "..", "agents");
+  const targetDir = path.join(__dirname, "..", "kiro", "agents");
+
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+
+  const agentFiles = fs.readdirSync(sourceDir).filter((f) => f.endsWith(".md"));
+
+  let generated = 0;
+  agentFiles.forEach((file) => {
+    const sourcePath = path.join(sourceDir, file);
+    const agentName = path.basename(file, ".md");
+
+    // Load the standard config (contains permission, description, etc.)
+    const config = loadConfig(agentName, sourceDir, "agent");
+    if (!config) {
+      console.warn(`  ⚠️  Skipping ${file} - missing or invalid config`);
+      return;
+    }
+
+    // Read the canonical markdown content
+    const content = fs.readFileSync(sourcePath, "utf8");
+
+    // Auto-map permission to Kiro toolsSettings
+    const toolsSettings = mapPermissionToToolsSettings(config.permission || {});
+    
+    // Determine allowedTools and all available tools
+    const allowedTools = determineAllowedTools(config.permission || {});
+    const tools = determineTools(config.permission || {});
+
+    // === Generate JSON config file for Kiro CLI ===
+    const jsonConfig = {
+      name: agentName,
+      description: config.description,
+      prompt: `./${agentName}.md`,
+      tools: tools.length > 0 ? tools : ["fs_read", "fs_write", "shell"],
+      allowedTools: allowedTools,
+    };
+
+    // Add toolsSettings if there are any path/command restrictions
+    if (Object.keys(toolsSettings).length > 0) {
+      jsonConfig.toolsSettings = toolsSettings;
+    }
+
+    const jsonPath = path.join(targetDir, `${agentName}.json`);
+    fs.writeFileSync(jsonPath, JSON.stringify(jsonConfig, null, 2));
+
+    // === Generate markdown file with YAML frontmatter for Kiro IDE ===
+    const yamlLines = [
+      "---",
+      `name: ${yamlQuote(agentName)}`,
+      `description: ${yamlQuote(config.description)}`,
+    ];
+
+    // Add tools
+    if (tools.length > 0) {
+      yamlLines.push("tools:");
+      tools.forEach(t => yamlLines.push(`  - ${t}`));
+    }
+
+    // Add allowedTools
+    if (allowedTools.length > 0) {
+      yamlLines.push("allowedTools:");
+      allowedTools.forEach(t => yamlLines.push(`  - ${t}`));
+    }
+
+    // Add toolsSettings as YAML
+    if (Object.keys(toolsSettings).length > 0) {
+      yamlLines.push("toolsSettings:");
+      for (const [tool, settings] of Object.entries(toolsSettings)) {
+        yamlLines.push(`  ${tool}:`);
+        if (settings.allowedPaths) {
+          yamlLines.push("    allowedPaths:");
+          settings.allowedPaths.forEach(p => yamlLines.push(`      - ${yamlQuote(p)}`));
+        }
+        if (settings.deniedPaths) {
+          yamlLines.push("    deniedPaths:");
+          settings.deniedPaths.forEach(p => yamlLines.push(`      - ${yamlQuote(p)}`));
+        }
+        if (settings.allowedCommands) {
+          yamlLines.push("    allowedCommands:");
+          settings.allowedCommands.forEach(c => yamlLines.push(`      - ${yamlQuote(c)}`));
+        }
+        if (settings.deniedCommands) {
+          yamlLines.push("    deniedCommands:");
+          settings.deniedCommands.forEach(c => yamlLines.push(`      - ${yamlQuote(c)}`));
+        }
+        if (settings.enabled !== undefined) {
+          yamlLines.push(`    enabled: ${settings.enabled}`);
+        }
+      }
+    }
+
+    yamlLines.push("---");
+
+    const mdPath = path.join(targetDir, `${agentName}.md`);
+    fs.writeFileSync(mdPath, `${yamlLines.join("\n")}\n\n${content}`);
+
+    console.log(`  ✓ Generated ${agentName}.json + ${agentName}.md`);
+    generated++;
+  });
+
+  console.log(`✓ Kiro agent definitions built to ${targetDir} (${generated} agents)\n`);
+}
+
+/**
+ * Build Kiro IDE agent definitions from canonical source.
+ * Generates:
+ * - kiro-ide/agents/{name}.md - Kiro IDE format with YAML frontmatter
+ */
+function buildKiroIdeAgents() {
+  console.log("🧠 Building Kiro IDE agent definitions...");
+
+  const sourceDir = path.join(__dirname, "..", "agents");
+  const targetDir = path.join(__dirname, "..", "kiro-ide", "agents");
+
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+
+  const agentFiles = fs.readdirSync(sourceDir).filter((f) => f.endsWith(".md"));
+
+  let generated = 0;
+  agentFiles.forEach((file) => {
+    const sourcePath = path.join(sourceDir, file);
+    const agentName = path.basename(file, ".md");
+
+    // Load the standard config
+    const config = loadConfig(agentName, sourceDir, "agent");
+    if (!config) {
+      console.warn(`  ⚠️  Skipping ${file} - missing or invalid config`);
+      return;
+    }
+
+    // Read the canonical markdown content
+    const content = fs.readFileSync(sourcePath, "utf8");
+
+    // Auto-map permission to Kiro toolsSettings
+    const toolsSettings = mapPermissionToToolsSettings(config.permission || {});
+    
+    // Determine allowedTools and all available tools
+    const allowedTools = determineAllowedTools(config.permission || {});
+    const tools = determineTools(config.permission || {});
+
+    // Generate YAML frontmatter for Kiro IDE
+    const yamlLines = [
+      "---",
+      `name: ${yamlQuote(agentName)}`,
+      `description: ${yamlQuote(config.description)}`,
+    ];
+
+    // Add tools (map our tool names to Kiro's tool names)
+    if (tools.length > 0) {
+      yamlLines.push("tools:");
+      tools.forEach(t => yamlLines.push(`  - ${t}`));
+    }
+
+    // Add allowedTools
+    if (allowedTools.length > 0) {
+      yamlLines.push("allowedTools:");
+      allowedTools.forEach(t => yamlLines.push(`  - ${t}`));
+    }
+
+    // Add toolsSettings as YAML
+    if (Object.keys(toolsSettings).length > 0) {
+      yamlLines.push("toolsSettings:");
+      for (const [tool, settings] of Object.entries(toolsSettings)) {
+        yamlLines.push(`  ${tool}:`);
+        if (settings.allowedPaths) {
+          yamlLines.push("    allowedPaths:");
+          settings.allowedPaths.forEach(p => yamlLines.push(`      - ${yamlQuote(p)}`));
+        }
+        if (settings.deniedPaths) {
+          yamlLines.push("    deniedPaths:");
+          settings.deniedPaths.forEach(p => yamlLines.push(`      - ${yamlQuote(p)}`));
+        }
+        if (settings.allowedCommands) {
+          yamlLines.push("    allowedCommands:");
+          settings.allowedCommands.forEach(c => yamlLines.push(`      - ${yamlQuote(c)}`));
+        }
+        if (settings.deniedCommands) {
+          yamlLines.push("    deniedCommands:");
+          settings.deniedCommands.forEach(c => yamlLines.push(`      - ${yamlQuote(c)}`));
+        }
+        if (settings.enabled !== undefined) {
+          yamlLines.push(`    enabled: ${settings.enabled}`);
+        }
+      }
+    }
+
+    yamlLines.push("---");
+
+    const mdPath = path.join(targetDir, `${agentName}.md`);
+    fs.writeFileSync(mdPath, `${yamlLines.join("\n")}\n\n${content}`);
+
+    console.log(`  ✓ Generated ${agentName}.md`);
+    generated++;
+  });
+
+  console.log(`✓ Kiro IDE agent definitions built to ${targetDir} (${generated} agents)\n`);
+}
+
+/**
+ * Build Kiro skill definitions (for both CLI and IDE).
+ * Generates into a single kiro/skills directory.
+ * Kiro CLI and IDE both read plain markdown skills from the same location.
+ */
+function buildKiroSkills() {
+  console.log("🧠 Building Kiro skill definitions...");
+
+  const sourceDir = path.join(__dirname, "..", "skills");
+  const targetDir = path.join(__dirname, "..", "kiro", "skills");
+
+  if (!fs.existsSync(sourceDir)) {
+    console.log(`  ℹ️  No skills directory found at ${sourceDir}`);
+    return;
+  }
+
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+
+  const skillFiles = fs.readdirSync(sourceDir).filter((f) => f.endsWith(".md"));
+
+  if (skillFiles.length === 0) {
+    console.log("  ℹ️  No skill files found");
+    return;
+  }
+
+  skillFiles.forEach((file) => {
+    const sourcePath = path.join(sourceDir, file);
+    const targetPath = path.join(targetDir, file);
+
+    const content = fs.readFileSync(sourcePath, "utf8");
+    fs.writeFileSync(targetPath, content);
+    console.log(`  ✓ Generated ${file}`);
+  });
+
+  console.log(`✓ Kiro skill definitions built to ${targetDir}\n`);
+}
+
+// ============================================================================
 // MAIN
 // ============================================================================
 
@@ -371,10 +836,14 @@ function build() {
       process.exit(1);
     }
 
+    // Kiro config is auto-generated from permission mapping, no validation needed
+
     buildOpenCodeAgents();
     buildCopilotAgents();
+    buildKiroAgents();
     buildOpenCodeSkills();
     buildCopilotSkills();
+    buildKiroSkills();
 
     console.log("✨ Build complete!");
     console.log("\n📁 Generated files:");
@@ -382,6 +851,8 @@ function build() {
     console.log(`  - opencode/skills/*.md (plain markdown)`);
     console.log(`  - .github/agents/*.md (with Copilot YAML frontmatter)`);
     console.log(`  - .github/skills/*.md (with Copilot YAML frontmatter)`);
+    console.log(`  - kiro/agents/*.json + kiro/agents/*.md (Kiro CLI + IDE, same directory)`);
+    console.log(`  - kiro/skills/*.md (Kiro skills)`);
   } catch (error) {
     console.error("\n❌ Build failed:");
     console.error(error.message);
@@ -394,4 +865,12 @@ if (require.main === module) {
   build();
 }
 
-module.exports = { buildOpenCodeAgents, buildCopilotAgents, buildOpenCodeSkills, buildCopilotSkills };
+module.exports = {
+  buildOpenCodeAgents,
+  buildCopilotAgents,
+  buildOpenCodeSkills,
+  buildCopilotSkills,
+  buildKiroAgents,
+  buildKiroSkills,
+  loadConfig,
+};

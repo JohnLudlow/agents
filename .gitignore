@@ -54,6 +54,7 @@ opencode/
 .opencode.johnludlow-backup-*
 .github/agents.johnludlow-backup-*/*
 .github/skills.johnludlow-backup-*/*
+.kiro.johnludlow-backup-*
 
 # Packages
 johnludlow-agents-*.tgz
@@ -64,5 +65,9 @@ johnludlow-agents-*.tgz
 .copilot/.johnludlow-backup-*
 .github/agents/
 .github/skills/
+.kiro
+/kiro/
+kiro-cli
+kiro-ide
 
 .rumdl_cache/

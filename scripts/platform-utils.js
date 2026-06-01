@@ -38,6 +38,25 @@ const PLATFORMS = {
     // to avoid affecting workflows, issue templates, and other .github metadata
     localManagedSubDirs: ["agents", "skills"],
   },
+  "kiro": {
+    name: "Kiro",
+    emoji: "🧠",
+    // Kiro uses the same directory for both CLI and IDE:
+    // - Local: .kiro/ (project workspace)
+    // - Global: varies by OS:
+    //   - Windows: %APPDATA%/Kiro/
+    //   - macOS: ~/Library/Application Support/Kiro/
+    //   - Linux: ~/.config/kiro/
+    // Kiro CLI reads .json files, Kiro IDE reads .md files with frontmatter
+    globalDir: process.platform === "win32" 
+      ? path.join(os.homedir(), "AppData", "Roaming", "Kiro")
+      : process.platform === "darwin"
+        ? path.join(os.homedir(), "Library", "Application Support", "Kiro")
+        : path.join(os.homedir(), ".config", "kiro"),
+    localDir: (cwd) => path.join(cwd, ".kiro"),
+    requiresConfig: false,
+    localManagedSubDirs: ["agents", "skills"],
+  },
 };
 
 // ============================================================================

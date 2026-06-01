@@ -33,6 +33,8 @@ const SOURCE_DIRS = {
   canonicalSkills: path.join(__dirname, "..", "skills"),
   opencodeAgents: path.join(__dirname, "..", "opencode", "agents"),
   opencodeConfig: path.join(__dirname, "..", "opencode"),
+  kiroAgents: path.join(__dirname, "..", "kiro", "agents"),
+  kiroSkills: path.join(__dirname, "..", "kiro", "skills"),
 };
 
 // ============================================================================
@@ -52,6 +54,9 @@ function getSourceAgentsDir(platform) {
   if (platform === "copilot") {
     return path.join(__dirname, "..", ".github", "agents");
   }
+  if (platform === "kiro") {
+    return SOURCE_DIRS.kiroAgents;
+  }
   throw new Error(`Unknown platform: ${platform}`);
 }
 
@@ -64,6 +69,9 @@ function getSourceAgentsDir(platform) {
 function getSourceSkillsDir(platform) {
   if (platform === "copilot") {
     return path.join(__dirname, "..", ".github", "skills");
+  }
+  if (platform === "kiro") {
+    return SOURCE_DIRS.kiroSkills;
   }
   return SOURCE_DIRS.canonicalSkills;
 }
@@ -113,8 +121,8 @@ function installPlatform(platform, mode) {
     fs.mkdirSync(targetDir, { recursive: true });
   }
 
-  // For Copilot: remove old managed subdirectories before installing new ones
-  if (platform === "copilot" && config.localManagedSubDirs) {
+  // For Copilot and Kiro: remove old managed subdirectories before installing new ones
+  if ((platform === "copilot" || platform === "kiro") && config.localManagedSubDirs) {
     for (const subDir of config.localManagedSubDirs) {
       const subDirPath = path.join(targetDir, subDir);
       if (fs.existsSync(subDirPath)) {
@@ -127,12 +135,22 @@ function installPlatform(platform, mode) {
   const agentsDir = path.join(targetDir, "agents");
   const skillsDir = path.join(targetDir, "skills");
 
+  // Determine whether to copy JSON files (Kiro needs both .json and .md files)
+  const skipJson = platform !== "kiro";
+
   // Install agents
   if (fs.existsSync(sourceAgentsDir)) {
     console.log("  → Installing agents...");
-    copyDirectory(sourceAgentsDir, agentsDir, { skipJson: true });
-    const count = countMarkdownFiles(agentsDir);
-    console.log(`    ✓ Installed ${count} agents`);
+    copyDirectory(sourceAgentsDir, agentsDir, { skipJson });
+    if (platform === "kiro") {
+      // Count both JSON and MD files for Kiro (CLI reads .json, IDE reads .md)
+      const jsonCount = fs.existsSync(agentsDir) ? fs.readdirSync(agentsDir).filter(f => f.endsWith('.json')).length : 0;
+      const mdCount = fs.existsSync(agentsDir) ? fs.readdirSync(agentsDir).filter(f => f.endsWith('.md')).length : 0;
+      console.log(`    ✓ Installed ${jsonCount} CLI configs + ${mdCount} IDE prompts`);
+    } else {
+      const count = countMarkdownFiles(agentsDir);
+      console.log(`    ✓ Installed ${count} agents`);
+    }
   }
 
   // Install skills
@@ -429,7 +447,7 @@ function installOpenCodePlugins(mode) {
 /**
  * Display next steps
  */
-function displayNextSteps(opencodePath, copilotPath, mode) {
+function displayNextSteps(opencodePath, copilotPath, kiroPath, mode) {
   console.log("\n📚 Next steps:");
   console.log("\n1. Agents and skills installed successfully!");
 
@@ -443,14 +461,20 @@ function displayNextSteps(opencodePath, copilotPath, mode) {
   console.log("   - Agents and skills are ready to use immediately");
   console.log("   - Configure in: .github/copilot/config.yml");
 
-  console.log("\n4. Additional commands:");
+  console.log("\n4. For Kiro (CLI + IDE):");
+  console.log(`   - ${mode === "global" ? "Global" : "Local"} installation: ${kiroPath}`);
+  console.log("   - Kiro CLI reads .json files, Kiro IDE reads .md files with frontmatter");
+  console.log("   - Both share the same directory, use 'discloseContext' for skills");
+
+  console.log("\n5. Additional commands:");
   console.log("   - npm run restore     : Restore from backup");
   console.log("   - npm run uninstall   : Remove installations");
   console.log("   - npm run list        : Show installed agents/skills");
 
-  console.log("\n5. Documentation:");
+  console.log("\n6. Documentation:");
   console.log("   - OpenCode: https://opencode.ai/docs");
   console.log("   - GitHub Copilot: https://github.com/features/copilot");
+  console.log("   - Kiro: https://kiro.dev/docs/cli/");
 }
 
 // ============================================================================
@@ -471,11 +495,13 @@ async function main() {
     // Build agent definitions from canonical source
     console.log("\n🔨 Building agent and skill definitions...");
     try {
-      const { buildOpenCodeAgents, buildCopilotAgents, buildOpenCodeSkills, buildCopilotSkills } = require("./build-agents.js");
+      const { buildOpenCodeAgents, buildCopilotAgents, buildKiroAgents, buildOpenCodeSkills, buildCopilotSkills, buildKiroSkills } = require("./build-agents.js");
       buildOpenCodeAgents();
       buildCopilotAgents();
+      buildKiroAgents();
       buildOpenCodeSkills();
       buildCopilotSkills();
+      buildKiroSkills();
     } catch (buildError) {
       console.warn("   ⚠️  Could not build agents/skills, using pre-built versions");
     }
@@ -486,11 +512,13 @@ async function main() {
       console.log("   Note: Installing to local .opencode directory");
     }
 
-    // Install both platforms
+    // Install all platforms
     const opencodePath = installPlatform("opencode", mode);
     installOpenCodeConfig(mode);
     console.log("");
     const copilotPath = installPlatform("copilot", mode);
+    console.log("");
+    const kiroPath = installPlatform("kiro", mode);
 
     // Install OpenCode plugins
     installOpenCodePlugins(mode);
@@ -499,7 +527,7 @@ async function main() {
     installCopilotPlugins();
 
     // Display next steps
-    displayNextSteps(opencodePath, copilotPath, mode);
+    displayNextSteps(opencodePath, copilotPath, kiroPath, mode);
 
     console.log("\n✨ Installation successful!");
   } catch (error) {
