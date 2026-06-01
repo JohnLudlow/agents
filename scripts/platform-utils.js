@@ -48,8 +48,8 @@ const PLATFORMS = {
     //   - macOS: ~/Library/Application Support/Kiro/
     //   - Linux: ~/.config/kiro/
     // Kiro CLI reads .json files, Kiro IDE reads .md files with frontmatter
-    globalDir: process.platform === "win32" 
-      ? path.join(os.homedir(), "AppData", "Roaming", "Kiro")
+    globalDir: process.platform === "win32"
+      ? path.join(process.env.APPDATA ?? path.join(os.homedir(), "AppData", "Roaming"), "Kiro")
       : process.platform === "darwin"
         ? path.join(os.homedir(), "Library", "Application Support", "Kiro")
         : path.join(os.homedir(), ".config", "kiro"),
