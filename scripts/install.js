@@ -849,8 +849,7 @@ function displayNextSteps(opencodePath, copilotPath, mode) {
   console.log("   - For context-7: run `opencode mcp auth context7` to authenticate.");
   console.log("   - For github-mcp-server: ensure OC_GITHUB_PAT environment variable is set.");
   console.log("   - Local npx MCPs (gamecodex): launched on-demand by the host.");
-  console.log("   - Local MCPs (mslearn, nuget): start with pm2 or appropriate supervisor.");
-  console.log("   - Verify local MCPs with: curl http://localhost:<port>/healthz");
+  console.log("   - No additional locally managed MCP services are installed by this script.");
 
   console.log("\n5. Additional commands:");
   console.log("   - npm run restore     : Restore from backup");
