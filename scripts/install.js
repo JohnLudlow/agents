@@ -12,7 +12,6 @@
 const fs = require("fs");
 const path = require("path");
 const net = require("net");
-const { spawnSync } = require("child_process");
 
 const {
   BACKUP_SUFFIX,
