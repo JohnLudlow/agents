@@ -692,7 +692,9 @@ async function installMcps(mode) {
   if (failed.length > 0) {
     console.log(`\n   ⚠️  ${failed.length} MCP(s) failed:`);
     failed.forEach(m => console.log(`     • ${m.name} (${m.reason})`));
-    console.log("\n   See docs/plans/add-mcps-alongside-agents.md → Rollback and Error Handling");
+    console.log(
+      `\n   Review the warnings above for details. If you need to roll back, restore any backup files ending in ${BACKUP_SUFFIX}.`,
+    );
   }
 
   // NOTE: Process supervision (pm2 / systemd) is the implementer's responsibility;
