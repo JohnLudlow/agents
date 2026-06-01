@@ -433,6 +433,11 @@ function mapPermissionToToolsSettings(permission) {
   if (permission.grep) {
     const allowedPaths = [];
     for (const [pattern, action] of Object.entries(permission.grep)) {
+      if (pattern === "*" && action === "allow") {
+        allowedPaths.length = 0;
+        allowedPaths.push("**");
+        break;
+      }
       if (action === "allow") {
         const converted = convertGlobToPath(pattern);
         if (converted) allowedPaths.push(converted);
