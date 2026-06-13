@@ -1,18 +1,23 @@
-name: 'Build'
-description: 'Build @johnludlow/agents NPM package'
+name: "Build"
+description: "Build @johnludlow/agents NPM package"
 
 inputs:
   version:
-    description: 'Version to set in package.json'
+    description: "Version to set in package.json"
     required: true
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '22'
+        node-version: "22"
+
+    - name: Install APM
+      shell: pwsh
+      run: |
+        Invoke-RestMethod https://aka.ms/apm-windows | Invoke-Expression
 
     - name: Update apm.yml version
       shell: bash
