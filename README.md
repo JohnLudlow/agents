@@ -539,7 +539,8 @@ johnludlow-code-quality skill:
 
 Contributions are welcome! Please follow these guidelines:
 
-1. **Edit canonical sources** in `.apm/` primitives (`.apm/agents/` and `.apm/skills/`) or the legacy `agents/`/`skills/` sources if present (do not edit generated files in `.github/` or `opencode/`)
+1. **Edit canonical sources** in `.apm/` primitives (`.apm/agents/` and `.apm/skills/`) or the legacy `agents/`/`skills/`
+   sources if present (do not edit generated files in `.github/` or `opencode/`)
 2. Ensure all markdown files pass markdownlint validation
 3. Run `npm run build:agents` to generate format-specific versions
 4. Test installation: `npm install` (from package directory)

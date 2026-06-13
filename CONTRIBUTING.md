@@ -122,28 +122,33 @@ When creating or updating templates:
 Quick checklist before opening a pull request:
 
 - Markdown validation
+
   ```bash
   npx rumdl check .
   ```
 
 - Package validation (APM validator)
+
   ```bash
   node scripts/validate-apm-package.js
   ```
 
 - Compile / pack (if APM CLI is available)
+
   ```bash
   apm compile
   apm pack --dry-run
   ```
 
 - Local install for runtime testing
+
   ```bash
   apm install "C:\src\git\gh\JohnLudlow\agents"   # Windows
   apm install ./                                      # macOS / Linux
   ```
 
 - Reproducible installs (lockfile)
+
   ```bash
   apm install --update    # refresh apm.lock.yaml locally
   git add apm.lock.yaml && git commit -m "chore: update apm.lock.yaml"
@@ -151,8 +156,12 @@ Quick checklist before opening a pull request:
   ```
 
 Notes
-- The authoritative validator is `node scripts/validate-apm-package.js`. It checks frontmatter, required fields, and common packaging issues.
-- `apm compile` and `apm pack` provide additional runtime-target checks when the APM CLI is installed locally; CI will run these when available but falls back to a tarball artifact otherwise.
+
+- The authoritative validator is `node scripts/validate-apm-package.js`. It checks frontmatter, required fields, and
+  common packaging issues.
+
+- `apm compile` and `apm pack` provide additional runtime-target checks when the APM CLI is installed locally; CI will
+  run these when available but falls back to a tarball artifact otherwise.
 
 ### Installing and testing locally (detailed)
 
@@ -180,18 +189,23 @@ apm install ./
 ```
 
 After installation inspect the installed outputs (examples):
+
 - `.github/agents/` and `.github/skills/` — Copilot-ready files
 - `opencode/agents/` and `opencode/skills/` — OpenCode-ready files
 
 4) Test in GitHub Copilot
+
 - Open Copilot Chat in VS Code (or GitHub.com) and select the agent from the picker.
 
 5) Test in OpenCode
+
 - Launch OpenCode and select the installed agent; verify permissions and behaviour.
 
 6) Cleanup / restore
-- If you need to remove installed artifacts created by `apm install`, delete the generated harness files (for example `.github/agents/` or `opencode/agents/`) or use your system's package uninstall path if available.
 
+- If you need to remove installed artifacts created by `apm install`, delete the generated harness
+  files (for example `.github/agents/` or `opencode/agents/`) or use your system's package uninstall
+  path if available.1
 
 ## Pull Request Guidelines
 
@@ -218,43 +232,56 @@ After installation inspect the installed outputs (examples):
 
 ### Adding a New Agent
 
-Preferred authoring location: `.apm/agents/` — create an APM agent primitive named `johnludlow-[agent-name].agent.md` that includes YAML frontmatter (description, temperature, mode, permissions) followed by the agent body.
+Preferred authoring location: `.apm/agents/` — create an APM agent primitive named `johnludlow-[agent-name].agent.md`
+that includes YAML frontmatter (description, temperature, mode, permissions) followed by the agent body.
 
 1. Create `.apm/agents/johnludlow-[agent-name].agent.md` with YAML frontmatter and the agent markdown body.
 2. Follow the standard agent schema (include Description, Purpose, Inputs, Outputs, Requirements, Capabilities, Restrictions).
 3. Validate the package and compile locally:
+
    ```bash
    node scripts/validate-apm-package.js
    apm compile   # optional, requires apm CLI
    ```
+
 4. Install locally for runtime testing:
+
    ```bash
    apm install ./
    ```
+
 5. Test the agent in Copilot and/or OpenCode (see Installing and Testing Locally above).
 6. Update `README.md` with the new agent and open a PR.
 
-> Back-compat: If you prefer the legacy source format (separate `.md` + `.json` sidecar in `agents/`), include both files, but note the repository now prefers APM primitives in `.apm/` and the build scripts that converted sidecars have been removed.
+> Back-compat: If you prefer the legacy source format (separate `.md` + `.json` sidecar in `agents/`), include both
+  files, but note the repository now prefers APM primitives in `.apm/` and the build scripts that converted sidecars have
+  been removed.
 
 ### Adding a New Skill
 
-Preferred authoring location: `.apm/skills/` — create an APM skill primitive named `johnludlow-[skill-name].skill.md` with YAML frontmatter (`description`) followed by the skill markdown body.
+Preferred authoring location: `.apm/skills/` — create an APM skill primitive named `johnludlow-[skill-name].skill.md`
+with YAML frontmatter (`description`) followed by the skill markdown body.
 
 1. Create `.apm/skills/johnludlow-[skill-name].skill.md` with YAML frontmatter and the skill markdown body.
 2. Follow the standard skill structure (Overview, Key principles, Examples).
 3. Validate and compile:
+
    ```bash
    node scripts/validate-apm-package.js
    apm compile   # optional
    ```
+
 4. Install locally for runtime testing:
+
    ```bash
    apm install ./
    ```
+
 5. Test the skill in Copilot and/or OpenCode (see Installing and Testing Locally above).
 6. Update `README.md` with the new skill and open a PR.
 
-> Back-compat: Legacy `skills/*.md` + `skills/*.json` sidecars are supported for reference, but new contributions should prefer the `.apm/` primitives.
+> Back-compat: Legacy `skills/*.md` + `skills/*.json` sidecars are supported for reference, but new contributions should
+  prefer the `.apm/` primitives.
 
 ### Adding a New Template
 
@@ -270,7 +297,9 @@ Releases are handled by GitHub Actions and are driven by semantic versioning (Gi
 
 How the version number is updated
 
-- CI (recommended): the `.github/actions/setup` step runs GitVersion to calculate a semantic version based on commit history; this `semVer` is passed to the build job and is used to update `apm.yml` during the CI run.
+- CI (recommended): the `.github/actions/setup` step runs GitVersion to calculate a semantic version based on commit
+  history; this `semVer` is passed to the build job and is used to update `apm.yml` during the CI run.
+
 - Manual release: create a signed (or annotated) tag locally and push it:
 
 ```bash
@@ -278,21 +307,28 @@ git tag -a v1.2.3 -m "Release v1.2.3"
 git push origin v1.2.3
 ```
 
-  Pushing a release tag triggers the release job in the workflow. CI will generate artifacts, create a GitHub Release, and attach packaged artifacts.
+  Pushing a release tag triggers the release job in the workflow. CI will generate artifacts, create a GitHub Release,
+  and attach packaged artifacts.
 
-- Local testing / ad-hoc bump: to test a version locally you can edit the `version:` field in `apm.yml` and run `apm pack` or create a local tag, but the recommended release flow is to rely on CI/GitVersion so versioning is consistent across contributors.
+- Local testing / ad-hoc bump: to test a version locally you can edit the `version:` field in `apm.yml` and run
+  `apm pack` or create a local tag, but the recommended release flow is to rely on CI/GitVersion so versioning is
+  consistent across contributors.
 
 Packaging & artifacts
 
-- CI will attempt to run `apm pack` when the APM CLI is available on the runner. If `apm` is not present, the build action falls back to creating a tarball of `apm.yml` and the `.apm/` layout.
+- CI will attempt to run `apm pack` when the APM CLI is available on the runner. If `apm` is not present, the build
+  action falls back to creating a tarball of `apm.yml` and the `.apm/` layout.
+
 - Artifacts include the APM package (`*.apm`) or fallback tarball, and generated Copilot/OpenCode outputs when applicable.
 
 Best practices
 
-- Prefer tagging with `vMAJOR.MINOR.PATCH` for releases — this is the most consistent way to produce a well-known package version for consumers.
-- Commit `apm.lock.yaml` after running `apm install --update` to lock resolved SHAs for reproducible installs in CI.
-- Do not manually modify CI-generated tags — create a new tag if you need a new release.
+- Prefer tagging with `vMAJOR.MINOR.PATCH` for releases — this is the most consistent way to produce a well-known
+  package version for consumers.
 
+- Commit `apm.lock.yaml` after running `apm install --update` to lock resolved SHAs for reproducible installs in CI.
+
+- Do not manually modify CI-generated tags — create a new tag if you need a new release.
 
 ## Questions or Issues?
 

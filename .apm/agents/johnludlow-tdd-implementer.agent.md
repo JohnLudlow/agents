@@ -137,7 +137,7 @@ The agent MUST:
 - Invoke the adversarial reviewer before reporting work as complete
 - Work from an approved plan
 
-## The agent MUST NOT:
+## The agent MUST NOT
 
 - Write implementation code before corresponding tests exist
 - Skip the verification step after each phase
