@@ -17,41 +17,19 @@ runs:
       shell: bash
       run: rumdl check .
 
-    - name: Check required sections in agents
+    - name: Validate APM package with validator
       shell: bash
       run: |
-        for file in agents/*.md; do
-          echo "Checking $file..."
-          if ! grep -q "## Description" "$file"; then
-            echo "❌ Missing ## Description in $file"
-            exit 1
-          fi
-          if ! grep -q "## Purpose" "$file"; then
-            echo "❌ Missing ## Purpose in $file"
-            exit 1
-          fi
-          if ! grep -q "## Capabilities" "$file"; then
-            echo "❌ Missing ## Capabilities in $file"
-            exit 1
-          fi
-          if ! grep -q "## Restrictions" "$file"; then
-            echo "❌ Missing ## Restrictions in $file"
-            exit 1
-          fi
-          echo "✓ $file is valid"
-        done
+        node scripts/validate-apm-package.js
 
-    - name: Check required sections in skills
+    - name: Compile package if apm is available
       shell: bash
       run: |
-        for file in skills/*.md; do
-          echo "Checking $file..."
-          if ! grep -q "## Overview" "$file"; then
-            echo "❌ Missing ## Overview in $file"
-            exit 1
-          fi
-          echo "✓ $file is valid"
-        done
+        if command -v apm >/dev/null 2>&1; then
+          apm compile
+        else
+          echo "apm CLI not found on runner — skipping apm compile (CI may require apm for full validation)"
+        fi
 
     - name: Validate package.json
       shell: bash

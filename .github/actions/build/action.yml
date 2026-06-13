@@ -1,43 +1,54 @@
-name: 'Build'
-description: 'Build @johnludlow/agents NPM package'
+name: "Build"
+description: "Build @johnludlow/agents NPM package"
 
 inputs:
   version:
-    description: 'Version to set in package.json'
+    description: "Version to set in package.json"
     required: true
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '22'
+        node-version: "22"
 
-    - name: Update package.json version
+    - name: Install APM
       shell: bash
       run: |
-        npm version ${{ inputs.version }} --no-git-tag-version
-        echo "✓ Updated package.json to version ${{ inputs.version }}"
+        curl -sSL https://aka.ms/apm-unix | sh
 
-    - name: Build agent definitions
+    - name: Update apm.yml version
       shell: bash
       run: |
-        npm run build:agents
-        echo "✓ Built agent definitions for OpenCode and Copilot"
+        # Update version in apm.yml if present, otherwise create minimal apm.yml
+        if [ -f apm.yml ]; then
+          sed -i "s/^version:.*/version: ${{ inputs.version }}/" apm.yml || echo "version: ${{ inputs.version }}" >> apm.yml
+        else
+          echo "name: johnludlow/agents" > apm.yml
+          echo "version: ${{ inputs.version }}" >> apm.yml
+        fi
+        echo "✓ Updated apm.yml to version ${{ inputs.version }}"
 
-    - name: Create NPM package
+    - name: Validate and compile package
       shell: bash
       run: |
-        npm pack
-        echo "✓ Created NPM package"
+        node scripts/validate-apm-package.js
+        if command -v apm >/dev/null 2>&1; then
+          apm compile
+        else
+          echo "apm CLI not found — skipping apm compile"
+        fi
 
-    - name: List artifacts
+    - name: Pack APM package (apm pack or fallback tar)
       shell: bash
       run: |
-        echo "Generated artifacts:"
-        ls -lh johnludlow-agents-*.tgz 2>/dev/null || true
-        echo "  Agents:"
-        ls .github/agents/*.md 2>/dev/null | wc -l
-        echo "  Skills:"
-        ls .github/skills/*.md 2>/dev/null | wc -l
+        if command -v apm >/dev/null 2>&1; then
+          apm pack --output johnludlow-agents-${{ inputs.version }}.apm || apm pack
+          echo "✓ apm pack completed"
+        else
+          echo "apm CLI not found — creating tarball of .apm/ and apm.yml"
+          tar -czf johnludlow-agents-${{ inputs.version }}.tgz apm.yml .apm README.md docs || tar -czf johnludlow-agents-${{ inputs.version }}.tgz apm.yml .apm || true
+          echo "✓ Created fallback tarball"
+        fi

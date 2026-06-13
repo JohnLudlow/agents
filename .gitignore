@@ -21,6 +21,8 @@ dist/
 !.github/workflows/
 !.github/agents/
 
+.github/plugin/
+
 # Node
 node_modules/
 npm-debug.log
@@ -71,3 +73,8 @@ kiro-cli
 kiro-ide
 
 .rumdl_cache/
+
+
+# APM dependencies
+apm_modules/
+AGENTS.md

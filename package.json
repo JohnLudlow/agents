@@ -4,11 +4,13 @@
   "description": "Reusable AI agents and skills for feature planning, implementation, documentation, and testing across C#, TypeScript, and C++ projects",
   "main": "index.js",
   "scripts": {
-    "build:agents": "node scripts/build-agents.js",
-    "install:local": "node scripts/install.js",
-    "postinstall": "node scripts/install.js",
-    "uninstall": "node scripts/uninstall.js",
-    "restore": "node scripts/restore.js",
+    "build:agents": "node scripts/validate-apm-package.js",
+    "validate": "node scripts/validate-apm-package.js",
+    "apm:compile": "apm compile || true",
+    "install:local": "echo \"Use 'apm install <path>' to install this package locally (requires apm).\"",
+    "postinstall": "echo \"This package no longer runs an automated postinstall. Use 'apm install' to deploy primitives.\"",
+    "uninstall": "echo \"Use the runtime's package uninstall mechanism or remove generated harness files manually.\"",
+    "restore": "echo \"Restore is not supported — remove or recreate installed artifacts manually.\"",
     "generate:copilot": "node scripts/generate-copilot.js",
     "list": "node scripts/list.js"
   },

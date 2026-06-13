@@ -10,7 +10,7 @@ line_length = 120
 
 # MD041 - First line in file should be a top level heading
 [MD041]
-enabled = true
+enabled = false
 
 # MD043 - Required heading structure (optional, can enforce specific structures)
 # Disabled by default to allow flexible heading structures

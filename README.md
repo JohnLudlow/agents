@@ -291,14 +291,13 @@ copilot chat -a johnludlow-tester "Run all tests for the auth module"
 ### Available Commands
 
 ```bash
-# Build format-specific agents from canonical source
-npm run build:agents
+# Validate package and primitives
+node scripts/validate-apm-package.js
+# (optional) If you have the APM CLI installed:
+# apm compile && apm pack --dry-run
 
-# Install (run automatically on npm install, but can be run manually)
-npm run install:local
-
-# Restore from latest backup
-npm run restore
+# Install locally with APM (preferred for runtime testing)
+# apm install ./
 
 # Show CLI help
 npx @johnludlow/agents help
@@ -462,14 +461,13 @@ This approach ensures:
 ### Commands
 
 ```bash
-# Build format-specific agents from canonical source
-npm run build:agents
+# Validate package and primitives
+node scripts/validate-apm-package.js
+# (optional) If you have the APM CLI installed:
+# apm compile && apm pack --dry-run
 
-# Install agents (includes build step automatically)
-npm install
-
-# Install locally in current project
-npm run install:local
+# Install locally with APM (preferred for runtime testing)
+# apm install ./
 ```
 
 ## Configuration
@@ -541,7 +539,8 @@ johnludlow-code-quality skill:
 
 Contributions are welcome! Please follow these guidelines:
 
-1. **Edit canonical sources** in `agents/` or `skills/` directories (not the generated files)
+1. **Edit canonical sources** in `.apm/` primitives (`.apm/agents/` and `.apm/skills/`) or the legacy `agents/`/`skills/`
+   sources if present (do not edit generated files in `.github/` or `opencode/`)
 2. Ensure all markdown files pass markdownlint validation
 3. Run `npm run build:agents` to generate format-specific versions
 4. Test installation: `npm install` (from package directory)

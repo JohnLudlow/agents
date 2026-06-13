@@ -10,3 +10,6 @@ opencode/agents/*.md
 
 # Node modules
 node_modules/
+
+# Ignore opencode backups and generated opencode.* directories
+.opencode*

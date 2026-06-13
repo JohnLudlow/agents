@@ -1,0 +1,15 @@
+name: johnludlow/agents-apm
+version: 0.0.1-poc
+description: "POC APM package containing the johnludlow-implementer agent for local apm installs and testing"
+# Optional: targets users can force during install; apm auto-detects targets if omitted
+targets:
+  - copilot
+  - opencode
+  - kiro
+
+# scripts are optional; keep validate helper for local checks
+scripts:
+  validate: node scripts/validate-apm-package.js
+
+dependencies:
+  apm: []
