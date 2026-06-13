@@ -17,7 +17,7 @@ runs:
     - name: Install APM
       shell: pwsh
       run: |
-        Invoke-RestMethod https://aka.ms/apm-windows | Invoke-Expression
+        Invoke-RestMethod https://aka.ms/apm-unix | Invoke-Expression
 
     - name: Update apm.yml version
       shell: bash
