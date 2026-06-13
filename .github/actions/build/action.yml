@@ -15,9 +15,9 @@ runs:
         node-version: "22"
 
     - name: Install APM
-      shell: pwsh
+      shell: bash
       run: |
-        Invoke-RestMethod https://aka.ms/apm-unix | Invoke-Expression
+        curl -sSL https://aka.ms/apm-unix | sh
 
     - name: Update apm.yml version
       shell: bash
