@@ -71,3 +71,8 @@ kiro-cli
 kiro-ide
 
 .rumdl_cache/
+
+
+# APM dependencies
+apm_modules/
+AGENTS.md

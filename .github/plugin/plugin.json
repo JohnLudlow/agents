@@ -1,0 +1,5 @@
+{
+  "name": "johnludlow/agents-apm",
+  "version": "0.0.1-poc",
+  "description": "POC APM package containing the johnludlow-implementer agent for local apm installs and testing"
+}

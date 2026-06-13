@@ -1,0 +1,29 @@
+lockfile_version: '1'
+generated_at: '2026-06-13T14:53:42.610188+00:00'
+dependencies: []
+local_deployed_files:
+- .github/agents/johnludlow-documenter.agent.md
+- .github/agents/johnludlow-feature-documenter.agent.md
+- .github/agents/johnludlow-feature-implementer.agent.md
+- .github/agents/johnludlow-feature-planner.agent.md
+- .github/agents/johnludlow-feature-reviewer.agent.md
+- .github/agents/johnludlow-feature-tester.agent.md
+- .github/agents/johnludlow-implementer.agent.md
+- .github/agents/johnludlow-planner.agent.md
+- .github/agents/johnludlow-tdd-implementer.agent.md
+- .github/agents/johnludlow-tester.agent.md
+- .github/instructions/csharp-style.instructions.md
+- .kiro/steering/csharp-style.md
+local_deployed_file_hashes:
+  .github/agents/johnludlow-documenter.agent.md: sha256:0b40d971d9ebf7ba765386c87cc4f593f779109c38bc3b9aa96c7d0c628115ec
+  .github/agents/johnludlow-feature-documenter.agent.md: sha256:1a523bbb7187be6534dcd9621a7c38f40022711dff1d173e4c8895103935485c
+  .github/agents/johnludlow-feature-implementer.agent.md: sha256:ad57c4409bdfcfc19ed4694ada03c21ac4c6da80e80110300530ea9e2753e787
+  .github/agents/johnludlow-feature-planner.agent.md: sha256:c7836e02609aba022c2fe96e4b941ffd024aa59497d9f10ade3803a3545ff0b4
+  .github/agents/johnludlow-feature-reviewer.agent.md: sha256:31bff817b5a7d3294ae3226e60caf76991b66ce280443c54421da7f76154d96e
+  .github/agents/johnludlow-feature-tester.agent.md: sha256:ef12acf7411a5dfb82d01e6b1037fd918cd4b4af9b8b7750fa13b78012d20239
+  .github/agents/johnludlow-implementer.agent.md: sha256:ee4a3190af4078a426def8f5dca0df3ca62dc2f592b96b7f3aa0261e2943f9b7
+  .github/agents/johnludlow-planner.agent.md: sha256:b13c348ffd30f624edeb6e86c66e595f08338adb6d1f47508805508acf55f389
+  .github/agents/johnludlow-tdd-implementer.agent.md: sha256:900d89bd0d79c5c6b8e1013f8125dc7537cab8f3ce7ea9f492ce81c3d15cc7d6
+  .github/agents/johnludlow-tester.agent.md: sha256:c1491f51f16c8cac8f813df30d3ffb6a67271d810f77e780b38aeaa48fd87afd
+  .github/instructions/csharp-style.instructions.md: sha256:a36b536cce76e3f517e15f52587708013d2a3c07e5bb32f62e173763a061f33f
+  .kiro/steering/csharp-style.md: sha256:902b870e58703d450954ff97462f6c76ec12e6fc10859a437d11324d2ef88409

@@ -1,0 +1,12 @@
+{
+  "version": "1",
+  "exit_code": 0,
+  "summary": {
+    "files_scanned": 12,
+    "files_affected": 0,
+    "critical": 0,
+    "warning": 0,
+    "info": 0
+  },
+  "findings": []
+}

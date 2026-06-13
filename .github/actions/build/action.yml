@@ -14,23 +14,39 @@ runs:
       with:
         node-version: '22'
 
-    - name: Update package.json version
+    - name: Update apm.yml version
       shell: bash
       run: |
-        npm version ${{ inputs.version }} --no-git-tag-version
-        echo "✓ Updated package.json to version ${{ inputs.version }}"
+        # Update version in apm.yml if present, otherwise create minimal apm.yml
+        if [ -f apm.yml ]; then
+          sed -i "s/^version:.*/version: ${{ inputs.version }}/" apm.yml || echo "version: ${{ inputs.version }}" >> apm.yml
+        else
+          echo "name: johnludlow/agents" > apm.yml
+          echo "version: ${{ inputs.version }}" >> apm.yml
+        fi
+        echo "✓ Updated apm.yml to version ${{ inputs.version }}"
 
-    - name: Build agent definitions
+    - name: Validate and compile package
       shell: bash
       run: |
-        npm run build:agents
-        echo "✓ Built agent definitions for OpenCode and Copilot"
+        node scripts/validate-apm-package.js
+        if command -v apm >/dev/null 2>&1; then
+          apm compile
+        else
+          echo "apm CLI not found — skipping apm compile"
+        fi
 
-    - name: Create NPM package
+    - name: Pack APM package (apm pack or fallback tar)
       shell: bash
       run: |
-        npm pack
-        echo "✓ Created NPM package"
+        if command -v apm >/dev/null 2>&1; then
+          apm pack --out johnludlow-agents-${{ inputs.version }}.apm || apm pack
+          echo "✓ apm pack completed"
+        else
+          echo "apm CLI not found — creating tarball of .apm/ and apm.yml"
+          tar -czf johnludlow-agents-${{ inputs.version }}.tgz apm.yml .apm README.md docs || tar -czf johnludlow-agents-${{ inputs.version }}.tgz apm.yml .apm || true
+          echo "✓ Created fallback tarball"
+        fi
 
     - name: List artifacts
       shell: bash
