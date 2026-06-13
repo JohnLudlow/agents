@@ -52,13 +52,3 @@ runs:
           tar -czf johnludlow-agents-${{ inputs.version }}.tgz apm.yml .apm README.md docs || tar -czf johnludlow-agents-${{ inputs.version }}.tgz apm.yml .apm || true
           echo "✓ Created fallback tarball"
         fi
-
-    - name: List artifacts
-      shell: bash
-      run: |
-        echo "Generated artifacts:"
-        ls -lh johnludlow-agents-*.tgz 2>/dev/null || true
-        echo "  Agents:"
-        ls .github/agents/*.md 2>/dev/null | wc -l
-        echo "  Skills:"
-        ls .github/skills/*.md 2>/dev/null | wc -l
