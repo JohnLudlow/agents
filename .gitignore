@@ -21,6 +21,8 @@ dist/
 !.github/workflows/
 !.github/agents/
 
+.github/plugin/
+
 # Node
 node_modules/
 npm-debug.log
