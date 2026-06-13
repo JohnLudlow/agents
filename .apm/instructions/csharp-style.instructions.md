@@ -33,7 +33,7 @@ public class my_class           // should be MyClass
 {
     private int myField = 0;    // should be _myField
     public void MYMETHOD(       // should be MyMethod
-        MyParam                 // should be myParam
+        int MyParam             // should be myParam
     )      
     {
         int _myLocal = 123;     // should be myLocal
@@ -43,17 +43,15 @@ public class my_class           // should be MyClass
 
 Good example:
 
-Bad example:
-
 ```csharp
-public class MyClass            // should be MyClass
+public class MyClass
 {
-    private int _myField = 0;   // should be _myField
-    public void MyMethod(       // should be MyMethod
-        myParam                 // should be myParam
-    )      
+    private int _myField = 0;
+    public void MyMethod(
+        int myParam
+    )
     {
-        int myLocal = 123;      // should be myLocal
+        int myLocal = 123;
     }
 }
 ```
