@@ -32,14 +32,28 @@ without approval prompts where the harness supports them:
 - Codegraph exploration tools (`codegraph_codegraph_explore`,
   `codegraph_codegraph_node`, `codegraph_codegraph_search`)
 
-Within the current issue scope, non-planner agents may use read-only provider
-commands for context only:
+### Provider Command Allowlists
+
+For provider interactions, agents may use only the following commands:
+
+- **Read-only context** (planner and non-planner agents):
+  - `gh issue list*`
+  - `gh issue view*`
+  - `az boards query*`
+  - `az boards work-item show*`
+- **Approval-gated writes** (planner agents only):
+  - `gh issue create*`
+  - `gh issue edit*`
+  - `az boards work-item create*`
+  - `az boards work-item update*`
+
+Non-planner agents may use read-only provider commands for context only:
 
 - `gh issue list`, `gh issue view`
 - `az boards query`, `az boards work-item show`
 
 Provider-native create and update actions remain out of scope for non-planner
-agents in this change.
+agents unless a later change explicitly expands that scope.
 
 ## Top-Level Agent Permissions
 
@@ -66,6 +80,7 @@ Top-level agents orchestrate work by delegating to sub-agents. They have restric
 - Cannot modify source code
 - Cannot commit, push, pull, rebase, or merge changes
 - Cannot create, delete, or modify git branches
+- Cannot perform provider writes without explicit approval
 - Cannot run build or test commands
 
 ### Implementer (`johnludlow-implementer`)
@@ -167,6 +182,7 @@ Sub-agents perform the actual work delegated by top-level agents.
 - Cannot modify source code
 - Cannot commit, push, pull, rebase, or merge changes
 - Cannot create, delete, or modify git branches
+- Cannot perform provider writes without explicit approval
 - Cannot run build or test commands
 - Cannot modify configuration files
 
@@ -345,7 +361,7 @@ The planner can:
 
 - Read all code files
 - Write the plan to `/docs/plans/authentication-plan.md`
-- Create a GitHub issue with the plan
+- Create a GitHub issue with the plan, with approval
 
 ### Ask the Implementer to Implement a Feature
 

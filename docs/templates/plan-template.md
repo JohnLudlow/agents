@@ -12,6 +12,14 @@ Use this template when creating feature plans with johnludlow-feature-planner.
 Plan documents stored in `docs/plans/` should keep YAML frontmatter and replace
 the placeholder values above.
 
+## Plan Target and Governance
+
+- **Plan target**: [Markdown plan / GitHub issue / Azure DevOps work item]
+- **Provider**: [docs/plans / GitHub / Azure DevOps]
+- **Governing instructions**: [Repository guidance / linked guidance / session instruction]
+- **Override source**: [None / user session override]
+- **Child artifact strategy**: [None / child issues / child work items / linked follow-up docs]
+
 ## Executive Summary
 
 [1-2 paragraph summary of what is being planned and why]
@@ -29,6 +37,13 @@ the placeholder values above.
 - [Measurable criterion 1]
 - [Measurable criterion 2]
 - [Measurable criterion 3]
+
+## Requirements Mapping
+
+| Source requirement | Planned coverage | Notes |
+|:-------------------|:-----------------|:------|
+| [Requirement 1] | [Section / phase / artifact] | [Notes] |
+| [Requirement 2] | [Section / phase / artifact] | [Notes] |
 
 ## Problem Statement
 
@@ -105,11 +120,31 @@ the placeholder values above.
 - User guides
 - Architecture decision records
 
+## Open Questions and Decision Log
+
+### Open Questions
+
+- [Open question 1]
+- [Open question 2]
+
+### Decisions
+
+- [Decision 1]
+- [Decision 2]
+
 ## Acceptance Criteria
 
 - [ ] [Criterion 1]
 - [ ] [Criterion 2]
 - [ ] [Criterion 3]
+
+## Validation Checklist
+
+- [ ] Plan target and provider recorded
+- [ ] Governing instructions and override source recorded
+- [ ] Child artifact strategy recorded
+- [ ] Open questions and decisions recorded
+- [ ] Validation steps identified
 
 ## Related Documents
 

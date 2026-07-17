@@ -17,7 +17,9 @@ This repository contains agents and skills that work with both Copilot CLI and
 OpenCode. These tools are designed to assist with the complete software development
 lifecycle:
 
-- **Planning**: Create well-structured feature plans
+Canonical source files live under `.apm/agents/` and `.apm/skills/`.
+
+- **Planning**: Create well-structured feature plans in markdown, GitHub Issues, or Azure DevOps work items
 - **Implementation**: Develop features according to approved plans
 - **Documentation**: Generate comprehensive technical documentation
 - **Testing**: Validate implementations through automated testing
@@ -26,7 +28,7 @@ lifecycle:
 
 This project uses a two-tier agent architecture:
 
-- **Top-level agents** (`mode: agent`) are user-facing entry points with a fixed,
+- **Top-level agents** (`mode: primary`) are user-facing entry points with a fixed,
   locked intent. Select these via `/agent` in OpenCode or `-a` in Copilot CLI.
 - **Sub-agents** (`mode: subagent`) perform the actual work, delegated to by
   top-level agents. They are token-efficient and scoped to specific tasks.
@@ -111,8 +113,8 @@ interrupt the agent's primary workflow.
 Creates comprehensive feature plans and project specifications.
 
 - **Temperature**: 0.3 (balanced creativity and consistency)
-- **Focus**: Planning, design, and specification
-- **Output**: Markdown plan documents in `docs/plans/`
+- **Focus**: Planning, design, specification, and issue management
+- **Output**: Markdown plan documents in `docs/plans/`, GitHub Issues, or Azure DevOps work items
 
 [View full agent definition](.apm/agents/johnludlow-feature-planner.agent.md)
 
@@ -191,7 +193,7 @@ are automatically installed and configured during setup.
 
 Top-level agents:
 
-- **Planner**: Read all, write `docs/plans/`, delegate to planner/documenter/reviewer
+- **Planner**: Read all, write `docs/plans/`, inspect provider records, and create or update GitHub/Azure DevOps planning artifacts with approval; delegate to planner/documenter/reviewer
 - **Implementer**: Read all, delegate to implementer/tester/reviewer
 - **TDD Implementer**: Read all, delegate to tester/implementer/reviewer (test-first)
 - **Documenter**: Read all, delegate to documenter/reviewer
@@ -200,11 +202,10 @@ Top-level agents:
 Sub-agents:
 
 - **Feature Planner**: Can read project files, write to `docs/plans/`, run git read
-  commands, create GitHub issues
+  commands, and create or update GitHub issues and Azure DevOps work items with approval
 - **Feature Implementer**: Can write source code, run build/test commands, read-only
   git commands
-- **Feature Documenter**: Can write documentation, read project files, create GitHub
-  issues
+- **Feature Documenter**: Can write documentation, read project files, and read provider issue/work-item context
 - **Feature Tester**: Can read code and docs, run test commands
 - **Feature Reviewer**: Read-only, no edit/task/webfetch permissions
 
@@ -340,7 +341,9 @@ A typical workflow using top-level agents:
    Define feature requirements, architecture, and implementation phases.
    The planner delegates to sub-agents and invokes the adversarial reviewer
    before completion.
-   Output: Feature plan document in `docs/plans/`
+   Output: Feature plan document in `docs/plans/`, GitHub Issue content, or
+   Azure DevOps work-item content depending on the selected plan target. Any
+   provider-native create or update action remains approval-gated.
 
 2. **Implement** (`johnludlow-implementer` or `johnludlow-tdd-implementer`)
 
@@ -401,7 +404,8 @@ These agents are designed to work with:
 │   │   └── johnludlow-feature-reviewer.agent.md
 │   └── skills/
 │       ├── johnludlow-markdown-standards.skill.md
-│       └── johnludlow-code-quality.skill.md
+│       ├── johnludlow-code-quality.skill.md
+│       └── johnludlow-issue-management.skill.md
 ├── agents/                 # ↩️ Legacy back-compat references only
 ├── skills/                 # ↩️ Legacy back-compat references only
 ├── opencode/               # 🔨 Generated OpenCode format (built from .apm/)
