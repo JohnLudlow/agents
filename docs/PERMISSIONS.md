@@ -24,6 +24,14 @@ Each permission can be set to:
 - **`ask`** — OpenCode prompts you for approval before running the action
 - **`deny`** — The action is blocked and cannot run
 
+All agents in this repository are also configured to use the following tooling
+without approval prompts where the harness supports them:
+
+- LSP resources
+- Skill invocation
+- Codegraph exploration tools (`codegraph_codegraph_explore`,
+  `codegraph_codegraph_node`, `codegraph_codegraph_search`)
+
 Within the current issue scope, non-planner agents may use read-only provider
 commands for context only:
 

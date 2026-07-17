@@ -22,6 +22,10 @@ permission:
   grep:
     "*": allow
   lsp: allow
+  skill: allow
+  codegraph_codegraph_explore: allow
+  codegraph_codegraph_node: allow
+  codegraph_codegraph_search: allow
   webfetch: deny
   task:
     "*": deny
