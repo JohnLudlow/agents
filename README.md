@@ -174,6 +174,14 @@ Defines code quality expectations across C#, TypeScript, and C++.
 
 [View full skill definition](.apm/skills/johnludlow-code-quality.skill.md)
 
+### johnludlow-issue-management
+
+Defines provider-agnostic issue-management guidance for markdown plans, GitHub
+Issues, and Azure DevOps work items.
+
+[View full skill definition](.apm/skills/johnludlow-issue-management.skill.md)
+
+
 ## Permissions
 
 Each agent has specific permissions that control what actions it can perform. These
