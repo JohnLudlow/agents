@@ -10,6 +10,10 @@ permission:
     "*": deny
   bash:
     "*": deny
+    "gh issue list*": allow
+    "gh issue view*": allow
+    "az boards query*": allow
+    "az boards work-item show*": allow
     "git log*": allow
     "git status*": allow
     "git branch*": allow
@@ -17,6 +21,7 @@ permission:
     "rumdl check*": allow
   grep:
     "*": allow
+  lsp: allow
   webfetch: deny
   task:
     "*": deny
@@ -136,6 +141,8 @@ The agent MUST NOT:
 
 - Read any file in the workspace
 - Run read-like git commands (`git log`, `git status`, `git diff`, `git branch`)
+- Use LSP resources where available
+- Run GitHub CLI (`gh`) and Azure DevOps CLI (`az boards`) for read-only issue and work-item context
 - Analyse diffs and code changes
 - Compare work against plans and requirements
 
@@ -144,6 +151,7 @@ The agent MUST NOT:
 - Cannot write or edit any files (strictly read-only)
 - Cannot run build or test commands
 - Cannot commit or push changes
+- Cannot create or update provider-native records
 - Cannot delegate responsibility for the review to other agents,
   except that it may invoke the explicitly approved community skills
   and agents listed below to assist its analysis

@@ -11,6 +11,10 @@ permission:
     "*": deny
   bash:
     "*": deny
+    "gh issue list*": allow
+    "gh issue view*": allow
+    "az boards query*": allow
+    "az boards work-item show*": allow
     "npm test*": allow
     "npm run test*": allow
     "dotnet test*": allow
@@ -21,7 +25,10 @@ permission:
     "git diff*": allow
   grep:
     "*": allow
+  lsp: allow
   webfetch: ask
+  task:
+    "*": deny
 ---
 
 # johnludlow-feature-tester
@@ -76,12 +83,15 @@ The agent MUST NOT:
 - Read test files and configurations
 - Execute test runners and commands
 - Run read-like commands
+- Use LSP resources where available
+- Run GitHub CLI (`gh`) and Azure DevOps CLI (`az boards`) for read-only issue and work-item context
 - Analyze test results
 
 ## Restrictions
 
 - Cannot modify code without explicit request
 - Cannot commit changes
+- Cannot create or update provider-native records
 - Cannot modify git history
 
 ## Community Skills and Agents

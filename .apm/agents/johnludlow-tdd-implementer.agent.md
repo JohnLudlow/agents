@@ -11,13 +11,17 @@ permission:
     "*": deny
   bash:
     "*": deny
+    "gh issue list*": allow
     "gh issue view*": allow
+    "az boards query*": allow
+    "az boards work-item show*": allow
     "git log*": allow
     "git status*": allow
     "git branch*": allow
     "git diff*": allow
   grep:
     "*": allow
+  lsp: allow
   webfetch: ask
   task:
     "*": deny
@@ -150,13 +154,15 @@ The agent MUST:
 - Read any file in the workspace
 - Delegate to permitted sub-agents
 - Run read-like git commands (`git log`, `git status`, `git diff`, `git branch`)
-- Run GitHub CLI for issue details
+- Use LSP resources where available
+- Run GitHub CLI and Azure DevOps CLI for read-only issue and work-item details
 
 ## Restrictions
 
 - Cannot write source code directly (must delegate to sub-agents)
 - Cannot skip the test-first ordering
 - Cannot commit or push changes
+- Cannot create or update provider-native records
 - Cannot delegate to planner or documenter sub-agents
 - Requires an approved plan to proceed
 

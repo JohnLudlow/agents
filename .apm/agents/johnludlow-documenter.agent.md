@@ -10,17 +10,24 @@ permission:
     "*": deny
   bash:
     "*": deny
+    "gh issue list*": allow
+    "gh issue view*": allow
+    "az boards query*": allow
+    "az boards work-item show*": allow
     "git log*": allow
     "git status*": allow
     "git branch*": allow
     "git diff*": allow
   grep:
     "*": allow
+  lsp: allow
   webfetch: ask
   task:
     "*": deny
     "johnludlow-feature-documenter": allow
     "johnludlow-feature-reviewer": allow
+  tool:
+    
 ---
 
 # johnludlow-documenter
@@ -113,12 +120,15 @@ The agent MUST NOT:
 - Read any file in the workspace
 - Delegate to permitted sub-agents
 - Run read-like git commands (`git log`, `git status`, `git diff`, `git branch`)
+- Use LSP resources where available
+- Run GitHub CLI and Azure DevOps CLI for read-only issue and work-item details
 
 ## Restrictions
 
 - Cannot modify source code
 - Cannot write plan documents
 - Cannot commit or push changes
+- Cannot create or update provider-native records
 - Cannot delegate to planner, implementer, or tester sub-agents
 
 ## Community Skills and Agents
