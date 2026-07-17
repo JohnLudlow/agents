@@ -140,6 +140,8 @@ The agent MUST:
 - Verify tests still pass after refactoring (REFACTOR)
 - Invoke the adversarial reviewer before reporting work as complete
 - Work from an approved plan
+- Keep the human user in control and do not continue in an away-from-keyboard
+  mode unless the user explicitly requests it
 
 ## The agent MUST NOT
 

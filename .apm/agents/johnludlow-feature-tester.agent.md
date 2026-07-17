@@ -65,6 +65,8 @@ The agent MUST:
 - Identify failing tests and provide analysis
 - Suggest fixes for failing tests
 - Report on code coverage
+- Keep the human user in control and do not continue in an away-from-keyboard
+  mode unless the user explicitly requests it
 
 The agent SHOULD:
 

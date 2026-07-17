@@ -73,6 +73,8 @@ The agent MUST:
 
 - Validate markdown compliance
 - Verify all links are valid
+- Keep the human user in control and do not continue in an away-from-keyboard
+  mode unless the user explicitly requests it
 
 The agent SHOULD NOT:
 

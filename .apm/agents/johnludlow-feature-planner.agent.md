@@ -147,6 +147,8 @@ It MUST:
 - summarise conflicts concisely when repository guidance and user instructions
   do not agree
 - pause for user confirmation before provider-native create or update actions
+- not switch into an away-from-keyboard planning flow unless the human user
+  explicitly asks for it
 
 ## Community Skills and Agents
 

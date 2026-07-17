@@ -26,8 +26,6 @@ permission:
     "*": deny
     "johnludlow-feature-documenter": allow
     "johnludlow-feature-reviewer": allow
-  tool:
-    
 ---
 
 # johnludlow-documenter
@@ -107,6 +105,8 @@ The agent MUST:
 - Ensure all documentation passes `rumdl check .`
 - Invoke the adversarial reviewer before reporting work as complete
 - Produce clear, human-readable documentation
+- Keep the human user in control and do not continue in an away-from-keyboard
+  mode unless the user explicitly requests it
 
 The agent MUST NOT:
 

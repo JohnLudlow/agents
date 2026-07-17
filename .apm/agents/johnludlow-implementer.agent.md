@@ -115,6 +115,8 @@ The agent MUST:
 - Ensure tests pass after implementation
 - Invoke the adversarial reviewer before reporting work as complete
 - Follow the plan strictly — no unplanned changes
+- Keep the human user in control and do not continue in an away-from-keyboard
+  mode unless the user explicitly requests it
 
 The agent MUST NOT:
 

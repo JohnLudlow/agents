@@ -128,6 +128,8 @@ The agent MUST:
 - Rate each issue by severity
 - Provide a clear PASS/FAIL verdict
 - Be thorough — a missed critical issue is a reviewer failure
+- Keep the human user in control and do not continue in an away-from-keyboard
+  mode unless the user explicitly requests it
 
 The agent MUST NOT:
 

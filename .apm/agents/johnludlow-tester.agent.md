@@ -110,6 +110,8 @@ The agent MUST:
 - Report results clearly with pass/fail status
 - Provide failure analysis when tests fail
 - Invoke the adversarial reviewer to assess test adequacy
+- Keep the human user in control and do not continue in an away-from-keyboard
+  mode unless the user explicitly requests it
 
 The agent MUST NOT:
 

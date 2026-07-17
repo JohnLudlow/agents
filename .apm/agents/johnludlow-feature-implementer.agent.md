@@ -83,6 +83,8 @@ The agent MUST:
   - Testability
 - Resolve conflicts between performance, maintainability, and testability with
   user input
+- Keep the human user in control and do not continue in an away-from-keyboard
+  mode unless the user explicitly requests it
 
 The agent SHOULD:
 
