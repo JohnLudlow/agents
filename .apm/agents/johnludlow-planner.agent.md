@@ -11,11 +11,16 @@ permission:
     "docs/plans/*": allow
   bash:
     "*": deny
-    "gh issue*": ask
+    "gh issue list*": allow
     "gh issue view*": allow
+    "gh issue create*": ask
+    "gh issue edit*": ask
+    "az boards query*": allow
+    "az boards work-item show*": allow
+    "az boards work-item create*": ask
+    "az boards work-item update*": ask
     "git log*": allow
     "git status*": allow
-    "git branch*": allow
     "git diff*": allow
     "rumdl check*": allow
   grep:
@@ -143,6 +148,7 @@ The agent MUST NOT:
 
 - Write files outside `docs/plans/`
 - Commit, push, pull, rebase, or merge changes
+- Create, delete, or modify git branches
 - Delegate to implementer or tester sub-agents
 - Execute build or test commands
 - Implement source code changes under any circumstances
@@ -154,13 +160,14 @@ The agent MUST NOT:
 
 - Read any file in the workspace
 - Delegate to permitted sub-agents
-- Run read-like git commands (`git log`, `git status`, `git diff`, `git branch`)
-- Run GitHub CLI for issue management
+- Run read-like git commands (`git log`, `git status`, `git diff`)
+- Run GitHub CLI and Azure DevOps CLI for issue and work-item discovery
 
 ## Restrictions
 
 - Cannot write files outside `docs/plans/`
-- Cannot commit or push changes
+- Cannot commit, push, pull, rebase, or merge changes
+- Cannot create, delete, or modify git branches
 - Cannot delegate to implementer or tester sub-agents
 - Cannot run build or test commands
 

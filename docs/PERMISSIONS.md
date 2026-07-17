@@ -38,14 +38,17 @@ Top-level agents orchestrate work by delegating to sub-agents. They have restric
 - Read all project files
 - Write to `docs/plans/` directory
 - Run read-only git commands
-- Create and update GitHub issues
+- Read GitHub issue and Azure DevOps work-item context
+- Create and update GitHub issues with approval
+- Create and update Azure DevOps work items with approval
 - Delegate to: feature-planner, feature-documenter, feature-reviewer
 
 **Restrictions**:
 
 - Cannot delegate to feature-implementer or feature-tester
 - Cannot modify source code
-- Cannot commit or push changes
+- Cannot commit, push, pull, rebase, or merge changes
+- Cannot create, delete, or modify git branches
 - Cannot run build or test commands
 
 ### Implementer (`johnludlow-implementer`)
@@ -126,12 +129,15 @@ Sub-agents perform the actual work delegated by top-level agents.
 - Read all project files
 - Write to `/docs/plans/` directory
 - Run read-only git commands (log, status, diff)
-- Create and update GitHub issues
+- Read GitHub issue and Azure DevOps work-item context
+- Create and update GitHub issues with approval
+- Create and update Azure DevOps work items with approval
 
 **Restrictions**:
 
 - Cannot modify source code
-- Cannot commit or push changes
+- Cannot commit, push, pull, rebase, or merge changes
+- Cannot create, delete, or modify git branches
 - Cannot run build or test commands
 - Cannot modify configuration files
 
@@ -139,7 +145,7 @@ Sub-agents perform the actual work delegated by top-level agents.
 
 - Planning new features
 - Creating implementation specifications
-- Creating GitHub issues for features
+- Creating GitHub issues or Azure DevOps work items for features
 - Analyzing existing code structure
 
 ### Feature Implementer (`johnludlow-feature-implementer`)

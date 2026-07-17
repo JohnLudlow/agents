@@ -9,15 +9,18 @@ permission:
   edit:
     "*": deny
     "docs/plans/*": allow
-    "README.md": allow
-    "CONTRIBUTING.md": allow
   bash:
     "*": deny
-    "gh issue*": ask
+    "gh issue list*": allow
     "gh issue view*": allow
+    "gh issue create*": ask
+    "gh issue edit*": ask
+    "az boards query*": allow
+    "az boards work-item show*": allow
+    "az boards work-item create*": ask
+    "az boards work-item update*": ask
     "git log*": allow
     "git status*": allow
-    "git branch*": allow
     "git diff*": allow
     "rumdl check*": allow
   grep:
@@ -119,15 +122,16 @@ The agent MUST NOT:
 
 - Read any file in the workspace
 - Write to `docs/plans` folder
-- Run read-like commands (`git log`, `rumdl check`, and issue-context queries)
-- Run GitHub CLI (`gh`) for issue management context
+- Run read-like commands (`git log`, `rumdl check`, and issue/work-item context queries)
+- Run GitHub CLI (`gh`) and Azure DevOps CLI (`az boards`) for issue and work-item context
 - Produce provider-native planning content for GitHub Issues or Azure DevOps
   work items without hard-coding execution to a single harness
 
 ## Restrictions
 
 - Cannot write files outside `docs/plans`
-- Cannot commit files under any circumstances
+- Cannot commit, push, pull, rebase, or merge changes
+- Cannot create, delete, or modify git branches
 - Cannot run write-like git commands
 
 ## Interactive Planning
