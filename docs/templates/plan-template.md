@@ -1,6 +1,16 @@
-# Plan Template
+---
+title: "[Plan title]"
+description: "[Short description of the planned work]"
+author: "johnludlow-feature-planner"
+date: "YYYY-MM-DD"
+status: "Draft"
+---
+
+# [Plan Title]
 
 Use this template when creating feature plans with johnludlow-feature-planner.
+Plan documents stored in `docs/plans/` should keep YAML frontmatter and replace
+the placeholder values above.
 
 ## Executive Summary
 
@@ -68,9 +78,9 @@ Use this template when creating feature plans with johnludlow-feature-planner.
 
 ### Technical Risks
 
-| Risk   | Probability  | Impact       | Mitigation            |
-|:-------|:-------------|:-------------|:----------------------|
-| Risk 1 | High/Med/Low | High/Med/Low | Mitigation strategy   |
+| Risk   | Probability  | Impact       | Mitigation          |
+|:-------|:-------------|:-------------|:--------------------|
+| Risk 1 | High/Med/Low | High/Med/Low | Mitigation strategy |
 
 ### Resource Risks
 
@@ -108,6 +118,6 @@ Use this template when creating feature plans with johnludlow-feature-planner.
 
 ## Revision History
 
-| Date       | Author | Changes          |
-|:-----------|:-------|:-----------------|
-| YYYY-MM-DD | Agent  | Initial plan     |
+| Date       | Author | Changes      |
+|:-----------|:-------|:-------------|
+| YYYY-MM-DD | Agent  | Initial plan |

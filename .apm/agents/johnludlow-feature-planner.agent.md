@@ -9,6 +9,8 @@ permission:
   edit:
     "*": deny
     "docs/plans/*": allow
+    "README.md": allow
+    "CONTRIBUTING.md": allow
   bash:
     "*": deny
     "gh issue*": ask

@@ -40,3 +40,6 @@ enabled = false
 # Disabled because templates contain placeholder links
 [MD057]
 enabled = false
+
+[MD077]
+enabled = false
