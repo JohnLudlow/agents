@@ -46,9 +46,13 @@ token-usage-output.txt
 docs/plans/**/*.md
 !docs/plans/.gitkeep
 
+.obsidian
+
 # Generated agent definition files in build directory (built from agents/*.md source)
 # Note: opencode/agents/*.md are committed as build artifacts
 # But .opencode/ is user installation directory, not committed
+
+.omo/
 
 # Installation directories (created at install time)
 .opencode/

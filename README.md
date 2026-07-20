@@ -17,7 +17,9 @@ This repository contains agents and skills that work with both Copilot CLI and
 OpenCode. These tools are designed to assist with the complete software development
 lifecycle:
 
-- **Planning**: Create well-structured feature plans
+Canonical source files live under `.apm/agents/` and `.apm/skills/`.
+
+- **Planning**: Create well-structured feature plans in markdown, GitHub Issues, or Azure DevOps work items
 - **Implementation**: Develop features according to approved plans
 - **Documentation**: Generate comprehensive technical documentation
 - **Testing**: Validate implementations through automated testing
@@ -26,7 +28,7 @@ lifecycle:
 
 This project uses a two-tier agent architecture:
 
-- **Top-level agents** (`mode: agent`) are user-facing entry points with a fixed,
+- **Top-level agents** (`mode: primary`) are user-facing entry points with a fixed,
   locked intent. Select these via `/agent` in OpenCode or `-a` in Copilot CLI.
 - **Sub-agents** (`mode: subagent`) perform the actual work, delegated to by
   top-level agents. They are token-efficient and scoped to specific tasks.
@@ -45,7 +47,7 @@ documenter, and reviewer sub-agents.
 - **Delegates to**: feature-planner, feature-documenter, feature-reviewer
 - **Refuses**: Implementation, source code changes, build/test commands
 
-[View full agent definition](agents/johnludlow-planner.md)
+[View full agent definition](.apm/agents/johnludlow-planner.agent.md)
 
 #### johnludlow-implementer
 
@@ -56,7 +58,7 @@ implementer and tester sub-agents.
 - **Delegates to**: feature-implementer, feature-tester, feature-reviewer
 - **Refuses**: Planning, documentation, working without an approved plan
 
-[View full agent definition](agents/johnludlow-implementer.md)
+[View full agent definition](.apm/agents/johnludlow-implementer.agent.md)
 
 #### johnludlow-tdd-implementer
 
@@ -67,7 +69,7 @@ writes tests before implementation code.
 - **Delegates to**: feature-tester, feature-implementer, feature-reviewer
 - **Refuses**: Writing implementation before tests, skipping verification
 
-[View full agent definition](agents/johnludlow-tdd-implementer.md)
+[View full agent definition](.apm/agents/johnludlow-tdd-implementer.agent.md)
 
 #### johnludlow-documenter
 
@@ -77,7 +79,7 @@ Top-level documentation agent. Creates and maintains documentation only.
 - **Delegates to**: feature-documenter, feature-reviewer
 - **Refuses**: Source code changes, planning, test execution
 
-[View full agent definition](agents/johnludlow-documenter.md)
+[View full agent definition](.apm/agents/johnludlow-documenter.agent.md)
 
 #### johnludlow-tester
 
@@ -87,7 +89,7 @@ Top-level testing agent. Runs tests and reports results without fixing code.
 - **Delegates to**: feature-tester, feature-reviewer
 - **Refuses**: Code changes, planning, documentation
 
-[View full agent definition](agents/johnludlow-tester.md)
+[View full agent definition](.apm/agents/johnludlow-tester.agent.md)
 
 ### Usage Reporting
 
@@ -111,10 +113,10 @@ interrupt the agent's primary workflow.
 Creates comprehensive feature plans and project specifications.
 
 - **Temperature**: 0.3 (balanced creativity and consistency)
-- **Focus**: Planning, design, and specification
-- **Output**: Markdown plan documents in `docs/plans/`
+- **Focus**: Planning, design, specification, and issue management
+- **Output**: Markdown plan documents in `docs/plans/`, GitHub Issues, or Azure DevOps work items
 
-[View full agent definition](agents/johnludlow-feature-planner.md)
+[View full agent definition](.apm/agents/johnludlow-feature-planner.agent.md)
 
 #### johnludlow-feature-implementer
 
@@ -124,7 +126,7 @@ Implements features based on approved plans with code quality and best practices
 - **Focus**: Code implementation, testing, quality
 - **Output**: Modified source files and tests
 
-[View full agent definition](agents/johnludlow-feature-implementer.md)
+[View full agent definition](.apm/agents/johnludlow-feature-implementer.agent.md)
 
 #### johnludlow-feature-documenter
 
@@ -134,7 +136,7 @@ Creates user-friendly technical documentation for features and APIs.
 - **Focus**: Documentation, guides, references
 - **Output**: Markdown documentation in `docs/`
 
-[View full agent definition](agents/johnludlow-feature-documenter.md)
+[View full agent definition](.apm/agents/johnludlow-feature-documenter.agent.md)
 
 #### johnludlow-feature-tester
 
@@ -144,7 +146,7 @@ Runs automated tests and reports results.
 - **Focus**: Testing, validation, quality assurance
 - **Output**: Test results and coverage reports
 
-[View full agent definition](agents/johnludlow-feature-tester.md)
+[View full agent definition](.apm/agents/johnludlow-feature-tester.agent.md)
 
 #### johnludlow-feature-reviewer
 
@@ -156,23 +158,55 @@ verdicts.
 - **Focus**: Correctness, completeness, consistency, standards compliance
 - **Output**: Structured review feedback with severity ratings
 
-[View full agent definition](agents/johnludlow-feature-reviewer.md)
+[View full agent definition](.apm/agents/johnludlow-feature-reviewer.agent.md)
 
 ## Skills
 
 Skills provide shared knowledge and standards for agents.
 
+### johnludlow-clarify-requirements
+
+Adaptive requirements-clarification skill. Interviews the user in chat for
+small features, or generates a questionnaire document for large features, and
+lets the user redesignate between the two modes at any point in the session.
+Provider- and harness-agnostic.
+
+[View full skill definition](.apm/skills/johnludlow-clarify-requirements/SKILL.md)
+
 ### johnludlow-markdown-standards
 
 Defines markdown document structure, formatting, and quality standards.
 
-[View full skill definition](skills/johnludlow-markdown-standards.md)
+[View full skill definition](.apm/skills/johnludlow-markdown-standards/SKILL.md)
 
 ### johnludlow-code-quality
 
 Defines code quality expectations across C#, TypeScript, and C++.
 
-[View full skill definition](skills/johnludlow-code-quality.md)
+[View full skill definition](.apm/skills/johnludlow-code-quality/SKILL.md)
+
+### johnludlow-issue-management
+
+Defines provider-agnostic issue-management guidance for markdown plans, GitHub
+Issues, and Azure DevOps work items.
+
+[View full skill definition](.apm/skills/johnludlow-issue-management/SKILL.md)
+
+### johnludlow-plan-template
+
+Provides the canonical plan document template and structure for feature plans
+stored in `docs/plans/`, including YAML frontmatter. Used by
+`johnludlow-feature-planner` and `johnludlow-planner`.
+
+[View full skill definition](.apm/skills/johnludlow-plan-template/SKILL.md)
+
+### johnludlow-documentation-template
+
+Provides the canonical documentation template and structure for feature and
+API documentation stored in `docs/`. Used by `johnludlow-feature-documenter`
+and `johnludlow-documenter`.
+
+[View full skill definition](.apm/skills/johnludlow-documentation-template/SKILL.md)
 
 ## Permissions
 
@@ -183,7 +217,8 @@ are automatically installed and configured during setup.
 
 Top-level agents:
 
-- **Planner**: Read all, write `docs/plans/`, delegate to planner/documenter/reviewer
+- **Planner**: Read all, write `docs/plans/`, inspect provider records, and create or update GitHub/Azure DevOps planning
+  artifacts with approval; delegate to planner/documenter/reviewer
 - **Implementer**: Read all, delegate to implementer/tester/reviewer
 - **TDD Implementer**: Read all, delegate to tester/implementer/reviewer (test-first)
 - **Documenter**: Read all, delegate to documenter/reviewer
@@ -192,11 +227,10 @@ Top-level agents:
 Sub-agents:
 
 - **Feature Planner**: Can read project files, write to `docs/plans/`, run git read
-  commands, create GitHub issues
+  commands, and create or update GitHub issues and Azure DevOps work items with approval
 - **Feature Implementer**: Can write source code, run build/test commands, read-only
   git commands
-- **Feature Documenter**: Can write documentation, read project files, create GitHub
-  issues
+- **Feature Documenter**: Can write documentation, read project files, and read provider issue/work-item context
 - **Feature Tester**: Can read code and docs, run test commands
 - **Feature Reviewer**: Read-only, no edit/task/webfetch permissions
 
@@ -207,12 +241,18 @@ commits or pushes) while enabling productive work within their domain.
 
 ## Templates
 
-Pre-built templates for common documents:
+Document templates are now delivered as skills, with the template itself as
+an asset, so they are loaded as explicit skill dependencies by the agents
+that use them:
 
-- **Plan Template** (`docs/templates/plan-template.md`): Structure for feature
-  plans
-- **Documentation Template** (`docs/templates/documentation-template.md`):
-  Structure for technical documentation
+- **Plan Template** — see
+  [johnludlow-plan-template](.apm/skills/johnludlow-plan-template/SKILL.md).
+  Structure for feature plans stored in `docs/plans/`, including YAML
+  frontmatter. Used by `johnludlow-feature-planner` and `johnludlow-planner`.
+- **Documentation Template** — see
+  [johnludlow-documentation-template](.apm/skills/johnludlow-documentation-template/SKILL.md).
+  Structure for technical documentation stored in `docs/`. Used by
+  `johnludlow-feature-documenter` and `johnludlow-documenter`.
 
 ## Installation
 
@@ -332,7 +372,9 @@ A typical workflow using top-level agents:
    Define feature requirements, architecture, and implementation phases.
    The planner delegates to sub-agents and invokes the adversarial reviewer
    before completion.
-   Output: Feature plan document in `docs/plans/`
+   Output: Feature plan document in `docs/plans/`, GitHub Issue content, or
+   Azure DevOps work-item content depending on the selected plan target. Any
+   provider-native create or update action remains approval-gated.
 
 2. **Implement** (`johnludlow-implementer` or `johnludlow-tdd-implementer`)
 
@@ -379,48 +421,56 @@ These agents are designed to work with:
 
 ```bash
 .
-├── agents/                 # 📝 Canonical agent definitions (PRIMARY SOURCE)
-│   ├── johnludlow-planner.md              # Top-level: planning
-│   ├── johnludlow-implementer.md          # Top-level: implementation
-│   ├── johnludlow-tdd-implementer.md      # Top-level: TDD implementation
-│   ├── johnludlow-documenter.md           # Top-level: documentation
-│   ├── johnludlow-tester.md               # Top-level: testing
-│   ├── johnludlow-feature-planner.md      # Sub-agent: planning work
-│   ├── johnludlow-feature-implementer.md  # Sub-agent: code changes
-│   ├── johnludlow-feature-documenter.md   # Sub-agent: documentation work
-│   ├── johnludlow-feature-tester.md       # Sub-agent: test execution
-│   └── johnludlow-feature-reviewer.md     # Sub-agent: adversarial review
-├── skills/                 # 📝 Canonical skill definitions (PRIMARY SOURCE)
-│   ├── johnludlow-markdown-standards.md
-│   └── johnludlow-code-quality.md
-├── opencode/               # 🔨 Generated OpenCode format (built from agents/)
-│   ├── agents/             # With YAML frontmatter and permissions
+├── .apm/                   # 📝 Canonical source files (PRIMARY SOURCE)
+│   ├── agents/
+│   │   ├── johnludlow-planner.agent.md
+│   │   ├── johnludlow-implementer.agent.md
+│   │   ├── johnludlow-tdd-implementer.agent.md
+│   │   ├── johnludlow-documenter.agent.md
+│   │   ├── johnludlow-tester.agent.md
+│   │   ├── johnludlow-feature-planner.agent.md
+│   │   ├── johnludlow-feature-implementer.agent.md
+│   │   ├── johnludlow-feature-documenter.agent.md
+│   │   ├── johnludlow-feature-tester.agent.md
+│   │   └── johnludlow-feature-reviewer.agent.md
+│   └── skills/
+│       ├── johnludlow-clarify-requirements/
+│       │   ├── SKILL.md
+│       │   └── assets/
+│       │       └── clarify-questionnaire-template.md
+│       ├── johnludlow-plan-template/
+│       │   ├── SKILL.md
+│       │   └── assets/
+│       │       └── plan-template.md
+│       ├── johnludlow-documentation-template/
+│       │   ├── SKILL.md
+│       │   └── assets/
+│       │       └── documentation-template.md
+│       ├── johnludlow-markdown-standards/
+│       │   └── SKILL.md
+│       ├── johnludlow-code-quality/
+│       │   └── SKILL.md
+│       └── johnludlow-issue-management/
+│           └── SKILL.md
+├── agents/                 # ↩️ Legacy back-compat references only
+├── skills/                 # ↩️ Legacy back-compat references only
+├── opencode/               # 🔨 Generated OpenCode format (built from .apm/)
+│   ├── agents/
 │   ├── skills/
 │   └── config.json
 ├── .github/                # 🔨 Generated GitHub Copilot format
-│   ├── agents/             # Generated Copilot agent markdown with YAML frontmatter
-│   ├── skills/             # Generated Copilot skill markdown
-│   ├── actions/            # Reusable GitHub Actions
-│   │   ├── setup/          # Setup Node.js and determine version
-│   │   ├── validate/       # Validate markdown and structure
-│   │   └── build/          # Build NPM package
+│   ├── agents/
+│   ├── skills/
+│   ├── actions/
 │   └── workflows/
-│       └── main.yml        # CI/CD workflow
 ├── .opencode/              # 🎯 User installation directory (created at install time)
 ├── docs/
-│   ├── CI-CD.md           # CI/CD pipeline documentation
-│   ├── PERMISSIONS.md      # Detailed permissions reference
-│   ├── templates/          # Document templates
-│   └── plans/              # Generated feature plans
-├── scripts/                # Build and installation scripts
-│   ├── build-agents.js    # 🔨 Build script to generate format-specific versions
-│   ├── install.js         # Installation script (runs on postinstall)
-│   ├── uninstall.js       # Uninstall script (runs on uninstall)
-│   ├── generate-copilot.js # Legacy Copilot generation (use build-agents.js instead)
-│   ├── restore.js         # Restore from backup
-│   └── init.js            # CLI entry point
-├── package.json           # NPM package manifest
-└── README.md              # This file
+│   ├── CI-CD.md
+│   ├── PERMISSIONS.md
+│   └── plans/              # Feature plans (use YAML frontmatter)
+├── scripts/
+├── package.json
+└── README.md
 
 Legend: 📝 = Source files (edit these), 🔨 = Generated files (don't edit), 🎯 = Installation target
 ```
@@ -431,10 +481,11 @@ This project uses a single-source-of-truth approach for agent and skill definiti
 
 ### How It Works
 
-1. **Canonical Source** (`agents/` and `skills/` directories)
+1. **Canonical Source** (`.apm/agents/` and `.apm/skills/`)
    - Contains the primary, detailed definitions of all agents and skills
-   - Includes complete descriptions, capabilities, requirements, and restrictions
-   - Pure markdown format without frontmatter
+   - Uses APM primitives with YAML frontmatter plus the agent or skill body
+   - Is the only authoring location that new repository changes should target
+   - Treats legacy `agents/` and `skills/` paths as back-compat references only
 
 2. **Build Process** (runs on `npm install` and `npm run build:agents`)
    - Generates format-specific versions from the canonical source
@@ -518,7 +569,7 @@ npm run restore
 All documents created by these agents follow the markdown standards defined in the
 johnludlow-markdown-standards skill:
 
-- Valid YAML frontmatter for OpenCode definition files
+- Valid YAML frontmatter for `.apm/` agent and skill primitives and for plan documents in `docs/plans/`
 - Proper heading hierarchy
 - Markdown linting compliance
 - Plain language with defined jargon
@@ -539,16 +590,17 @@ johnludlow-code-quality skill:
 
 Contributions are welcome! Please follow these guidelines:
 
-1. **Edit canonical sources** in `.apm/` primitives (`.apm/agents/` and `.apm/skills/`) or the legacy `agents/`/`skills/`
-   sources if present (do not edit generated files in `.github/` or `opencode/`)
+1. **Edit canonical sources** in `.apm/agents/` and `.apm/skills/` (do not edit
+   generated files in `.github/` or `opencode/`)
 2. Ensure all markdown files pass markdownlint validation
 3. Run `npm run build:agents` to generate format-specific versions
 4. Test installation: `npm install` (from package directory)
 5. Update README.md if adding new agents or skills
 6. Submit a pull request with clear descriptions
 
-**Important**: Always edit files in `agents/` and `skills/` directories. The files in `opencode/`, `.github/`, and
-`.opencode/` are automatically generated and should not be edited directly.
+**Important**: Always edit files in `.apm/agents/` and `.apm/skills/`. Legacy `agents/` and `skills/` paths are
+back-compat references only. The files in `opencode/`, `.github/`, and `.opencode/` are automatically generated and
+should not be edited directly.
 
 See CONTRIBUTING.md for detailed guidelines.
 

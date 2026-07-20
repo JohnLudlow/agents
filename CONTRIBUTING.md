@@ -18,9 +18,12 @@ repository!
 
 When creating or modifying agent definitions:
 
-1. **Required Files** — each agent requires two files:
-   - `agents/johnludlow-[name].md` — provider-agnostic instructions and behaviour
-   - `agents/johnludlow-[name].json` — build metadata (description, mode, temperature, permissions)
+1. **Canonical Authoring Location** — author new and updated agent definitions in:
+   - `.apm/agents/johnludlow-[name].agent.md` — canonical APM agent primitive with YAML frontmatter and agent body
+
+   Legacy `agents/johnludlow-[name].md` plus `agents/johnludlow-[name].json`
+   sidecars are back-compat reference material only. Do not treat `agents/` as the
+   primary authoring location for new repository work.
 
 2. **Markdown Required Sections**
    - Description: Brief overview of the agent
@@ -32,10 +35,12 @@ When creating or modifying agent definitions:
    - Restrictions: What the agent cannot do
    - Integration: How it works with other agents
 
-   > **Note:** Do not add a `## Temperature` section to the markdown. Temperature is
-   > defined in the JSON sidecar and injected by the build script.
+   > **Note:** Do not add a `## Temperature` section to the markdown. For canonical
+   > `.apm/` primitives, temperature belongs in YAML frontmatter. If you are
+   > maintaining a legacy back-compat reference in `agents/`, temperature belongs
+   > in the JSON sidecar instead.
 
-3. **JSON Sidecar Schema**
+3. **Legacy JSON Sidecar Schema (back-compat only)**
 
    ```json
    {
@@ -53,16 +58,16 @@ When creating or modifying agent definitions:
    }
    ```
 
+   - Use this only when maintaining a legacy back-compat reference under `agents/`
    - `mode`: `"primary"` for user-facing agents, `"subagent"` for delegated agents
-   - `temperature`: `0.0`–`1.0`. Lower = more deterministic. The build injects a
-     matching guidance text block into generated output for platforms that do not
-     honour the frontmatter temperature field.
+   - `temperature`: `0.0`–`1.0`. Lower = more deterministic.
    - `permission`: OpenCode permission map. Copilot uses description + temperature only.
 
 4. **Naming Convention**
    - All agent names start with `johnludlow-`
    - Use hyphen-separated names (e.g., `johnludlow-feature-planner`)
-   - File names match agent names with `.md` and `.json` extensions
+   - Canonical APM primitive files use the `.agent.md` suffix
+   - Legacy `agents/*.md` plus `agents/*.json` sidecars remain back-compat references only
 
 5. **Documentation**
    - Use clear, plain English
@@ -74,11 +79,21 @@ When creating or modifying agent definitions:
 
 When creating or modifying skills:
 
-1. **Required Files** — each skill requires two files:
-   - `skills/johnludlow-[name].md` — provider-agnostic content
-   - `skills/johnludlow-[name].json` — build metadata (description)
+1. **Canonical Authoring Location** — author new and updated skill definitions in:
+   - `.apm/skills/johnludlow-[name]/SKILL.md` — canonical APM skill primitive
+     (Agent Skills spec-compliant directory) with YAML frontmatter
+     (`name` matching the directory, plus `description`) and skill body
 
-2. **JSON Sidecar Schema**
+   Supporting documents (templates, reference material, scripts) for a skill
+   live alongside it under `.apm/skills/johnludlow-[name]/assets/`,
+   `references/`, or `scripts/` as appropriate — never as loose files
+   elsewhere in the repo.
+
+   Legacy `skills/johnludlow-[name].md` plus `skills/johnludlow-[name].json`
+   sidecars are back-compat reference material only. Do not treat `skills/` as
+   the primary authoring location for new repository work.
+
+2. **Legacy JSON Sidecar Schema (back-compat only)**
 
    ```json
    {
@@ -86,18 +101,22 @@ When creating or modifying skills:
    }
    ```
 
-3. **Markdown Required Sections**
+3. Markdown Required Sections
    - Overview: What the skill covers
    - Key principles or standards
    - Language-specific guidance (if applicable)
    - Examples where appropriate
 
-4. **Naming Convention**
+4. Naming Convention
    - All skill names start with `johnludlow-`
    - Use descriptive names (e.g., `johnludlow-code-quality`)
-   - File names match skill names with `.md` and `.json` extensions
+   - Canonical APM primitives are a directory named after the skill
+     containing `SKILL.md` (e.g., `.apm/skills/johnludlow-code-quality/SKILL.md`),
+     per the Agent Skills specification — not a flat `.skill.md` file
+   - The `name` field in `SKILL.md` frontmatter must match the directory name
+   - Legacy `skills/*.md` plus `skills/*.json` sidecars remain back-compat references only
 
-5. **Standards**
+5. Standards
    - Focus on practical, actionable guidance
    - Include examples from supported languages (C#, TypeScript, C++)
    - Link to official documentation where helpful
@@ -107,7 +126,10 @@ When creating or modifying skills:
 When creating or updating templates:
 
 1. **Structure**
-   - Include YAML frontmatter with title, description, author, date
+   - Templates intended for plan documents in `docs/plans/` must include YAML
+     frontmatter with title, description, author, and date fields
+   - Other templates should match the conventions of their document type and do
+     not need frontmatter unless that artifact's standard requires it
    - Use clear section headings (h2)
    - Provide helpful comments or placeholders
    - Include example content where appropriate
@@ -116,6 +138,190 @@ When creating or updating templates:
    - Must pass `rumdl check .`
    - Should be concise but complete
    - Should guide users through the document structure
+
+### Issue Management and Planning Guidance
+
+When creating or updating plans, issues, or work items for this repository, use
+the following rules.
+
+#### Human-in-the-loop rule
+
+- Planning is always collaborative.
+- The human user is always in control.
+- Agents must ask clarifying questions when requirements, destination, or issue
+  structure are unclear.
+- Agents must not create or update provider-native artifacts without explicit
+  user confirmation for that session.
+
+#### Instruction precedence
+
+Use this precedence order when deciding how and where a plan should be created:
+
+1. Session-specific instructions from the user
+2. Any linked issue-management guidance referenced by this file
+3. The default rules in this `CONTRIBUTING.md`
+4. Interactive clarification with the user if ambiguity remains
+
+If instructions conflict, agents must briefly explain the conflict and ask the
+user to confirm which instruction should apply.
+
+#### Supported plan destinations
+
+Plans for this repository may live in one of these destinations:
+
+1. Markdown documents in `docs/plans/`
+2. GitHub Issues
+3. Azure DevOps work items
+
+GitHub Issues and Azure DevOps are first-class provider-native destinations.
+Markdown plans in `docs/plans/` are also fully supported.
+
+#### Choosing the plan destination
+
+Use these rules unless the user gives a session override:
+
+- Use `docs/plans/` when:
+  - the work is still exploratory
+  - the user wants a local draft before creating provider-native items
+  - the plan is too early or too speculative for GitHub Issues or Azure DevOps
+- Use GitHub Issues when:
+  - the repository is managing the work in GitHub
+  - the user wants implementation tracked as issues or sub-issues
+- Use Azure DevOps work items when:
+  - the team is managing the work in Azure Boards
+  - the user explicitly asks for Azure DevOps output
+
+If no destination is clear, ask the user instead of guessing.
+
+#### Expected detail level
+
+Plans must be detailed enough for a later implementer to act without reopening
+chat history for missing context.
+
+At minimum, a complete plan should include:
+
+- the problem being solved
+- the intended outcome
+- scope and non-goals
+- important constraints
+- implementation phases or ordered work steps
+- risks or open questions
+- validation or acceptance criteria
+
+Avoid shallow plans such as “update X” or “fix Y” without context, rationale, or
+verification guidance.
+
+#### Child-plan and child-item expectations
+
+For larger efforts, use hierarchical planning.
+
+- Markdown plans:
+  - a parent plan in `docs/plans/` may link to smaller child plans
+- GitHub:
+  - prefer a parent issue with child issues or sub-issues
+  - do not hide major implementation detail only in long comment threads unless
+    the user explicitly wants that format
+- Azure DevOps:
+  - prefer native parent/child work item relationships
+
+Each child item should have a clear relationship to the parent and a scope that
+can be implemented and reviewed independently.
+
+#### Session overrides
+
+Users may override the repository default for a single session.
+
+Examples:
+
+- “Use a markdown plan for this one even though we normally use GitHub Issues.”
+- “Do not create provider-native items yet; keep this in `docs/plans/`.”
+- “Track this in Azure DevOps instead of GitHub.”
+
+When a session override is given, agents should restate the effective rule in a
+short confirmation before continuing.
+
+#### Code samples in plans
+
+Code samples in planning artifacts are for illustration only unless the user
+explicitly asks for implementation.
+
+When including code samples:
+
+- keep them minimal and focused
+- label the language on fenced code blocks
+- prefer pseudocode or partial examples when full implementation is unnecessary
+- explain why the sample is relevant
+
+#### Diagrams in plans
+
+Use simple, reviewable text-based diagrams unless the user asks for a different
+format.
+
+Preferred default:
+
+- Mermaid for flow, relationship, and sequence diagrams
+
+Diagram guidance:
+
+- keep diagrams small and readable
+- include a short explanation of what the diagram shows
+- do not use diagrams where a short bullet list is clearer
+
+#### Markdown plan formatting
+
+Plans stored in `docs/plans/` must use YAML frontmatter and a clear heading
+hierarchy.
+
+Include, where applicable:
+
+- `title`
+- `description`
+- `author`
+- `date`
+- related issue or status metadata if useful
+
+Plans must also pass normal repository markdown validation. The
+`johnludlow-plan-template` skill (`.apm/skills/johnludlow-plan-template/SKILL.md`,
+template asset at `assets/plan-template.md`) follows the same convention and
+should be used as the baseline for new plan documents.
+
+#### Provider-native plan expectations
+
+If a plan is stored in GitHub Issues or Azure DevOps, the provider-native record
+must still contain enough detail to stand on its own.
+
+At minimum, provider-native planning artifacts should include:
+
+- a concise summary
+- scope
+- acceptance criteria
+- implementation outline or phases
+- links to related parent/child items
+- links to markdown plans when supporting documents exist
+
+#### When to use markdown plans vs provider-native items
+
+Use markdown plans when the goal is discovery, shaping, or pre-implementation
+alignment.
+
+Use provider-native items when the goal is committed tracking in the team’s work
+management system.
+
+It is acceptable to use both, as long as one is clearly the source of record and
+the relationship between the artifacts is explicit.
+
+### Adding a New Template
+
+1. Create a new skill directory `.apm/skills/johnludlow-[document-type]-template/`
+   with `SKILL.md` and the template asset at
+   `assets/[document-type]-template.md`
+2. Follow the existing template format for that document type
+3. Templates intended for `docs/plans/` must include YAML frontmatter
+4. Provide clear structure with helpful placeholders
+5. Include example content where appropriate
+6. Wire the new skill into the agent(s) that consume it (Community Skills and
+   Agents / Skill Activation section) and update the README.md Skills and
+   Templates sections
 
 ## Testing & Local Development
 
@@ -259,10 +465,19 @@ that includes YAML frontmatter (description, temperature, mode, permissions) fol
 
 ### Adding a New Skill
 
-Preferred authoring location: `.apm/skills/` — create an APM skill primitive named `johnludlow-[skill-name].skill.md`
-with YAML frontmatter (`description`) followed by the skill markdown body.
+Preferred authoring location: `.apm/skills/` — create an APM skill primitive as
+`johnludlow-[skill-name]/SKILL.md`, a directory named after the skill
+containing `SKILL.md` with YAML frontmatter (`name` matching the directory,
+plus `description`) followed by the skill markdown body. This follows the
+[Agent Skills specification](https://agentskills.io/specification): the
+skill directory may also contain `assets/`, `references/`, and `scripts/`
+subdirectories for supporting material, referenced from `SKILL.md` using
+paths relative to the skill root.
 
-1. Create `.apm/skills/johnludlow-[skill-name].skill.md` with YAML frontmatter and the skill markdown body.
+1. Create `.apm/skills/johnludlow-[skill-name]/SKILL.md` with YAML frontmatter
+   and the skill markdown body. Place any supporting templates or reference
+   documents under `.apm/skills/johnludlow-[skill-name]/assets/` or
+   `references/` and link to them with a skill-root-relative path.
 2. Follow the standard skill structure (Overview, Key principles, Examples).
 3. Validate and compile:
 
@@ -282,14 +497,6 @@ with YAML frontmatter (`description`) followed by the skill markdown body.
 
 > Back-compat: Legacy `skills/*.md` + `skills/*.json` sidecars are supported for reference, but new contributions should
   prefer the `.apm/` primitives.
-
-### Adding a New Template
-
-1. Create a new file in `docs/templates/` named `[document-type]-template.md`
-2. Follow the existing template format and do not add YAML frontmatter
-3. Provide clear structure with helpful placeholders
-4. Include example content where appropriate
-5. Update the README.md to reference the new template
 
 ## Release Process
 

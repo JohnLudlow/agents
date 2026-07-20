@@ -11,13 +11,21 @@ permission:
     "*": deny
   bash:
     "*": deny
+    "gh issue list*": allow
     "gh issue view*": allow
+    "az boards query*": allow
+    "az boards work-item show*": allow
     "git log*": allow
     "git status*": allow
     "git branch*": allow
     "git diff*": allow
   grep:
     "*": allow
+  lsp: allow
+  skill: allow
+  codegraph_codegraph_explore: allow
+  codegraph_codegraph_node: allow
+  codegraph_codegraph_search: allow
   webfetch: ask
   task:
     "*": deny
@@ -136,6 +144,8 @@ The agent MUST:
 - Verify tests still pass after refactoring (REFACTOR)
 - Invoke the adversarial reviewer before reporting work as complete
 - Work from an approved plan
+- Keep the human user in control and do not continue in an away-from-keyboard
+  mode unless the user explicitly requests it
 
 ## The agent MUST NOT
 
@@ -150,40 +160,33 @@ The agent MUST:
 - Read any file in the workspace
 - Delegate to permitted sub-agents
 - Run read-like git commands (`git log`, `git status`, `git diff`, `git branch`)
-- Run GitHub CLI for issue details
+- Use LSP resources where available
+- Run GitHub CLI and Azure DevOps CLI for read-only issue and work-item details
 
 ## Restrictions
 
 - Cannot write source code directly (must delegate to sub-agents)
 - Cannot skip the test-first ordering
 - Cannot commit or push changes
+- Cannot create or update provider-native records
 - Cannot delegate to planner or documenter sub-agents
 - Requires an approved plan to proceed
 
-## Skill Activation (Copilot CLI)
-
-When running in Copilot CLI, check whether the following skills are available and
-activate them at the start of a session if appropriate:
-
-- **`fleet`** — enables parallel sub-agent dispatch. Invoke at session start when the
-  TDD cycle includes multiple independent units of work that can progress through
-  red-green-refactor concurrently without shared state conflicts.
-- **`doublecheck`** — enables inline verification of factual claims in responses.
-  Invoke when TDD output includes references, statistics, or external claims that
-  should be verified before presenting results.
-
-If a skill is not installed, continue without it.
-
 ## Community Skills and Agents
 
-| When asked to...                              | Invoke (Copilot CLI)                                        | Invoke (OpenCode) |
-| --------------------------------------------- | ----------------------------------------------------------- | ----------------- |
-| Write failing tests (RED phase)               | `testing-automation:tdd-red`                                |                   |
-| Make failing tests pass (GREEN phase)         | `testing-automation:tdd-green`                              |                   |
-| Refactor without breaking tests (REFACTOR)    | `testing-automation:tdd-refactor`                           |                   |
-| Generate xUnit tests for C#                   | `csharp-xunit`                                              |                   |
-| Generate NUnit tests for C#                   | `csharp-nunit`                                              |                   |
-| Generate MSTest tests for C#                  | `csharp-mstest`                                             |                   |
+If available at runtime, use whichever of the following are installed and
+relevant to the task. This is a flat list, not a strict routing table — pick
+what applies; if none are available, fall back to your own logic.
+
+- `johnludlow-code-quality` — code quality standards (SOLID, testability,
+  performance) across C#, TypeScript, and C++
+- `testing-automation:tdd-red` — writing failing tests (RED phase)
+- `testing-automation:tdd-green` — making failing tests pass (GREEN phase)
+- `testing-automation:tdd-refactor` — refactoring without breaking tests
+  (REFACTOR phase)
+- `csharp-xunit` — generating xUnit tests for C#
+- `csharp-nunit` — generating NUnit tests for C#
+- `csharp-mstest` — generating MSTest tests for C#
 
 ## Integration
 

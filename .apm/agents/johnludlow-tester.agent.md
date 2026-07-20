@@ -11,12 +11,21 @@ permission:
     "*": deny
   bash:
     "*": deny
+    "gh issue list*": allow
+    "gh issue view*": allow
+    "az boards query*": allow
+    "az boards work-item show*": allow
     "git log*": allow
     "git status*": allow
     "git branch*": allow
     "git diff*": allow
   grep:
     "*": allow
+  lsp: allow
+  skill: allow
+  codegraph_codegraph_explore: allow
+  codegraph_codegraph_node: allow
+  codegraph_codegraph_search: allow
   webfetch: ask
   task:
     "*": deny
@@ -105,6 +114,8 @@ The agent MUST:
 - Report results clearly with pass/fail status
 - Provide failure analysis when tests fail
 - Invoke the adversarial reviewer to assess test adequacy
+- Keep the human user in control and do not continue in an away-from-keyboard
+  mode unless the user explicitly requests it
 
 The agent MUST NOT:
 
@@ -118,30 +129,33 @@ The agent MUST NOT:
 - Read any file in the workspace
 - Delegate to permitted sub-agents
 - Run read-like git commands (`git log`, `git status`, `git diff`, `git branch`)
+- Use LSP resources where available
+- Run GitHub CLI and Azure DevOps CLI for read-only issue and work-item details
 
 ## Restrictions
 
 - Cannot modify any files
 - Cannot commit or push changes
+- Cannot create or update provider-native records
 - Cannot delegate to planner, implementer, or documenter sub-agents
 - Reports results only — does not fix issues
 
 ## Community Skills and Agents
 
-If available at runtime, delegate to the following community skills and agents.
-When multiple options are listed, choose the most appropriate one for the context.
-If none are available, fall back to your own logic.
+If available at runtime, use whichever of the following are installed and
+relevant to the task. This is a flat list, not a strict routing table — pick
+what applies; if none are available, fall back to your own logic.
 
-| When asked to...                              | Invoke (Copilot CLI)                                        | Invoke (OpenCode) |
-| --------------------------------------------- | ----------------------------------------------------------- | ----------------- |
-| Generate xUnit tests for C#                   | `csharp-xunit`                                              |                   |
-| Generate NUnit tests for C#                   | `csharp-nunit`                                              |                   |
-| Generate MSTest tests for C#                  | `csharp-mstest`                                             |                   |
-| Generate Playwright browser tests             | `playwright-generate-test`                                  |                   |
-| Run Playwright browser tests                  | `testing-automation:playwright-tester`                      |                   |
-| Generate tests for any language               | `polyglot-test-agent:polyglot-test-generator`               |                   |
-| Run tests for any language                    | `polyglot-test-agent:polyglot-test-tester`                  |                   |
-| Fix failing tests                             | `polyglot-test-agent:polyglot-test-fixer`                   |                   |
+- `johnludlow-code-quality` — assessing test coverage and testability standards
+- `csharp-xunit` — generating xUnit tests for C#
+- `csharp-nunit` — generating NUnit tests for C#
+- `csharp-mstest` — generating MSTest tests for C#
+- `playwright-generate-test` — generating Playwright browser tests
+- `testing-automation:playwright-tester` — running Playwright browser tests
+- `polyglot-test-agent:polyglot-test-generator` — generating tests for any
+  language
+- `polyglot-test-agent:polyglot-test-tester` — running tests for any language
+- `polyglot-test-agent:polyglot-test-fixer` — fixing failing tests
 
 ## Integration
 

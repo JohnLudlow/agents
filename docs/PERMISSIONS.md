@@ -11,7 +11,7 @@ agents operate within their intended scope.
 
 This project uses a two-tier architecture:
 
-- **Top-level agents** (`mode: agent`) are user-facing entry points with locked
+- **Top-level agents** (`mode: primary`) are user-facing entry points with locked
   intent and restricted delegation permissions
 - **Sub-agents** (`mode: subagent`) perform the actual work within their specific
   domain
@@ -23,6 +23,37 @@ Each permission can be set to:
 - **`allow`** — The action runs without approval
 - **`ask`** — OpenCode prompts you for approval before running the action
 - **`deny`** — The action is blocked and cannot run
+
+All agents in this repository are also configured to use the following tooling
+without approval prompts where the harness supports them:
+
+- LSP resources
+- Skill invocation
+- Codegraph exploration tools (`codegraph_codegraph_explore`,
+  `codegraph_codegraph_node`, `codegraph_codegraph_search`)
+
+### Provider Command Allowlists
+
+For provider interactions, agents may use only the following commands:
+
+- **Read-only context** (planner and non-planner agents):
+  - `gh issue list*`
+  - `gh issue view*`
+  - `az boards query*`
+  - `az boards work-item show*`
+- **Approval-gated writes** (planner agents only):
+  - `gh issue create*`
+  - `gh issue edit*`
+  - `az boards work-item create*`
+  - `az boards work-item update*`
+
+Non-planner agents may use read-only provider commands for context only:
+
+- `gh issue list`, `gh issue view`
+- `az boards query`, `az boards work-item show`
+
+Provider-native create and update actions remain out of scope for non-planner
+agents unless a later change explicitly expands that scope.
 
 ## Top-Level Agent Permissions
 
@@ -38,14 +69,18 @@ Top-level agents orchestrate work by delegating to sub-agents. They have restric
 - Read all project files
 - Write to `docs/plans/` directory
 - Run read-only git commands
-- Create and update GitHub issues
+- Read GitHub issue and Azure DevOps work-item context
+- Create and update GitHub issues with approval
+- Create and update Azure DevOps work items with approval
 - Delegate to: feature-planner, feature-documenter, feature-reviewer
 
 **Restrictions**:
 
 - Cannot delegate to feature-implementer or feature-tester
 - Cannot modify source code
-- Cannot commit or push changes
+- Cannot commit, push, pull, rebase, or merge changes
+- Cannot create, delete, or modify git branches
+- Cannot perform provider writes without explicit approval
 - Cannot run build or test commands
 
 ### Implementer (`johnludlow-implementer`)
@@ -55,7 +90,9 @@ Top-level agents orchestrate work by delegating to sub-agents. They have restric
 **Capabilities**:
 
 - Read all project files (except .env)
+- Use LSP where available
 - Run read-only git commands
+- Read provider issue and work-item context
 - Delegate to: feature-implementer, feature-tester, feature-reviewer
 
 **Restrictions**:
@@ -63,6 +100,7 @@ Top-level agents orchestrate work by delegating to sub-agents. They have restric
 - Cannot delegate to feature-planner or feature-documenter
 - Cannot edit files directly (must delegate to sub-agents)
 - Cannot commit or push changes
+- Cannot create or update provider-native records
 
 ### TDD Implementer (`johnludlow-tdd-implementer`)
 
@@ -71,7 +109,9 @@ Top-level agents orchestrate work by delegating to sub-agents. They have restric
 **Capabilities**:
 
 - Read all project files (except .env)
+- Use LSP where available
 - Run read-only git commands
+- Read provider issue and work-item context
 - Delegate to: feature-tester, feature-implementer, feature-reviewer
 
 **Restrictions**:
@@ -79,6 +119,7 @@ Top-level agents orchestrate work by delegating to sub-agents. They have restric
 - Cannot delegate to feature-planner or feature-documenter
 - Cannot edit files directly (must delegate to sub-agents)
 - Cannot commit or push changes
+- Cannot create or update provider-native records
 - Enforces test-first ordering via system prompt
 
 ### Documenter (`johnludlow-documenter`)
@@ -88,7 +129,9 @@ Top-level agents orchestrate work by delegating to sub-agents. They have restric
 **Capabilities**:
 
 - Read all project files
+- Use LSP where available
 - Run read-only git commands
+- Read provider issue and work-item context
 - Delegate to: feature-documenter, feature-reviewer
 
 **Restrictions**:
@@ -96,6 +139,7 @@ Top-level agents orchestrate work by delegating to sub-agents. They have restric
 - Cannot delegate to feature-planner, feature-implementer, or feature-tester
 - Cannot edit files directly (must delegate to sub-agents)
 - Cannot commit or push changes
+- Cannot create or update provider-native records
 
 ### Tester (`johnludlow-tester`)
 
@@ -104,7 +148,9 @@ Top-level agents orchestrate work by delegating to sub-agents. They have restric
 **Capabilities**:
 
 - Read all project files (except .env)
+- Use LSP where available
 - Run read-only git commands
+- Read provider issue and work-item context
 - Delegate to: feature-tester, feature-reviewer
 
 **Restrictions**:
@@ -112,6 +158,7 @@ Top-level agents orchestrate work by delegating to sub-agents. They have restric
 - Cannot delegate to feature-planner, feature-implementer, or feature-documenter
 - Cannot edit files directly (must delegate to sub-agents)
 - Cannot commit or push changes
+- Cannot create or update provider-native records
 
 ## Sub-Agent Permissions
 
@@ -126,12 +173,16 @@ Sub-agents perform the actual work delegated by top-level agents.
 - Read all project files
 - Write to `/docs/plans/` directory
 - Run read-only git commands (log, status, diff)
-- Create and update GitHub issues
+- Read GitHub issue and Azure DevOps work-item context
+- Create and update GitHub issues with approval
+- Create and update Azure DevOps work items with approval
 
 **Restrictions**:
 
 - Cannot modify source code
-- Cannot commit or push changes
+- Cannot commit, push, pull, rebase, or merge changes
+- Cannot create, delete, or modify git branches
+- Cannot perform provider writes without explicit approval
 - Cannot run build or test commands
 - Cannot modify configuration files
 
@@ -139,7 +190,7 @@ Sub-agents perform the actual work delegated by top-level agents.
 
 - Planning new features
 - Creating implementation specifications
-- Creating GitHub issues for features
+- Creating GitHub issues or Azure DevOps work items for features
 - Analyzing existing code structure
 
 ### Feature Implementer (`johnludlow-feature-implementer`)
@@ -149,6 +200,8 @@ Sub-agents perform the actual work delegated by top-level agents.
 **Capabilities**:
 
 - Read all project files (except .env)
+- Use LSP where available
+- Read provider issue and work-item context
 - Write to source directories:
   - `src/**`
   - `lib/**`
@@ -162,6 +215,7 @@ Sub-agents perform the actual work delegated by top-level agents.
 **Restrictions**:
 
 - Cannot commit or push changes (use `git diff` to review)
+- Cannot create or update provider-native records
 - Cannot modify configuration or environment files
 - Cannot write to documentation directories
 - Cannot run other system commands
@@ -186,17 +240,19 @@ Sub-agents perform the actual work delegated by top-level agents.
 **Capabilities**:
 
 - Read all project files
+- Use LSP where available
+- Read provider issue and work-item context
 - Write to documentation:
-  - `/docs/**` directory
-  - `/docs/plans/` directory
+  - `/docs/*.md`
   - `README.md`
 - Run read-only git commands
-- Create and update GitHub issues
 
 **Restrictions**:
 
 - Cannot modify source code
 - Cannot commit or push changes
+- Cannot create or update provider-native records
+- Cannot write plan documents in `docs/plans/`
 - Cannot run build or test commands
 - Cannot modify configuration files
 
@@ -205,7 +261,7 @@ Sub-agents perform the actual work delegated by top-level agents.
 - Writing API documentation
 - Creating user guides
 - Updating README and guides
-- Maintaining documentation plans
+- Supporting documentation for approved work
 
 ### Feature Tester (`johnludlow-feature-tester`)
 
@@ -214,6 +270,8 @@ Sub-agents perform the actual work delegated by top-level agents.
 **Capabilities**:
 
 - Read all project files (except .env)
+- Use LSP where available
+- Read provider issue and work-item context
 - Run test commands:
   - `npm test`
   - `dotnet test`
@@ -224,6 +282,7 @@ Sub-agents perform the actual work delegated by top-level agents.
 
 - Cannot make any code changes
 - Cannot commit or push changes
+- Cannot create or update provider-native records
 - Cannot run build commands
 - Cannot run other system commands
 
@@ -241,6 +300,8 @@ Sub-agents perform the actual work delegated by top-level agents.
 **Capabilities**:
 
 - Read all project files
+- Use LSP where available
+- Read provider issue and work-item context
 - Run read-only git commands (log, status, diff, branch)
 - Analyse diffs and code changes
 
@@ -249,6 +310,7 @@ Sub-agents perform the actual work delegated by top-level agents.
 - Cannot edit or write any files (strictly read-only)
 - Cannot run build or test commands
 - Cannot commit or push changes
+- Cannot create or update provider-native records
 - Cannot delegate to other agents
 - Cannot fetch web content
 
@@ -298,7 +360,7 @@ The planner can:
 
 - Read all code files
 - Write the plan to `/docs/plans/authentication-plan.md`
-- Create a GitHub issue with the plan
+- Create a GitHub issue with the plan, with approval
 
 ### Ask the Implementer to Implement a Feature
 
@@ -329,8 +391,8 @@ The documenter can:
 
 - Read all code and documentation
 - Write to `/docs/` directory
-- Create GitHub issues
-- Create documentation plans
+- Read GitHub issue and Azure DevOps work-item context
+- Support documentation for approved work
 
 ### Ask the Tester to Verify Implementation
 

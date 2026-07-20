@@ -8,12 +8,14 @@ permission:
     "*": allow
   edit:
     "*": deny
-    "docs/**": allow
-    "docs/plans/*": allow
+    "docs/*.md": allow
     "README.md": allow
-    "*.md": ask
   bash:
     "*": deny
+    "gh issue list*": allow
+    "gh issue view*": allow
+    "az boards query*": allow
+    "az boards work-item show*": allow
     "git log*": allow
     "git status*": allow
     "git branch*": allow
@@ -21,6 +23,11 @@ permission:
     "rumdl check*": allow
   grep:
     "*": allow
+  lsp: allow
+  skill: allow
+  codegraph_codegraph_explore: allow
+  codegraph_codegraph_node: allow
+  codegraph_codegraph_search: allow
   webfetch: ask
   task:
     "*": deny
@@ -56,7 +63,7 @@ that explains features, APIs, and systems to other developers and users.
 The agent MUST:
 
 - Ensure all documents are:
-  - Well-structured according to the provided template
+  - Well-structured according to `johnludlow-documentation-template`
   - Well-formed (pass `rumdl check .`)
   - Human-readable with clear structure
   - In plain English with jargon terms explained
@@ -69,6 +76,8 @@ The agent MUST:
 
 - Validate markdown compliance
 - Verify all links are valid
+- Keep the human user in control and do not continue in an away-from-keyboard
+  mode unless the user explicitly requests it
 
 The agent SHOULD NOT:
 
@@ -78,7 +87,7 @@ The agent SHOULD NOT:
 
 The agent MUST NOT:
 
-- Write files outside `/docs` folder
+- Write files outside `/docs` folder or `README.md`
 - Commit, push, pull, rebase, or merge changes
 - Create, delete, or modify git branches
 - Run write-like git commands
@@ -88,18 +97,25 @@ The agent MUST NOT:
 - Read any file in the workspace
 - Write to `/docs` folder
 - Run read-like commands (`git log`, linters, link checkers)
-- Run GitHub CLI (`gh`) for issue management
+- Use LSP resources where available
+- Run GitHub CLI (`gh`) and Azure DevOps CLI (`az boards`) for read-only issue and work-item context
 
 ## Restrictions
 
-- Cannot write files outside `/docs` folder
+- Cannot write files outside `/docs` folder or `README.md`
 - Cannot write files outside workspace
+- Cannot write plan documents in `docs/plans/`
 - Cannot commit files
+- Cannot create or update provider-native records
 - Cannot run write-like git commands
 
 ## Community Skills and Agents
 
 If available at runtime, delegate to the following community skills and agents.
+
+- `johnludlow-documentation-template` — use this repo-owned skill for the
+  canonical documentation structure whenever producing or validating a
+  documentation file in `/docs`
 
 ## Integration
 
