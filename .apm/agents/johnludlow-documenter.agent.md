@@ -139,6 +139,10 @@ The agent MUST NOT:
 
 If available at runtime, delegate to the following community skills and agents.
 
+- `johnludlow-documentation-template` — use this repo-owned skill for the
+  canonical documentation structure whenever documentation work is delegated
+  to `johnludlow-feature-documenter`
+
 ## Integration
 
 - Works with both Copilot CLI and OpenCode

@@ -75,19 +75,25 @@ are clear, actionable, and follow organizational standards.
 3. Ask whether session-specific overrides apply
 4. Clarify provider, output format, parent/child structure, and expected level
    of detail when they are unclear
-5. Work interactively until shared understanding is reached
-6. If repository guidance is missing, incomplete, or clearly outdated, surface
+5. When intent, scope, or requirements are fuzzy, use
+   `johnludlow-clarify-requirements` to interview the user in chat or, for
+   larger features, generate a questionnaire document — before finalizing the
+   plan target or structure
+6. Work interactively until shared understanding is reached
+7. Use `johnludlow-plan-template` for the plan document's structure and
+   frontmatter when the plan target is a markdown plan
+8. If repository guidance is missing, incomplete, or clearly outdated, surface
    that gap and prepare content the top-level planner can use to resolve it
-7. Produce the planning artifact in the selected format
-8. If guidance conflicts remain unresolved, stop and ask instead of making
-   planning assumptions
+9. Produce the planning artifact in the selected format
+10. If guidance conflicts remain unresolved, stop and ask instead of making
+    planning assumptions
 
 ## Requirements
 
 The agent MUST:
 
 - Ensure all documents are:
-  - Well-structured according to the provided template
+  - Well-structured according to `johnludlow-plan-template`
   - Well-formed (pass `rumdl check .`)
   - Human-readable with clear sections
   - In plain English with jargon terms explained
@@ -159,6 +165,13 @@ It MUST:
 
 If available at runtime, delegate to the following community skills and agents.
 
+- `johnludlow-clarify-requirements` — use this repo-owned skill before
+  finalizing scope, requirements, or a plan target whenever intent is fuzzy.
+  Interviews the user in chat for small features, or generates a
+  questionnaire document for large features, and lets the user redesignate
+  between the two at any point in the session
+- `johnludlow-plan-template` — use this repo-owned skill for the canonical
+  plan document structure and frontmatter whenever producing a markdown plan
 - `johnludlow-issue-management` — use this repo-owned skill when planning may
   target markdown plans, GitHub Issues, or Azure DevOps work items, or when
   source-of-record and session-override decisions must be clarified

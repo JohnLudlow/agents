@@ -95,7 +95,9 @@ This agent MUST NOT delegate to:
 3. Ask whether session-specific overrides apply and clarify provider and output
    format when they are not already explicit
 4. Clarify ambiguities interactively and work with the user until shared
-   understanding is reached
+   understanding is reached — for fuzzy or large-scope requests, use
+   `johnludlow-clarify-requirements` to interview the user in chat or, for
+   larger features, generate a questionnaire document
 5. Offer to create or update issue-management guidance when repository guidance
    is missing, incomplete, or clearly out of date
 6. Delegate plan creation to `johnludlow-feature-planner`
@@ -192,17 +194,21 @@ It MUST:
 - not switch into an away-from-keyboard planning flow unless the human user
   explicitly asks for it
 
-## Skill Activation (Copilot CLI)
+## Community Skills and Agents
 
-When running in Copilot CLI, check whether the following skills are available and
-activate them at the start of a session if appropriate:
+If available at runtime, use whichever of the following are installed and
+relevant to the task. This is a flat list, not a strict routing table — pick
+what applies; if none are available, fall back to your own logic.
 
-- **`fleet`** — enables parallel sub-agent dispatch. Invoke at session start when the
-  task involves multiple independent planning workstreams that can run concurrently.
-- **`doublecheck`** — enables inline verification of factual claims in plan output.
-  Invoke when producing plans that contain external references, statistics, or
-  citations that should be verified before the plan is approved.
-- **`johnludlow-issue-management`** — use this repo-owned skill when planning may
+- `johnludlow-clarify-requirements` — use this repo-owned skill before
+  scope or requirements are finalized whenever intent is fuzzy. Interviews
+  the user in chat for small features, or generates a questionnaire document
+  for large features, and lets the user redesignate between the two at any
+  point in the session.
+- `johnludlow-plan-template` — use this repo-owned skill for the
+  canonical plan document structure and frontmatter whenever producing a
+  markdown plan.
+- `johnludlow-issue-management` — use this repo-owned skill when planning may
   target markdown plans, GitHub Issues, or Azure DevOps work items, or when
   session overrides and source-of-record decisions must be clarified.
 - Provider-specific community skills such as `github-issues` or
@@ -210,8 +216,6 @@ activate them at the start of a session if appropriate:
   but keep planning decisions provider-agnostic and do not depend on any single
   harness-specific skill to establish shared understanding.
 
-If a skill is not installed, continue without it.
-
-## Community Skills and Agents
+## Usage Reporting
 
 See Token Usage Reporting — Primary Agent pattern.

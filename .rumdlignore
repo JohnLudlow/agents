@@ -1,7 +1,7 @@
 # rumdl ignore patterns for johnludlow agents repository
 
-# Template files contain placeholder links
-docs/templates/*.md
+# Skill asset templates contain placeholder links
+.apm/skills/*/assets/*.md
 
 # Agent definition files (have YAML frontmatter, not standard markdown)
 opencode/agents/*.md

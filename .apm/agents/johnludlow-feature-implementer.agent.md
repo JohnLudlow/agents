@@ -123,6 +123,10 @@ The agent MUST NOT:
 
 If available at runtime, delegate to the following community skills and agents.
 
+- `johnludlow-code-quality` — use this repo-owned skill for code quality
+  standards (SOLID, testability, performance) across C#, TypeScript, and C++
+  whenever writing or modifying source code
+
 ## Integration
 
 - Works with both Copilot CLI and OpenCode

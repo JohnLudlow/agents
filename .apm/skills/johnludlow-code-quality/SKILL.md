@@ -1,4 +1,5 @@
 ---
+name: johnludlow-code-quality
 description: "Code quality standards across C#, TypeScript, and C++ (SOLID, testing, performance)"
 ---
 

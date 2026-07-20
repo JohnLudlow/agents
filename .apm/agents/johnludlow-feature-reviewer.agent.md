@@ -167,6 +167,13 @@ The agent MUST NOT:
 If available at runtime, this agent may invoke the following approved community skills
 and agents to assist review.
 
+- `johnludlow-code-quality` — use this repo-owned skill to assess code under
+  review against SOLID, testability, and performance standards across C#,
+  TypeScript, and C++
+- `johnludlow-markdown-standards` — use this repo-owned skill to assess
+  documentation and plan output under review against markdown structure,
+  formatting, and `rumdl check .` compliance
+
 ## Integration
 
 - Invoked by all top-level agents before they report completion

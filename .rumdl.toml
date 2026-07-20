@@ -1,8 +1,8 @@
 # rumdl configuration for johnludlow agents and skills
 
 [global]
-# Exclude template files which contain placeholder links
-exclude = ["docs/templates/**/*.md"]
+# Exclude skill asset templates which contain placeholder links
+exclude = [".apm/skills/*/assets/*.md"]
 
 # MD013 - Line length should not be excessive
 [MD013]

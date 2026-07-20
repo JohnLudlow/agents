@@ -1,4 +1,5 @@
 ---
+name: johnludlow-issue-management
 description: "Provider-agnostic issue-management guidance for markdown plans, GitHub Issues, and Azure DevOps work items"
 ---
 

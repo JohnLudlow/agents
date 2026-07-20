@@ -164,25 +164,49 @@ verdicts.
 
 Skills provide shared knowledge and standards for agents.
 
+### johnludlow-clarify-requirements
+
+Adaptive requirements-clarification skill. Interviews the user in chat for
+small features, or generates a questionnaire document for large features, and
+lets the user redesignate between the two modes at any point in the session.
+Provider- and harness-agnostic.
+
+[View full skill definition](.apm/skills/johnludlow-clarify-requirements/SKILL.md)
+
 ### johnludlow-markdown-standards
 
 Defines markdown document structure, formatting, and quality standards.
 
-[View full skill definition](.apm/skills/johnludlow-markdown-standards.skill.md)
+[View full skill definition](.apm/skills/johnludlow-markdown-standards/SKILL.md)
 
 ### johnludlow-code-quality
 
 Defines code quality expectations across C#, TypeScript, and C++.
 
-[View full skill definition](.apm/skills/johnludlow-code-quality.skill.md)
+[View full skill definition](.apm/skills/johnludlow-code-quality/SKILL.md)
 
 ### johnludlow-issue-management
 
 Defines provider-agnostic issue-management guidance for markdown plans, GitHub
 Issues, and Azure DevOps work items.
 
-[View full skill definition](.apm/skills/johnludlow-issue-management.skill.md)
+[View full skill definition](.apm/skills/johnludlow-issue-management/SKILL.md)
 
+### johnludlow-plan-template
+
+Provides the canonical plan document template and structure for feature plans
+stored in `docs/plans/`, including YAML frontmatter. Used by
+`johnludlow-feature-planner` and `johnludlow-planner`.
+
+[View full skill definition](.apm/skills/johnludlow-plan-template/SKILL.md)
+
+### johnludlow-documentation-template
+
+Provides the canonical documentation template and structure for feature and
+API documentation stored in `docs/`. Used by `johnludlow-feature-documenter`
+and `johnludlow-documenter`.
+
+[View full skill definition](.apm/skills/johnludlow-documentation-template/SKILL.md)
 
 ## Permissions
 
@@ -193,7 +217,8 @@ are automatically installed and configured during setup.
 
 Top-level agents:
 
-- **Planner**: Read all, write `docs/plans/`, inspect provider records, and create or update GitHub/Azure DevOps planning artifacts with approval; delegate to planner/documenter/reviewer
+- **Planner**: Read all, write `docs/plans/`, inspect provider records, and create or update GitHub/Azure DevOps planning
+  artifacts with approval; delegate to planner/documenter/reviewer
 - **Implementer**: Read all, delegate to implementer/tester/reviewer
 - **TDD Implementer**: Read all, delegate to tester/implementer/reviewer (test-first)
 - **Documenter**: Read all, delegate to documenter/reviewer
@@ -216,12 +241,18 @@ commits or pushes) while enabling productive work within their domain.
 
 ## Templates
 
-Pre-built templates for common documents:
+Document templates are now delivered as skills, with the template itself as
+an asset, so they are loaded as explicit skill dependencies by the agents
+that use them:
 
-- **Plan Template** (`docs/templates/plan-template.md`): Structure for feature
-  plans stored in `docs/plans/`, including YAML frontmatter
-- **Documentation Template** (`docs/templates/documentation-template.md`):
-  Structure for technical documentation
+- **Plan Template** — see
+  [johnludlow-plan-template](.apm/skills/johnludlow-plan-template/SKILL.md).
+  Structure for feature plans stored in `docs/plans/`, including YAML
+  frontmatter. Used by `johnludlow-feature-planner` and `johnludlow-planner`.
+- **Documentation Template** — see
+  [johnludlow-documentation-template](.apm/skills/johnludlow-documentation-template/SKILL.md).
+  Structure for technical documentation stored in `docs/`. Used by
+  `johnludlow-feature-documenter` and `johnludlow-documenter`.
 
 ## Installation
 
@@ -403,9 +434,24 @@ These agents are designed to work with:
 │   │   ├── johnludlow-feature-tester.agent.md
 │   │   └── johnludlow-feature-reviewer.agent.md
 │   └── skills/
-│       ├── johnludlow-markdown-standards.skill.md
-│       ├── johnludlow-code-quality.skill.md
-│       └── johnludlow-issue-management.skill.md
+│       ├── johnludlow-clarify-requirements/
+│       │   ├── SKILL.md
+│       │   └── assets/
+│       │       └── clarify-questionnaire-template.md
+│       ├── johnludlow-plan-template/
+│       │   ├── SKILL.md
+│       │   └── assets/
+│       │       └── plan-template.md
+│       ├── johnludlow-documentation-template/
+│       │   ├── SKILL.md
+│       │   └── assets/
+│       │       └── documentation-template.md
+│       ├── johnludlow-markdown-standards/
+│       │   └── SKILL.md
+│       ├── johnludlow-code-quality/
+│       │   └── SKILL.md
+│       └── johnludlow-issue-management/
+│           └── SKILL.md
 ├── agents/                 # ↩️ Legacy back-compat references only
 ├── skills/                 # ↩️ Legacy back-compat references only
 ├── opencode/               # 🔨 Generated OpenCode format (built from .apm/)
@@ -421,7 +467,6 @@ These agents are designed to work with:
 ├── docs/
 │   ├── CI-CD.md
 │   ├── PERMISSIONS.md
-│   ├── templates/
 │   └── plans/              # Feature plans (use YAML frontmatter)
 ├── scripts/
 ├── package.json

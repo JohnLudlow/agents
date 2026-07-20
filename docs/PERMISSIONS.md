@@ -244,7 +244,6 @@ Sub-agents perform the actual work delegated by top-level agents.
 - Read provider issue and work-item context
 - Write to documentation:
   - `/docs/*.md`
-  - `/docs/templates/*.md`
   - `README.md`
 - Run read-only git commands
 

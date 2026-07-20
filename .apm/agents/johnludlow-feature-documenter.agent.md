@@ -9,7 +9,6 @@ permission:
   edit:
     "*": deny
     "docs/*.md": allow
-    "docs/templates/*.md": allow
     "README.md": allow
   bash:
     "*": deny
@@ -64,7 +63,7 @@ that explains features, APIs, and systems to other developers and users.
 The agent MUST:
 
 - Ensure all documents are:
-  - Well-structured according to the provided template
+  - Well-structured according to `johnludlow-documentation-template`
   - Well-formed (pass `rumdl check .`)
   - Human-readable with clear structure
   - In plain English with jargon terms explained
@@ -113,6 +112,10 @@ The agent MUST NOT:
 ## Community Skills and Agents
 
 If available at runtime, delegate to the following community skills and agents.
+
+- `johnludlow-documentation-template` — use this repo-owned skill for the
+  canonical documentation structure whenever producing or validating a
+  documentation file in `/docs`
 
 ## Integration
 

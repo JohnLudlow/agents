@@ -102,21 +102,21 @@ The agent MUST NOT:
 
 ## Community Skills and Agents
 
-If available at runtime, delegate to the following community skills and agents.
-When multiple options are listed, choose the most appropriate one for the context.
-If none are available, fall back to your own logic.
+If available at runtime, use whichever of the following are installed and
+relevant to the task. This is a flat list, not a strict routing table — pick
+what applies; if none are available, fall back to your own logic.
 
-| When asked to...                              | Invoke (Copilot CLI)                                        | Invoke (OpenCode) |
-| --------------------------------------------- | ----------------------------------------------------------- | ----------------- |
-| Generate xUnit tests for C#                   | `csharp-xunit`                                              |                   |
-| Generate NUnit tests for C#                   | `csharp-nunit`                                              |                   |
-| Generate MSTest tests for C#                  | `csharp-mstest`                                             |                   |
-| Generate Playwright browser tests             | `playwright-generate-test`                                  |                   |
-| Run Playwright browser tests                  | `testing-automation:playwright-tester`                      |                   |
-| Explore a website for test planning           | `playwright-explore-website`                                |                   |
-| Generate tests for any language               | `polyglot-test-agent:polyglot-test-generator`               |                   |
-| Run tests for any language                    | `polyglot-test-agent:polyglot-test-tester`                  |                   |
-| Fix failing tests                             | `polyglot-test-agent:polyglot-test-fixer`                   |                   |
+- `johnludlow-code-quality` — assessing test coverage and testability standards
+- `csharp-xunit` — generating xUnit tests for C#
+- `csharp-nunit` — generating NUnit tests for C#
+- `csharp-mstest` — generating MSTest tests for C#
+- `playwright-generate-test` — generating Playwright browser tests
+- `testing-automation:playwright-tester` — running Playwright browser tests
+- `playwright-explore-website` — exploring a website for test planning
+- `polyglot-test-agent:polyglot-test-generator` — generating tests for any
+  language
+- `polyglot-test-agent:polyglot-test-tester` — running tests for any language
+- `polyglot-test-agent:polyglot-test-fixer` — fixing failing tests
 
 ## Integration
 
