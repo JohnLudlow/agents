@@ -164,14 +164,15 @@ verdicts.
 
 Skills provide shared knowledge and standards for agents.
 
-### johnludlow-clarify-requirements
+### johnludlow-quiz
 
-Adaptive requirements-clarification skill. Interviews the user in chat for
-small features, or generates a questionnaire document for large features, and
-lets the user redesignate between the two modes at any point in the session.
+Structured question skill. Interviews the user in chat for narrow decisions,
+or generates a questionnaire document for broad decisions, and lets the user
+switch between the two modes at any point in the session. Used by all agents
+when they encounter decisions that only the user can answer.
 Provider- and harness-agnostic.
 
-[View full skill definition](.apm/skills/johnludlow-clarify-requirements/SKILL.md)
+[View full skill definition](.apm/skills/johnludlow-quiz/SKILL.md)
 
 ### johnludlow-markdown-standards
 
@@ -434,7 +435,7 @@ These agents are designed to work with:
 │   │   ├── johnludlow-feature-tester.agent.md
 │   │   └── johnludlow-feature-reviewer.agent.md
 │   └── skills/
-│       ├── johnludlow-clarify-requirements/
+│       ├── johnludlow-quiz/
 │       │   ├── SKILL.md
 │       │   └── assets/
 │       │       └── clarify-questionnaire-template.md
