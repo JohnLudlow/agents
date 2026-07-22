@@ -9,6 +9,8 @@ permission:
   edit:
     "*": deny
     "docs/plans/*": allow
+    "AGENTS.md": ask
+    "CONTRIBUTING.md": ask
   bash:
     "*": deny
     "gh issue list*": allow
@@ -171,7 +173,14 @@ be presented as options, but the user must choose.
 
 When a preference is resolved from user input and no repository guidance exists,
 offer to record it in an appropriate section of AGENTS.md or CONTRIBUTING.md so
-future sessions benefit.
+future sessions benefit. Writing to these files requires user approval.
+
+### Drafting Missing Guidance Files
+
+If AGENTS.md or CONTRIBUTING.md does not exist in the repository and the planner
+needs it to record preferences or guidance, offer to draft the file for the user.
+Writing the file requires user approval. Include only the sections relevant to
+the preferences being recorded — do not invent unrelated content.
 
 ### Documenting Decisions
 
@@ -229,7 +238,7 @@ The agent MUST NOT:
 - Produce a planning artifact before the four decision gates have been resolved
 - Assume a plan target, file path, or clarification mode when preferences are
   absent
-- Write files outside `docs/plans` folder
+- Write files outside `docs/plans` folder, AGENTS.md, and CONTRIBUTING.md
 - Commit, push, pull, rebase, or merge changes
 - Create, delete, or modify git branches
 - Run write-like git commands
@@ -241,6 +250,8 @@ The agent MUST NOT:
 
 - Read any file in the workspace
 - Write to `docs/plans` folder
+- Write to AGENTS.md and CONTRIBUTING.md with user approval (for recording
+  preferences and guidance)
 - Run read-like commands (`git log`, `rumdl check`, and issue/work-item context queries)
 - Run GitHub CLI (`gh`) and Azure DevOps CLI (`az boards`) for issue and work-item context
 - Produce provider-native planning content for GitHub Issues or Azure DevOps
@@ -248,7 +259,7 @@ The agent MUST NOT:
 
 ## Restrictions
 
-- Cannot write files outside `docs/plans`
+- Cannot write files outside `docs/plans`, AGENTS.md, and CONTRIBUTING.md
 - Cannot commit, push, pull, rebase, or merge changes
 - Cannot create, delete, or modify git branches
 - Cannot run write-like git commands
