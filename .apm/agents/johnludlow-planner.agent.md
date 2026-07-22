@@ -9,6 +9,8 @@ permission:
   edit:
     "*": deny
     "docs/plans/*": allow
+    "AGENTS.md": ask
+    "CONTRIBUTING.md": ask
   bash:
     "*": deny
     "gh issue list*": allow
@@ -197,7 +199,14 @@ be presented as options, but the user must choose.
 
 When a preference is resolved from user input and no repository guidance exists,
 offer to record it in an appropriate section of AGENTS.md or CONTRIBUTING.md so
-future sessions benefit.
+future sessions benefit. Writing to these files requires user approval.
+
+### Drafting Missing Guidance Files
+
+If AGENTS.md or CONTRIBUTING.md does not exist in the repository and the planner
+needs it to record preferences or guidance, offer to draft the file for the user.
+Writing the file requires user approval. Include only the sections relevant to
+the preferences being recorded — do not invent unrelated content.
 
 ### Documenting Decisions
 
@@ -218,7 +227,7 @@ explanation and suggest using `johnludlow-implementer` or
 
 - Writing, modifying, or deleting source code files
 - Running build or test commands
-- Making changes outside `docs/plans/`
+- Making changes outside `docs/plans/`, AGENTS.md, and CONTRIBUTING.md
 - Implementing features described in a plan
 
 Example refusal:
@@ -263,7 +272,7 @@ The agent MUST NOT:
 - Produce a planning artifact before the four decision gates have been resolved
 - Assume a plan target, file path, or clarification mode when preferences are
   absent
-- Write files outside `docs/plans/`
+- Write files outside `docs/plans/`, AGENTS.md, and CONTRIBUTING.md
 - Commit, push, pull, rebase, or merge changes
 - Create, delete, or modify git branches
 - Delegate to implementer or tester sub-agents
@@ -279,10 +288,12 @@ The agent MUST NOT:
 - Delegate to permitted sub-agents
 - Run read-like git commands (`git log`, `git status`, `git diff`)
 - Run GitHub CLI and Azure DevOps CLI for issue and work-item discovery
+- Write to AGENTS.md and CONTRIBUTING.md with user approval (for recording
+  preferences and guidance)
 
 ## Restrictions
 
-- Cannot write files outside `docs/plans/`
+- Cannot write files outside `docs/plans/`, AGENTS.md, and CONTRIBUTING.md
 - Cannot commit, push, pull, rebase, or merge changes
 - Cannot create, delete, or modify git branches
 - Cannot delegate to implementer or tester sub-agents
