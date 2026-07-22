@@ -1,28 +1,46 @@
 ---
-name: johnludlow-clarify-requirements
-description: "Adaptive requirements-clarification skill: interviews the user in chat for small features, or generates a questionnaire document for large features, and lets the user switch between the two modes at any point in the session"
+name: johnludlow-quiz
+description: "Structured question skill: interviews the user in chat for narrow decisions, or generates a questionnaire document for broad decisions, and lets the user switch between the two modes at any point in the session"
 ---
 
-# Clarify Requirements
+# Quiz
 
 ## Overview
 
-This skill closes the gap between what a user asks for and what an agent
-builds, before planning or implementation starts. It replaces two narrower
-ideas — a relentless one-question-at-a-time chat interview, and a
-tracker-issue-backed map for oversized efforts — with a single skill that
-carries one underlying model of open questions and answers, rendered in
-whichever mode fits the size of the change.
+This skill gives any agent a structured way to surface decisions that only
+the user can answer, before the agent acts on assumptions. It carries one
+underlying model of open questions and answers, rendered in whichever mode
+fits the breadth of the decisions.
+
+**Default bias: ask.** When in any doubt about what the user wants, ask
+rather than assume. A brief question is always cheaper than rework caused
+by a wrong guess. This skill exists precisely because agents are prone to
+ploughing ahead on assumptions — use it early and often.
 
 Use this skill when:
 
-- intent is fuzzy and needs sharpening before a plan or spec is written
-- a feature is small enough to clarify in a few conversational turns
-- a feature is large enough that a chat interview would feel like an
-  interrogation, and a document the user can fill in at their own pace is a
-  better fit
+- a task has decisions the agent cannot resolve from the codebase, docs, or
+  history alone
+- the agent could make a reasonable guess, but the cost of guessing wrong
+  is non-trivial
+- the agent is uncertain whether a choice is a fact (answerable from the
+  codebase) or a decision (answerable only by the user) — when in doubt,
+  treat it as a decision and ask
+- a small number of narrow decisions can be resolved in a few conversational
+  turns
+- a large number of decisions, or decisions spanning multiple areas, would
+  benefit from a document the user can fill in at their own pace
 - the user wants to change how they are being asked mid-session, in either
   direction
+
+Examples of decisions this skill handles:
+
+- **Planning**: scope, target audience, acceptance criteria, plan target
+- **Implementation**: which library to use, pattern A vs pattern B, how to
+  handle an edge case, API design choices
+- **Documentation**: audience, depth, which topics to cover
+- **Testing**: test strategy, which frameworks to use, coverage expectations
+- **Any context**: trade-offs the codebase cannot answer for the user
 
 This skill is provider- and harness-agnostic. It uses only plain
 conversation and standard file read/write — no issue-tracker native
@@ -31,8 +49,8 @@ command syntax.
 
 ## Core Model
 
-Every clarification session tracks the same state regardless of which mode
-is rendering it:
+Every quiz session tracks the same state regardless of which mode is
+rendering it:
 
 - **Objective** — a one-line statement of what is being built or decided.
 - **Facts** — answerable by exploring the repository or codebase. The agent
@@ -51,11 +69,39 @@ decisions to the user. Do not blur this line even when working through a
 questionnaire document alone — a document is still the user's side of the
 exchange, not license to fill in their answers for them.
 
+**When uncertain whether something is a fact or a decision, treat it as a
+decision and ask the user.** A brief clarifying question is always
+preferable to a silent assumption that turns out to be wrong.
+
+## When This Skill is Invoked
+
+When this skill is invoked, follow these steps:
+
+1. Determine the scope and make a judgement about
+   - Scope
+   - Complexity
+   - Depth of shared understanding
+
+2. Determine which mode (In-Chat Interview vs Questionnaire)
+   - If the user has asked you to operate in a particular mode, continue in
+     that mode until instructed otherwise, continue to step 4
+   - If a prior decision has been made in this session about what mode to
+     operate in, continue in that mode until instructed otherwise, continue
+     to step 4
+   - If a CONTRIBUTING.md or AGENTS.md document rules about what mode to
+     operate in, continue in that mode until instructed otherwise, continue
+     to step 4
+   - If the ***Scope*** is ***small***, AND the ***Complexity*** is
+     ***simple***, AND the ***shared understanding*** is ***deep*** AND
+     ***complete***, use an in-chat interview (Mode A)
+   - If the ***Scope*** is ***large***, OR the ***Complexity*** is
+     ***complex***, OR the ***shared understanding*** is ***shallow*** OR
+     ***nonexistent***, use a separate questionnaire document (Mode B).
+
 ## Mode A — In-Chat Interview
 
-Default mode. Use for small features, bug fixes, or any change where the
-open-decision count is small and narrow in scope (a rough guide: five or
-fewer open decisions, all in one area of the system).
+Default mode. Use when the open-decision count is small and narrow in scope
+(a rough guide: five or fewer open decisions, all in one area).
 
 Behaviour:
 
@@ -67,15 +113,14 @@ Behaviour:
   correct rather than guessing.
 - When you have resolved every decision, restate the objective and the full
   set of resolved decisions, then stop and ask for confirmation before
-  proceeding to planning or implementation. Do not act on the plan until the
-  user confirms shared understanding has been reached.
+  proceeding. Do not act until the user confirms shared understanding has
+  been reached.
 
 ## Mode B — Questionnaire Document
 
-Use for large or broad features, where the open-decision count is large or
-spans multiple unrelated areas (a rough guide: more than five open
-decisions, or decisions spanning multiple unrelated areas of the system), or
-whenever the user asks for a questionnaire directly.
+Use when the open-decision count is large or spans multiple unrelated areas
+(a rough guide: more than five open decisions, or decisions spanning multiple
+unrelated areas), or whenever the user asks for a questionnaire directly.
 
 Behaviour:
 
@@ -83,9 +128,8 @@ Behaviour:
    writing the document — the document should only contain decisions, not
    facts.
 2. Generate a single markdown file from
-   `assets/clarify-questionnaire-template.md` (relative to this skill),
-   defaulting to `docs/clarify/<slug>.questionnaire.md` (ask the user if a
-   different location is preferred).
+   `assets/clarify-questionnaire-template.md` (relative to this skill).
+   Ask the user where to put the document.
 3. Populate the Objective, Facts, and Open Decisions sections. Leave
    Resolved Decisions and Deferred / Out of Scope empty unless the session
    already produced some before switching to this mode.
@@ -140,6 +184,8 @@ Triggered by explicit user request ("let's just talk through the rest",
 
 The agent MUST:
 
+- Default to asking the user when in any doubt — a brief question is
+  always cheaper than rework from a wrong assumption.
 - Keep the human user in control of which mode is active; only switch modes
   on explicit user request, or by proposing a switch and waiting for
   agreement — never switch silently.
@@ -149,7 +195,7 @@ The agent MUST:
   decision on the user's behalf, including while processing a returned
   questionnaire.
 - Reach and restate shared understanding — objective plus every resolved
-  decision — before proceeding to planning or implementation.
+  decision — before proceeding to the next step.
 - Preserve already-resolved decisions across a mode switch; never re-ask a
   resolved decision.
 - Produce questionnaire documents that pass `rumdl check .` and follow the
@@ -157,30 +203,28 @@ The agent MUST:
 
 The agent MUST NOT:
 
+- Assume when it could ask — guessing saves one message but can cost an
+  entire rework cycle.
 - Depend on issue-tracker native features (blocking, labels, child-issue
   creation) to represent open or resolved decisions.
 - Depend on any harness-specific chat feature beyond plain conversational
   turns and standard file read/write.
-- Proceed to planning or implementation before the user has confirmed shared
-  understanding.
+- Proceed before the user has confirmed shared understanding.
 - Continue asking questions in chat while a questionnaire document is
   outstanding, unless the user asks to switch back.
 
 ## Relationship to Other Skills and Commands
 
-- Use `johnludlow-issue-management` once shared understanding is reached and
-  the resolved objective needs a home (markdown plan, GitHub issue, or Azure
-  DevOps work item) — this skill only clarifies requirements, it does not
-  decide where the resulting plan lives.
+- Use `johnludlow-issue-management` when the resolved objective needs a home
+  in a provider-native system (GitHub issue, Azure DevOps work item) — this
+  skill only surfaces and resolves decisions, it does not decide where
+  resulting artifacts live.
 - Use `johnludlow-markdown-standards` for the structure and formatting of any
   questionnaire document produced by this skill.
-- This skill is upstream of `/flow-start`: a confirmed objective and resolved
-  decision set from this skill is well-formed input to `/flow-start`'s story
-  generation, not a replacement for it.
 
-## Example
+## Examples
 
-### Small feature (Mode A)
+### Planning — small scope (Mode A)
 
 > User: Add a "remember me" checkbox to the login form.
 >
@@ -195,12 +239,51 @@ The agent MUST NOT:
 > the session to 30 days when checked. Resolved: session length is 30 days
 > when checked, unchanged otherwise. Confirm before I proceed?
 
-### Large feature (Mode B)
+### Planning — large scope (Mode B)
 
 > User: We need multi-tenant billing support across the whole platform.
 >
 > Agent: This spans billing, auth, and provisioning — more open decisions
-> than a chat interview handles well. I've drafted
-> `docs/clarify/multi-tenant-billing.questionnaire.md` with the facts I could
-> confirm from the code and the open decisions I need from you. Take your
-> time and hand it back when ready.
+> than a chat interview handles well. I've drafted a questionnaire with the
+> facts I could confirm from the code and the open decisions I need from
+> you. Take your time and hand it back when ready.
+
+### Implementation — library choice (Mode A)
+
+> User: Implement the CSV export feature from the plan.
+>
+> Agent: The plan says "export to CSV" but doesn't specify a library. The
+> project already uses `papaparse` for CSV parsing in the import flow (a
+> fact). One decision: should I use `papaparse` for export too, or do you
+> prefer a different library?
+>
+> User: Use papaparse.
+>
+> Agent: Understood. Using papaparse for CSV export, consistent with the
+> existing import flow. Confirm before I proceed?
+
+### Implementation — design pattern (Mode A)
+
+> User: Add retry logic to the API client.
+>
+> Agent: The API client currently has no retry logic (a fact). Two
+> decisions: (1) should retries use exponential backoff or fixed intervals?
+> (2) What is the maximum retry count?
+>
+> User: Exponential backoff, max 3 retries.
+>
+> Agent: Understood. Exponential backoff with a maximum of 3 retries.
+> Confirm before I proceed?
+
+### Documentation — audience (Mode A)
+
+> User: Document the authentication module.
+>
+> Agent: The auth module has inline JSDoc but no standalone documentation
+> (a fact). One decision: is this documentation aimed at API consumers
+> (external), or at developers maintaining the module (internal)?
+>
+> User: Internal — for maintainers.
+>
+> Agent: Understood. Internal maintainer documentation for the auth module.
+> Confirm before I proceed?

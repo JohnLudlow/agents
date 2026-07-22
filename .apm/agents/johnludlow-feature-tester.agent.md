@@ -107,6 +107,9 @@ relevant to the task. This is a flat list, not a strict routing table — pick
 what applies; if none are available, fall back to your own logic.
 
 - `johnludlow-code-quality` — assessing test coverage and testability standards
+- `johnludlow-quiz` — use when in any doubt about what the user wants:
+  test scope, strategy, coverage expectations, or any choice the codebase
+  does not answer for the agent. Prefer asking over assuming.
 - `csharp-xunit` — generating xUnit tests for C#
 - `csharp-nunit` — generating NUnit tests for C#
 - `csharp-mstest` — generating MSTest tests for C#
