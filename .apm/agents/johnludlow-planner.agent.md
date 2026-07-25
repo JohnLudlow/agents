@@ -208,9 +208,9 @@ write actions before proceeding to Planning Steps.
    write them inline in plan documents
 6. If shared understanding is not reached, stop and ask the user instead of
    making planning assumptions
-7. Before reporting completion, delegate to `johnludlow-feature-reviewer` for
-   adversarial review
-8. Address reviewer feedback by delegating corrections to the appropriate
+7. Before reporting completion, invoke `johnludlow-adversarial-review` skill
+   for adversarial review
+8. Address review feedback by delegating corrections to the appropriate
    sub-agent
 9. Collect usage summaries from sub-agents
 10. Aggregate into a structured usage report
@@ -390,6 +390,13 @@ still apply.
 - `johnludlow-issue-management` — **MUST** be consulted at Decision Gate 2
   (plan target selection) and Decision Gate 4 (issue workflow). Use the skill's
   provider selection logic and mandatory human approval points.
+- `johnludlow-adversarial-review` — invoked before plan completion (Planning
+  Step 7) to identify flaws, omissions, and standards violations. This is a
+  quality gate; stop and address feedback before signoff.
+- `johnludlow-subagent-spawning` — reference guide for spawning planning
+  subagents across different harnesses (CLI, browser, Azure DevOps). Consult
+  when implementing Phase 2 (harness detection) or troubleshooting subagent
+  coordination across Copilot harnesses.
 - Provider-specific community skills such as `github-issues` or
   `azure-devops-cli` — use them when available for provider execution details,
   but keep planning decisions provider-agnostic and do not depend on any single

@@ -77,6 +77,44 @@ preferable to a silent assumption that turns out to be wrong.
 
 When this skill is invoked, follow these steps:
 
+### ✓ BLOCKER 0: Preference Resolution
+
+Before proceeding with interviews or questionnaires, resolve any setup
+preferences. These are _not_ subject to user assumptions — they MUST be
+documented in the repository or explicitly confirmed.
+
+**Setup preferences this skill requires:**
+
+- **Preference 1: Output destination** — Are results recorded as a GitHub
+  issue, Azure DevOps work item, local file, or inline message?
+- **Preference 2: File storage location** (if using local files) — Which
+  directory should questionnaire documents or output files live in?
+
+**Gate logic (deterministic):**
+
+1. Check `CONTRIBUTING.md` and `AGENTS.md` for documented preferences on
+   output destination and file storage paths
+2. If preferences are found in repo: use them (no user question needed)
+3. If preferences NOT found in repo:
+   - MUST ask the user (no silent assumption allowed)
+   - MUST present the ask_user tool with specific choices:
+     - Output destination: "GitHub issue", "Azure DevOps work item",
+       "Local file", "Inline message"
+     - File location (if Local file selected): "docs/plans/", "docs/",
+       "./" (current directory), or custom path?
+   - MUST wait for answer
+   - MUST offer to record the preference: "Would you like me to record
+     this preference in CONTRIBUTING.md or AGENTS.md for future sessions?
+     (Yes / No)" — this is not optional; always offer
+   - If user confirms: document the preference in the appropriate file with
+     timestamp and context ("Recorded by johnludlow-quiz on [date]")
+
+**Completion criterion:** Preferences are resolved AND user has been offered
+recording opportunity AND offer was either accepted (preference recorded) OR
+explicitly declined (user chose not to record).
+
+---
+
 1. Determine the scope and make a judgement about
    - Scope
    - Complexity
@@ -127,26 +165,28 @@ Behaviour:
 1. Resolve as many facts as possible by exploring the codebase before
    writing the document — the document should only contain decisions, not
    facts.
-2. Generate a single markdown file from
-   `assets/clarify-questionnaire-template.md` (relative to this skill).
-   Ask the user where to put the document.
-3. Populate the Objective, Facts, and Open Decisions sections. Leave
+2. Preferences (output destination and file storage location) have already
+   been resolved in BLOCKER 0. Use the resolved preferences to determine:
+   - Whether to generate a document (if local file selected) or to return
+     resolved decisions inline (if inline message selected)
+   - Where to save the document (using the file storage location from
+     BLOCKER 0)
+3. If generating a document: Generate a single markdown file from
+   `assets/clarify-questionnaire-template.md` (relative to this skill),
+   stored at the location determined in step 2.
+4. Populate the Objective, Facts, and Open Decisions sections. Leave
    Resolved Decisions and Deferred / Out of Scope empty unless the session
    already produced some before switching to this mode.
-4. Tell the user where the file is and that they can answer inline under
+5. Tell the user where the file is and that they can answer inline under
    each question, then hand it back when ready. Do not continue asking
    questions in chat while a questionnaire is outstanding, unless the user
    asks to switch back (see Mode Switching).
-5. When the user returns the file, read it, move every answered item from
+6. When the user returns the file, read it, move every answered item from
    Open Decisions to Resolved Decisions with its answer recorded, and treat
    any newly surfaced questions the answers raise as new Open Decisions.
-6. Repeat until no open decisions remain, then restate the objective and the
+7. Repeat until no open decisions remain, then restate the objective and the
    full set of resolved decisions and stop for confirmation, exactly as in
    Mode A.
-
-The document is deliberately incomplete while decisions remain open — do not
-guess at answers to speed this up, and do not invent structure the user
-hasn't asked for beyond the template.
 
 ## Mode Switching
 
@@ -184,6 +224,11 @@ Triggered by explicit user request ("let's just talk through the rest",
 
 The agent MUST:
 
+- **Preference Resolution (BLOCKER 0):** Before any interview or questionnaire,
+  MUST check CONTRIBUTING.md and AGENTS.md for documented preferences (output
+  destination, file storage location). If not found, MUST ask the user using
+  ask_user tool with specific choices. MUST offer to record preferences after
+  user answer (offer is not optional).
 - Default to asking the user when in any doubt — a brief question is
   always cheaper than rework from a wrong assumption.
 - Keep the human user in control of which mode is active; only switch modes

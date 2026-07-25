@@ -353,6 +353,13 @@ still apply.
 - `johnludlow-issue-management` — **MUST** be consulted at Decision Gate 2
   (plan target selection) and Decision Gate 4 (issue workflow). Use the skill's
   provider selection logic and mandatory human approval points.
+- `johnludlow-adversarial-review` — available as a quality gate skill for
+  reviewing planning artifacts. Invoked by the top-level planner before
+  completion, but can be used by this agent or other agents as needed.
+- `johnludlow-subagent-spawning` — reference guide for spawning planning
+  subagents across different harnesses (CLI, browser, Azure DevOps). Consult
+  when implementing Phase 2 (harness detection) or troubleshooting subagent
+  coordination across Copilot harnesses.
 - Provider-specific community skills such as `github-issues` and
   `azure-devops-cli` — use them when available for provider execution details,
   but keep planning decisions provider-agnostic and do not depend on any single
