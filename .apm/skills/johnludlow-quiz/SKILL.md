@@ -107,7 +107,7 @@ documented in the repository or explicitly confirmed.
      this preference in CONTRIBUTING.md or AGENTS.md for future sessions?
      (Yes / No)" — this is not optional; always offer
    - If user confirms: document the preference in the appropriate file with
-     timestamp and context ("Recorded by johnludlow-quiz on [date]")
+     timestamp and context (e.g., "Recorded by johnludlow-quiz on YYYY-MM-DD")
 
 **Completion criterion:** Preferences are resolved AND user has been offered
 recording opportunity AND offer was either accepted (preference recorded) OR
