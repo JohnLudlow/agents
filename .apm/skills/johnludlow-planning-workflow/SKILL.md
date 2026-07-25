@@ -11,10 +11,11 @@ two planning agents. Both agents reference this skill instead of duplicating
 the workflow, ensuring consistency. Changes to workflow apply everywhere
 automatically.
 
-## The Four BLOCKERs
+## The Five BLOCKERs
 
 Every planning session must resolve these gates in order before proceeding to
-Planning Steps.
+Planning Steps. (Gates 0–4 are shared across all planning agents; additional
+local gates may be defined by calling agents.)
 
 ### ✓ BLOCKER 0: Template Compliance
 
@@ -70,13 +71,34 @@ Azure DevOps work item, inline message).
 3. If no repository guidance: ask user and offer to record preference
 4. Verify that user has approved any provider-native write actions (creating
    issues, work items, etc.)
+5. If local file selected: carry forward file storage preference from quiz
+   BLOCKER 0 (which may be documented or user-stated)
 
 **Completion criterion:** Plan target is confirmed and provider-specific
 approval (if needed) is documented.
 
 ---
 
-### ✓ BLOCKER 3: Issue Workflow
+### ✓ BLOCKER 3: Local File Path Confirmation (if applicable)
+
+**Objective:** If the plan target is a local file, confirm the exact file path
+and verify the directory exists or is creatable.
+
+**Gate logic:**
+
+1. If plan target is not a local file: skip this BLOCKER
+2. If plan target is a local file:
+   - Use file storage preference from quiz BLOCKER 0 as starting point
+   - Confirm the concrete file path with user (e.g., "docs/plans/auth.md")
+   - Verify that the directory exists or can be created
+   - If user modifies path: offer to record new preference for future sessions
+
+**Completion criterion:** Concrete file path is confirmed and directory is
+accessible.
+
+---
+
+### ✓ BLOCKER 4: Issue Workflow
 
 **Objective:** If the plan target is a provider-native artifact (GitHub issue,
 Azure DevOps work item), confirm the workflow.
@@ -111,7 +133,7 @@ user. Always offer to record preferences for future sessions.
 
 ## Post-BLOCKER Validation
 
-After all four BLOCKERs are resolved, validate:
+After all five BLOCKERs are resolved, validate:
 
 1. Template matches selected plan target format
 2. Shared understanding is complete (objective + all decisions)
@@ -121,7 +143,7 @@ After all four BLOCKERs are resolved, validate:
 
 ## Completion
 
-All four BLOCKERs resolved and validated. Ready to proceed to Planning Steps
+All five BLOCKERs resolved and validated. Ready to proceed to Planning Steps
 (which live in the calling agent, not in this skill).
 
 ## Related

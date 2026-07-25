@@ -321,20 +321,15 @@ It MUST:
 
 ## Community Skills and Agents
 
-**CRITICAL:** All planning workflow (BLOCKERs, preference resolution, validation)
-is centralized in `johnludlow-planning-workflow` skill. This agent references
-that skill rather than duplicating logic, ensuring consistency across all planning
-agents.
-
 The following skills are mandatory or strongly recommended. Availability is
 checked at runtime; if a skill is not installed, fall back to your own logic for
 that specific concern only — the decision gates and preference resolution rules
 still apply.
 
-- `johnludlow-planning-workflow` — **MUST** be loaded at the start of any
-  planning task. This skill consolidates the shared BLOCKERs and preference
-  resolution logic used by all planning agents. Reference this skill instead of
-  duplicating the workflow.
+- `johnludlow-planning-workflow` — Reference skill providing shared BLOCKER
+  definitions. See the explicit gate logic above in the "Decision Gates" section
+  for authoritative workflow definitions (this agent implements the full
+  workflow locally for determinism and clarity).
 - `johnludlow-quiz` — **MUST** be loaded before any planning
   work begins (at BLOCKER 1). This is a hard requirement, not an
   optional aid. The skill handles both Mode A (in-chat interview) and Mode B
@@ -343,8 +338,9 @@ still apply.
 - `johnludlow-plan-template` — use this repo-owned skill for the canonical
   plan document structure and frontmatter whenever producing a markdown plan.
 - `johnludlow-issue-management` — **MUST** be consulted at Decision Gate 2
-  (plan target selection) and Decision Gate 4 (issue workflow). Use the skill's
-  provider selection logic and mandatory human approval points.
+  (plan target selection), Decision Gate 3 (local file path confirmation),
+  and Decision Gate 4 (issue workflow). Use the skill's provider selection
+  logic and mandatory human approval points.
 - `johnludlow-adversarial-review` — available as a quality gate skill for
   reviewing planning artifacts. Invoked by the top-level planner before
   completion, but can be used by this agent or other agents as needed.

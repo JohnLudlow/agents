@@ -97,7 +97,7 @@ documented in the repository or explicitly confirmed.
 2. If preferences are found in repo: use them (no user question needed)
 3. If preferences NOT found in repo:
    - MUST ask the user (no silent assumption allowed)
-   - MUST present the ask_user tool with specific choices:
+   - MUST present the user with specific choices:
      - Output destination: "GitHub issue", "Azure DevOps work item",
        "Local file", "Inline message"
      - File location (if Local file selected): "docs/plans/", "docs/",
@@ -199,8 +199,9 @@ The agent MUST:
 
 - **Preference Resolution (BLOCKER 0):** Before any interview or questionnaire,
   MUST check CONTRIBUTING.md and AGENTS.md for documented preferences (output
-  destination, file storage location). If not found, MUST ask the user using
-  ask_user tool with specific choices. MUST offer to record preferences after
+  destination, file storage location). If not found, MUST present the user
+  with specific choices (GitHub issue, Azure DevOps work item, local file,
+  inline message) and wait for answer. MUST offer to record preferences after
   user answer (offer is not optional).
 - Default to asking the user when in any doubt — a brief question is
   always cheaper than rework from a wrong assumption.
