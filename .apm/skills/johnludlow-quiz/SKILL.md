@@ -77,6 +77,44 @@ preferable to a silent assumption that turns out to be wrong.
 
 When this skill is invoked, follow these steps:
 
+### ✓ BLOCKER 0: Preference Resolution
+
+Before proceeding with interviews or questionnaires, resolve any setup
+preferences. These are _not_ subject to user assumptions — they MUST be
+documented in the repository or explicitly confirmed.
+
+**Setup preferences this skill requires:**
+
+- **Preference 1: Output destination** — Are results recorded as a GitHub
+  issue, Azure DevOps work item, local file, or inline message?
+- **Preference 2: File storage location** (if using local files) — Which
+  directory should questionnaire documents or output files live in?
+
+**Gate logic (deterministic):**
+
+1. Check `CONTRIBUTING.md` (and `AGENTS.md` if present) for documented preferences on
+   output destination and file storage paths
+2. If preferences are found in repo: use them (no user question needed)
+3. If preferences NOT found in repo:
+   - MUST ask the user (no silent assumption allowed)
+   - MUST present the user with specific choices:
+     - Output destination: "GitHub issue", "Azure DevOps work item",
+       "Local file", "Inline message"
+      - File location (if Local file selected): "docs/plans/" (preferred for planning agents),
+        or a custom path under the calling agent's allowed write locations?
+   - MUST wait for answer
+   - MUST offer to record the preference: "Would you like me to record
+     this preference in CONTRIBUTING.md or AGENTS.md for future sessions?
+     (Yes / No)" — this is not optional; always offer
+   - If user confirms: document the preference in the appropriate file with
+     timestamp and context (e.g., "Recorded by johnludlow-quiz on YYYY-MM-DD")
+
+**Completion criterion:** Preferences are resolved AND user has been offered
+recording opportunity AND offer was either accepted (preference recorded) OR
+explicitly declined (user chose not to record).
+
+---
+
 1. Determine the scope and make a judgement about
    - Scope
    - Complexity
@@ -127,63 +165,44 @@ Behaviour:
 1. Resolve as many facts as possible by exploring the codebase before
    writing the document — the document should only contain decisions, not
    facts.
-2. Generate a single markdown file from
-   `assets/clarify-questionnaire-template.md` (relative to this skill).
-   Ask the user where to put the document.
-3. Populate the Objective, Facts, and Open Decisions sections. Leave
+2. Preferences (output destination and file storage location) have already
+   been resolved in BLOCKER 0. Use the resolved preferences to determine:
+   - Whether to generate a document (if local file selected) or to return
+     resolved decisions inline (if inline message selected)
+   - Where to save the document (using the file storage location from
+     BLOCKER 0)
+3. If generating a document: Generate a single markdown file from
+   `assets/clarify-questionnaire-template.md` (relative to this skill),
+   stored at the location determined in step 2.
+4. Populate the Objective, Facts, and Open Decisions sections. Leave
    Resolved Decisions and Deferred / Out of Scope empty unless the session
    already produced some before switching to this mode.
-4. Tell the user where the file is and that they can answer inline under
+5. Tell the user where the file is and that they can answer inline under
    each question, then hand it back when ready. Do not continue asking
    questions in chat while a questionnaire is outstanding, unless the user
    asks to switch back (see Mode Switching).
-5. When the user returns the file, read it, move every answered item from
+6. When the user returns the file, read it, move every answered item from
    Open Decisions to Resolved Decisions with its answer recorded, and treat
    any newly surfaced questions the answers raise as new Open Decisions.
-6. Repeat until no open decisions remain, then restate the objective and the
+7. Repeat until no open decisions remain, then restate the objective and the
    full set of resolved decisions and stop for confirmation, exactly as in
    Mode A.
 
-The document is deliberately incomplete while decisions remain open — do not
-guess at answers to speed this up, and do not invent structure the user
-hasn't asked for beyond the template.
-
 ## Mode Switching
 
-The user may redesignate the session's mode at any point, in either
-direction. Mode switching is a projection of the same underlying state, not
-a restart — never re-ask a decision that is already Resolved.
-
-### Chat to questionnaire
-
-Triggered by explicit user request ("make this a questionnaire", "let's put
-this in a document instead"), or proposed by the agent when the open-decision
-count or breadth grows mid-interview past the Mode B guide above.
-
-1. Snapshot the current Objective, Facts, Resolved Decisions, and Open
-   Decisions.
-2. Generate the questionnaire document as in Mode B, pre-populated with the
-   snapshot — resolved items go straight into Resolved Decisions, not back
-   into Open Decisions.
-3. Tell the user the file has been created and pause chat-mode questioning.
-
-### Questionnaire to chat
-
-Triggered by explicit user request ("let's just talk through the rest",
-"I'd rather answer these in chat").
-
-1. Read the questionnaire document as it currently stands, including any
-   partial answers.
-2. Import every answered item into Resolved Decisions and every unanswered
-   item into Open Decisions.
-3. Resume Mode A, asking one open decision at a time. Do not regenerate or
-   delete the document — if the user switches back to questionnaire mode
-   later, re-sync it from the current state rather than starting a new file.
+The user may switch modes at any point in either direction. For details on
+switching logic (chat ↔ questionnaire), see **[BRANCHING.md](BRANCHING.md)**.
 
 ## Requirements
 
 The agent MUST:
 
+- **Preference Resolution (BLOCKER 0):** Before any interview or questionnaire,
+  MUST check CONTRIBUTING.md and AGENTS.md for documented preferences (output
+  destination, file storage location). If not found, MUST present the user
+  with specific choices (GitHub issue, Azure DevOps work item, local file,
+  inline message) and wait for answer. MUST offer to record preferences after
+  user answer (offer is not optional).
 - Default to asking the user when in any doubt — a brief question is
   always cheaper than rework from a wrong assumption.
 - Keep the human user in control of which mode is active; only switch modes
@@ -215,75 +234,11 @@ The agent MUST NOT:
 
 ## Relationship to Other Skills and Commands
 
-- Use `johnludlow-issue-management` when the resolved objective needs a home
-  in a provider-native system (GitHub issue, Azure DevOps work item) — this
-  skill only surfaces and resolves decisions, it does not decide where
-  resulting artifacts live.
-- Use `johnludlow-markdown-standards` for the structure and formatting of any
-  questionnaire document produced by this skill.
+See **[DEPENDENCIES.md](DEPENDENCIES.md)** for relationships to johnludlow-issue-management,
+johnludlow-markdown-standards, johnludlow-planning-workflow, and johnludlow-subagent-spawning.
 
 ## Examples
 
-### Planning — small scope (Mode A)
-
-> User: Add a "remember me" checkbox to the login form.
->
-> Agent: Looking at the login form now — it currently issues a session
-> cookie with no explicit expiry (a fact, resolved by reading the code).
-> One decision: when "remember me" is checked, how long should the session
-> last?
->
-> User: 30 days.
->
-> Agent: Understood. Objective: add a "remember me" checkbox that extends
-> the session to 30 days when checked. Resolved: session length is 30 days
-> when checked, unchanged otherwise. Confirm before I proceed?
-
-### Planning — large scope (Mode B)
-
-> User: We need multi-tenant billing support across the whole platform.
->
-> Agent: This spans billing, auth, and provisioning — more open decisions
-> than a chat interview handles well. I've drafted a questionnaire with the
-> facts I could confirm from the code and the open decisions I need from
-> you. Take your time and hand it back when ready.
-
-### Implementation — library choice (Mode A)
-
-> User: Implement the CSV export feature from the plan.
->
-> Agent: The plan says "export to CSV" but doesn't specify a library. The
-> project already uses `papaparse` for CSV parsing in the import flow (a
-> fact). One decision: should I use `papaparse` for export too, or do you
-> prefer a different library?
->
-> User: Use papaparse.
->
-> Agent: Understood. Using papaparse for CSV export, consistent with the
-> existing import flow. Confirm before I proceed?
-
-### Implementation — design pattern (Mode A)
-
-> User: Add retry logic to the API client.
->
-> Agent: The API client currently has no retry logic (a fact). Two
-> decisions: (1) should retries use exponential backoff or fixed intervals?
-> (2) What is the maximum retry count?
->
-> User: Exponential backoff, max 3 retries.
->
-> Agent: Understood. Exponential backoff with a maximum of 3 retries.
-> Confirm before I proceed?
-
-### Documentation — audience (Mode A)
-
-> User: Document the authentication module.
->
-> Agent: The auth module has inline JSDoc but no standalone documentation
-> (a fact). One decision: is this documentation aimed at API consumers
-> (external), or at developers maintaining the module (internal)?
->
-> User: Internal — for maintainers.
->
-> Agent: Understood. Internal maintainer documentation for the auth module.
-> Confirm before I proceed?
+For concrete examples of Mode A (chat interview) and Mode B (questionnaire
+document) across planning, implementation, documentation, and testing contexts,
+see **[EXAMPLES.md](EXAMPLES.md)**.

@@ -4,13 +4,26 @@
 # and configured according to GitHub Copilot documentation.
 #
 # Agents:
-#   - johnludlow-feature-documenter: ./agents/johnludlow-feature-documenter.md
-#   - johnludlow-feature-implementer: ./agents/johnludlow-feature-implementer.md
-#   - johnludlow-feature-planner: ./agents/johnludlow-feature-planner.md
-#   - johnludlow-feature-tester: ./agents/johnludlow-feature-tester.md
+#   - johnludlow-documenter: ./.apm/agents/johnludlow-documenter.agent.md
+#   - johnludlow-feature-documenter: ./.apm/agents/johnludlow-feature-documenter.agent.md
+#   - johnludlow-feature-implementer: ./.apm/agents/johnludlow-feature-implementer.agent.md
+#   - johnludlow-feature-planner: ./.apm/agents/johnludlow-feature-planner.agent.md
+#   - johnludlow-feature-reviewer: ./.apm/agents/johnludlow-feature-reviewer.agent.md
+#   - johnludlow-feature-tester: ./.apm/agents/johnludlow-feature-tester.agent.md
+#   - johnludlow-implementer: ./.apm/agents/johnludlow-implementer.agent.md
+#   - johnludlow-planner: ./.apm/agents/johnludlow-planner.agent.md
+#   - johnludlow-tdd-implementer: ./.apm/agents/johnludlow-tdd-implementer.agent.md
+#   - johnludlow-tester: ./.apm/agents/johnludlow-tester.agent.md
 #
 # Skills:
-#   - johnludlow-code-quality: ./skills/johnludlow-code-quality.md
-#   - johnludlow-markdown-standards: ./skills/johnludlow-markdown-standards.md
+#   - johnludlow-adversarial-review: ./.apm/skills/johnludlow-adversarial-review/SKILL.md
+#   - johnludlow-code-quality: ./.apm/skills/johnludlow-code-quality/SKILL.md
+#   - johnludlow-documentation-template: ./.apm/skills/johnludlow-documentation-template/SKILL.md
+#   - johnludlow-issue-management: ./.apm/skills/johnludlow-issue-management/SKILL.md
+#   - johnludlow-markdown-standards: ./.apm/skills/johnludlow-markdown-standards/SKILL.md
+#   - johnludlow-plan-template: ./.apm/skills/johnludlow-plan-template/SKILL.md
+#   - johnludlow-planning-workflow: ./.apm/skills/johnludlow-planning-workflow/SKILL.md
+#   - johnludlow-quiz: ./.apm/skills/johnludlow-quiz/SKILL.md
+#   - johnludlow-subagent-spawning: ./.apm/skills/johnludlow-subagent-spawning/SKILL.md
 #
 # See https://github.com/github/copilot-cli for more information.

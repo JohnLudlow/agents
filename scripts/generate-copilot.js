@@ -1,26 +1,19 @@
 #!/usr/bin/env node
 
 /**
- * @johnludlow/agents GitHub Copilot Format Generator
+ * @johnludlow/agents GitHub Copilot Config Generator
  *
- * Converts OpenCode format (agents, skills) to GitHub Copilot format.
- * This ensures both environments stay in sync from a single source of truth.
+ * Generates a Copilot path mapping file from APM-native agent/skill sources.
  */
 
 const fs = require("fs");
 const path = require("path");
 
-// Configuration
-const SOURCE_DIRS = {
-  agents: path.join(__dirname, "..", "agents"),
-  skills: path.join(__dirname, "..", "skills"),
+const APM_DIRS = {
+  agents: path.join(__dirname, "..", ".apm", "agents"),
+  skills: path.join(__dirname, "..", ".apm", "skills")
 };
-
-const OUTPUT_DIRS = {
-  agents: path.join(__dirname, "..", ".github", "agents"),
-  skills: path.join(__dirname, "..", ".github", "skills"),
-  root: path.join(__dirname, "..", ".github"),
-};
+const OUTPUT_DIR = path.join(__dirname, "..", ".github");
 
 /**
  * Ensure directory exists
@@ -31,27 +24,35 @@ function ensureDir(dir) {
   }
 }
 
-/**
- * Copy files from source to target
- */
-function copyFiles(sourceDir, targetDir, filePattern = "*.md") {
-  if (!fs.existsSync(sourceDir)) {
-    return 0;
+function getApmAgents() {
+  if (!fs.existsSync(APM_DIRS.agents)) {
+    return [];
   }
 
-  ensureDir(targetDir);
+  return fs.readdirSync(APM_DIRS.agents)
+    .filter(file => file.endsWith(".agent.md"))
+    .sort()
+    .map(file => ({
+      name: file.replace(".agent.md", ""),
+      path: `./.apm/agents/${file}`
+    }));
+}
 
-  const files = fs.readdirSync(sourceDir).filter(f => f.endsWith(".md"));
-  let copied = 0;
-
-  for (const file of files) {
-    const sourcePath = path.join(sourceDir, file);
-    const targetPath = path.join(targetDir, file);
-    fs.copyFileSync(sourcePath, targetPath);
-    copied++;
+function getApmSkills() {
+  if (!fs.existsSync(APM_DIRS.skills)) {
+    return [];
   }
 
-  return copied;
+  return fs.readdirSync(APM_DIRS.skills)
+    .filter(entry => {
+      const skillPath = path.join(APM_DIRS.skills, entry, "SKILL.md");
+      return fs.existsSync(skillPath);
+    })
+    .sort()
+    .map(skillName => ({
+      name: skillName,
+      path: `./.apm/skills/${skillName}/SKILL.md`
+    }));
 }
 
 /**
@@ -60,36 +61,12 @@ function copyFiles(sourceDir, targetDir, filePattern = "*.md") {
 function generateCopilotConfig() {
   console.log("\n  → Generating Copilot configuration file...");
 
-  const agentsDir = OUTPUT_DIRS.agents;
-  const skillsDir = OUTPUT_DIRS.skills;
+  const agents = getApmAgents();
+  const skills = getApmSkills();
 
-  if (!fs.existsSync(agentsDir) && !fs.existsSync(skillsDir)) {
+  if (agents.length === 0 && skills.length === 0) {
     console.log("    ℹ️  No agents or skills found to configure");
     return;
-  }
-
-  // Read agent definitions
-  const agents = [];
-  if (fs.existsSync(agentsDir)) {
-    const agentFiles = fs.readdirSync(agentsDir).filter(f => f.endsWith(".md"));
-    for (const file of agentFiles) {
-      agents.push({
-        name: path.basename(file, ".md"),
-        path: `./agents/${file}`
-      });
-    }
-  }
-
-  // Read skill definitions
-  const skills = [];
-  if (fs.existsSync(skillsDir)) {
-    const skillFiles = fs.readdirSync(skillsDir).filter(f => f.endsWith(".md"));
-    for (const file of skillFiles) {
-      skills.push({
-        name: path.basename(file, ".md"),
-        path: `./skills/${file}`
-      });
-    }
   }
 
   // Create configuration comment for .github/copilot-config.yml or similar
@@ -107,7 +84,7 @@ ${skills.map(s => `#   - ${s.name}: ${s.path}`).join("\n")}
 # See https://github.com/github/copilot-cli for more information.
 `;
 
-  const configPath = path.join(OUTPUT_DIRS.root, "copilot-agents.txt");
+  const configPath = path.join(OUTPUT_DIR, "copilot-agents.txt");
   fs.writeFileSync(configPath, configTemplate);
 
   console.log(`    ✓ Generated: ${configPath}`);
@@ -120,40 +97,17 @@ ${skills.map(s => `#   - ${s.name}: ${s.path}`).join("\n")}
  */
 function generate() {
   try {
-    console.log("🔄 @johnludlow/agents Copilot Format Generator");
+    console.log("🔄 @johnludlow/agents Copilot Config Generator");
     console.log("==============================================\n");
-
-    // Ensure output directories exist
-    ensureDir(OUTPUT_DIRS.root);
-
-    // Copy agents
-    console.log("📋 Converting agents to Copilot format...");
-    const agentsCopied = copyFiles(SOURCE_DIRS.agents, OUTPUT_DIRS.agents);
-    if (agentsCopied > 0) {
-      console.log(`    ✓ Copied ${agentsCopied} agent(s) to: ${OUTPUT_DIRS.agents}`);
-    } else {
-      console.log(`    ℹ️  No agents found to copy`);
-    }
-
-    // Copy skills
-    console.log("\n📚 Converting skills to Copilot format...");
-    const skillsCopied = copyFiles(SOURCE_DIRS.skills, OUTPUT_DIRS.skills);
-    if (skillsCopied > 0) {
-      console.log(`    ✓ Copied ${skillsCopied} skill(s) to: ${OUTPUT_DIRS.skills}`);
-    } else {
-      console.log(`    ℹ️  No skills found to copy`);
-    }
-
-    // Generate configuration
+    ensureDir(OUTPUT_DIR);
     generateCopilotConfig();
 
     console.log("\n✨ Generation complete!");
-    console.log(`\n📁 Output directory: ${OUTPUT_DIRS.root}`);
+    console.log(`\n📁 Output directory: ${OUTPUT_DIR}`);
     console.log("\n📚 Next steps:");
-    console.log("   1. Review the generated files in .github/agents and .github/skills");
+    console.log("   1. Review .github/copilot-agents.txt");
     console.log("   2. Configure agents and skills in your GitHub Copilot settings");
-    console.log("   3. Test with GitHub Copilot CLI: gh copilot");
-    console.log("   4. See: https://github.com/features/copilot for documentation");
+    console.log("   3. See: https://github.com/features/copilot for documentation");
 
   } catch (error) {
     console.error("\n❌ Generation failed:");
