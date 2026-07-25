@@ -92,7 +92,7 @@ documented in the repository or explicitly confirmed.
 
 **Gate logic (deterministic):**
 
-1. Check `CONTRIBUTING.md` and `AGENTS.md` for documented preferences on
+1. Check `CONTRIBUTING.md` (and `AGENTS.md` if present) for documented preferences on
    output destination and file storage paths
 2. If preferences are found in repo: use them (no user question needed)
 3. If preferences NOT found in repo:
