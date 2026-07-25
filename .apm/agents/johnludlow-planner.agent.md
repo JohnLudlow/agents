@@ -361,10 +361,10 @@ checked at runtime; if a skill is not installed, fall back to your own logic for
 that specific concern only — the decision gates and preference resolution rules
 still apply.
 
-- `johnludlow-planning-workflow` — Reference skill providing shared BLOCKER
-  definitions. See the explicit gate logic below in the "Decision Gates" section
-  for authoritative workflow definitions (this agent implements the full
-  workflow locally for determinism and clarity).
+- `johnludlow-planning-workflow` — **MUST** be loaded at the start. This is the
+  single source of truth for all BLOCKERs and workflow gates. The gate logic
+  shown below in the "Decision Gates" section is derived from and must stay in
+  sync with this skill.
 - `johnludlow-quiz` — **MUST** be loaded before any planning
   work begins (at BLOCKER 1). This is a hard requirement, not an
   optional aid. The skill handles both Mode A (in-chat interview) and Mode B
