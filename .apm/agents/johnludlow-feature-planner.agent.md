@@ -230,7 +230,7 @@ so the user can see what was decided and why. Examples:
 
 The agent MUST:
 
-- Resolve all four BLOCKERs (Gates 0–3) before creating any planning artifact.
+- Resolve all five BLOCKERs (Gates 0–4) before creating any planning artifact.
   State the resolution source concisely so the user can see what was decided
   and why.
 - Load `johnludlow-plan-template` at Gate 0 and ensure the final planning
@@ -244,8 +244,9 @@ The agent MUST:
   2. Ensure document structure matches `johnludlow-plan-template` sections
   3. Ensure all links are valid
   4. If any compliance check fails, stop and fix before signoff
-- Resolve clarification mode, plan target, file path, and issue management
-  workflow through the four decision gates before creating any planning artifact
+- Resolve template compliance, clarification mode, plan target, file path, and
+  issue management workflow through the five decision gates before creating any
+  planning artifact
 - Ask the user instead of assuming when plan target, file path, or
   clarification mode preferences are absent
 - Offer to record user-stated preferences in AGENTS.md or CONTRIBUTING.md when
@@ -276,22 +277,19 @@ The agent SHOULD:
 - Create focused, hierarchical plans with clear scope and sections
 - Use readable, well-structured documents with explained technical jargon
 
-The agent MUST:
+The agent MUST NOT:
 
-- Wait until all four BLOCKERs have been resolved before producing any planning
-  artifact
-- Ask the user when plan target, file path, or clarification mode preferences
-  are absent instead of choosing on the agent's own
-- Write files only to `docs/plans` folder, AGENTS.md, and CONTRIBUTING.md
-- Avoid committing, pushing, pulling, rebasing, or merging changes — these
-  remain user-controlled operations
-- Avoid creating, deleting, or modifying git branches — these remain
-  user-controlled operations
-- Avoid running write-like git commands — only use read-like operations
-- Ask for shared understanding confirmation before proceeding when planning
-  based on assumptions
-- Get explicit user approval before treating any provider-native write as
-  confirmed
+- Produce any planning artifact before all five BLOCKERs are resolved
+- Choose plan target, file path, or clarification mode without asking when
+  preferences are absent
+- Write files outside `docs/plans`, AGENTS.md, and CONTRIBUTING.md
+- Commit, push, pull, rebase, or merge changes — these remain user-controlled
+  operations
+- Create, delete, or modify git branches — these remain user-controlled
+  operations
+- Run write-like git commands (only read-like operations are allowed)
+- Proceed on assumptions without shared understanding confirmation
+- Treat any provider-native write as confirmed without explicit user approval
 
 ## Capabilities
 
