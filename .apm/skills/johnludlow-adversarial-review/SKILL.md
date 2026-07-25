@@ -67,7 +67,8 @@ release.
 **FAIL:** Any checkpoint has critical or major findings (use list below to
 communicate them).
 
-**PASS with NITS:** All five checkpoints clear, but 1+ minor findings exist (list them; implementer may choose to address before release or defer).
+**PASS with NITS:** All five checkpoints clear, but 1+ minor findings exist
+(list them; implementer may choose to address before release or defer).
 
 ## Reporting Format
 
@@ -98,125 +99,41 @@ Fix: Add "Rollback" section with steps and failure conditions
 
 1. **Load the artifact** — Fetch the plan, code, or design document produced
    by the agent/user
-2. **Read requirements** — Understand what the user asked for (reference the original request/issue)
-3. **Apply checklist** — Independently evaluate each of the five checkpoints (Correctness, Completeness, Consistency, Standards, Edge Cases)
-4. **Grade findings** — For each finding, assign severity: critical (blocks release), major (should fix), minor/nit (nice to fix)
+2. **Read requirements** — Understand what the user asked for (see original
+   request/issue)
+3. **Apply checklist** — Independently evaluate each of the five checkpoints
+   (Correctness, Completeness, Consistency, Standards, Edge Cases)
+4. **Grade findings** — For each finding, assign severity: critical (blocks
+   release), major (should fix), minor/nit (nice to fix)
 5. **Render verdict** —
    - If no critical/major findings: **PASS** (or **PASS with NITS** if minors exist)
    - If critical or major findings exist: **FAIL** and list them with fixes
-6. **Return structured report** — Artifact is unsafe to release if verdict is FAIL; agent must revise and request re-review
+6. **Return structured report** — Artifact is unsafe to release if verdict is
+   FAIL; agent must revise and request re-review
 
 ## Integration
 
-This skill is **model-invoked** (`disable-model-invocation: false`). Agents can autonomously invoke it when:
+This skill is **model-invoked** and works across all harnesses (CLI, browser,
+Azure DevOps). Agents can autonomously invoke it after completing a subtask,
+plan, or deliverable.
 
-- A subagent has completed a subtask and needs quality check before returning to parent
-- A planning agent has completed artifact generation and needs gate before surfacing to user
-- Any agent producing a deliverable wants cold, adversarial feedback
-
-Example agent integration:
-
-```text
-If the implementation looks complete:
-  Invoke johnludlow-adversarial-review skill for code review
-  If verdict is FAIL: iterate and re-review
-  If verdict is PASS or PASS with NITS: proceed to next step
-```
-
-### Cross-Harness Availability
-
-This skill is designed to work across:
-
-- **Copilot CLI** — agents invoke skill directly via skill system
-- **Browser / OpenCode** — agents invoke skill via model-invocation
-- **Azure DevOps / Copilot Extensions** — depends on harness agent execution support
-
-**Note on Fleet Mode & Subagent Spawning:** If you need one agent to spawn a reviewer _subagent_ via fleet mode, use the **johnludlow-feature-reviewer agent** instead (maintained as fallback). Fleet mode coordinates agents only, not skills. Skills must be invoked directly within an agent's context. For harnesses that don't support skill invocation, the separate agent provides fallback coverage.
-
-### Temperature
-
-Set model temperature to **0.2** (cold, critical thinking). Adversarial review requires skepticism, not enthusiasm.
+For integration patterns, cross-harness considerations, fleet mode workarounds,
+and temperature settings, see **[INTEGRATION.md](INTEGRATION.md)**.
 
 ## Examples
 
-### Example 1: Plan Review → FAIL (Critical + Major)
+For concrete examples of how to apply the five-checkpoint checklist across
+plan reviews, code reviews, and design reviews, see **[EXAMPLES.md](EXAMPLES.md)**:
 
-**Artifact:** markdown plan from johnludlow-feature-planner
+- Plan Review → FAIL (how critical + major findings block release)
+- Code Review → PASS with NITS (how minor findings are deferred)
+- Design Review → PASS (how comprehensive reviews clear all checkpoints)
 
-**Verdict:** ❌ **FAIL**
+## Usage Guardrails & Requirements
 
-**Findings:**
+Before starting a review, see **[GUARDRAILS.md](GUARDRAILS.md)** for:
 
-```text
-**Completeness** — critical
-Finding: Plan has zero test cases for the feature
-Impact: No way to verify implementation meets requirements; regression risk
-Fix: Add "Acceptance Criteria" section with at least 3 test cases (happy path, edge case, error case)
-
-**Correctness** — major  
-Finding: Plan references "UserRepository.GetAsync()" but codebase uses "UserRepository.FetchAsync()"
-Impact: Code examples won't compile; misleads implementer
-Fix: Update all examples to use FetchAsync()
-
-**Edge Cases** — minor
-Finding: Plan doesn't cover what happens if database is down
-Impact: Unclear if feature should fail fast or retry
-Fix: Add note: "On DB timeout, return 503 Service Unavailable after 5s"
-```
-
-**Action:** Plan returned to agent with FAIL verdict. Agent must address critical + major findings before re-review.
-
----
-
-### Example 2: Code Review → PASS with NITS
-
-**Artifact:** C# implementation changes from johnludlow-feature-implementer
-
-**Verdict:** ✅ **PASS with NITS**
-
-**Findings:**
-
-```text
-**Correctness** — nit
-Finding: XML doc comment misspells "occured" (should be "occurred")
-Impact: Documentation has typo
-Fix: Correct spelling in UsersController.cs line 42
-
-**Standards** — nit
-Finding: Method UserService.ValidateAsync doesn't use CancellationToken parameter
-Impact: Inconsistent with project standard (all async methods accept CancellationToken)
-Fix: Add cancellationToken parameter and pass to downstream calls
-```
-
-**Action:** Code approved for PR. Implementer may address nits before merge or leave as-is (minor issues).
-
----
-
-### Example 3: Design Review → PASS
-
-**Artifact:** Architecture decision from design agent
-
-**Verdict:** ✅ **PASS**
-
-**Findings:** None. All five checkpoints clear. Design is correct, complete, consistent, follows standards, and handles edge cases.
-
-**Action:** Design approved. Proceed to implementation planning.
-
----
-
-## When NOT to Use This Skill
-
-Do NOT use this skill for:
-
-- **Stylistic critique** — "I prefer semicolons" or "color the heading blue". Use linters and design systems instead.
-- **Opinions without substance** — "This feels wrong" requires a checkable reason (Correctness, Completeness, etc.).
-- **Nitpicking that won't ship** — Review only findings that block release or materially affect maintainability.
-
-## Requirements
-
-- Temperature set to 0.2 (cold, critical)
-- Read the original user request / issue so you understand what "complete" means
-- Load the full artifact (don't review a summary)
-- Apply the checklist independently (don't skip checkpoints)
-- Assign severity honestly (critical if it blocks release, major if it should be fixed, minor if it's nice but deferrable)
-- Verdict must be actionable: if FAIL, say exactly what needs to change
+- When NOT to use this skill (stylistic nitpicking, opinions without substance)
+- Pre-review requirements checklist (temperature, artifact loading, checklist
+  application)
+- Severity mapping reference (how to calibrate critical vs. major vs. minor)

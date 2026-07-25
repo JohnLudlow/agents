@@ -190,35 +190,8 @@ Behaviour:
 
 ## Mode Switching
 
-The user may redesignate the session's mode at any point, in either
-direction. Mode switching is a projection of the same underlying state, not
-a restart — never re-ask a decision that is already Resolved.
-
-### Chat to questionnaire
-
-Triggered by explicit user request ("make this a questionnaire", "let's put
-this in a document instead"), or proposed by the agent when the open-decision
-count or breadth grows mid-interview past the Mode B guide above.
-
-1. Snapshot the current Objective, Facts, Resolved Decisions, and Open
-   Decisions.
-2. Generate the questionnaire document as in Mode B, pre-populated with the
-   snapshot — resolved items go straight into Resolved Decisions, not back
-   into Open Decisions.
-3. Tell the user the file has been created and pause chat-mode questioning.
-
-### Questionnaire to chat
-
-Triggered by explicit user request ("let's just talk through the rest",
-"I'd rather answer these in chat").
-
-1. Read the questionnaire document as it currently stands, including any
-   partial answers.
-2. Import every answered item into Resolved Decisions and every unanswered
-   item into Open Decisions.
-3. Resume Mode A, asking one open decision at a time. Do not regenerate or
-   delete the document — if the user switches back to questionnaire mode
-   later, re-sync it from the current state rather than starting a new file.
+The user may switch modes at any point in either direction. For details on
+switching logic (chat ↔ questionnaire), see **[BRANCHING.md](BRANCHING.md)**.
 
 ## Requirements
 
@@ -260,75 +233,11 @@ The agent MUST NOT:
 
 ## Relationship to Other Skills and Commands
 
-- Use `johnludlow-issue-management` when the resolved objective needs a home
-  in a provider-native system (GitHub issue, Azure DevOps work item) — this
-  skill only surfaces and resolves decisions, it does not decide where
-  resulting artifacts live.
-- Use `johnludlow-markdown-standards` for the structure and formatting of any
-  questionnaire document produced by this skill.
+See **[DEPENDENCIES.md](DEPENDENCIES.md)** for relationships to johnludlow-issue-management,
+johnludlow-markdown-standards, johnludlow-planning-workflow, and johnludlow-subagent-spawning.
 
 ## Examples
 
-### Planning — small scope (Mode A)
-
-> User: Add a "remember me" checkbox to the login form.
->
-> Agent: Looking at the login form now — it currently issues a session
-> cookie with no explicit expiry (a fact, resolved by reading the code).
-> One decision: when "remember me" is checked, how long should the session
-> last?
->
-> User: 30 days.
->
-> Agent: Understood. Objective: add a "remember me" checkbox that extends
-> the session to 30 days when checked. Resolved: session length is 30 days
-> when checked, unchanged otherwise. Confirm before I proceed?
-
-### Planning — large scope (Mode B)
-
-> User: We need multi-tenant billing support across the whole platform.
->
-> Agent: This spans billing, auth, and provisioning — more open decisions
-> than a chat interview handles well. I've drafted a questionnaire with the
-> facts I could confirm from the code and the open decisions I need from
-> you. Take your time and hand it back when ready.
-
-### Implementation — library choice (Mode A)
-
-> User: Implement the CSV export feature from the plan.
->
-> Agent: The plan says "export to CSV" but doesn't specify a library. The
-> project already uses `papaparse` for CSV parsing in the import flow (a
-> fact). One decision: should I use `papaparse` for export too, or do you
-> prefer a different library?
->
-> User: Use papaparse.
->
-> Agent: Understood. Using papaparse for CSV export, consistent with the
-> existing import flow. Confirm before I proceed?
-
-### Implementation — design pattern (Mode A)
-
-> User: Add retry logic to the API client.
->
-> Agent: The API client currently has no retry logic (a fact). Two
-> decisions: (1) should retries use exponential backoff or fixed intervals?
-> (2) What is the maximum retry count?
->
-> User: Exponential backoff, max 3 retries.
->
-> Agent: Understood. Exponential backoff with a maximum of 3 retries.
-> Confirm before I proceed?
-
-### Documentation — audience (Mode A)
-
-> User: Document the authentication module.
->
-> Agent: The auth module has inline JSDoc but no standalone documentation
-> (a fact). One decision: is this documentation aimed at API consumers
-> (external), or at developers maintaining the module (internal)?
->
-> User: Internal — for maintainers.
->
-> Agent: Understood. Internal maintainer documentation for the auth module.
-> Confirm before I proceed?
+For concrete examples of Mode A (chat interview) and Mode B (questionnaire
+document) across planning, implementation, documentation, and testing contexts,
+see **[EXAMPLES.md](EXAMPLES.md)**.

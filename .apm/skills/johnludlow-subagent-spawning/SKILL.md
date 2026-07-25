@@ -130,8 +130,8 @@ not an agent.
   independently orchestrated
 
 **Workaround:** If you absolutely need fleet coordination of multiple agents
-(e.g., "run quiz in parallel with template validation"), create wrapper agents
-that invoke those skills. This adds an agent layer but keeps skills focused.
+(e.g., "run quiz in parallel with template validation"), see
+**[DESIGN-RATIONALE.md](DESIGN-RATIONALE.md)** for pattern recommendations.
 
 ## Decision Table: Which Approach?
 
@@ -144,66 +144,19 @@ that invoke those skills. This adds an agent layer but keeps skills focused.
 | Coordinate multiple agents | CLI | task tool | manual sequencing |
 | Coordinate multiple agents | Browser | not supported | manual sequencing |
 
-## Implementation Roadmap
+## Implementation Status & Roadmap
 
-**Phase 1 (Complete):**
+**Phase 1 (Complete):** Convert reviewer agent → skill, document cross-harness
+behavior.
 
-- ✅ Convert johnludlow-feature-reviewer agent → johnludlow-adversarial-review
-  skill
-- ✅ Document cross-harness behavior (this file)
+**Phase 2 (Future):** Implement harness detection in planner agents. See
+**[ROADMAP.md](ROADMAP.md)** for detailed implementation plan and open questions.
 
-**Phase 2 (Future):** Harness Detection
-
-Both planner agents should detect their harness at startup:
-
-```
-AT SESSION START:
-  harness = detect_harness()
-    - If env var COPILOT_CLI_MODE exists: return "cli"
-    - Else if window object exists (JavaScript): return "browser"
-    - Else if Azure DevOps APIs available: return "azure-devops"
-    - Else: return "unknown"
-
-  Store harness in session_state for reference
-
-WHEN SPAWNING SUBAGENT:
-  If harness == "cli":
-    Use task tool (native subagent spawning)
-  Else if harness == "browser":
-    Use skill invocation inline
-    Optionally: offer johnludlow-feature-reviewer agent as fallback
-  Else if harness == "azure-devops":
-    Check for task tool availability
-    Fall back to skills or agent fallback if unavailable
-
-ALWAYS (before completion):
-  Invoke johnludlow-adversarial-review skill (works in all harnesses)
-  If skill unavailable: offer johnludlow-feature-reviewer agent as fallback
-```
-
-**Implementation effort:** ~3–4 hours (harness detection, graceful degradation,
-testing)
-
-**Phase 3 (Future):** User Documentation
-
-- Add "Subagent Spawning" section to docs/README.md
-- Link to troubleshooting guide
-- Document how to detect your harness (Copilot CLI vs. browser vs. Azure DevOps)
-
-## Open Questions
-
-- [ ] Does Azure DevOps expose the task tool? (Critical for Phase 2)
-- [ ] Does fleet mode ever support skills in future Copilot releases?
-- [ ] Should johnludlow-feature-reviewer agent be deprecated after Phase 2, or
-      kept indefinitely as fallback?
+**Phase 3 (Future):** Create user-facing documentation. See
+**[ROADMAP.md](ROADMAP.md)**.
 
 ## Related Skills & Agents
 
-- **johnludlow-planner** — top-level planning agent; uses this reference for
-  subagent spawning decisions
-- **johnludlow-feature-planner** — subagent spawned by planner; uses this
-  reference for Phase 2 harness detection
-- **johnludlow-adversarial-review** — skill called by both planning agents;
-  works across all harnesses (model-invoked)
-- **johnludlow-feature-reviewer** — fallback agent (maintained for harness
-  incompatibility)
+See **[DEPENDENCIES.md](DEPENDENCIES.md)** for relationships to johnludlow-planner,
+johnludlow-feature-planner, johnludlow-adversarial-review, johnludlow-feature-reviewer,
+and johnludlow-planning-workflow.
