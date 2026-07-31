@@ -29,6 +29,11 @@ shape and suggest Wayfinder by name, but only a human launches it.
 - **Destination** — what reaching the end of the map looks like: a spec, a
   decision, or a shipped change. Named first; it fixes scope for everything
   that follows.
+- **Inciting issue** — the issue, work item, or conversation that prompted
+  charting the map — often "this turned out too big for one session." If one
+  exists, the map must link back to it using the provider's native
+  parent/child or cross-reference mechanism, never left to float free. A map
+  with no findable path back to why it exists is a map nobody can find.
 - **Map** — the single canonical artifact holding Destination, Notes, one
   Decisions-so-far list, Not-yet-specified (fog), and Out-of-scope. A GitHub
   issue tagged `wayfinder:map`, an Azure DevOps parent work item, or a
@@ -88,18 +93,29 @@ Starting a map from a loose idea.
    the decisions currently blocking the destination and the fog around them.
    If nothing surfaces as fog, the way is already clear — say so and ask the
    human how they want to proceed instead of forcing a map into existence.
-3. Create the map artifact (see [PROVIDERS.md](references/PROVIDERS.md) for
+3. Ask whether an inciting issue exists — the issue, work item, or thread
+   that prompted charting this map. If one does, confirm it with the human
+   before creating anything.
+4. Create the map artifact (see [PROVIDERS.md](references/PROVIDERS.md) for
    the mechanics of each provider) with Destination and Notes filled in, the
    Decisions-so-far list empty, and the surfaced fog under Not-yet-specified.
-4. Create tickets for every decision sharp enough to specify now, as
-   children of the map. Wire blocking relationships in a second pass — see
+5. If an inciting issue was confirmed, link the map to it immediately, using
+   the provider's native mechanism — see
+   [PROVIDERS.md](references/PROVIDERS.md). Do this before creating any
+   tickets; an unlinked map is the bug this step exists to prevent.
+6. Create tickets for every decision sharp enough to specify now, as
+   children of the map. On GitHub or Azure DevOps, copy the map's labels or
+   tags onto each new ticket before adding its `wayfinder:<type>`
+   classification — see [PROVIDERS.md](references/PROVIDERS.md). Wire
+   blocking relationships in a second pass — see
    [PROVIDERS.md](references/PROVIDERS.md) for the mechanics per provider.
-5. For any Research ticket, ask the human whether it may run AFK before
+7. For any Research ticket, ask the human whether it may run AFK before
    touching it further.
 
 **Completion criterion:** the map artifact exists with every section
-populated (even if Decisions-so-far is still empty), and every ticket
-specifiable today has been created.
+populated (even if Decisions-so-far is still empty), it is linked to its
+inciting issue if one exists, and every ticket specifiable today has been
+created.
 
 ### 2. Work through the map
 
@@ -162,6 +178,12 @@ The agent MUST:
 - Confirm the destination and frontier through `johnludlow-quiz` before
   creating the map (Chart mode) — never invent scope on the agent's own
   read of a loose request.
+- Ask whether an inciting issue exists before creating the map, and if one
+  does, link the map to it using the provider's native mechanism before
+  creating any tickets.
+- Copy the map's labels or tags onto every ticket created on GitHub or
+  Azure DevOps, in addition to the ticket's own `wayfinder:<type>`
+  classification — never in place of it.
 - Get explicit, per-ticket human sign-off before running any Research ticket
   AFK, and have the human review its findings before closing it.
 - Keep every other ticket type human-in-the-loop: the agent proposes, the
@@ -178,6 +200,10 @@ The agent MUST NOT:
 
 - Fire this skill itself — it is user-invoked only. Suggesting it by name is
   fine; launching it is not.
+- Create a map without asking whether an inciting issue exists, or leave a
+  confirmed inciting issue unlinked once the map is created.
+- Create a GitHub or Azure DevOps ticket without the map's labels or tags
+  carried over.
 - Let a ticket's type change because a quiz or other detour occurred inside
   it — spin off a child ticket instead.
 - Represent the same child-item information more than once on a map (a list,
@@ -204,14 +230,16 @@ The agent MUST NOT:
 - **johnludlow-plan-template** — the base that
   `assets/wayfinder-map-template.md` extends for markdown-provider maps.
 - **johnludlow-markdown-standards** — applies to any markdown map or ticket
-  this skill produces.
+  this skill produces, including source line wrapping and list-item spacing
+  for map and ticket bodies, whether the provider is GitHub, Azure DevOps,
+  or local markdown.
 
 ## References
 
-- [PROVIDERS.md](references/PROVIDERS.md) — how the map, tickets, blocking,
-  and assignee tracking are represented on GitHub, Azure DevOps, and
-  markdown-only, including the current no-dedicated-field stance for Azure
-  DevOps ticket typing.
+- [PROVIDERS.md](references/PROVIDERS.md) — how the map, tickets, inciting-
+  issue links, label/tag inheritance, blocking, and assignee tracking are
+  represented on GitHub, Azure DevOps, and markdown-only, including the
+  current no-dedicated-field stance for Azure DevOps ticket typing.
 
 ## Assets
 

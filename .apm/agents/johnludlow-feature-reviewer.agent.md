@@ -93,6 +93,11 @@ The reviewer evaluates against:
 ### Standards Compliance
 
 - Does documentation pass `rumdl check .`?
+- Does documentation follow `johnludlow-markdown-standards` source line
+  wrapping and list-spacing rules? (`rumdl check .` does not catch these —
+  check the raw source directly: no manual line breaks mid-paragraph or
+  mid-bullet, and a blank line between list items whose content spans more
+  than a few words.)
 - Does code follow language-specific best practices?
 - Are SOLID principles observed (for code)?
 - Is test coverage adequate?

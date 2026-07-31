@@ -4,6 +4,7 @@ description: "[One-line destination this map is finding its way to]"
 author: "johnludlow-wayfinder"
 date: "YYYY-MM-DD"
 status: "Charting"
+inciting-issue: "[Link to the issue/work item/document that prompted this map, or 'None']"
 ---
 
 # [Map Title]
@@ -29,7 +30,9 @@ created.]
 ## Notes
 
 [Anything the reader needs to know about the map itself before diving into
-tickets — constraints, prior context, how this map came to exist.]
+tickets — constraints, prior context, how this map came to exist. If an
+inciting issue exists, say so here by name: "Charted because [Original issue
+name](link) turned out too big for one session."]
 
 ## Decisions So Far
 
