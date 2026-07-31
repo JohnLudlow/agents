@@ -191,7 +191,7 @@ Behaviour:
 ## Mode Switching
 
 The user may switch modes at any point in either direction. For details on
-switching logic (chat ↔ questionnaire), see **[BRANCHING.md](BRANCHING.md)**.
+switching logic (chat ↔ questionnaire), see **[BRANCHING.md](references/BRANCHING.md)**.
 
 ## Requirements
 
@@ -234,11 +234,11 @@ The agent MUST NOT:
 
 ## Relationship to Other Skills and Commands
 
-See **[DEPENDENCIES.md](DEPENDENCIES.md)** for relationships to johnludlow-issue-management,
+See **[DEPENDENCIES.md](references/DEPENDENCIES.md)** for relationships to johnludlow-issue-management,
 johnludlow-markdown-standards, johnludlow-planning-workflow, and johnludlow-subagent-spawning.
 
 ## Examples
 
 For concrete examples of Mode A (chat interview) and Mode B (questionnaire
 document) across planning, implementation, documentation, and testing contexts,
-see **[EXAMPLES.md](EXAMPLES.md)**.
+see **[EXAMPLES.md](references/EXAMPLES.md)**.

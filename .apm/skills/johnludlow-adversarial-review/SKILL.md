@@ -118,12 +118,12 @@ Azure DevOps). Agents can autonomously invoke it after completing a subtask,
 plan, or deliverable.
 
 For integration patterns, cross-harness considerations, fleet mode workarounds,
-and temperature settings, see **[INTEGRATION.md](INTEGRATION.md)**.
+and temperature settings, see **[INTEGRATION.md](references/INTEGRATION.md)**.
 
 ## Examples
 
 For concrete examples of how to apply the five-checkpoint checklist across
-plan reviews, code reviews, and design reviews, see **[EXAMPLES.md](EXAMPLES.md)**:
+plan reviews, code reviews, and design reviews, see **[EXAMPLES.md](references/EXAMPLES.md)**:
 
 - Plan Review → FAIL (how critical + major findings block release)
 - Code Review → PASS with NITS (how minor findings are deferred)
@@ -131,7 +131,7 @@ plan reviews, code reviews, and design reviews, see **[EXAMPLES.md](EXAMPLES.md)
 
 ## Usage Guardrails & Requirements
 
-Before starting a review, see **[GUARDRAILS.md](GUARDRAILS.md)** for:
+Before starting a review, see **[GUARDRAILS.md](references/GUARDRAILS.md)** for:
 
 - When NOT to use this skill (stylistic nitpicking, opinions without substance)
 - Pre-review requirements checklist (temperature, artifact loading, checklist
