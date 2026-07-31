@@ -153,6 +153,13 @@ the following rules.
 - Agents must not create or update provider-native artifacts without explicit
   user confirmation for that session.
 
+#### Quiz skill preferences (recorded by johnludlow-quiz on 2026-07-31)
+
+- Output destination for quiz-resolved decisions: update the relevant GitHub issue
+  with the fleshed-out requirements
+- Interview mode for small sessions: in-chat interview (Mode A); questionnaire
+  document (Mode B) for large or multi-area scopes
+
 #### Instruction precedence
 
 Use this precedence order when deciding how and where a plan should be created:
