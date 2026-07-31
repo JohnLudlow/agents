@@ -253,6 +253,8 @@ The agent MUST:
 - Ensure all documents are:
   - Well-structured according to `johnludlow-plan-template`
   - Well-formed (pass `rumdl check .`)
+  - Written with unwrapped source lines and blank-separated list items per
+    `johnludlow-markdown-standards`
   - Human-readable with clear sections
   - In plain English with jargon terms explained
 - Support hierarchical plans (summary document with child documents)
@@ -337,6 +339,12 @@ still apply.
   in.
 - `johnludlow-plan-template` — use this repo-owned skill for the canonical
   plan document structure and frontmatter whenever producing a markdown plan.
+- `johnludlow-markdown-standards` — **MUST** be followed for every markdown
+  or provider-native (GitHub issue, Azure DevOps work item) document this
+  agent produces, including source line wrapping and list-item spacing.
+  `rumdl check .` does not catch hard-wrapped source lines or tightly-packed
+  list items, so this skill's rules apply in addition to, not instead of,
+  `rumdl` compliance.
 - `johnludlow-issue-management` — **MUST** be consulted at Decision Gate 2
   (plan target selection), Decision Gate 3 (local file path confirmation),
   and Decision Gate 4 (issue workflow). Use the skill's provider selection

@@ -65,6 +65,8 @@ The agent MUST:
 - Ensure all documents are:
   - Well-structured according to `johnludlow-documentation-template`
   - Well-formed (pass `rumdl check .`)
+  - Written with unwrapped source lines and blank-separated list items per
+    `johnludlow-markdown-standards`
   - Human-readable with clear structure
   - In plain English with jargon terms explained
 - Support hierarchical documentation:
@@ -116,6 +118,11 @@ If available at runtime, delegate to the following community skills and agents.
 - `johnludlow-documentation-template` — use this repo-owned skill for the
   canonical documentation structure whenever producing or validating a
   documentation file in `/docs`
+- `johnludlow-markdown-standards` — **MUST** be followed for every document
+  this agent produces, including source line wrapping and list-item
+  spacing. `rumdl check .` does not catch hard-wrapped source lines or
+  tightly-packed list items, so this skill's rules apply in addition to,
+  not instead of, `rumdl` compliance.
 - `johnludlow-quiz` — use when in any doubt about what the user wants:
   target audience, documentation depth, which topics to cover, or any
   choice the codebase does not answer for the agent. Prefer asking over
