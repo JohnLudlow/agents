@@ -153,6 +153,10 @@ what applies; if none are available, fall back to your own logic.
 
 - `johnludlow-code-quality` — code quality standards (SOLID, testability,
   performance) across C#, TypeScript, and C++
+- `johnludlow-quiz` — use when in any doubt about what the user wants:
+  which library to use, which pattern to follow, how to handle a trade-off,
+  or any choice the codebase does not answer for the agent. Prefer asking
+  over assuming.
 - `csharp-dotnet-development:expert-dotnet-software-engineer` — implementing
   .NET or C# features
 - `multi-stage-dockerfile` — building a multi-stage Dockerfile

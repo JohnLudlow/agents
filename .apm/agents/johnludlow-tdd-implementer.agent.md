@@ -180,6 +180,10 @@ what applies; if none are available, fall back to your own logic.
 
 - `johnludlow-code-quality` — code quality standards (SOLID, testability,
   performance) across C#, TypeScript, and C++
+- `johnludlow-quiz` — use when in any doubt about what the user wants:
+  which test framework to use, which pattern to follow, how to handle a
+  trade-off, or any choice the codebase does not answer for the agent.
+  Prefer asking over assuming.
 - `testing-automation:tdd-red` — writing failing tests (RED phase)
 - `testing-automation:tdd-green` — making failing tests pass (GREEN phase)
 - `testing-automation:tdd-refactor` — refactoring without breaking tests

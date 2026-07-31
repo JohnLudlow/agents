@@ -126,6 +126,10 @@ If available at runtime, delegate to the following community skills and agents.
 - `johnludlow-code-quality` — use this repo-owned skill for code quality
   standards (SOLID, testability, performance) across C#, TypeScript, and C++
   whenever writing or modifying source code
+- `johnludlow-quiz` — use when in any doubt about what the user wants:
+  which library to use, which design pattern to follow, how to handle a
+  trade-off, or any choice the codebase does not answer for the agent.
+  Prefer asking over assuming.
 
 ## Integration
 

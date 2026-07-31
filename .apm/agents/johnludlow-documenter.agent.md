@@ -142,6 +142,10 @@ If available at runtime, delegate to the following community skills and agents.
 - `johnludlow-documentation-template` — use this repo-owned skill for the
   canonical documentation structure whenever documentation work is delegated
   to `johnludlow-feature-documenter`
+- `johnludlow-quiz` — use when in any doubt about what the user wants:
+  target audience, documentation depth, which topics to cover, or any
+  choice the codebase does not answer for the agent. Prefer asking over
+  assuming.
 
 ## Integration
 

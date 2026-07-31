@@ -59,8 +59,7 @@ The agent MUST NOT:
 
 - Use `johnludlow-issue-management` to decide the plan target and provider
   before filling in the **Plan Target and Governance** section.
-- Use `johnludlow-clarify-requirements` before drafting the plan when intent
-  or scope is still fuzzy — a plan built on unresolved decisions will need
-  rework.
+- Use `johnludlow-quiz` before drafting the plan when intent or scope is
+  still fuzzy — a plan built on unresolved decisions will need rework.
 - Use `johnludlow-markdown-standards` for general markdown formatting rules
   that apply on top of this template's structure.
