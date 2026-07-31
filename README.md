@@ -201,6 +201,15 @@ stored in `docs/plans/`, including YAML frontmatter. Used by
 
 [View full skill definition](.apm/skills/johnludlow-plan-template/SKILL.md)
 
+### johnludlow-prototype
+
+Generates a time-boxed, stack-agnostic prototype — runnable code, an IaC
+deployment, a mockup, a docs sample, or an architecture sketch — on its own
+`prototype/<slug>` branch. Runs `johnludlow-quiz` as a mandatory pre-step and
+refuses to generate until shared understanding is confirmed.
+
+[View full skill definition](.apm/skills/johnludlow-prototype/SKILL.md)
+
 ### johnludlow-documentation-template
 
 Provides the canonical documentation template and structure for feature and
