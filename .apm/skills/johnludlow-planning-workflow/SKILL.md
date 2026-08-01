@@ -1,3 +1,8 @@
+---
+name: johnludlow-planning-workflow
+description: "Single source of truth for planning workflow logic — BLOCKERs, preference resolution, and completion criteria shared by johnludlow-planner and johnludlow-feature-planner agents."
+---
+
 # johnludlow-planning-workflow
 
 Single source of truth for all planning workflow logic — consolidated BLOCKERs,
