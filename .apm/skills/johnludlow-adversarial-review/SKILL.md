@@ -1,3 +1,8 @@
+---
+name: johnludlow-adversarial-review
+description: "Adversarial quality gate skill for planning artifacts, implementation changes, and design decisions. Use when you or another agent need a ruthless review before completion."
+---
+
 # johnludlow-adversarial-review
 
 Adversarial quality gate skill for planning artifacts, implementation changes,
