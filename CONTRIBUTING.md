@@ -19,9 +19,9 @@ repository!
 When creating or modifying agent definitions:
 
 1. **Canonical Authoring Location** — author new and updated agent definitions in:
-   - `.apm/agents/johnludlow-[name].agent.md` — canonical APM agent primitive with YAML frontmatter and agent body
+   - `.apm/agents/jl-[name].agent.md` — canonical APM agent primitive with YAML frontmatter and agent body
 
-   Legacy `agents/johnludlow-[name].md` plus `agents/johnludlow-[name].json`
+   Legacy `agents/jl-[name].md` plus `agents/jl-[name].json`
    sidecars are back-compat reference material only. Do not treat `agents/` as the
    primary authoring location for new repository work.
 
@@ -64,8 +64,8 @@ When creating or modifying agent definitions:
    - `permission`: OpenCode permission map. Copilot uses description + temperature only.
 
 4. **Naming Convention**
-   - All agent names start with `johnludlow-`
-   - Use hyphen-separated names (e.g., `johnludlow-feature-planner`)
+   - All agent names start with `jl-`
+   - Use hyphen-separated names (e.g., `jl-feature-planner`)
    - Canonical APM primitive files use the `.agent.md` suffix
    - Legacy `agents/*.md` plus `agents/*.json` sidecars remain back-compat references only
 
@@ -80,16 +80,16 @@ When creating or modifying agent definitions:
 When creating or modifying skills:
 
 1. **Canonical Authoring Location** — author new and updated skill definitions in:
-   - `.apm/skills/johnludlow-[name]/SKILL.md` — canonical APM skill primitive
+   - `.apm/skills/jl-[name]/SKILL.md` — canonical APM skill primitive
      (Agent Skills spec-compliant directory) with YAML frontmatter
      (`name` matching the directory, plus `description`) and skill body
 
    Supporting documents (templates, reference material, scripts) for a skill
-   live alongside it under `.apm/skills/johnludlow-[name]/assets/`,
+   live alongside it under `.apm/skills/jl-[name]/assets/`,
    `references/`, or `scripts/` as appropriate — never as loose files
    elsewhere in the repo.
 
-   Legacy `skills/johnludlow-[name].md` plus `skills/johnludlow-[name].json`
+   Legacy `skills/jl-[name].md` plus `skills/jl-[name].json`
    sidecars are back-compat reference material only. Do not treat `skills/` as
    the primary authoring location for new repository work.
 
@@ -108,10 +108,10 @@ When creating or modifying skills:
    - Examples where appropriate
 
 4. Naming Convention
-   - All skill names start with `johnludlow-`
-   - Use descriptive names (e.g., `johnludlow-code-quality`)
+   - All skill names start with `jl-`
+   - Use descriptive names (e.g., `jl-code-quality`)
    - Canonical APM primitives are a directory named after the skill
-     containing `SKILL.md` (e.g., `.apm/skills/johnludlow-code-quality/SKILL.md`),
+     containing `SKILL.md` (e.g., `.apm/skills/jl-code-quality/SKILL.md`),
      per the Agent Skills specification — not a flat `.skill.md` file
    - The `name` field in `SKILL.md` frontmatter must match the directory name
    - Legacy `skills/*.md` plus `skills/*.json` sidecars remain back-compat references only
@@ -153,7 +153,7 @@ the following rules.
 - Agents must not create or update provider-native artifacts without explicit
   user confirmation for that session.
 
-#### Quiz skill preferences (recorded by johnludlow-quiz on 2026-07-31)
+#### Quiz skill preferences (recorded by jl-quiz on 2026-07-31)
 
 - Output destination for quiz-resolved decisions: update the relevant GitHub issue
   with the fleshed-out requirements
@@ -288,7 +288,7 @@ Include, where applicable:
 - related issue or status metadata if useful
 
 Plans must also pass normal repository markdown validation. The
-`johnludlow-plan-template` skill (`.apm/skills/johnludlow-plan-template/SKILL.md`,
+`jl-plan-template` skill (`.apm/skills/jl-plan-template/SKILL.md`,
 template asset at `assets/plan-template.md`) follows the same convention and
 should be used as the baseline for new plan documents.
 
@@ -319,7 +319,7 @@ the relationship between the artifacts is explicit.
 
 ### Adding a New Template
 
-1. Create a new skill directory `.apm/skills/johnludlow-[document-type]-template/`
+1. Create a new skill directory `.apm/skills/jl-[document-type]-template/`
    with `SKILL.md` and the template asset at
    `assets/[document-type]-template.md`
 2. Follow the existing template format for that document type
@@ -423,7 +423,7 @@ After installation inspect the installed outputs (examples):
 ## Pull Request Guidelines
 
 1. **Title**: Use a clear, descriptive title
-   - Good: "Add new johnludlow-performance-analyzer agent"
+   - Good: "Add new jl-performance-analyzer agent"
    - Bad: "Updates"
 
 2. **Description**: Explain what you changed and why
@@ -445,10 +445,10 @@ After installation inspect the installed outputs (examples):
 
 ### Adding a New Agent
 
-Preferred authoring location: `.apm/agents/` — create an APM agent primitive named `johnludlow-[agent-name].agent.md`
+Preferred authoring location: `.apm/agents/` — create an APM agent primitive named `jl-[agent-name].agent.md`
 that includes YAML frontmatter (description, temperature, mode, permissions) followed by the agent body.
 
-1. Create `.apm/agents/johnludlow-[agent-name].agent.md` with YAML frontmatter and the agent markdown body.
+1. Create `.apm/agents/jl-[agent-name].agent.md` with YAML frontmatter and the agent markdown body.
 2. Follow the standard agent schema (include Description, Purpose, Inputs, Outputs, Requirements, Capabilities, Restrictions).
 3. Validate the package and compile locally:
 
@@ -473,7 +473,7 @@ that includes YAML frontmatter (description, temperature, mode, permissions) fol
 ### Adding a New Skill
 
 Preferred authoring location: `.apm/skills/` — create an APM skill primitive as
-`johnludlow-[skill-name]/SKILL.md`, a directory named after the skill
+`jl-[skill-name]/SKILL.md`, a directory named after the skill
 containing `SKILL.md` with YAML frontmatter (`name` matching the directory,
 plus `description`) followed by the skill markdown body. This follows the
 [Agent Skills specification](https://agentskills.io/specification): the
@@ -481,9 +481,9 @@ skill directory may also contain `assets/`, `references/`, and `scripts/`
 subdirectories for supporting material, referenced from `SKILL.md` using
 paths relative to the skill root.
 
-1. Create `.apm/skills/johnludlow-[skill-name]/SKILL.md` with YAML frontmatter
+1. Create `.apm/skills/jl-[skill-name]/SKILL.md` with YAML frontmatter
    and the skill markdown body. Place any supporting templates or reference
-   documents under `.apm/skills/johnludlow-[skill-name]/assets/` or
+   documents under `.apm/skills/jl-[skill-name]/assets/` or
    `references/` and link to them with a skill-root-relative path.
 2. Follow the standard skill structure (Overview, Key principles, Examples).
 3. Validate and compile:

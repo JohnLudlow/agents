@@ -38,9 +38,9 @@ tests/
 # Backup files
 *.backup
 *.tmp
-.johnludlow-backup-*
-.opencode.johnludlow-backup-*
-.copilot.johnludlow-backup-*
+.jl-backup-*
+.opencode.jl-backup-*
+.copilot.jl-backup-*
 
 # User installation directories (created at install time)
 .opencode/

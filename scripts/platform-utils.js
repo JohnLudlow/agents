@@ -16,7 +16,7 @@ const os = require("os");
 // ============================================================================
 
 // Backup suffix based on current time (computed once per process)
-const BACKUP_SUFFIX = `.johnludlow-backup-${new Date().toISOString().replace(/[:.]/g, "-")}`;
+const BACKUP_SUFFIX = `.jl-backup-${new Date().toISOString().replace(/[:.]/g, "-")}`;
 
 // Installation platform definitions
 const PLATFORMS = {
@@ -194,12 +194,12 @@ function listBackupsForPlatform(targetDir) {
   const dirName = path.basename(targetDir);
   const files = fs.readdirSync(parentDir);
   const backups = files
-    .filter(f => f.startsWith(dirName + ".johnludlow-backup-"))
+    .filter(f => f.startsWith(dirName + ".jl-backup-"))
     .sort()
     .reverse();
 
   return backups.map(b => {
-    const suffix = b.replace(dirName + ".johnludlow-backup-", "");
+    const suffix = b.replace(dirName + ".jl-backup-", "");
     // Reconstruct ISO-8601: the backup suffix replaced [:.]→- in the time portion only.
     // Date dashes (YYYY-MM-DD) are natural and unchanged; only THH-MM-SS-mssZ needs fixing.
     const timestamp = suffix.replace(/T(\d{2})-(\d{2})-(\d{2})-(\d{3})Z$/, "T$1:$2:$3.$4Z");

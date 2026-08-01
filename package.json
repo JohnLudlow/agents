@@ -15,7 +15,7 @@
     "list": "node scripts/list.js"
   },
   "bin": {
-    "johnludlow-agents": "./scripts/init.js"
+    "jl-agents": "./scripts/init.js"
   },
   "keywords": [
     "opencode",

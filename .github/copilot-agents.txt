@@ -4,26 +4,28 @@
 # and configured according to GitHub Copilot documentation.
 #
 # Agents:
-#   - johnludlow-documenter: ./.apm/agents/johnludlow-documenter.agent.md
-#   - johnludlow-feature-documenter: ./.apm/agents/johnludlow-feature-documenter.agent.md
-#   - johnludlow-feature-implementer: ./.apm/agents/johnludlow-feature-implementer.agent.md
-#   - johnludlow-feature-planner: ./.apm/agents/johnludlow-feature-planner.agent.md
-#   - johnludlow-feature-reviewer: ./.apm/agents/johnludlow-feature-reviewer.agent.md
-#   - johnludlow-feature-tester: ./.apm/agents/johnludlow-feature-tester.agent.md
-#   - johnludlow-implementer: ./.apm/agents/johnludlow-implementer.agent.md
-#   - johnludlow-planner: ./.apm/agents/johnludlow-planner.agent.md
-#   - johnludlow-tdd-implementer: ./.apm/agents/johnludlow-tdd-implementer.agent.md
-#   - johnludlow-tester: ./.apm/agents/johnludlow-tester.agent.md
+#   - jl-documenter: ./.apm/agents/jl-documenter.agent.md
+#   - jl-feature-documenter: ./.apm/agents/jl-feature-documenter.agent.md
+#   - jl-feature-implementer: ./.apm/agents/jl-feature-implementer.agent.md
+#   - jl-feature-planner: ./.apm/agents/jl-feature-planner.agent.md
+#   - jl-feature-reviewer: ./.apm/agents/jl-feature-reviewer.agent.md
+#   - jl-feature-tester: ./.apm/agents/jl-feature-tester.agent.md
+#   - jl-implementer: ./.apm/agents/jl-implementer.agent.md
+#   - jl-planner: ./.apm/agents/jl-planner.agent.md
+#   - jl-tdd-implementer: ./.apm/agents/jl-tdd-implementer.agent.md
+#   - jl-tester: ./.apm/agents/jl-tester.agent.md
 #
 # Skills:
-#   - johnludlow-adversarial-review: ./.apm/skills/johnludlow-adversarial-review/SKILL.md
-#   - johnludlow-code-quality: ./.apm/skills/johnludlow-code-quality/SKILL.md
-#   - johnludlow-documentation-template: ./.apm/skills/johnludlow-documentation-template/SKILL.md
-#   - johnludlow-issue-management: ./.apm/skills/johnludlow-issue-management/SKILL.md
-#   - johnludlow-markdown-standards: ./.apm/skills/johnludlow-markdown-standards/SKILL.md
-#   - johnludlow-plan-template: ./.apm/skills/johnludlow-plan-template/SKILL.md
-#   - johnludlow-planning-workflow: ./.apm/skills/johnludlow-planning-workflow/SKILL.md
-#   - johnludlow-quiz: ./.apm/skills/johnludlow-quiz/SKILL.md
-#   - johnludlow-subagent-spawning: ./.apm/skills/johnludlow-subagent-spawning/SKILL.md
+#   - jl-adversarial-review: ./.apm/skills/jl-adversarial-review/SKILL.md
+#   - jl-code-quality: ./.apm/skills/jl-code-quality/SKILL.md
+#   - jl-documentation-template: ./.apm/skills/jl-documentation-template/SKILL.md
+#   - jl-issue-management: ./.apm/skills/jl-issue-management/SKILL.md
+#   - jl-markdown-standards: ./.apm/skills/jl-markdown-standards/SKILL.md
+#   - jl-plan-template: ./.apm/skills/jl-plan-template/SKILL.md
+#   - jl-planning-workflow: ./.apm/skills/jl-planning-workflow/SKILL.md
+#   - jl-prototype: ./.apm/skills/jl-prototype/SKILL.md
+#   - jl-quiz: ./.apm/skills/jl-quiz/SKILL.md
+#   - jl-subagent-spawning: ./.apm/skills/jl-subagent-spawning/SKILL.md
+#   - jl-wayfinder: ./.apm/skills/jl-wayfinder/SKILL.md
 #
 # See https://github.com/github/copilot-cli for more information.

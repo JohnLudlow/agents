@@ -1,6 +1,6 @@
 name: johnludlow/agents-apm
 version: 0.0.1-poc
-description: "POC APM package containing the johnludlow-implementer agent for local apm installs and testing"
+description: "POC APM package containing the jl-implementer agent for local apm installs and testing"
 # Optional: targets users can force during install; apm auto-detects targets if omitted
 targets:
   - copilot

@@ -8,20 +8,20 @@ const agentAgentMd = path.join(
   root,
   ".apm",
   "agents",
-  "johnludlow-implementer.agent.md",
+  "jl-implementer.agent.md",
 );
 const agentLegacyMd = path.join(
   root,
   ".apm",
   "agents",
-  "johnludlow-implementer.md",
+  "jl-implementer.md",
 );
 const agentMd = fs.existsSync(agentAgentMd) ? agentAgentMd : agentLegacyMd;
 const agentJson = path.join(
   root,
   ".apm",
   "agents",
-  "johnludlow-implementer.json",
+  "jl-implementer.json",
 );
 
 let failed = false;

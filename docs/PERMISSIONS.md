@@ -60,7 +60,7 @@ agents unless a later change explicitly expands that scope.
 Top-level agents orchestrate work by delegating to sub-agents. They have restricted
 `task` permissions that control which sub-agents they can invoke.
 
-### Planner (`johnludlow-planner`)
+### Planner (`jl-planner`)
 
 **Purpose**: Orchestrates planning work. Plans only, never implements.
 
@@ -83,7 +83,7 @@ Top-level agents orchestrate work by delegating to sub-agents. They have restric
 - Cannot perform provider writes without explicit approval
 - Cannot run build or test commands
 
-### Implementer (`johnludlow-implementer`)
+### Implementer (`jl-implementer`)
 
 **Purpose**: Orchestrates implementation of approved plans.
 
@@ -102,7 +102,7 @@ Top-level agents orchestrate work by delegating to sub-agents. They have restric
 - Cannot commit or push changes
 - Cannot create or update provider-native records
 
-### TDD Implementer (`johnludlow-tdd-implementer`)
+### TDD Implementer (`jl-tdd-implementer`)
 
 **Purpose**: Orchestrates test-driven implementation (red-green-refactor).
 
@@ -122,7 +122,7 @@ Top-level agents orchestrate work by delegating to sub-agents. They have restric
 - Cannot create or update provider-native records
 - Enforces test-first ordering via system prompt
 
-### Documenter (`johnludlow-documenter`)
+### Documenter (`jl-documenter`)
 
 **Purpose**: Orchestrates documentation work.
 
@@ -141,7 +141,7 @@ Top-level agents orchestrate work by delegating to sub-agents. They have restric
 - Cannot commit or push changes
 - Cannot create or update provider-native records
 
-### Tester (`johnludlow-tester`)
+### Tester (`jl-tester`)
 
 **Purpose**: Orchestrates test execution and reporting.
 
@@ -164,7 +164,7 @@ Top-level agents orchestrate work by delegating to sub-agents. They have restric
 
 Sub-agents perform the actual work delegated by top-level agents.
 
-### Feature Planner (`johnludlow-feature-planner`)
+### Feature Planner (`jl-feature-planner`)
 
 **Purpose**: Creates detailed feature plans and implementation specifications.
 
@@ -193,7 +193,7 @@ Sub-agents perform the actual work delegated by top-level agents.
 - Creating GitHub issues or Azure DevOps work items for features
 - Analyzing existing code structure
 
-### Feature Implementer (`johnludlow-feature-implementer`)
+### Feature Implementer (`jl-feature-implementer`)
 
 **Purpose**: Implements features and writes code changes.
 
@@ -233,7 +233,7 @@ Sub-agents perform the actual work delegated by top-level agents.
 - Running tests and linters
 - Reviewing changes before submission
 
-### Feature Documenter (`johnludlow-feature-documenter`)
+### Feature Documenter (`jl-feature-documenter`)
 
 **Purpose**: Writes and maintains project documentation.
 
@@ -263,7 +263,7 @@ Sub-agents perform the actual work delegated by top-level agents.
 - Updating README and guides
 - Supporting documentation for approved work
 
-### Feature Tester (`johnludlow-feature-tester`)
+### Feature Tester (`jl-feature-tester`)
 
 **Purpose**: Tests features and reports test results.
 
@@ -293,7 +293,7 @@ Sub-agents perform the actual work delegated by top-level agents.
 - Analyzing test failures
 - Verifying features work correctly
 
-### Feature Reviewer (`johnludlow-feature-reviewer`)
+### Feature Reviewer (`jl-feature-reviewer`)
 
 **Purpose**: Adversarial quality gate. Reviews all work before completion.
 
@@ -352,7 +352,7 @@ Contains:
 ### Ask the Planner to Create a Feature Plan
 
 ```text
-@johnludlow-feature-planner Create a detailed plan for adding user authentication
+@jl-feature-planner Create a detailed plan for adding user authentication
 to the API
 ```
 
@@ -365,7 +365,7 @@ The planner can:
 ### Ask the Implementer to Implement a Feature
 
 ```text
-@johnludlow-feature-implementer Implement the feature described in /docs/plans/authentication-plan.md
+@jl-feature-implementer Implement the feature described in /docs/plans/authentication-plan.md
 ```
 
 The implementer can:
@@ -383,7 +383,7 @@ The implementer cannot:
 ### Ask the Documenter to Update Documentation
 
 ```text
-@johnludlow-feature-documenter Update the API documentation with the new
+@jl-feature-documenter Update the API documentation with the new
 authentication endpoints
 ```
 
@@ -397,7 +397,7 @@ The documenter can:
 ### Ask the Tester to Verify Implementation
 
 ```text
-@johnludlow-feature-tester Run all tests and report results for the
+@jl-feature-tester Run all tests and report results for the
 authentication feature
 ```
 
@@ -429,12 +429,12 @@ After modifying, restart OpenCode for changes to take effect.
 
 ### Example: Allow Implementer to Commit
 
-Add to `config.json` in the `johnludlow-feature-implementer` agent:
+Add to `config.json` in the `jl-feature-implementer` agent:
 
 ```json
 {
   "agent": {
-    "johnludlow-feature-implementer": {
+    "jl-feature-implementer": {
       "permission": {
         "bash": {
           "git commit *": "ask"
