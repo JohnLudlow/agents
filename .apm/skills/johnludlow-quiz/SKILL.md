@@ -100,8 +100,8 @@ documented in the repository or explicitly confirmed.
    - MUST present the user with specific choices:
      - Output destination: "GitHub issue", "Azure DevOps work item",
        "Local file", "Inline message"
-      - File location (if Local file selected): "docs/plans/" (preferred for planning agents),
-        or a custom path under the calling agent's allowed write locations?
+     - File location (if Local file selected): "docs/plans/" (preferred for planning agents),
+       or a custom path under the calling agent's allowed write locations?
    - MUST wait for answer
    - MUST offer to record the preference: "Would you like me to record
      this preference in CONTRIBUTING.md or AGENTS.md for future sessions?
