@@ -38,7 +38,7 @@ its intent and only delegates to permitted sub-agents.
 
 ### Top-Level Agents
 
-#### johnludlow-planner
+#### jl-planner
 
 Top-level planning agent. Plans only, never implements. Delegates to planner,
 documenter, and reviewer sub-agents.
@@ -47,9 +47,9 @@ documenter, and reviewer sub-agents.
 - **Delegates to**: feature-planner, feature-documenter, feature-reviewer
 - **Refuses**: Implementation, source code changes, build/test commands
 
-[View full agent definition](.apm/agents/johnludlow-planner.agent.md)
+[View full agent definition](.apm/agents/jl-planner.agent.md)
 
-#### johnludlow-implementer
+#### jl-implementer
 
 Top-level implementation agent. Implements approved plans by delegating to
 implementer and tester sub-agents.
@@ -58,9 +58,9 @@ implementer and tester sub-agents.
 - **Delegates to**: feature-implementer, feature-tester, feature-reviewer
 - **Refuses**: Planning, documentation, working without an approved plan
 
-[View full agent definition](.apm/agents/johnludlow-implementer.agent.md)
+[View full agent definition](.apm/agents/jl-implementer.agent.md)
 
-#### johnludlow-tdd-implementer
+#### jl-tdd-implementer
 
 Top-level TDD implementation agent. Enforces the red-green-refactor cycle —
 writes tests before implementation code.
@@ -69,9 +69,9 @@ writes tests before implementation code.
 - **Delegates to**: feature-tester, feature-implementer, feature-reviewer
 - **Refuses**: Writing implementation before tests, skipping verification
 
-[View full agent definition](.apm/agents/johnludlow-tdd-implementer.agent.md)
+[View full agent definition](.apm/agents/jl-tdd-implementer.agent.md)
 
-#### johnludlow-documenter
+#### jl-documenter
 
 Top-level documentation agent. Creates and maintains documentation only.
 
@@ -79,9 +79,9 @@ Top-level documentation agent. Creates and maintains documentation only.
 - **Delegates to**: feature-documenter, feature-reviewer
 - **Refuses**: Source code changes, planning, test execution
 
-[View full agent definition](.apm/agents/johnludlow-documenter.agent.md)
+[View full agent definition](.apm/agents/jl-documenter.agent.md)
 
-#### johnludlow-tester
+#### jl-tester
 
 Top-level testing agent. Runs tests and reports results without fixing code.
 
@@ -89,7 +89,7 @@ Top-level testing agent. Runs tests and reports results without fixing code.
 - **Delegates to**: feature-tester, feature-reviewer
 - **Refuses**: Code changes, planning, documentation
 
-[View full agent definition](.apm/agents/johnludlow-tester.agent.md)
+[View full agent definition](.apm/agents/jl-tester.agent.md)
 
 ### Usage Reporting
 
@@ -108,7 +108,7 @@ interrupt the agent's primary workflow.
 
 ### Sub-Agents
 
-#### johnludlow-feature-planner
+#### jl-feature-planner
 
 Creates comprehensive feature plans and project specifications.
 
@@ -116,9 +116,9 @@ Creates comprehensive feature plans and project specifications.
 - **Focus**: Planning, design, specification, and issue management
 - **Output**: Markdown plan documents in `docs/plans/`, GitHub Issues, or Azure DevOps work items
 
-[View full agent definition](.apm/agents/johnludlow-feature-planner.agent.md)
+[View full agent definition](.apm/agents/jl-feature-planner.agent.md)
 
-#### johnludlow-feature-implementer
+#### jl-feature-implementer
 
 Implements features based on approved plans with code quality and best practices.
 
@@ -126,9 +126,9 @@ Implements features based on approved plans with code quality and best practices
 - **Focus**: Code implementation, testing, quality
 - **Output**: Modified source files and tests
 
-[View full agent definition](.apm/agents/johnludlow-feature-implementer.agent.md)
+[View full agent definition](.apm/agents/jl-feature-implementer.agent.md)
 
-#### johnludlow-feature-documenter
+#### jl-feature-documenter
 
 Creates user-friendly technical documentation for features and APIs.
 
@@ -136,9 +136,9 @@ Creates user-friendly technical documentation for features and APIs.
 - **Focus**: Documentation, guides, references
 - **Output**: Markdown documentation in `docs/`
 
-[View full agent definition](.apm/agents/johnludlow-feature-documenter.agent.md)
+[View full agent definition](.apm/agents/jl-feature-documenter.agent.md)
 
-#### johnludlow-feature-tester
+#### jl-feature-tester
 
 Runs automated tests and reports results.
 
@@ -146,9 +146,9 @@ Runs automated tests and reports results.
 - **Focus**: Testing, validation, quality assurance
 - **Output**: Test results and coverage reports
 
-[View full agent definition](.apm/agents/johnludlow-feature-tester.agent.md)
+[View full agent definition](.apm/agents/jl-feature-tester.agent.md)
 
-#### johnludlow-feature-reviewer
+#### jl-feature-reviewer
 
 Adversarial reviewer sub-agent. Read-only quality gate invoked by all top-level
 agents before they report completion. Produces critical feedback with PASS/FAIL
@@ -158,13 +158,13 @@ verdicts.
 - **Focus**: Correctness, completeness, consistency, standards compliance
 - **Output**: Structured review feedback with severity ratings
 
-[View full agent definition](.apm/agents/johnludlow-feature-reviewer.agent.md)
+[View full agent definition](.apm/agents/jl-feature-reviewer.agent.md)
 
 ## Skills
 
 Skills provide shared knowledge and standards for agents.
 
-### johnludlow-quiz
+### jl-quiz
 
 Structured question skill. Interviews the user in chat for narrow decisions,
 or generates a questionnaire document for broad decisions, and lets the user
@@ -172,61 +172,61 @@ switch between the two modes at any point in the session. Used by all agents
 when they encounter decisions that only the user can answer.
 Provider- and harness-agnostic.
 
-[View full skill definition](.apm/skills/johnludlow-quiz/SKILL.md)
+[View full skill definition](.apm/skills/jl-quiz/SKILL.md)
 
-### johnludlow-markdown-standards
+### jl-markdown-standards
 
 Defines markdown document structure, formatting, and quality standards.
 
-[View full skill definition](.apm/skills/johnludlow-markdown-standards/SKILL.md)
+[View full skill definition](.apm/skills/jl-markdown-standards/SKILL.md)
 
-### johnludlow-code-quality
+### jl-code-quality
 
 Defines code quality expectations across C#, TypeScript, and C++.
 
-[View full skill definition](.apm/skills/johnludlow-code-quality/SKILL.md)
+[View full skill definition](.apm/skills/jl-code-quality/SKILL.md)
 
-### johnludlow-issue-management
+### jl-issue-management
 
 Defines provider-agnostic issue-management guidance for markdown plans, GitHub
 Issues, and Azure DevOps work items.
 
-[View full skill definition](.apm/skills/johnludlow-issue-management/SKILL.md)
+[View full skill definition](.apm/skills/jl-issue-management/SKILL.md)
 
-### johnludlow-plan-template
+### jl-plan-template
 
 Provides the canonical plan document template and structure for feature plans
 stored in `docs/plans/`, including YAML frontmatter. Used by
-`johnludlow-feature-planner` and `johnludlow-planner`.
+`jl-feature-planner` and `jl-planner`.
 
-[View full skill definition](.apm/skills/johnludlow-plan-template/SKILL.md)
+[View full skill definition](.apm/skills/jl-plan-template/SKILL.md)
 
-### johnludlow-prototype
+### jl-prototype
 
 Generates a time-boxed, stack-agnostic prototype — runnable code, an IaC
 deployment, a mockup, a docs sample, or an architecture sketch — on its own
-`prototype/<slug>` branch. Runs `johnludlow-quiz` as a mandatory pre-step and
+`prototype/<slug>` branch. Runs `jl-quiz` as a mandatory pre-step and
 refuses to generate until shared understanding is confirmed.
 
-[View full skill definition](.apm/skills/johnludlow-prototype/SKILL.md)
+[View full skill definition](.apm/skills/jl-prototype/SKILL.md)
 
-### johnludlow-documentation-template
+### jl-documentation-template
 
 Provides the canonical documentation template and structure for feature and
-API documentation stored in `docs/`. Used by `johnludlow-feature-documenter`
-and `johnludlow-documenter`.
+API documentation stored in `docs/`. Used by `jl-feature-documenter`
+and `jl-documenter`.
 
-[View full skill definition](.apm/skills/johnludlow-documentation-template/SKILL.md)
+[View full skill definition](.apm/skills/jl-documentation-template/SKILL.md)
 
-### johnludlow-wayfinder
+### jl-wayfinder
 
 Charts a map of decision tickets that turns a large, poorly-understood
 feature into a well-understood one. Human-in-the-loop by default (Research
 tickets may run AFK only with explicit per-ticket approval). Delegates to
-`johnludlow-quiz` for destination-naming and Grilling tickets, and to
-`johnludlow-prototype` for Prototype tickets. User-invoked only.
+`jl-quiz` for destination-naming and Grilling tickets, and to
+`jl-prototype` for Prototype tickets. User-invoked only.
 
-[View full skill definition](.apm/skills/johnludlow-wayfinder/SKILL.md)
+[View full skill definition](.apm/skills/jl-wayfinder/SKILL.md)
 
 ## Permissions
 
@@ -266,13 +266,13 @@ an asset, so they are loaded as explicit skill dependencies by the agents
 that use them:
 
 - **Plan Template** — see
-  [johnludlow-plan-template](.apm/skills/johnludlow-plan-template/SKILL.md).
+  [jl-plan-template](.apm/skills/jl-plan-template/SKILL.md).
   Structure for feature plans stored in `docs/plans/`, including YAML
-  frontmatter. Used by `johnludlow-feature-planner` and `johnludlow-planner`.
+  frontmatter. Used by `jl-feature-planner` and `jl-planner`.
 - **Documentation Template** — see
-  [johnludlow-documentation-template](.apm/skills/johnludlow-documentation-template/SKILL.md).
+  [jl-documentation-template](.apm/skills/jl-documentation-template/SKILL.md).
   Structure for technical documentation stored in `docs/`. Used by
-  `johnludlow-feature-documenter` and `johnludlow-documenter`.
+  `jl-feature-documenter` and `jl-documenter`.
 
 ## Installation
 
@@ -314,38 +314,38 @@ Once installed, select a top-level agent for your task:
 
 ```bash
 # Planning
-/agent johnludlow-planner
+/agent jl-planner
 
 # Implementation (standard)
-/agent johnludlow-implementer
+/agent jl-implementer
 
 # Implementation (TDD - test-first)
-/agent johnludlow-tdd-implementer
+/agent jl-tdd-implementer
 
 # Documentation
-/agent johnludlow-documenter
+/agent jl-documenter
 
 # Testing
-/agent johnludlow-tester
+/agent jl-tester
 ```
 
 ### Using Top-Level Agents with GitHub Copilot CLI
 
 ```bash
 # Planning
-copilot chat -a johnludlow-planner "Plan a user authentication system"
+copilot chat -a jl-planner "Plan a user authentication system"
 
 # Implementation
-copilot chat -a johnludlow-implementer "Implement the plan in docs/plans/auth.md"
+copilot chat -a jl-implementer "Implement the plan in docs/plans/auth.md"
 
 # TDD Implementation
-copilot chat -a johnludlow-tdd-implementer "Implement the plan in docs/plans/auth.md"
+copilot chat -a jl-tdd-implementer "Implement the plan in docs/plans/auth.md"
 
 # Documentation
-copilot chat -a johnludlow-documenter "Document the authentication API"
+copilot chat -a jl-documenter "Document the authentication API"
 
 # Testing
-copilot chat -a johnludlow-tester "Run all tests for the auth module"
+copilot chat -a jl-tester "Run all tests for the auth module"
 ```
 
 ### Available Commands
@@ -369,25 +369,25 @@ The package includes a CLI tool for manual management:
 
 ```bash
 # Global installation
-johnludlow-agents [command]
+jl-agents [command]
 
 # Local installation  
 npx @johnludlow/agents [command]
 
 # Commands:
-johnludlow-agents install         # Install agents
-johnludlow-agents uninstall       # Remove agents
-johnludlow-agents restore         # Restore from backup
-johnludlow-agents generate-copilot # Create Copilot format
-johnludlow-agents help            # Show help
-johnludlow-agents version         # Show version
+jl-agents install         # Install agents
+jl-agents uninstall       # Remove agents
+jl-agents restore         # Restore from backup
+jl-agents generate-copilot # Create Copilot format
+jl-agents help            # Show help
+jl-agents version         # Show version
 ```
 
 ## Workflow Example
 
 A typical workflow using top-level agents:
 
-1. **Plan** (`johnludlow-planner`)
+1. **Plan** (`jl-planner`)
 
    Define feature requirements, architecture, and implementation phases.
    The planner delegates to sub-agents and invokes the adversarial reviewer
@@ -396,23 +396,23 @@ A typical workflow using top-level agents:
    Azure DevOps work-item content depending on the selected plan target. Any
    provider-native create or update action remains approval-gated.
 
-2. **Implement** (`johnludlow-implementer` or `johnludlow-tdd-implementer`)
+2. **Implement** (`jl-implementer` or `jl-tdd-implementer`)
 
    Follow the approved plan to implement code and tests. The TDD variant
    enforces red-green-refactor (tests written before implementation).
    Output: Updated source files, tests, and code changes
 
-3. **Document** (`johnludlow-documenter`)
+3. **Document** (`jl-documenter`)
 
    Create user-friendly documentation for the feature.
    Output: API docs, guides, and references in `docs/`
 
-4. **Test** (`johnludlow-tester`)
+4. **Test** (`jl-tester`)
 
    Run automated tests and report results.
    Output: Test results and coverage reports
 
-Each top-level agent invokes the `johnludlow-feature-reviewer` sub-agent before
+Each top-level agent invokes the `jl-feature-reviewer` sub-agent before
 reporting completion, ensuring adversarial quality review of all work.
 
 ## Supported Languages
@@ -443,34 +443,34 @@ These agents are designed to work with:
 .
 ├── .apm/                   # 📝 Canonical source files (PRIMARY SOURCE)
 │   ├── agents/
-│   │   ├── johnludlow-planner.agent.md
-│   │   ├── johnludlow-implementer.agent.md
-│   │   ├── johnludlow-tdd-implementer.agent.md
-│   │   ├── johnludlow-documenter.agent.md
-│   │   ├── johnludlow-tester.agent.md
-│   │   ├── johnludlow-feature-planner.agent.md
-│   │   ├── johnludlow-feature-implementer.agent.md
-│   │   ├── johnludlow-feature-documenter.agent.md
-│   │   ├── johnludlow-feature-tester.agent.md
-│   │   └── johnludlow-feature-reviewer.agent.md
+│   │   ├── jl-planner.agent.md
+│   │   ├── jl-implementer.agent.md
+│   │   ├── jl-tdd-implementer.agent.md
+│   │   ├── jl-documenter.agent.md
+│   │   ├── jl-tester.agent.md
+│   │   ├── jl-feature-planner.agent.md
+│   │   ├── jl-feature-implementer.agent.md
+│   │   ├── jl-feature-documenter.agent.md
+│   │   ├── jl-feature-tester.agent.md
+│   │   └── jl-feature-reviewer.agent.md
 │   └── skills/
-│       ├── johnludlow-quiz/
+│       ├── jl-quiz/
 │       │   ├── SKILL.md
 │       │   └── assets/
 │       │       └── clarify-questionnaire-template.md
-│       ├── johnludlow-plan-template/
+│       ├── jl-plan-template/
 │       │   ├── SKILL.md
 │       │   └── assets/
 │       │       └── plan-template.md
-│       ├── johnludlow-documentation-template/
+│       ├── jl-documentation-template/
 │       │   ├── SKILL.md
 │       │   └── assets/
 │       │       └── documentation-template.md
-│       ├── johnludlow-markdown-standards/
+│       ├── jl-markdown-standards/
 │       │   └── SKILL.md
-│       ├── johnludlow-code-quality/
+│       ├── jl-code-quality/
 │       │   └── SKILL.md
-│       └── johnludlow-issue-management/
+│       └── jl-issue-management/
 │           └── SKILL.md
 ├── agents/                 # ↩️ Legacy back-compat references only
 ├── skills/                 # ↩️ Legacy back-compat references only
@@ -573,7 +573,7 @@ Agents and skills are installed to predictable locations:
 Installation backups are created automatically:
 
 ```bash
-~/.config/opencode.johnludlow-backup-YYYY-MM-DDTHH-MM-SS
+~/.config/opencode.jl-backup-YYYY-MM-DDTHH-MM-SS
 ```
 
 Restore the latest backup:
@@ -587,7 +587,7 @@ npm run restore
 ### Documentation Standards
 
 All documents created by these agents follow the markdown standards defined in the
-johnludlow-markdown-standards skill:
+jl-markdown-standards skill:
 
 - Valid YAML frontmatter for `.apm/` agent and skill primitives and for plan documents in `docs/plans/`
 - Proper heading hierarchy
@@ -597,8 +597,8 @@ johnludlow-markdown-standards skill:
 
 ### Code Quality Standards
 
-Code created by johnludlow-feature-implementer follows the standards in the
-johnludlow-code-quality skill:
+Code created by jl-feature-implementer follows the standards in the
+jl-code-quality skill:
 
 - SOLID principles
 - Language-specific best practices

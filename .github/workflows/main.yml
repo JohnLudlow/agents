@@ -46,10 +46,10 @@ jobs:
       - name: Upload APM package artifact
         uses: actions/upload-artifact@v4
         with:
-          name: johnludlow-agents-${{ needs.setup.outputs.version }}
+          name: jl-agents-${{ needs.setup.outputs.version }}
           path: |
-            johnludlow-agents-*.tgz
-            johnludlow-agents-*.apm
+            jl-agents-*.tgz
+            jl-agents-*.apm
           retention-days: 30
 
       - name: Upload Copilot Format
@@ -97,7 +97,7 @@ jobs:
       - name: Download Build Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: johnludlow-agents-${{ needs.setup.outputs.version }}
+          name: jl-agents-${{ needs.setup.outputs.version }}
           path: ./release-artifacts
 
       - name: Create GitHub Release
@@ -106,7 +106,7 @@ jobs:
           tag_name: v${{ needs.setup.outputs.version }}
           body_path: RELEASE_NOTES.md
           files: |
-            ./release-artifacts/johnludlow-agents-*.tgz
+            ./release-artifacts/jl-agents-*.tgz
           draft: false
           prerelease: false
         env:

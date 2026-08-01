@@ -15,7 +15,7 @@ function showHelp() {
 @johnludlow/agents CLI
 
 Usage:
-  johnludlow-agents [command] [options]
+  jl-agents [command] [options]
 
 Commands:
    install [--global]        Install agents and skills
@@ -27,13 +27,13 @@ Commands:
    version                   Show version information
 
 Examples:
-   johnludlow-agents install
-   johnludlow-agents install --global
-   johnludlow-agents list
-   johnludlow-agents list --global
-   johnludlow-agents uninstall
-   johnludlow-agents restore
-   johnludlow-agents generate-copilot
+   jl-agents install
+   jl-agents install --global
+   jl-agents list
+   jl-agents list --global
+   jl-agents uninstall
+   jl-agents restore
+   jl-agents generate-copilot
 
 For more information, visit: https://github.com/JohnLudlow/agents
   `);

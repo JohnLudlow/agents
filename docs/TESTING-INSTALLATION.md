@@ -258,7 +258,7 @@ Create a clean test environment by:
 2. **Install with npm**
 
    ```bash
-   npm install ./johnludlow-agents-VERSION.tgz
+   npm install ./jl-agents-VERSION.tgz
    ```
 
 3. **Verify installation**
@@ -296,7 +296,7 @@ Create a clean test environment by:
 2. **Install globally**
 
    ```bash
-   npm install -g ./johnludlow-agents-VERSION.tgz
+   npm install -g ./jl-agents-VERSION.tgz
    ```
 
 3. **Verify**
@@ -338,7 +338,7 @@ Create a clean test environment by:
 2. **Check agent content**
 
    ```bash
-   cat .opencode/agents/johnludlow-feature-planner.md | head -20
+   cat .opencode/agents/jl-feature-planner.md | head -20
    ```
 
 3. **Verify YAML frontmatter** (for OpenCode agents)
@@ -349,16 +349,16 @@ Create a clean test environment by:
 
    ```bash
    # Try to load the agent
-   opencode agent johnludlow-feature-planner
+   opencode agent jl-feature-planner
    ```
 
 **Expected Results**:
 
 - All 4 agents present:
-  - johnludlow-feature-planner.md
-  - johnludlow-feature-implementer.md
-  - johnludlow-feature-documenter.md
-  - johnludlow-feature-tester.md
+  - jl-feature-planner.md
+  - jl-feature-implementer.md
+  - jl-feature-documenter.md
+  - jl-feature-tester.md
 - Valid YAML frontmatter in each file
 - Agents loadable in OpenCode
 
@@ -464,7 +464,7 @@ Create a clean test environment by:
 3. **Modify an agent** (to verify restore works)
 
    ```bash
-   echo "test" >> ~/.config/opencode/agents/johnludlow-feature-planner.md
+   echo "test" >> ~/.config/opencode/agents/jl-feature-planner.md
    ```
 
 4. **Restore from backup**

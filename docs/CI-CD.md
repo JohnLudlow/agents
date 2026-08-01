@@ -71,7 +71,7 @@ The primary workflow is defined in `.github/workflows/main.yml` and executes on:
 
 **Outputs**:
 
-- `@johnludlow-agents-*.tgz` - NPM package
+- `@jl-agents-*.tgz` - NPM package
 - `.github/agents/` - Generated Copilot format agents
 - `.github/skills/` - Generated Copilot format skills
 
@@ -103,7 +103,7 @@ The primary workflow is defined in `.github/workflows/main.yml` and executes on:
 
 **Release Assets Included**:
 
-- `johnludlow-agents-0.1.0.tgz` - NPM package for direct installation
+- `jl-agents-0.1.0.tgz` - NPM package for direct installation
 - `install-release.ps1` - PowerShell installation script
 - `install-release.sh` - Bash installation script
 
@@ -127,7 +127,7 @@ Control version bumps using commit message prefixes:
 **Example commit message**:
 
 ```text
-feat: add new johnludlow-performance-analyzer agent
+feat: add new jl-performance-analyzer agent
 
 +semver: minor
 ```

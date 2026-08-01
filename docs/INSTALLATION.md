@@ -74,10 +74,10 @@ For offline installation or manual control:
 
    ```bash
    # Global installation
-   npm install -g ./johnludlow-agents-X.X.X.tgz
+   npm install -g ./jl-agents-X.X.X.tgz
 
    # Local installation
-   npm install ./johnludlow-agents-X.X.X.tgz
+   npm install ./jl-agents-X.X.X.tgz
    ```
 
 ### Method 3: From npm Registry
@@ -99,7 +99,7 @@ npm install @johnludlow/agents
 Installs agents and skills into the current project directory:
 
 ```bash
-npm install https://github.com/JohnLudlow/agents/releases/download/vX.X.X/johnludlow-agents-X.X.X.tgz
+npm install https://github.com/JohnLudlow/agents/releases/download/vX.X.X/jl-agents-X.X.X.tgz
 ```
 
 **Installation directories:**
@@ -119,7 +119,7 @@ npm install https://github.com/JohnLudlow/agents/releases/download/vX.X.X/johnlu
 Makes agents available to all projects:
 
 ```bash
-npm install -g https://github.com/JohnLudlow/agents/releases/download/vX.X.X/johnludlow-agents-X.X.X.tgz
+npm install -g https://github.com/JohnLudlow/agents/releases/download/vX.X.X/jl-agents-X.X.X.tgz
 ```
 
 **Installation directories:**
@@ -166,10 +166,10 @@ ls ~/.config/opencode/agents/
 
 You should see files like:
 
-- `johnludlow-feature-planner.md`
-- `johnludlow-feature-implementer.md`
-- `johnludlow-feature-documenter.md`
-- `johnludlow-feature-tester.md`
+- `jl-feature-planner.md`
+- `jl-feature-implementer.md`
+- `jl-feature-documenter.md`
+- `jl-feature-tester.md`
 
 ### Test Agent Integration
 
@@ -177,7 +177,7 @@ You should see files like:
 
 ```bash
 # Try using an agent
-opencode agent johnludlow-feature-planner
+opencode agent jl-feature-planner
 ```
 
 **With GitHub Copilot CLI:**
@@ -187,7 +187,7 @@ opencode agent johnludlow-feature-planner
 copilot agent list
 
 # Use an agent
-copilot chat -a johnludlow-feature-planner
+copilot chat -a jl-feature-planner
 ```
 
 ## Uninstallation
@@ -279,7 +279,7 @@ If you need to install without internet access:
 3. Install with npm:
 
    ```bash
-   npm install -g ./johnludlow-agents-X.X.X.tgz
+   npm install -g ./jl-agents-X.X.X.tgz
    ```
 
 ## Getting Help
@@ -306,15 +306,15 @@ When you install `@johnludlow/agents`, you get:
 
 ### Agents (4 total)
 
-- **johnludlow-feature-planner** - Create comprehensive feature plans
-- **johnludlow-feature-implementer** - Implement features from plans
-- **johnludlow-feature-documenter** - Generate technical documentation
-- **johnludlow-feature-tester** - Run tests and report results
+- **jl-feature-planner** - Create comprehensive feature plans
+- **jl-feature-implementer** - Implement features from plans
+- **jl-feature-documenter** - Generate technical documentation
+- **jl-feature-tester** - Run tests and report results
 
 ### Skills (2 total)
 
-- **johnludlow-markdown-standards** - Markdown formatting and structure standards
-- **johnludlow-code-quality** - Code quality expectations and best practices
+- **jl-markdown-standards** - Markdown formatting and structure standards
+- **jl-code-quality** - Code quality expectations and best practices
 
 ### Configuration
 

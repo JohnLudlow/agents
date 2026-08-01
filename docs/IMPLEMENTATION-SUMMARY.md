@@ -393,16 +393,16 @@ Added `Usage Reporting` section to all 10 agent definitions (5 top-level, 5 sub-
 
 ### Agent Definitions (10 files)
 
-- `agents/johnludlow-planner.md` - Added usage reporting section
-- `agents/johnludlow-implementer.md` - Added usage reporting section
-- `agents/johnludlow-tdd-implementer.md` - Added usage reporting section
-- `agents/johnludlow-documenter.md` - Added usage reporting section
-- `agents/johnludlow-tester.md` - Added usage reporting section
-- `agents/johnludlow-feature-planner.md` - Added usage reporting section
-- `agents/johnludlow-feature-implementer.md` - Added usage reporting section
-- `agents/johnludlow-feature-documenter.md` - Added usage reporting section
-- `agents/johnludlow-feature-tester.md` - Added usage reporting section
-- `agents/johnludlow-feature-reviewer.md` - Added usage reporting section
+- `agents/jl-planner.md` - Added usage reporting section
+- `agents/jl-implementer.md` - Added usage reporting section
+- `agents/jl-tdd-implementer.md` - Added usage reporting section
+- `agents/jl-documenter.md` - Added usage reporting section
+- `agents/jl-tester.md` - Added usage reporting section
+- `agents/jl-feature-planner.md` - Added usage reporting section
+- `agents/jl-feature-implementer.md` - Added usage reporting section
+- `agents/jl-feature-documenter.md` - Added usage reporting section
+- `agents/jl-feature-tester.md` - Added usage reporting section
+- `agents/jl-feature-reviewer.md` - Added usage reporting section
 
 ### Documentation (3 files)
 
@@ -413,6 +413,6 @@ Added `Usage Reporting` section to all 10 agent definitions (5 top-level, 5 sub-
 ### Project Configuration and Metadata (2 files)
 
 - `.gitignore` - Updated ignore rules
-- `agents/johnludlow-planner.json` - Updated agent metadata
+- `agents/jl-planner.json` - Updated agent metadata
 
 ### Total: 15 files modified

@@ -51,7 +51,7 @@ Agents are ready to use immediately after installation:
 
 ```bash
 # In OpenCode chat
-/agent johnludlow-feature-planner
+/agent jl-feature-planner
 ```
 
 ### With GitHub Copilot CLI
@@ -65,7 +65,7 @@ npm run generate:copilot
 Then use with Copilot:
 
 ```bash
-copilot chat -a johnludlow-feature-planner "Please plan a new feature"
+copilot chat -a jl-feature-planner "Please plan a new feature"
 ```
 
 ## Example Workflow
@@ -74,7 +74,7 @@ copilot chat -a johnludlow-feature-planner "Please plan a new feature"
 
 ```bash
 # Using OpenCode
-/agent johnludlow-feature-planner
+/agent jl-feature-planner
 ```
 
 "I need to implement user authentication with OAuth2"
@@ -84,7 +84,7 @@ copilot chat -a johnludlow-feature-planner "Please plan a new feature"
 ### 2. Implement the Feature
 
 ```bash
-/agent johnludlow-feature-implementer
+/agent jl-feature-implementer
 ```
 
 "Implement the authentication system according to the plan in
@@ -95,7 +95,7 @@ docs/plans/user-authentication.md"
 ### 3. Document the Feature
 
 ```bash
-/agent johnludlow-feature-documenter
+/agent jl-feature-documenter
 ```
 
 "Create API documentation for the authentication system"
@@ -105,7 +105,7 @@ docs/plans/user-authentication.md"
 ### 4. Run Tests
 
 ```bash
-/agent johnludlow-feature-tester
+/agent jl-feature-tester
 ```
 
 "Run all authentication-related tests"
@@ -136,28 +136,28 @@ npx @johnludlow/agents version
 
 ## Agent Details
 
-### johnludlow-feature-planner (Temperature: 0.3)
+### jl-feature-planner (Temperature: 0.3)
 
 - **Purpose**: Create comprehensive feature plans
 - **Input**: Feature description or user story
 - **Output**: Well-structured plan document in `docs/plans/`
 - **Ideal for**: Planning, requirements clarification, architecture decisions
 
-### johnludlow-feature-implementer (Temperature: 0.2)
+### jl-feature-implementer (Temperature: 0.2)
 
 - **Purpose**: Implement features following approved plans
 - **Input**: Plan document + implementation details
 - **Output**: Code changes, tests, and updated documentation
 - **Ideal for**: Feature implementation, refactoring, bug fixes
 
-### johnludlow-feature-documenter (Temperature: 0.2)
+### jl-feature-documenter (Temperature: 0.2)
 
 - **Purpose**: Generate technical documentation
 - **Input**: Implementation code + documentation requirements
 - **Output**: API docs, guides, and reference materials in `docs/`
 - **Ideal for**: API documentation, user guides, architecture docs
 
-### johnludlow-feature-tester (Temperature: 0.2)
+### jl-feature-tester (Temperature: 0.2)
 
 - **Purpose**: Run automated tests and validate implementations
 - **Input**: Test specifications or implementation

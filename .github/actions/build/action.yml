@@ -45,10 +45,10 @@ runs:
       shell: bash
       run: |
         if command -v apm >/dev/null 2>&1; then
-          apm pack --output johnludlow-agents-${{ inputs.version }}.apm || apm pack
+          apm pack --output jl-agents-${{ inputs.version }}.apm || apm pack
           echo "✓ apm pack completed"
         else
           echo "apm CLI not found — creating tarball of .apm/ and apm.yml"
-          tar -czf johnludlow-agents-${{ inputs.version }}.tgz apm.yml .apm README.md docs || tar -czf johnludlow-agents-${{ inputs.version }}.tgz apm.yml .apm || true
+          tar -czf jl-agents-${{ inputs.version }}.tgz apm.yml .apm README.md docs || tar -czf jl-agents-${{ inputs.version }}.tgz apm.yml .apm || true
           echo "✓ Created fallback tarball"
         fi
