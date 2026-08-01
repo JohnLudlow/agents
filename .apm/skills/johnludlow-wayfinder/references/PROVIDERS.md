@@ -28,7 +28,7 @@ the section for that provider, not all three.
   alongside it; one list carries all resolved decisions, whether or not each
   one has a sub-issue behind it.
 - **Ticket type**: a label — `wayfinder:research`, `wayfinder:prototype`,
-  `wayfinder:grilling`, `wayfinder:task`.
+  `wayfinder:quiz`, `wayfinder:task`.
 - **Blocking**: GitHub's native "blocked by" / "blocks" issue links. Also add
   a short note in the ticket body stating the reason, e.g. `BLOCKED:
   requires the widget widgetiser from [widgetising-widgets]` — the native

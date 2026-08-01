@@ -69,7 +69,7 @@ for that specific ticket.
 - **Prototype** — raise the fidelity of a discussion with a cheap artifact
   to react to. Delegate to `johnludlow-prototype` for the full flow
   (its own quiz, its own branch, its own self-check).
-- **Grilling** — resolve a decision conversationally, one question at a
+- **Quiz** — resolve a decision conversationally, one question at a
   time. Delegate to `johnludlow-quiz`. A quiz is not exclusive to this
   ticket type — it can surface inside a Prototype ticket (commonly, to get
   feedback on what was just built) or a Research ticket (occasionally) —
@@ -205,7 +205,8 @@ The agent MUST NOT:
 - Create a GitHub or Azure DevOps ticket without the map's labels or tags
   carried over.
 - Let a ticket's type change because a quiz or other detour occurred inside
-  it — spin off a child ticket instead.
+  it — spin off a child ticket instead. A Quiz ticket that internally runs
+  quiz-as-mechanism does not retype the ticket.
 - Represent the same child-item information more than once on a map (a list,
   then a summary of that list, then a status table of the same items).
 - Resolve more than one ticket in a single "work through the map" pass,
@@ -216,7 +217,7 @@ The agent MUST NOT:
 ## Relationship to Other Skills
 
 - **johnludlow-quiz** — the mechanism behind naming the destination, mapping
-  the frontier, and every Grilling ticket. Its own Mode A/B split is
+  the frontier, and every Quiz ticket. Its own Mode A/B split is
   inherited unchanged; Wayfinder does not re-decide it.
 - **johnludlow-prototype** — the mechanism behind every Prototype ticket.
   Delegate fully rather than re-implementing its quiz, branch, or self-check.

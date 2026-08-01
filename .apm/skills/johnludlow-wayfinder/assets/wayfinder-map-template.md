@@ -62,13 +62,13 @@ Tickets that are open, unblocked, and unclaimed right now.
 
 | Ticket | Type | Assignee |
 |:-------|:-----|:---------|
-| [Ticket name](link) | Research / Prototype / Grilling / Task | [who, if anyone] |
+| [Ticket name](link) | Research / Prototype / Quiz / Task | [who, if anyone] |
 
 ## Blocked Tickets
 
 | Ticket | Type | Blocked by | Reason |
 |:-------|:-----|:-----------|:-------|
-| [Ticket name](link) | Research / Prototype / Grilling / Task | [Blocking ticket name](link) | BLOCKED: [short reason] |
+| [Ticket name](link) | Research / Prototype / Quiz / Task | [Blocking ticket name](link) | BLOCKED: [short reason] |
 
 ## Revision History
 
