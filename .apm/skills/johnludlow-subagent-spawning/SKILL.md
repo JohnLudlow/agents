@@ -1,3 +1,8 @@
+---
+name: johnludlow-subagent-spawning
+description: Reference guide for spawning subagents and coordinating planning work across Copilot harnesses (CLI, browser, Azure DevOps). Explains fleet mode limitations and provides workarounds. Use when spawning subagents, coordinating multiple agents, planning in non-CLI harnesses, or encountering "embedded skills not supported" errors.
+---
+
 # johnludlow-subagent-spawning
 
 Reference guide for spawning subagents and coordinating planning work across
@@ -131,7 +136,7 @@ not an agent.
 
 **Workaround:** If you absolutely need fleet coordination of multiple agents
 (e.g., "run quiz in parallel with template validation"), see
-**[DESIGN-RATIONALE.md](DESIGN-RATIONALE.md)** for pattern recommendations.
+**[DESIGN-RATIONALE.md](references/DESIGN-RATIONALE.md)** for pattern recommendations.
 
 ## Decision Table: Which Approach?
 
@@ -150,13 +155,13 @@ not an agent.
 behavior.
 
 **Phase 2 (Future):** Implement harness detection in planner agents. See
-**[ROADMAP.md](ROADMAP.md)** for detailed implementation plan and open questions.
+**[ROADMAP.md](references/ROADMAP.md)** for detailed implementation plan and open questions.
 
 **Phase 3 (Future):** Create user-facing documentation. See
-**[ROADMAP.md](ROADMAP.md)**.
+**[ROADMAP.md](references/ROADMAP.md)**.
 
 ## Related Skills & Agents
 
-See **[DEPENDENCIES.md](DEPENDENCIES.md)** for relationships to johnludlow-planner,
+See **[DEPENDENCIES.md](references/DEPENDENCIES.md)** for relationships to johnludlow-planner,
 johnludlow-feature-planner, johnludlow-adversarial-review, johnludlow-feature-reviewer,
 and johnludlow-planning-workflow.
