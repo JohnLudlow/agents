@@ -218,15 +218,15 @@ and `johnludlow-documenter`.
 
 [View full skill definition](.apm/skills/johnludlow-documentation-template/SKILL.md)
 
-### johnludlow-wayfinder
+### jl-recon
 
 Charts a map of decision tickets that turns a large, poorly-understood
 feature into a well-understood one. Human-in-the-loop by default (Research
 tickets may run AFK only with explicit per-ticket approval). Delegates to
-`johnludlow-quiz` for destination-naming and Grilling tickets, and to
-`johnludlow-prototype` for Prototype tickets. User-invoked only.
+`jl-quiz` for destination-naming and Grilling tickets, and to
+`jl-prototype` for Prototype tickets. User-invoked only.
 
-[View full skill definition](.apm/skills/johnludlow-wayfinder/SKILL.md)
+[View full skill definition](.apm/skills/jl-recon/SKILL.md)
 
 ## Permissions
 

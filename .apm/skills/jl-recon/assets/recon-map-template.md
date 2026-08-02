@@ -1,7 +1,7 @@
 ---
 title: "[Map title]"
 description: "[One-line destination this map is finding its way to]"
-author: "johnludlow-wayfinder"
+author: "jl-recon"
 date: "YYYY-MM-DD"
 status: "Charting"
 inciting-issue: "[Link to the issue/work item/document that prompted this map, or 'None']"
@@ -9,8 +9,8 @@ inciting-issue: "[Link to the issue/work item/document that prompted this map, o
 
 # [Map Title]
 
-Use this template when charting a Wayfinder map as a markdown document. It
-extends `johnludlow-plan-template`'s frontmatter and governance conventions;
+Use this template when charting a Recon map as a markdown document. It
+extends `jl-plan-template`'s frontmatter and governance conventions;
 replace every placeholder value before use.
 
 ## Plan Target and Governance
@@ -24,7 +24,7 @@ replace every placeholder value before use.
 ## Destination
 
 [What reaching the end of this map looks like — a spec, a decision, or a
-shipped change. Named through `johnludlow-quiz` before this document is
+shipped change. Named through `jl-quiz` before this document is
 created.]
 
 ## Notes

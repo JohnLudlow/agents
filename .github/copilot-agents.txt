@@ -16,6 +16,7 @@
 #   - johnludlow-tester: ./.apm/agents/johnludlow-tester.agent.md
 #
 # Skills:
+#   - jl-recon: ./.apm/skills/jl-recon/SKILL.md
 #   - johnludlow-adversarial-review: ./.apm/skills/johnludlow-adversarial-review/SKILL.md
 #   - johnludlow-code-quality: ./.apm/skills/johnludlow-code-quality/SKILL.md
 #   - johnludlow-documentation-template: ./.apm/skills/johnludlow-documentation-template/SKILL.md
@@ -23,6 +24,7 @@
 #   - johnludlow-markdown-standards: ./.apm/skills/johnludlow-markdown-standards/SKILL.md
 #   - johnludlow-plan-template: ./.apm/skills/johnludlow-plan-template/SKILL.md
 #   - johnludlow-planning-workflow: ./.apm/skills/johnludlow-planning-workflow/SKILL.md
+#   - johnludlow-prototype: ./.apm/skills/johnludlow-prototype/SKILL.md
 #   - johnludlow-quiz: ./.apm/skills/johnludlow-quiz/SKILL.md
 #   - johnludlow-subagent-spawning: ./.apm/skills/johnludlow-subagent-spawning/SKILL.md
 #
