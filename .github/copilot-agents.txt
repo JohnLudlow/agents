@@ -26,6 +26,6 @@
 #   - jl-prototype: ./.apm/skills/jl-prototype/SKILL.md
 #   - jl-quiz: ./.apm/skills/jl-quiz/SKILL.md
 #   - jl-subagent-spawning: ./.apm/skills/jl-subagent-spawning/SKILL.md
-#   - jl-wayfinder: ./.apm/skills/jl-wayfinder/SKILL.md
+#   - jl-recon: ./.apm/skills/jl-recon/SKILL.md
 #
 # See https://github.com/github/copilot-cli for more information.

@@ -1,14 +1,14 @@
 ---
-name: jl-wayfinder
-description: "Wayfinder skill: charts a map of decision tickets that turns a large, poorly-understood feature into a well-understood one. User-invoked only — launch by name when a request is too big or too fuzzy for one session."
+name: jl-recon
+description: "Recon skill: charts a map of decision tickets that turns a large, poorly-understood feature into a well-understood one. User-invoked only — launch by name when a request is too big or too fuzzy for one session."
 disable-model-invocation: true
 ---
 
-# Wayfinder
+# Recon
 
 ## Overview
 
-Wayfinder turns a large, poorly-understood feature into a large,
+Recon turns a large, poorly-understood feature into a large,
 well-understood one, one decision at a time. It is adapted from Matt
 Pocock's [`/wayfinder`](https://github.com/mattpocock/skills/blob/main/skills/engineering/wayfinder/SKILL.md),
 with one deliberate divergence: every ticket type here defaults to
@@ -22,7 +22,7 @@ Nobody reads the map to find the answer — they read it to find which
 **ticket** has the answer, or to see that the answer is still fog.
 
 This skill is user-invoked only. An agent may notice a request has this
-shape and suggest Wayfinder by name, but only a human launches it.
+shape and suggest Recon by name, but only a human launches it.
 
 ## Core Model
 
@@ -36,8 +36,8 @@ shape and suggest Wayfinder by name, but only a human launches it.
   with no findable path back to why it exists is a map nobody can find.
 - **Map** — the single canonical artifact holding Destination, Notes, one
   Decisions-so-far list, Not-yet-specified (fog), and Out-of-scope. A GitHub
-  issue tagged `wayfinder:map`, an Azure DevOps parent work item, or a
-  markdown document from `assets/wayfinder-map-template.md`.
+  issue tagged `recon:map`, an Azure DevOps parent work item, or a
+  markdown document from `assets/recon-map-template.md`.
 - **Ticket** — a child artifact resolving exactly one decision, sized to one
   session. Its type is fixed at creation and never changes — a quiz that
   breaks out mid-ticket doesn't retype the ticket, it spins off a child
@@ -46,7 +46,10 @@ shape and suggest Wayfinder by name, but only a human launches it.
   ticket. Covers two distinct kinds of unclear: unclear *what* (the goal is
   fuzzy, the means would be easy) and unclear *how* (the goal is fixed, the
   means are fuzzy). Resolving a ticket often burns off fog by revealing the
-  next ticket underneath it.
+  next ticket underneath it. Fog is recorded the moment an uncertainty
+  surfaces — in-session, during whatever pass raised it (charting, walking
+  the map, prototyping), never deferred until the human asks or until a
+  later cleanup pass.
 - **Frontier** — the tickets that are open, unblocked, and unclaimed right
   now. This is what "work through the map" hands the human next.
 - **Out of scope** — work consciously ruled outside the destination. Closed
@@ -91,6 +94,7 @@ Starting a map from a loose idea.
    the scope calls for.
 2. Map the frontier — run `jl-quiz` again, breadth-first, to surface
    the decisions currently blocking the destination and the fog around them.
+   Record each fog item the moment the quiz surfaces it, before moving on.
    If nothing surfaces as fog, the way is already clear — say so and ask the
    human how they want to proceed instead of forcing a map into existence.
 3. Ask whether an inciting issue exists — the issue, work item, or thread
@@ -105,7 +109,7 @@ Starting a map from a loose idea.
    tickets; an unlinked map is the bug this step exists to prevent.
 6. Create tickets for every decision sharp enough to specify now, as
    children of the map. On GitHub or Azure DevOps, copy the map's labels or
-   tags onto each new ticket before adding its `wayfinder:<type>`
+   tags onto each new ticket before adding its `recon:<type>`
    classification — see [PROVIDERS.md](references/PROVIDERS.md). Wire
    blocking relationships in a second pass — see
    [PROVIDERS.md](references/PROVIDERS.md) for the mechanics per provider.
@@ -130,19 +134,24 @@ Resolving one ticket on an existing map.
    — so another human glancing at the map can tell. No formal claim step;
    this is informational, not a lock.
 4. Resolve it through the mechanism its type maps to (see Ticket Types
-   above). A quiz may surface inside any ticket regardless of type.
+   above). A quiz may surface inside any ticket regardless of type. Record
+   any new question or uncertainty the work surfaces — from a quiz detour,
+   prototype feedback, or research findings — to the map's fog immediately,
+   in-session, before the pass continues.
 5. Record the resolution: close the ticket, then append exactly one line to
    the map's Decisions-so-far list. One line, one place — if the map already
    shows this natively (GitHub's own sub-issue list), the manual line still
    goes in because some decisions resolve with no child ticket at all; it
    never gets restated a second time as a summary or a status table.
 6. Create any newly-surfaced tickets and graduate any fog the resolution
-   burned off. If the resolution reveals scope the destination doesn't cover,
-   close it into Out-of-scope instead of recording it as a decision.
+   burned off. Log any newly-surfaced uncertainty to the map's fog in the
+   same pass, before the pass ends. If the resolution reveals scope the
+   destination doesn't cover, close it into Out-of-scope instead of
+   recording it as a decision.
 
 **Completion criterion:** the ticket is closed, the Decisions-so-far list
-carries its one new line, and any fog or tickets the resolution surfaced
-have been added to the map.
+carries its one new line, and every new uncertainty the pass surfaced is
+recorded as fog on the map, in-session, before the pass ends.
 
 ### 3. Report on implementation status
 
@@ -182,8 +191,11 @@ The agent MUST:
   does, link the map to it using the provider's native mechanism before
   creating any tickets.
 - Copy the map's labels or tags onto every ticket created on GitHub or
-  Azure DevOps, in addition to the ticket's own `wayfinder:<type>`
+  Azure DevOps, in addition to the ticket's own `recon:<type>`
   classification — never in place of it.
+- Record every new question or uncertainty to the map's fog the moment it
+  surfaces — during charting, walking the map, or any ticket work — never
+  deferring it until the human asks.
 - Get explicit, per-ticket human sign-off before running any Research ticket
   AFK, and have the human review its findings before closing it.
 - Keep every other ticket type human-in-the-loop: the agent proposes, the
@@ -218,7 +230,7 @@ The agent MUST NOT:
 
 - **jl-quiz** — the mechanism behind naming the destination, mapping
   the frontier, and every Quiz ticket. Its own Mode A/B split is
-  inherited unchanged; Wayfinder does not re-decide it.
+  inherited unchanged; Recon does not re-decide it.
 - **jl-prototype** — the mechanism behind every Prototype ticket.
   Delegate fully rather than re-implementing its quiz, branch, or self-check.
 - **jl-subagent-spawning** — consulted when a Research ticket is
@@ -229,7 +241,7 @@ The agent MUST NOT:
   (plan target, source of record, parent/child, mandatory human approval
   before provider-native writes) that map and ticket creation runs on.
 - **jl-plan-template** — the base that
-  `assets/wayfinder-map-template.md` extends for markdown-provider maps.
+  `assets/recon-map-template.md` extends for markdown-provider maps.
 - **jl-markdown-standards** — applies to any markdown map or ticket
   this skill produces, including source line wrapping and list-item spacing
   for map and ticket bodies, whether the provider is GitHub, Azure DevOps,
@@ -244,5 +256,5 @@ The agent MUST NOT:
 
 ## Assets
 
-- `assets/wayfinder-map-template.md` — markdown map template, extending
+- `assets/recon-map-template.md` — markdown map template, extending
   `jl-plan-template`'s template, for markdown-provider maps.
