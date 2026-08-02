@@ -1,7 +1,7 @@
 ---
 title: "[Map title]"
 description: "[One-line destination this map is finding its way to]"
-author: "jl-wayfinder"
+author: "jl-recon"
 date: "YYYY-MM-DD"
 status: "Charting"
 inciting-issue: "[Link to the issue/work item/document that prompted this map, or 'None']"
@@ -9,7 +9,7 @@ inciting-issue: "[Link to the issue/work item/document that prompted this map, o
 
 # [Map Title]
 
-Use this template when charting a Wayfinder map as a markdown document. It
+Use this template when charting a Recon map as a markdown document. It
 extends `jl-plan-template`'s frontmatter and governance conventions;
 replace every placeholder value before use.
 
@@ -45,7 +45,9 @@ name, never a bare id.
 
 Known to be in scope, not yet sharp enough to ticket. Note which kind of
 unclear it is — the *what* (goal fuzzy, means would be easy) or the *how*
-(goal fixed, means fuzzy) — where that distinction is known.
+(goal fixed, means fuzzy) — where that distinction is known. Items are added
+the moment they surface — during charting, walking, or prototyping — not
+only at chart time.
 
 - [Fog item] — [what kind of unclear, if known]
 

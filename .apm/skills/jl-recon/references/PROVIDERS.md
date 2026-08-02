@@ -6,7 +6,7 @@ the section for that provider, not all three.
 
 ## GitHub
 
-- **Map**: an issue labelled `wayfinder:map`.
+- **Map**: an issue labelled `recon:map`.
 - **Inciting issue link**: if the map was charted because an existing issue
   turned out too big, make the map a native sub-issue of that issue (GitHub's
   sub-issue feature), so it appears in that issue's task list and the map is
@@ -17,7 +17,7 @@ the section for that provider, not all three.
   top of the map's Notes section — but prefer the native relationship.
 - **Tickets**: native sub-issues of the map issue. Copy every label the map
   issue carries onto each new ticket, then add the ticket's own
-  `wayfinder:<type>` label on top — labels are additive, not a replacement
+  `recon:<type>` label on top — labels are additive, not a replacement
   for whatever the map already carries (area labels, priority, `bug`, and
   so on).
 - **Decisions-so-far**: a single manually-maintained list in the map issue
@@ -27,8 +27,8 @@ the section for that provider, not all three.
   up. Do not add a second list, a prose summary, or a status table
   alongside it; one list carries all resolved decisions, whether or not each
   one has a sub-issue behind it.
-- **Ticket type**: a label — `wayfinder:research`, `wayfinder:prototype`,
-  `wayfinder:quiz`, `wayfinder:task`.
+- **Ticket type**: a label — `recon:research`, `recon:prototype`,
+  `recon:quiz`, `recon:task`.
 - **Blocking**: GitHub's native "blocked by" / "blocks" issue links. Also add
   a short note in the ticket body stating the reason, e.g. `BLOCKED:
   requires the widget widgetiser from [widgetising-widgets]` — the native
@@ -63,7 +63,7 @@ the section for that provider, not all three.
 ## Markdown-only
 
 - **Map**: a markdown document built from
-  [`assets/wayfinder-map-template.md`](../assets/wayfinder-map-template.md),
+  [`assets/recon-map-template.md`](../assets/recon-map-template.md),
   which extends `jl-plan-template`'s base template.
 - **Inciting issue link**: markdown has no native parent/child link, so
   record it explicitly — a `inciting-issue:` frontmatter field pointing at

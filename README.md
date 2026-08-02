@@ -218,7 +218,7 @@ and `jl-documenter`.
 
 [View full skill definition](.apm/skills/jl-documentation-template/SKILL.md)
 
-### jl-wayfinder
+### jl-recon
 
 Charts a map of decision tickets that turns a large, poorly-understood
 feature into a well-understood one. Human-in-the-loop by default (Research
@@ -226,7 +226,7 @@ tickets may run AFK only with explicit per-ticket approval). Delegates to
 `jl-quiz` for destination-naming and Grilling tickets, and to
 `jl-prototype` for Prototype tickets. User-invoked only.
 
-[View full skill definition](.apm/skills/jl-wayfinder/SKILL.md)
+[View full skill definition](.apm/skills/jl-recon/SKILL.md)
 
 ## Permissions
 
