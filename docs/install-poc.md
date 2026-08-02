@@ -30,7 +30,7 @@ How apm resolves versions when using git URLs:
 
 Notes about this POC
 
-- This POC places the `johnludlow-implementer` agent under `.apm/agents/` so `apm install` will
+- This POC places the `jl-implementer` agent under `.apm/agents/` so `apm install` will
   hoist it into supported runtime directories.
 
 - The repository's previous multi-harness plugin installer (scripts/install.js) is out-of-scope

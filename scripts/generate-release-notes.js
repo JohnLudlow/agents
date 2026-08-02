@@ -172,13 +172,13 @@ The simplest way to install is directly from the release package using npx:
 **Windows (PowerShell):**
 
 \`\`\`powershell
-npx https://github.com/JohnLudlow/agents/releases/download/v${version}/johnludlow-agents-${version}.tgz install --global
+npx https://github.com/JohnLudlow/agents/releases/download/v${version}/jl-agents-${version}.tgz install --global
 \`\`\`
 
 **macOS/Linux (Bash):**
 
 \`\`\`bash
-npx https://github.com/JohnLudlow/agents/releases/download/v${version}/johnludlow-agents-${version}.tgz install --global
+npx https://github.com/JohnLudlow/agents/releases/download/v${version}/jl-agents-${version}.tgz install --global
 \`\`\`
 
 ### Or Install Locally
@@ -186,7 +186,7 @@ npx https://github.com/JohnLudlow/agents/releases/download/v${version}/johnludlo
 To install in the current project instead of globally:
 
 \`\`\`bash
-npm install https://github.com/JohnLudlow/agents/releases/download/v${version}/johnludlow-agents-${version}.tgz
+npm install https://github.com/JohnLudlow/agents/releases/download/v${version}/jl-agents-${version}.tgz
 \`\`\`
 
 ### Verification

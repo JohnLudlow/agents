@@ -57,18 +57,18 @@ docs/plans/**/*.md
 # Installation directories (created at install time)
 .opencode/
 opencode/
-.opencode.johnludlow-backup-*
-.github/agents.johnludlow-backup-*/*
-.github/skills.johnludlow-backup-*/*
-.kiro.johnludlow-backup-*
+.opencode.jl-backup-*
+.github/agents.jl-backup-*/*
+.github/skills.jl-backup-*/*
+.kiro.jl-backup-*
 
 # Packages
-johnludlow-agents-*.tgz
+jl-agents-*.tgz
 
 # Installation backups
-.opencode/.johnludlow-backup-*
-.copilot.johnludlow-backup-*
-.copilot/.johnludlow-backup-*
+.opencode/.jl-backup-*
+.copilot.jl-backup-*
+.copilot/.jl-backup-*
 .github/agents/
 .github/skills/
 .kiro
