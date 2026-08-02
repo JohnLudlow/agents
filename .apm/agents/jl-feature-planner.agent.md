@@ -356,6 +356,9 @@ still apply.
   subagents across different harnesses (CLI, browser, Azure DevOps). Consult
   when implementing Phase 2 (harness detection) or troubleshooting subagent
   coordination across Copilot harnesses.
+- `jl-code-tour` — user-invoked; suggest it by name when planning would
+  benefit from a guided walkthrough of the codebase, but never launch it
+  yourself.
 - Provider-specific community skills such as `github-issues` and
   `azure-devops-cli` — use them when available for provider execution details,
   but keep planning decisions provider-agnostic and do not depend on any single

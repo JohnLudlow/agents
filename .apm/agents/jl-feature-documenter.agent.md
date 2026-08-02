@@ -127,6 +127,9 @@ If available at runtime, delegate to the following community skills and agents.
   target audience, documentation depth, which topics to cover, or any
   choice the codebase does not answer for the agent. Prefer asking over
   assuming.
+- `jl-code-tour` — user-invoked; suggest it by name when a walkthrough of
+  the codebase would serve the documentation, but never launch it
+  yourself.
 
 ## Integration
 

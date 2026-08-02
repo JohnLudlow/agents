@@ -186,6 +186,14 @@ Defines code quality expectations across C#, TypeScript, and C++.
 
 [View full skill definition](.apm/skills/jl-code-quality/SKILL.md)
 
+### jl-code-tour
+
+Generates CodeTour `.tour` walkthrough files for a repo, or walks a user
+through code live in-chat, for onboarding. User-invoked only — agents may
+suggest it by name but only a human launches it.
+
+[View full skill definition](.apm/skills/jl-code-tour/SKILL.md)
+
 ### jl-issue-management
 
 Defines provider-agnostic issue-management guidance for markdown plans, GitHub

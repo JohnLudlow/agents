@@ -1,0 +1,12 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "<Tour title>",
+  "description": "<Optional short description of the tour>",
+  "steps": [
+    {
+      "description": "<What to look at here, in markdown. Say why it matters, not just what it is.>",
+      "file": "<relative/path/to/file>",
+      "line": 1
+    }
+  ]
+}
