@@ -50,6 +50,42 @@ Resolution rules:
 The portable pattern is defined in that skill, not in this repository. Keep
 repository documentation lightweight and avoid duplicating the schema here.
 
+### Config Validation
+
+Agent configuration YAML in `CONTRIBUTING.md` and `AGENTS.md` is validated
+automatically as part of the CI check `npm run validate`.
+
+The validator:
+
+- **Layer 1:** Checks YAML syntax (indentation, duplicate keys, quotes)
+- **Layer 2:** Validates schema shape (agent config key must be object)
+- **Layer 3:** Validates semantics (value types, enums, constraints per agent)
+
+**Error messages** guide you to the specific violation and the schema docs:
+[`.apm/skills/jl-config/validation-rules.md`](.apm/skills/jl-config/validation-rules.md)
+
+**Example error output:**
+
+```text
+✗ CONTRIBUTING.md: [WARN] jl_quiz: missing required setting 'plan_destination'
+  Fix: Check value types and allowed values. See .apm/skills/jl-config/validation-rules.md Layer 3
+```
+
+**View complete linter examples:**
+[`.apm/skills/jl-config/linter-examples.md`](.apm/skills/jl-config/linter-examples.md)
+
+To run validation manually:
+
+```bash
+npm run validate
+```
+
+Or run just the config linter:
+
+```bash
+node scripts/validate-config.js
+```
+
 ## Code Standards
 
 ### Agent Definitions

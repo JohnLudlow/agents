@@ -175,6 +175,72 @@ preferences through `jl-config`.
 resolved `jl_quiz` config, or has asked the user only for the still-missing
 choice needed to proceed safely.
 
+### Configuration Warnings
+
+jl-quiz validates its configuration at startup and emits warnings (in the
+format defined by jl-config) for:
+
+#### Type Mismatch
+
+```text
+[WARN] jl-quiz: 'interview_mode' must be a string ("a" or "b"), not a boolean
+  File: CONTRIBUTING.md [line 5]
+  Fix: Change the value to a string: interview_mode: a
+```
+
+#### Enum Violation — interview_mode
+
+```text
+[WARN] jl-quiz: 'interview_mode' has invalid value "c" (must be "a" or "b")
+  File: AGENTS.md [line 8]
+  Fix: Change to one of: a, b
+```
+
+#### Enum Violation — plan_destination
+
+```text
+[WARN] jl-quiz: 'plan_destination' has invalid value "slack_thread"
+  (must be one of: github_issue, azure_devops_work_item, local_file,
+  inline_message)
+  File: CONTRIBUTING.md [line 12]
+  Fix: Change to one of the allowed destination types
+```
+
+#### Missing Required Setting
+
+```text
+[WARN] jl-quiz: required setting 'plan_destination' not found
+  in AGENTS.md or CONTRIBUTING.md
+  File: (checked both config files)
+  Fix: Add to CONTRIBUTING.md under jl_quiz: plan_destination: github_issue
+```
+
+#### Invalid File Path — absolute path
+
+```text
+[WARN] jl-quiz: 'file_storage_location' must be repository-relative
+  (no leading /)
+  File: AGENTS.md [line 10]
+  Fix: Change "/docs/plans" to "docs/plans"
+```
+
+#### Invalid File Path — parent directory
+
+```text
+[WARN] jl-quiz: 'file_storage_location' must not contain ".."
+  (parent directory traversal)
+  File: CONTRIBUTING.md [line 9]
+  Fix: Use a simple repository-relative path like "docs/plans"
+```
+
+#### Root Shape Error
+
+```text
+[WARN] jl-quiz: 'jl_quiz' config block must be an object, not a list
+  File: AGENTS.md [line 5]
+  Fix: Change the jl_quiz block to use YAML object syntax (key: value pairs)
+```
+
 ---
 
 1. Determine the scope and make a judgement about
