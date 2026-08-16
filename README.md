@@ -236,6 +236,35 @@ tickets may run AFK only with explicit per-ticket approval). Delegates to
 
 [View full skill definition](.apm/skills/jl-recon/SKILL.md)
 
+## Agent and Skill Configuration
+
+Each skill and agent defines its own configuration options. Configuration is documented in the skill's own `SKILL.md` file.
+
+### Per-Skill Configuration
+
+- **[jl-quiz Configuration](.apm/skills/jl-quiz/SKILL.md#configuration)** — Interview mode (live chat vs. questionnaire),
+  output destination (GitHub Issues, markdown, or Azure DevOps), file storage location
+- **[jl-recon Configuration](.apm/skills/jl-recon/SKILL.md#configuration)** — Decision gates (destination confirmation,
+  inciting issue confirmation, research AFK sign-off), uncertainty tracking pattern
+- **[jl-issue-management Configuration](.apm/skills/jl-issue-management/SKILL.md#configuration)** — Issue destination, file storage location, decision gates
+- **[jl-config Reference](.apm/skills/jl-config/SKILL.md)** — Configuration resolution mechanism and portable config pattern (used by all skills)
+
+### How to Configure
+
+For downstream repositories installing this APM package:
+
+1. Check the relevant skill's `SKILL.md` file for available settings
+2. Create or edit `AGENTS.md` in your repository root to override defaults:
+
+   ```yaml
+   jl_quiz:
+     interview_mode: b    # Override: use questionnaires instead of live chat
+   ```
+
+3. Run `npm run validate` (if your repository uses this package's validation) to check syntax and schema
+
+See [jl-config](.apm/skills/jl-config/SKILL.md) for full details on the configuration resolution mechanism and worked examples in [jl-config Examples](.apm/skills/jl-config/references/EXAMPLES.md).
+
 ## Permissions
 
 Each agent has specific permissions that control what actions it can perform. These
