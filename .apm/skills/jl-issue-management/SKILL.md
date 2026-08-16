@@ -22,6 +22,96 @@ Use this skill when an agent needs to decide:
 This skill is cross-provider and cross-harness. It should work for agents used
 in Copilot CLI, OpenCode, or other compatible environments.
 
+## Configuration
+
+jl-issue-management reads settings from `jl_issue_management`
+configuration in `CONTRIBUTING.md` and `AGENTS.md`. It uses `jl-config`
+only for the generic resolution mechanism; jl-issue-management owns this
+schema, its defaults, and its validation.
+
+### Schema
+
+| Setting | Type | Allowed values | Default | Sensitivity |
+| --- | --- | --- | --- | --- |
+| `plan_destination` | string | `github_issue`, `azure_devops_work_item`, `local_file`, `inline_message` | none | required |
+| `file_storage_location` | string | repository-relative path | `docs/plans/` | recommended |
+| `decision_gates.destination_confirmation` | boolean | `true`, `false` | `false` | optional |
+| `decision_gates.inciting_issue_confirmation` | boolean | `true`, `false` | `false` | optional |
+| `decision_gates.research_afk` | boolean | `true`, `false` | `false` | optional |
+
+### Validation and defaults
+
+- validate that `jl_issue_management`, if present, is an object
+- validate `plan_destination` against the documented destination enum
+- validate `file_storage_location` as a repository-relative string when present
+- validate `decision_gates`, if present, as an object of booleans
+- default `file_storage_location` to `docs/plans/`
+- default each missing decision gate to `false`
+- prompt the user only if required `plan_destination` is still unresolved or
+  unusable for the current session
+
+### Example configuration
+
+In `CONTRIBUTING.md`:
+
+```yaml
+jl_issue_management:
+  plan_destination: github_issue
+  file_storage_location: docs/plans/
+  decision_gates:
+    destination_confirmation: false
+    inciting_issue_confirmation: false
+    research_afk: false
+```
+
+In `AGENTS.md`:
+
+```yaml
+jl_issue_management:
+  plan_destination: local_file
+  file_storage_location: docs/plans/
+```
+
+## Configuration via `jl-config`
+
+Resolve repository defaults through `jl-config` before deciding where planning
+artifacts should live or which confirmation gates apply.
+
+This skill consumes:
+
+- `jl_issue_management.plan_destination`
+- `jl_issue_management.file_storage_location`
+- `jl_issue_management.decision_gates.destination_confirmation`
+- `jl_issue_management.decision_gates.inciting_issue_confirmation`
+- `jl_issue_management.decision_gates.research_afk` when coordinating with skills that may launch
+  AFK research from issue-management workflows
+
+Resolution rules:
+
+1. Read `CONTRIBUTING.md` if it exists.
+2. Read `AGENTS.md` if it exists.
+3. Call `jl-config`'s generic resolution mechanism for the
+   `jl_issue_management` key using this skill's defaults and the precedence
+   defined by the `jl-config` skill.
+4. Validate the resolved `jl_issue_management` object against this skill's
+   own schema and enums.
+5. Treat the resolved config as the repository default, not as an immutable
+   session command.
+6. Allow explicit user session overrides to supersede the resolved config for
+   the current task only.
+
+Graceful fallback:
+
+- Missing config files are not an error; continue with `jl-config`
+  resolution plus jl-issue-management's defaults.
+- Do not keep separate hardcoded config defaults in this skill outside the
+  documented `jl_issue_management` schema.
+- If the resolved destination is `local_file`, use the resolved
+  `file_storage_location`; if it cannot be used safely in the current harness,
+  ask the user for a session path.
+- If the resolved destination is provider-native but the human has not yet
+  approved a write, stop at the approval boundary and ask.
+
 ## Core Principles
 
 ### Human-in-the-loop
@@ -215,13 +305,15 @@ Parent/child pattern:
 
 ## Choosing a Provider
 
-Unless repository guidance or a session override says otherwise, use this
-decision order:
+Unless resolved `jl_issue_management` settings or a session override say otherwise,
+use this decision order:
 
 1. Check for session-specific user instructions.
-2. Check repository contribution or planning guidance.
-3. If the destination is still unclear, ask the user.
-4. Do not guess when issue hierarchy or provider choice affects team workflow.
+2. Check resolved `jl_issue_management` repository defaults.
+3. Check repository contribution or planning guidance that further explains
+   the resolved destination.
+4. If the destination is still unclear, ask the user.
+5. Do not guess when issue hierarchy or provider choice affects team workflow.
 
 Heuristics:
 
@@ -264,6 +356,10 @@ Human approval is required before:
 
 Agents should also pause for confirmation when:
 
+- `decision_gates.destination_confirmation` requires confirmation before the
+  chosen destination is acted on
+- `decision_gates.inciting_issue_confirmation` requires confirmation before
+  linking or basing work on an inciting issue or parent source of record
 - repository defaults and session instructions conflict
 - the provider is ambiguous
 - the requested level of detail is unclear
@@ -287,7 +383,8 @@ for basic planning or issue-management reasoning.
 When applying this skill, agents should:
 
 1. identify the likely plan target
-2. determine whether a repository default already exists
+2. resolve `jl-config` and determine whether a repository default already
+   exists
 3. check for a session override
 4. confirm whether shared understanding has been reached
 5. decide whether the work needs a parent item, child items, or both

@@ -12,6 +12,44 @@ repository!
 5. Test your changes
 6. Submit a pull request
 
+## Agent config
+
+This repository can optionally provide lightweight agent preferences in
+`CONTRIBUTING.md` and `AGENTS.md` using the portable `jl_config` pattern.
+
+Example:
+
+```yaml
+# Example: jl_quiz config (see jl-quiz SKILL.md for all options)
+jl_quiz:
+  setting_key: value
+
+# Example: jl_recon config (see jl-recon SKILL.md for all options)
+jl_recon:
+  setting_key: value
+```
+
+Notes:
+
+- This is a template that shows the pattern only; individual agents define
+  their own keys, defaults, and validation rules.
+- Specific settings are documented in each agent's `SKILL.md`.
+- The full resolution mechanism, precedence rules, validation pattern, and
+  missing-config guidance live in the `jl-config` skill:
+  <.apm/skills/jl-config/SKILL.md>.
+
+Resolution rules:
+
+- Both `CONTRIBUTING.md` and `AGENTS.md` are optional.
+- If both files define agent config, `AGENTS.md` overrides
+  `CONTRIBUTING.md` at the individual setting level.
+- If a setting is missing from both files, agents fall back to documented
+  defaults and should prompt the user only when a required value still cannot
+  be resolved safely.
+
+The portable pattern is defined in that skill, not in this repository. Keep
+repository documentation lightweight and avoid duplicating the schema here.
+
 ## Code Standards
 
 ### Agent Definitions

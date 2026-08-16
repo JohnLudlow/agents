@@ -73,45 +73,107 @@ exchange, not license to fill in their answers for them.
 decision and ask the user.** A brief clarifying question is always
 preferable to a silent assumption that turns out to be wrong.
 
+## Configuration
+
+jl-quiz reads settings from `jl_quiz` configuration in `CONTRIBUTING.md`
+and `AGENTS.md`. It uses `jl-config` only for the generic resolution
+mechanism; jl-quiz itself owns this schema, its defaults, and its
+validation.
+
+### Schema
+
+| Setting | Type | Allowed values | Default | Sensitivity |
+| --- | --- | --- | --- | --- |
+| `interview_mode` | string | `a`, `b` | `a` | recommended |
+| `plan_destination` | string | `github_issue`, `azure_devops_work_item`, `local_file`, `inline_message` | none | required |
+| `file_storage_location` | string | repository-relative path | `docs/plans/` | recommended |
+
+### Validation and defaults
+
+- validate that `jl_quiz`, if present, is an object
+- validate `interview_mode` against the `a` / `b` enum
+- validate `plan_destination` against the documented destination enum
+- validate `file_storage_location` as a repository-relative string when present
+- use defaults for recommended settings when absent
+- prompt the user only if required `plan_destination` is still unresolved or
+  unusable for the current session
+
+### Example configuration
+
+In `CONTRIBUTING.md`:
+
+```yaml
+jl_quiz:
+  interview_mode: a
+  plan_destination: github_issue
+  file_storage_location: docs/plans/
+```
+
+In `AGENTS.md`:
+
+```yaml
+jl_quiz:
+  interview_mode: b
+```
+
 ## When This Skill is Invoked
 
 When this skill is invoked, follow these steps:
 
-### ✓ BLOCKER 0: Preference Resolution
+### ✓ BLOCKER 0: Resolve `jl_quiz` Configuration via `jl-config`
 
-Before proceeding with interviews or questionnaires, resolve any setup
-preferences. These are _not_ subject to user assumptions — they MUST be
-documented in the repository or explicitly confirmed.
+Before proceeding with interviews or questionnaires, resolve setup
+preferences through `jl-config`.
 
-**Setup preferences this skill requires:**
+**Settings this skill consumes from `jl_quiz`:**
 
-- **Preference 1: Output destination** — Are results recorded as a GitHub
-  issue, Azure DevOps work item, local file, or inline message?
-- **Preference 2: File storage location** (if using local files) — Which
-  directory should questionnaire documents or output files live in?
+- `interview_mode`
+  - `a` = in-chat interview
+  - `b` = questionnaire/document-first workflow
+- `plan_destination`
+  - `github_issue`
+  - `azure_devops_work_item`
+  - `local_file`
+  - `inline_message`
+- `file_storage_location`
+  - repository-relative path used when artifacts must be written locally
 
-**Gate logic (deterministic):**
+**Resolution logic (deterministic):**
 
-1. Check `CONTRIBUTING.md` (and `AGENTS.md` if present) for documented preferences on
-   output destination and file storage paths
-2. If preferences are found in repo: use them (no user question needed)
-3. If preferences NOT found in repo:
-   - MUST ask the user (no silent assumption allowed)
-   - MUST present the user with specific choices:
-     - Output destination: "GitHub issue", "Azure DevOps work item",
-       "Local file", "Inline message"
-     - File location (if Local file selected): "docs/plans/" (preferred for planning agents),
-       or a custom path under the calling agent's allowed write locations?
-   - MUST wait for answer
-   - MUST offer to record the preference: "Would you like me to record
-     this preference in CONTRIBUTING.md or AGENTS.md for future sessions?
-     (Yes / No)" — this is not optional; always offer
-   - If user confirms: document the preference in the appropriate file with
-     timestamp and context (e.g., "Recorded by jl-quiz on YYYY-MM-DD")
+1. Read `AGENTS.md` if it exists.
+2. Read `CONTRIBUTING.md` if it exists.
+3. Call `jl-config`'s generic resolution mechanism for the `jl_quiz` key:
+   - start from jl-quiz's documented defaults
+   - merge `CONTRIBUTING.md`
+   - merge `AGENTS.md`
+4. Validate the resolved `jl_quiz` object against jl-quiz's own schema:
+   - `interview_mode` must be `a` or `b`
+   - `plan_destination` must be one of the documented destination values
+   - `file_storage_location`, if present, must be a repository-relative path
+5. Use the resolved values for `interview_mode`, `plan_destination`, and
+   `file_storage_location`.
+6. If a required value still cannot be used safely in the current session,
+   ask the user with explicit options and continue with their session answer.
 
-**Completion criterion:** Preferences are resolved AND user has been offered
-recording opportunity AND offer was either accepted (preference recorded) OR
-explicitly declined (user chose not to record).
+**Graceful fallback rules:**
+
+- Do not treat a missing config file as an error; use the `jl-config`
+  mechanism with jl-quiz's own defaults first.
+- Do not keep hardcoded config logic outside this documented `jl_quiz`
+  schema; jl-config only resolves, while jl-quiz owns defaults and
+  validation.
+- If `plan_destination` resolves to `local_file`, use the resolved
+  `file_storage_location`; if that path is missing or unusable in the current
+  harness, ask the user where to place the file.
+- If the resolved destination is provider-native and the current task still
+  needs human approval before a write, pause for that approval as normal.
+- If the user gives a session override, use it for this session and treat the
+  config value as the repository default rather than the live instruction.
+
+**Completion criterion:** The skill has resolved usable values for
+`interview_mode`, `plan_destination`, and `file_storage_location` from
+resolved `jl_quiz` config, or has asked the user only for the still-missing
+choice needed to proceed safely.
 
 ---
 
@@ -126,15 +188,16 @@ explicitly declined (user chose not to record).
    - If a prior decision has been made in this session about what mode to
      operate in, continue in that mode until instructed otherwise, continue
      to step 4
-   - If a CONTRIBUTING.md or AGENTS.md document rules about what mode to
-     operate in, continue in that mode until instructed otherwise, continue
-     to step 4
+   - If `jl_quiz.interview_mode` resolves to a mode, continue
+     in that mode until instructed otherwise, continue to step 4
    - If the ***Scope*** is ***small***, AND the ***Complexity*** is
      ***simple***, AND the ***shared understanding*** is ***deep*** AND
      ***complete***, use an in-chat interview (Mode A)
    - If the ***Scope*** is ***large***, OR the ***Complexity*** is
      ***complex***, OR the ***shared understanding*** is ***shallow*** OR
-     ***nonexistent***, use a separate questionnaire document (Mode B).
+     ***nonexistent***, use a separate questionnaire document (Mode B),
+     unless the resolved config or the user's active session instruction says
+     otherwise.
 
 ## Mode A — In-Chat Interview
 
@@ -166,7 +229,8 @@ Behaviour:
    writing the document — the document should only contain decisions, not
    facts.
 2. Preferences (output destination and file storage location) have already
-   been resolved in BLOCKER 0. Use the resolved preferences to determine:
+   been resolved in BLOCKER 0 via `jl-config`. Use the resolved preferences
+   to determine:
    - Whether to generate a document (if local file selected) or to return
      resolved decisions inline (if inline message selected)
    - Where to save the document (using the file storage location from
@@ -198,11 +262,10 @@ switching logic (chat ↔ questionnaire), see **[BRANCHING.md](references/BRANCH
 The agent MUST:
 
 - **Preference Resolution (BLOCKER 0):** Before any interview or questionnaire,
-  MUST check CONTRIBUTING.md and AGENTS.md for documented preferences (output
-  destination, file storage location). If not found, MUST present the user
-  with specific choices (GitHub issue, Azure DevOps work item, local file,
-  inline message) and wait for answer. MUST offer to record preferences after
-  user answer (offer is not optional).
+  MUST call `jl-config` to resolve `jl_quiz` from `CONTRIBUTING.md` and
+  `AGENTS.md`, using jl-quiz's own schema, defaults, and validation. If the
+  resolved values are still insufficient for safe progress, MUST ask the user
+  only for the missing session choice and then continue.
 - Default to asking the user when in any doubt — a brief question is
   always cheaper than rework from a wrong assumption.
 - Keep the human user in control of which mode is active; only switch modes
