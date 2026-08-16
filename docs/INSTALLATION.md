@@ -1,96 +1,85 @@
 # Installation Guide
 
-This guide explains how to install `@johnludlow/agents` from a GitHub release.
+This guide explains how to install `jl-agents` using APM (Agent Package Manager).
 
 ## Prerequisites
 
 Before installing, ensure you have:
 
-- **Node.js 22.0.0 or later** - [Download](https://nodejs.org/)
-- **npm** - Included with Node.js
-- **Internet connection** - To download the release package
-
-### Verify Prerequisites
-
-```bash
-# Check Node.js version
-node --version   # Should be v22.0.0 or later
-
-# Check npm version
-npm --version
-```
+- **APM CLI** - [Install APM](https://aka.ms/apm)
+- **Internet connection** - To download the package
 
 ## Quick Start (Recommended)
 
-Visit the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases/latest)** to find the latest release.
-Each release includes a `.tgz` asset — copy its URL and use it with `npx`:
+Install using APM from the GitHub repository:
 
-```bash
-npx <tgz-url> install --global
+**Windows (PowerShell):**
+
+```powershell
+apm install JohnLudlow/agents#vX.Y.Z --global --target opencode --force
 ```
 
-Or install it locally in your current project:
+**macOS/Linux (Bash):**
 
 ```bash
-npm install <tgz-url>
+apm install JohnLudlow/agents#vX.Y.Z --global --target opencode --force
 ```
+
+Replace `vX.Y.Z` with the latest release version from the [releases page](https://github.com/JohnLudlow/agents/releases).
 
 ## Installation Methods
 
-### Method 1: From GitHub Release (Recommended)
+### Method 1: From GitHub (Recommended)
 
-Visit the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases/latest)** to find the latest release.
-Each release includes a `.tgz` asset — copy its URL and use it for installation.
-
-**Global installation:**
+Install directly from the GitHub repository using a specific release tag:
 
 ```bash
-npx <tgz-url> install --global
+apm install JohnLudlow/agents#vX.Y.Z --global --target opencode --force
 ```
 
-**Local installation:**
+**Flags explained:**
 
-```bash
-npm install <tgz-url>
-```
+- `#vX.Y.Z` — pins to a specific release (recommended for reproducibility)
+- `--global` — installs system-wide (omit for project-local installation)
+- `--target opencode` — specifies the OpenCode deployment target
+- `--force` — overwrites any existing installation
 
 **Advantages:**
 
 - Simple one-command installation
 - Works on all platforms (Windows, macOS, Linux)
-- No scripts to download or execute
-- Automatic error checking by npm
-- No extraction needed
+- Automatically resolves dependencies
+- Stores installation metadata in `apm.lock.yaml` for reproducibility
 
-### Method 2: Download and Install Locally
+### Method 2: From Latest Default Branch
 
-For offline installation or manual control:
-
-1. **Download the release package**
-   - Visit: <https://github.com/JohnLudlow/agents/releases>
-   - Download the `.tgz` file for your version
-
-2. **Install with npm**
-
-   ```bash
-   # Global installation
-   npm install -g ./jl-agents-X.X.X.tgz
-
-   # Local installation
-   npm install ./jl-agents-X.X.X.tgz
-   ```
-
-### Method 3: From npm Registry
-
-If the package is published to npm:
+Install the latest development version (unreleased):
 
 ```bash
-# Global installation
-npm install -g @johnludlow/agents
-
-# Local installation
-npm install @johnludlow/agents
+apm install JohnLudlow/agents --global --target opencode --force
 ```
+
+**Note:** This installs HEAD of the default branch, which may include unreleased changes.
+
+### Method 3: From a Specific Branch or Commit
+
+```bash
+# Install from a specific branch
+apm install JohnLudlow/agents#branch-name --global --target opencode --force
+
+# Install from a specific commit SHA
+apm install JohnLudlow/agents#abc123def456 --global --target opencode --force
+```
+
+### Method 4: Local Installation (Project-Specific)
+
+To install locally in your current project instead of globally:
+
+```bash
+apm install JohnLudlow/agents#vX.Y.Z --target opencode --force
+```
+
+(Omit the `--global` flag)
 
 ## Installation Locations
 
@@ -99,14 +88,13 @@ npm install @johnludlow/agents
 Installs agents and skills into the current project directory:
 
 ```bash
-npm install https://github.com/JohnLudlow/agents/releases/download/vX.X.X/jl-agents-X.X.X.tgz
+apm install JohnLudlow/agents#vX.Y.Z --target opencode --force
 ```
 
 **Installation directories:**
 
 - Agents: `.opencode/agents/`
 - Skills: `.opencode/skills/`
-- GitHub format: `.github/agents/` and `.github/skills/`
 
 **When to use:**
 
@@ -119,13 +107,15 @@ npm install https://github.com/JohnLudlow/agents/releases/download/vX.X.X/jl-age
 Makes agents available to all projects:
 
 ```bash
-npm install -g https://github.com/JohnLudlow/agents/releases/download/vX.X.X/jl-agents-X.X.X.tgz
+apm install JohnLudlow/agents#vX.Y.Z --global --target opencode --force
 ```
 
 **Installation directories:**
 
-- Agents: `~/.config/opencode/agents/`
-- Skills: `~/.config/opencode/skills/`
+- Agents: `~/.config/opencode/agents/` (macOS/Linux)
+- Agents: `$APPDATA/opencode/agents/` (Windows)
+- Skills: `~/.config/opencode/skills/` (macOS/Linux)
+- Skills: `$APPDATA/opencode/skills/` (Windows)
 
 **When to use:**
 
@@ -135,41 +125,44 @@ npm install -g https://github.com/JohnLudlow/agents/releases/download/vX.X.X/jl-
 
 ## Verification
 
-After installation, verify that everything worked correctly.
+After installation, verify that the agents landed in your OpenCode installation:
 
-### List Installed Package
-
-```bash
-npm list @johnludlow/agents
-```
-
-You should see output like:
-
-```text
-your-project@1.0.0
-└── @johnludlow/agents@X.X.X
-```
-
-### List Installed Agents
-
-**For local installation:**
+**macOS/Linux:**
 
 ```bash
-ls .opencode/agents/
+ls ~/.config/opencode/agents/ | grep jl-
 ```
 
-**For global installation:**
+**Windows (PowerShell):**
+
+```powershell
+ls $env:APPDATA\opencode\agents\ | Where-Object Name -like "jl-*"
+```
+
+You should see agent files like:
+
+- `jl-planner.agent.md`
+- `jl-implementer.agent.md`
+- `jl-feature-documenter.agent.md` (if available)
+- `jl-feature-tester.agent.md` (if available)
+
+### Check the Lockfile
+
+Inspect `apm.lock.yaml` to confirm what was installed:
 
 ```bash
-ls ~/.config/opencode/agents/
+cat apm.lock.yaml
 ```
 
-You should see files like:
+You should see entries like:
 
-- `jl-feature-planner.md`
-- `jl-feature-implementer.md`
-- `jl-feature-documenter.md`
-- `jl-feature-tester.md`
+```yaml
+local_deployed_files:
+  - .github/agents/jl-planner.agent.md
+  - .github/agents/jl-implementer.agent.md
+local_deployed_file_hashes:
+  .github/agents/jl-planner.agent.md: sha256:...
+```
 
 ### Test Agent Integration
 
@@ -177,173 +170,160 @@ You should see files like:
 
 ```bash
 # Try using an agent
-opencode agent jl-feature-planner
-```
-
-**With GitHub Copilot CLI:**
-
-```bash
-# List available agents
-copilot agent list
-
-# Use an agent
-copilot chat -a jl-feature-planner
+opencode chat
+# Select an installed agent from the agent picker
 ```
 
 ## Uninstallation
 
-To remove the package:
+To remove the agents and skills:
+
+**Linux/macOS:**
 
 ```bash
-npm uninstall @johnludlow/agents
+rm -rf ~/.config/opencode/agents/jl-*
+rm -rf ~/.config/opencode/skills/jl-*
 ```
 
-For global installation:
+**Windows (PowerShell):**
+
+```powershell
+Remove-Item $env:APPDATA\opencode\agents\jl-* -Recurse
+Remove-Item $env:APPDATA\opencode\skills\jl-* -Recurse
+```
+
+To remove a local (project-specific) installation:
 
 ```bash
-npm uninstall -g @johnludlow/agents
+rm -rf .opencode/agents/jl-*
+rm -rf .opencode/skills/jl-*
 ```
-
-**Note:** The uninstall script will automatically remove agents and skills from your OpenCode configuration directory.
 
 ## Troubleshooting
 
-### Node.js version error
+### APM CLI not found
 
-**Error:** `npm ERR! engine unsupported`
+**Error:** `apm: command not found`
 
-**Solution:** Upgrade Node.js to version 22.0.0 or later
+**Solution:** Install APM from <https://aka.ms/apm>
 
 ```bash
-# Visit https://nodejs.org/ to download and install
-node --version  # Verify installation
+# macOS/Linux
+curl -sSL https://aka.ms/apm-unix | sh
+
+# Windows (via PowerShell)
+Invoke-WebRequest -Uri "https://aka.ms/apm-win" -OutFile "$env:TEMP\apm-setup.exe"
+& "$env:TEMP\apm-setup.exe"
 ```
 
-### npm not found
+### Installation fails with permission error
 
-**Error:** `npm: command not found`
-
-**Solution:** npm is included with Node.js. Reinstall Node.js from <https://nodejs.org/>
-
-### Network/Download fails
-
-**Error:** `npm ERR! 404 Not Found` or download timeout
+**Error:** Permission denied or access denied
 
 **Solution:**
 
-1. Check your internet connection
-2. Verify the release version exists: <https://github.com/JohnLudlow/agents/releases>
-3. Try again - GitHub may be temporarily unavailable
-4. Use a specific version instead of "latest"
-
-### npm install fails
-
-**Error:** `npm ERR! code ERESOLVE` or permission errors
-
-**Solution:**
-
-1. Check npm version: `npm --version`
-2. Clear npm cache: `npm cache clean --force`
-3. Try installing again
-4. Check if disk space is available
-5. For global install, ensure you have write permissions to npm's global directory
-
-### Cannot find module error after installation
-
-**Error:** `Cannot find module '@johnludlow/agents'`
-
-**Solution:**
-
-1. Verify installation: `npm list @johnludlow/agents`
-2. Try reinstalling: `npm install @johnludlow/agents`
-3. Clear npm cache: `npm cache clean --force`
-4. If using global installation, ensure npm's global bin directory is in your PATH
-
-### Agents not appearing in OpenCode
-
-**Solution:**
-
-1. Verify installation completed successfully
-2. Check that agents are in the correct directory:
-   - Local: `.opencode/agents/`
-   - Global: `~/.config/opencode/agents/`
-3. Restart OpenCode or your terminal session
-4. For global installation, verify `~/.config/opencode` exists
-
-## Offline Installation
-
-If you need to install without internet access:
-
-1. Download the release `.tgz` file on a machine with internet
-2. Transfer the file to the target machine
-3. Install with npm:
+1. For global installation on macOS/Linux, use `sudo`:
 
    ```bash
-   npm install -g ./jl-agents-X.X.X.tgz
+   sudo apm install JohnLudlow/agents#vX.Y.Z --global --target opencode --force
    ```
+
+2. For Windows, ensure PowerShell is running as Administrator
+
+3. Check disk space: `df -h` (Linux/macOS) or `Get-PSDrive C:` (Windows)
+
+### Agents not appearing after installation
+
+**Solution:**
+
+1. Verify installation completed: `cat apm.lock.yaml`
+2. Check the correct directory:
+   - Local: `.opencode/agents/`
+   - Global: `~/.config/opencode/agents/` (macOS/Linux) or `$APPDATA/opencode/agents/` (Windows)
+3. Restart OpenCode or your terminal session
+4. Verify the agent files exist and are readable: `ls -la ~/.config/opencode/agents/`
+
+### Update existing installation
+
+To update to a newer version:
+
+```bash
+apm install JohnLudlow/agents#vX.Y.Z --global --target opencode --force
+```
+
+The `--force` flag will overwrite the previous installation.
+
+## Reproducible Installations (For CI/Teams)
+
+To ensure everyone uses the same resolved versions:
+
+### Local: Create the lockfile
+
+```bash
+apm install JohnLudlow/agents#vX.Y.Z --update
+git add apm.lock.yaml
+git commit -m "chore: update apm.lock.yaml"
+```
+
+### CI: Use frozen mode
+
+In your CI pipeline:
+
+```bash
+apm install --frozen
+```
+
+This uses the exact versions recorded in `apm.lock.yaml`, ensuring reproducibility.
 
 ## Getting Help
 
 If you encounter issues during installation:
 
-1. **Check this guide** - See the Troubleshooting section above
-2. **Check the README** - <https://github.com/JohnLudlow/agents#readme>
-3. **Create an issue** - <https://github.com/JohnLudlow/agents/issues>
-4. **Start a discussion** - <https://github.com/JohnLudlow/agents/discussions>
+1. **Check this guide** — See the Troubleshooting section above
+2. **Check the README** — <https://github.com/JohnLudlow/agents#readme>
+3. **Create an issue** — <https://github.com/JohnLudlow/agents/issues>
+4. **Start a discussion** — <https://github.com/JohnLudlow/agents/discussions>
 
 ## Next Steps
 
 After successful installation:
 
-1. **Read the README** - <https://github.com/JohnLudlow/agents#readme>
-2. **Check the documentation** - <https://github.com/JohnLudlow/agents/tree/main/docs>
-3. **Review agent definitions** - <https://github.com/JohnLudlow/agents/tree/main/agents>
-4. **See usage examples** - Check individual agent files for examples
+1. **Read the Quick Start** — <https://github.com/JohnLudlow/agents/blob/main/QUICKSTART.md>
+2. **Check the README** — <https://github.com/JohnLudlow/agents#readme>
+3. **Review agent definitions** — `.apm/agents/` or `.opencode/agents/`
+4. **See usage examples** — Check individual agent files for examples
 
 ## What Gets Installed
 
-When you install `@johnludlow/agents`, you get:
+When you install `jl-agents`, you get:
 
-### Agents (4 total)
+### Agents
 
-- **jl-feature-planner** - Create comprehensive feature plans
-- **jl-feature-implementer** - Implement features from plans
-- **jl-feature-documenter** - Generate technical documentation
-- **jl-feature-tester** - Run tests and report results
+- **jl-planner** — Create comprehensive feature plans
+- **jl-implementer** — Implement features from plans
+- Additional agents as available in the repository
 
-### Skills (2 total)
+### Skills
 
-- **jl-markdown-standards** - Markdown formatting and structure standards
-- **jl-code-quality** - Code quality expectations and best practices
+- Supporting skills and utilities (if included in the package)
 
 ### Configuration
 
-- **config.json** - OpenCode configuration with permissions
-- **Permission rules** - Security boundaries for each agent
-
-## Backup and Restore
-
-The installation process automatically creates backups:
-
-```bash
-# List backups
-ls ~/.config/ | grep opencode-backup  # Global
-ls .opencode-backup-*                 # Local
-
-# Restore from latest backup
-npm run restore
-```
+- **apm.lock.yaml** — Installation metadata and resolved versions
+- Permission rules and security boundaries for each agent
 
 ## Version Management
 
-To check your installed version:
+To check your installed version, inspect the lockfile:
 
 ```bash
-npm list @johnludlow/agents
+cat apm.lock.yaml | grep -A 2 "local_packages"
 ```
 
-To upgrade to a newer version, find the `.tgz` asset on the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases/latest)** and run:
+To upgrade, run the install command again with the new version tag:
 
 ```bash
-npm install -g <tgz-url>
+apm install JohnLudlow/agents#vNEW.X.Y --global --target opencode --force
+git add apm.lock.yaml
+git commit -m "chore: update agents to vNEW.X.Y"
 ```

@@ -167,35 +167,37 @@ function generateInstallationInstructions(version) {
 
 ### Quick Start (Recommended)
 
-The simplest way to install is directly from the release package using npx:
+Install using apm (Agent Package Manager):
 
 **Windows (PowerShell):**
 
 \`\`\`powershell
-npx https://github.com/JohnLudlow/agents/releases/download/v${version}/jl-agents-${version}.tgz install --global
+apm install JohnLudlow/agents#v${version} --global --target opencode --force
 \`\`\`
 
 **macOS/Linux (Bash):**
 
 \`\`\`bash
-npx https://github.com/JohnLudlow/agents/releases/download/v${version}/jl-agents-${version}.tgz install --global
-\`\`\`
-
-### Or Install Locally
-
-To install in the current project instead of globally:
-
-\`\`\`bash
-npm install https://github.com/JohnLudlow/agents/releases/download/v${version}/jl-agents-${version}.tgz
+apm install JohnLudlow/agents#v${version} --global --target opencode --force
 \`\`\`
 
 ### Verification
 
-After installation, verify it worked:
+After installation, confirm the agents landed in your OpenCode installation:
+
+**macOS/Linux:**
 
 \`\`\`bash
-npm list @johnludlow/agents
+ls ~/.config/opencode/agents/ | grep jl-
 \`\`\`
+
+**Windows (PowerShell):**
+
+\`\`\`powershell
+ls $env:APPDATA\\opencode\\agents\\ | Where-Object Name -like "jl-*"
+\`\`\`
+
+You should see agent files like \`jl-planner.agent.md\`, \`jl-implementer.agent.md\`, etc.
 
 For help with installation, see the [Installation Guide](https://github.com/JohnLudlow/agents/blob/main/docs/INSTALLATION.md).`;
 }

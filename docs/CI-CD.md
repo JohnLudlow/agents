@@ -65,25 +65,23 @@ The primary workflow is defined in `.github/workflows/main.yml` and executes on:
 
 **Actions**:
 
-- Create NPM package (`.tgz`)
-- Generate GitHub Copilot format artifacts
+- Create APM package (`.apm`) via `apm pack --output jl-agents-<ver>.apm`
+- Validate package structure
 - Store artifacts for download
 
 **Outputs**:
 
-- `@jl-agents-*.tgz` - NPM package
-- `.github/agents/` - Generated Copilot format agents
-- `.github/skills/` - Generated Copilot format skills
+- `jl-agents-*.apm` — APM package
 
 ### 4. Release Job
 
-**Purpose**: Create GitHub release with comprehensive release notes and installation scripts (main branch only)
+**Purpose**: Create GitHub release with comprehensive release notes and APM package (main branch only)
 
 **Actions**:
 
 - Create git tag with semantic version
 - Generate comprehensive release notes including:
-  - Installation instructions (PowerShell, Bash, npm)
+  - Installation instructions (APM, PowerShell, Bash)
   - Changelog from conventional commits
   - Feature, fix, and other change categorization
   - Contributor list
@@ -91,8 +89,7 @@ The primary workflow is defined in `.github/workflows/main.yml` and executes on:
 - Download build artifacts
 - Create GitHub release with:
   - Generated release notes as description
-  - NPM package (.tgz) as downloadable asset
-  - Installation scripts (PowerShell and Bash) as downloadable assets
+  - APM package (`.apm`) as downloadable asset
   - Draft: false (automatically published)
 
 **Outputs**:
@@ -103,9 +100,7 @@ The primary workflow is defined in `.github/workflows/main.yml` and executes on:
 
 **Release Assets Included**:
 
-- `jl-agents-0.1.0.tgz` - NPM package for direct installation
-- `install-release.ps1` - PowerShell installation script
-- `install-release.sh` - Bash installation script
+- `jl-agents-0.1.0.apm` — APM package for installation via `apm install`
 
 ## Semantic Versioning
 
@@ -181,67 +176,38 @@ done
 ### Running the Build Locally
 
 ```bash
-# Generate NPM package
-npm pack
+# Update apm.yml version
+sed -i "s/^version:.*/version: 0.1.0/" apm.yml
 
-# Generate Copilot format
-npm run generate:copilot
+# Validate and pack
+node scripts/validate-apm-package.js
+apm pack --output jl-agents-0.1.0.apm
 ```
 
 ### Testing Release Process Locally
 
 ```bash
 # Generate release notes (preview)
-node scripts/generate-release-notes.js
+RELEASE_VERSION=0.1.0 node scripts/generate-release-notes.js
 
 # This will show you what the release notes will look like
 ```
 
-### Testing Installation Scripts
-
-You can test the installation scripts locally before release:
-
-**PowerShell:**
-
-```powershell
-# Download and test the script
-Invoke-WebRequest -Uri "https://github.com/JohnLudlow/agents/releases/download/vX.X.X/install-release.ps1" -OutFile install-release.ps1
-
-# Test with a specific version
-.\install-release.ps1 -Version "X.X.X"
-
-# Test global installation
-.\install-release.ps1 -Version "X.X.X" -Global
-```
-
-**Bash:**
-
-```bash
-# Download and test the script
-curl -fsSL "https://github.com/JohnLudlow/agents/releases/download/vX.X.X/install-release.sh" -o install-release.sh
-chmod +x install-release.sh
-
-# Test with a specific version
-./install-release.sh X.X.X
-
-# Test global installation
-./install-release.sh X.X.X --global
-```
-
 ## Installation Flow
 
-The automated release process includes installation support:
+The automated release process includes installation support via APM:
 
 ### Release Notes Generation
 
 When the Release job runs, it automatically generates comprehensive release notes that include:
 
-1. **Installation Instructions** - Platform-specific commands for:
-   - PowerShell (Windows)
-   - Bash (macOS/Linux)
-   - npm (all platforms)
+1. **Installation Instructions** — APM command for all platforms:
 
-2. **Changelog** - Categorized commit history:
+   ```bash
+   apm install JohnLudlow/agents#vX.Y.Z --global --target opencode --force
+   ```
+
+2. **Changelog** — Categorized commit history:
    - ✨ Features (commits starting with `feat:`)
    - 🐛 Bug Fixes (commits starting with `fix:`)
    - ⚡ Performance Improvements (commits starting with `perf:`)
@@ -250,34 +216,24 @@ When the Release job runs, it automatically generates comprehensive release note
    - ✅ Tests (commits starting with `test:`)
    - 📦 Other Changes
 
-3. **Contributors** - Top 20 contributors with commit counts
+3. **Contributors** — Top 20 contributors with commit counts
 
-4. **Links** - Comparison and commit history links
-
-### Installation Scripts as Release Assets
-
-Both installation scripts are included as downloadable assets in each GitHub release:
-
-- **install-release.ps1** - PowerShell installation script
-- **install-release.sh** - Bash installation script
-
-Users can download these scripts and run them independently.
+4. **Links** — Comparison and commit history links
 
 ### Automated Release Publishing
 
 The Release job automatically:
 
 1. Generates release notes from commit history
-2. Downloads the NPM package built in the Build job
-3. Includes installation scripts in the release
-4. Creates a GitHub Release with:
+2. Downloads the APM package built in the Build job
+3. Creates a GitHub Release with:
    - Tag name: `vX.X.X` (e.g., `v0.1.0`)
    - Title: Release version number
-   - Description: Generated release notes
-   - Assets: NPM package + installation scripts
+   - Description: Generated release notes (includes apm install command)
+   - Assets: APM package
    - Draft: false (automatically published)
 
-Users can then download the release from: <https://github.com/JohnLudlow/agents/releases>
+Users can then download the release and install via APM from: <https://github.com/JohnLudlow/agents/releases>
 
 ## Troubleshooting
 

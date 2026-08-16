@@ -2,24 +2,27 @@
 
 ## Installation
 
-The simplest way to install `@johnludlow/agents` is using NPM:
+Install using APM (Agent Package Manager):
 
-```bash
-npm install @johnludlow/agents
+**Windows (PowerShell):**
+
+```powershell
+apm install JohnLudlow/agents#vX.Y.Z --global --target opencode --force
 ```
 
-Or for global installation across all your projects:
+**macOS/Linux (Bash):**
 
 ```bash
-npm install -g @johnludlow/agents
+apm install JohnLudlow/agents#vX.Y.Z --global --target opencode --force
 ```
 
-That's it! The installation script runs automatically and sets up:
+Replace `vX.Y.Z` with the latest release version from the [releases page](https://github.com/JohnLudlow/agents/releases).
 
-- Agents to OpenCode configuration
-- Skills to OpenCode configuration
-- Backup of any existing installation
-- GitHub Copilot format (optional, use `npm run generate:copilot`)
+That's it! The installation places:
+
+- Agents into OpenCode configuration
+- Skills into OpenCode configuration
+- Everything ready to use immediately
 
 ## What Gets Installed
 
@@ -30,19 +33,6 @@ Agents and skills are installed to:
 - **Global**: `~/.config/opencode/agents/` and `~/.config/opencode/skills/`
 - **Local**: `.opencode/agents/` and `.opencode/skills/`
 
-### GitHub Copilot
-
-Generate Copilot format (optional):
-
-```bash
-npm run generate:copilot
-```
-
-This creates:
-
-- `.github/agents/`
-- `.github/skills/`
-
 ## Using the Agents
 
 ### With OpenCode
@@ -52,20 +42,6 @@ Agents are ready to use immediately after installation:
 ```bash
 # In OpenCode chat
 /agent jl-feature-planner
-```
-
-### With GitHub Copilot CLI
-
-First generate the Copilot format:
-
-```bash
-npm run generate:copilot
-```
-
-Then use with Copilot:
-
-```bash
-copilot chat -a jl-feature-planner "Please plan a new feature"
 ```
 
 ## Example Workflow
@@ -114,25 +90,7 @@ docs/plans/user-authentication.md"
 
 ## Available Commands
 
-```bash
-# Install globally
-npm install --global @johnludlow/agents
-
-# Or install and run in one step
-npx @johnludlow/agents install --global
-
-# Generate GitHub Copilot format from OpenCode format
-npx @johnludlow/agents generate-copilot
-
-# Restore from latest backup
-npx @johnludlow/agents restore
-
-# Show help
-npx @johnludlow/agents help
-
-# Show version
-npx @johnludlow/agents version
-```
+For more information, see the [Installation Guide](docs/INSTALLATION.md) and the [README](README.md).
 
 ## Agent Details
 
@@ -164,70 +122,43 @@ npx @johnludlow/agents version
 - **Output**: Test results, coverage metrics, failure analysis
 - **Ideal for**: Quality assurance, regression testing, validation
 
-## Supported Languages
-
-These agents work with:
-
-- **C# / .NET** (primary)
-- **TypeScript / JavaScript**
-- **C++** (game development)
-
 ## Troubleshooting
 
 ### Agents not found in OpenCode
 
 1. Verify installation: `ls ~/.config/opencode/agents/`
-2. If empty, run: `npx @johnludlow/agents install`
+2. If empty, run: `apm install JohnLudlow/agents#vX.Y.Z --global --target opencode --force`
 3. Restart OpenCode
 
 ### Need to uninstall?
 
-```bash
-npm uninstall @johnludlow/agents
-
-# Or globally
-npm uninstall -g @johnludlow/agents
-```
-
-### Restore from backup?
+Manually remove the agents and skills directories:
 
 ```bash
-npm run restore
+# For global installation
+rm -rf ~/.config/opencode/agents/  # macOS/Linux
+rm -rf $env:APPDATA/opencode/agents/  # Windows PowerShell
+
+# For local installation
+rm -rf .opencode/agents/
 ```
-
-Backups are saved with timestamps and can be restored at any time.
-
-### Using in your project?
-
-Add to your project's package.json:
-
-```json
-{
-  "dependencies": {
-    "@johnludlow/agents": "^0.0.1"
-  }
-}
-```
-
-Then agents are available locally in `.opencode/agents/`
 
 ## Environment Requirements
 
-- **Node.js**: 22.0.0 or higher
-- **npm**: 6.0.0 or higher
-- **OpenCode**: (optional, but required to use the agents)
-- **GitHub Copilot CLI**: (optional, for Copilot integration)
+- **APM CLI** - Install from <https://aka.ms/apm>
+- **OpenCode** - (optional, but required to use the agents)
 
 ## More Information
 
 - See **README.md** for comprehensive documentation
 - See **CONTRIBUTING.md** for development guidelines
-- Check individual agent definitions in `agents/` directory
-- Review skill definitions in `skills/` directory
+- Check individual agent definitions in `.apm/agents/` directory
+- Review skill definitions in `.apm/skills/` directory
 
 ## Getting Help
 
 - Read the [README.md](README.md)
+- Read the [Installation Guide](docs/INSTALLATION.md)
 - Contribute: See [CONTRIBUTING.md](CONTRIBUTING.md)
 - Report issues on GitHub
 - Start discussions for questions
