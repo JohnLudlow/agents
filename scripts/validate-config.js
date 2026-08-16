@@ -45,6 +45,98 @@ function parseYaml(text) {
       };
     }
 
+    const recognizedModelPatterns = [
+      /^claude-[a-z0-9.-]+$/i,
+      /^gpt-[a-z0-9.-]+$/i,
+      /^gemini-[a-z0-9.-]+$/i,
+      /^grok-[a-z0-9.-]+$/i,
+      /^kimi-[a-z0-9.-]+$/i,
+      /^mai-[a-z0-9.-]+$/i,
+    ];
+
+    const explicitRecognizedModels = new Set([
+      "claude-sonnet-5",
+      "claude-opus-4.5",
+      "gpt-4-turbo",
+      "gpt-5.4",
+      "gpt-5.4-mini",
+      "gemini-3.5-flash",
+      "gemini-3.6-flash",
+    ]);
+
+    function isRecognizedModelName(modelName) {
+      if (typeof modelName !== "string" || modelName.trim() === "") {
+        return false;
+      }
+
+      if (explicitRecognizedModels.has(modelName)) {
+        return true;
+      }
+
+      return recognizedModelPatterns.some((pattern) => pattern.test(modelName));
+    }
+
+    function validateSubagentModels(config) {
+      if (!("jl_subagent_models" in config)) {
+        return { errors: [], warnings: [] };
+      }
+
+      const errors = [];
+      const warnings = [];
+      const cfg = config.jl_subagent_models;
+
+      if (typeof cfg !== "object" || cfg === null || Array.isArray(cfg)) {
+        errors.push("jl_subagent_models must be an object");
+        return { errors, warnings };
+      }
+
+      const allowedTopLevelKeys = new Set([
+        "default",
+        "research",
+        "implementation",
+        "test_generation",
+        "documentation",
+        "overrides",
+      ]);
+
+      for (const key of Object.keys(cfg)) {
+        if (!allowedTopLevelKeys.has(key)) {
+          warnings.push(`jl_subagent_models.${key}: unrecognized top-level key`);
+        }
+      }
+
+      for (const key of ["default", "research", "implementation", "test_generation", "documentation"]) {
+        if (!(key in cfg)) continue;
+        if (typeof cfg[key] !== "string") {
+          errors.push(`jl_subagent_models.${key} must be a string`);
+          continue;
+        }
+
+        if (!isRecognizedModelName(cfg[key])) {
+          warnings.push(`jl_subagent_models.${key}: unknown model name '${cfg[key]}'`);
+        }
+      }
+
+      if ("overrides" in cfg) {
+        if (typeof cfg.overrides !== "object" || cfg.overrides === null || Array.isArray(cfg.overrides)) {
+          errors.push("jl_subagent_models.overrides must be an object");
+        } else {
+          for (const [taskKey, modelName] of Object.entries(cfg.overrides)) {
+            if (typeof modelName !== "string") {
+              errors.push(`jl_subagent_models.overrides.${taskKey} must be a string`);
+              continue;
+            }
+
+            if (!isRecognizedModelName(modelName)) {
+              warnings.push(`jl_subagent_models.overrides.${taskKey}: unknown model name '${modelName}'`);
+            }
+          }
+        }
+      }
+
+      return { errors, warnings };
+    }
+
     // Pop stack if we've decreased indentation
     while (stack.length > 1 && indent <= stack[stack.length - 1].indent) {
       stack.pop();
@@ -353,11 +445,33 @@ function validateLayer3(config, agentKey) {
 // Main validation function
 function validateConfigFile(filePath, fileName) {
   const content = fs.readFileSync(filePath, "utf8");
-  const agentKeys = ["jl_quiz", "jl_recon", "jl_issue_management"];
+  const agentKeys = ["jl_quiz", "jl_recon", "jl_issue_management", "jl_subagent_models"];
   let hasErrors = false;
   let message = [];
 
+  const wholeText = content.replace(/```[\s\S]*?```/g, "");
+  const subagentMatch = wholeText.match(/^jl_subagent_models:\s*(?:\r?\n)((?:^  .+$(?:\r?\n)?)*)/m);
+  if (subagentMatch) {
+    const parseResult = parseYaml(`jl_subagent_models:\n${subagentMatch[1] || ""}`);
+    if (parseResult.error) {
+      hasErrors = true;
+      message.push(
+        `${fileName}: ${parseResult.message}\n  Fix: Check jl_subagent_models indentation and YAML syntax.`
+      );
+    } else {
+      const subagentValidation = validateSubagentModels(parseResult.parsed);
+      for (const error of subagentValidation.errors) {
+        hasErrors = true;
+        message.push(`${fileName}: [WARN] ${error}\n  Fix: Check jl_subagent_models schema and value types.`);
+      }
+      for (const warning of subagentValidation.warnings) {
+        message.push(`${fileName}: [WARN] ${warning}\n  Fix: Verify the model name or key spelling.`);
+      }
+    }
+  }
+
   for (const agentKey of agentKeys) {
+    if (agentKey === "jl_subagent_models") continue;
     const yamlBlock = extractYamlFromMarkdown(content, agentKey);
     if (!yamlBlock) continue;
 
