@@ -49,6 +49,9 @@ unclear it is — the *what* (goal fuzzy, means would be easy) or the *how*
 the moment they surface — during charting, walking, or prototyping — not
 only at chart time.
 
+If `jl_config.uncertainty_tracking.pattern` resolves to a different heading,
+replace this heading text with that configured label before using the map.
+
 - [Fog item] — [what kind of unclear, if known]
 
 ## Out of Scope

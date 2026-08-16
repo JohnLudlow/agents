@@ -24,6 +24,99 @@ Nobody reads the map to find the answer — they read it to find which
 This skill is user-invoked only. An agent may notice a request has this
 shape and suggest Recon by name, but only a human launches it.
 
+## Configuration
+
+jl-recon reads settings from `jl_recon` configuration in `CONTRIBUTING.md`
+and `AGENTS.md`. It uses `jl-config` only for the generic resolution
+mechanism; jl-recon owns this schema, its defaults, and its validation.
+
+### Schema
+
+| Setting | Type | Allowed values | Default | Sensitivity |
+| --- | --- | --- | --- | --- |
+| `decision_gates.destination_confirmation` | boolean | `true`, `false` | `false` | required by recon |
+| `decision_gates.inciting_issue_confirmation` | boolean | `true`, `false` | `false` | required by recon |
+| `decision_gates.research_afk` | boolean | `true`, `false` | `false` | required by recon |
+| `uncertainty_tracking.pattern` | string | any markdown heading string | `## Not Yet Specified (Fog of War)` | optional |
+
+### Validation and defaults
+
+- validate that `jl_recon`, if present, is an object
+- validate `decision_gates`, if present, as an object of booleans
+- validate `uncertainty_tracking`, if present, as an object
+- default each missing decision gate to `false`
+- default missing `uncertainty_tracking.pattern` to
+  `## Not Yet Specified (Fog of War)`
+- apply resolved gate values at their workflow decision points rather than
+  relying on separate hardcoded gate rules
+
+### Example configuration
+
+In `CONTRIBUTING.md`:
+
+```yaml
+jl_recon:
+  decision_gates:
+    destination_confirmation: false
+    inciting_issue_confirmation: false
+    research_afk: false
+  uncertainty_tracking:
+    pattern: "## Not Yet Specified (Fog of War)"
+```
+
+In `AGENTS.md`:
+
+```yaml
+jl_recon:
+  decision_gates:
+    destination_confirmation: true
+```
+
+## Configuration via `jl-config`
+
+Before charting, working, reporting, or archiving, resolve `jl-config` from
+`CONTRIBUTING.md` and `AGENTS.md` using jl-recon's defaults and the
+precedence defined by the `jl-config` skill.
+
+This skill consumes:
+
+- `jl_recon.decision_gates.destination_confirmation`
+- `jl_recon.decision_gates.inciting_issue_confirmation`
+- `jl_recon.decision_gates.research_afk`
+- `jl_recon.uncertainty_tracking.pattern`
+
+Resolved behaviour:
+
+- `destination_confirmation`
+  - `required`: confirm the destination before creating or updating a map or
+    ticket artifact
+  - `optional`: destination may still be confirmed when the session is
+    ambiguous, but it is not a config-mandated gate
+- `inciting_issue_confirmation`
+  - `required`: confirm the inciting issue with the human before linking or
+    creating artifacts against it
+  - `optional`: ask when an inciting issue appears to exist but certainty is
+    not required by config
+- `research_afk`
+  - `required`: treat AFK research as a gated decision every time
+  - `optional`: AFK research may still require explicit sign-off by the skill
+    rules below, but not because of repository config alone
+- `uncertainty_tracking.pattern`
+  - use the resolved label when recording unresolved items in markdown maps or
+    in any textual artifact that mirrors the map structure
+  - if not configured, default to `## Not Yet Specified (Fog of War)` through
+    jl-recon's own defaults
+
+Graceful fallback:
+
+- Missing config files are not an error; use `jl-config` resolution with
+  jl-recon's defaults.
+- Do not keep separate hardcoded gate logic in this skill; apply the resolved
+  `jl_recon` values at the destination, inciting-issue, research-AFK, and fog
+  recording decision points.
+- If a gate's practical effect is still ambiguous in the current session, ask
+  the human rather than inventing a stricter or looser rule.
+
 ## Core Model
 
 - **Destination** — what reaching the end of the map looks like: a spec, a
@@ -92,17 +185,23 @@ Starting a map from a loose idea.
 
 1. Name the destination — run `jl-quiz`, in whichever mode (A or B)
    the scope calls for.
+   If resolved `decision_gates.destination_confirmation` is `true`, confirm the
+   destination explicitly before creating the map artifact.
 2. Map the frontier — run `jl-quiz` again, breadth-first, to surface
    the decisions currently blocking the destination and the fog around them.
    Record each fog item the moment the quiz surfaces it, before moving on.
    If nothing surfaces as fog, the way is already clear — say so and ask the
    human how they want to proceed instead of forcing a map into existence.
 3. Ask whether an inciting issue exists — the issue, work item, or thread
-   that prompted charting this map. If one does, confirm it with the human
-   before creating anything.
+   that prompted charting this map. If one does, and
+   resolved `decision_gates.inciting_issue_confirmation` is `true`, confirm
+   it with
+   the human before creating anything. If the gate is optional, still confirm
+   when the source issue is uncertain or the link target is ambiguous.
 4. Create the map artifact (see [PROVIDERS.md](references/PROVIDERS.md) for
    the mechanics of each provider) with Destination and Notes filled in, the
-   Decisions-so-far list empty, and the surfaced fog under Not-yet-specified.
+   Decisions-so-far list empty, and the surfaced fog under the resolved
+   `uncertainty_tracking.pattern` heading.
 5. If an inciting issue was confirmed, link the map to it immediately, using
    the provider's native mechanism — see
    [PROVIDERS.md](references/PROVIDERS.md). Do this before creating any
@@ -114,7 +213,9 @@ Starting a map from a loose idea.
    blocking relationships in a second pass — see
    [PROVIDERS.md](references/PROVIDERS.md) for the mechanics per provider.
 7. For any Research ticket, ask the human whether it may run AFK before
-   touching it further.
+   touching it further. If resolved `decision_gates.research_afk` is `true`,
+   this is a mandatory gate even when the human has previously been
+   comfortable with AFK research in similar sessions.
 
 **Completion criterion:** the map artifact exists with every section
 populated (even if Decisions-so-far is still empty), it is linked to its
@@ -136,8 +237,9 @@ Resolving one ticket on an existing map.
 4. Resolve it through the mechanism its type maps to (see Ticket Types
    above). A quiz may surface inside any ticket regardless of type. Record
    any new question or uncertainty the work surfaces — from a quiz detour,
-   prototype feedback, or research findings — to the map's fog immediately,
-   in-session, before the pass continues.
+   prototype feedback, or research findings — to the map using the resolved
+   `uncertainty_tracking.pattern` immediately, in-session, before the pass
+   continues.
 5. Record the resolution: close the ticket, then append exactly one line to
    the map's Decisions-so-far list. One line, one place — if the map already
    shows this natively (GitHub's own sub-issue list), the manual line still
@@ -187,6 +289,9 @@ The agent MUST:
 - Confirm the destination and frontier through `jl-quiz` before
   creating the map (Chart mode) — never invent scope on the agent's own
   read of a loose request.
+- Resolve `jl-config` before acting, validate the resolved `jl_recon`
+  settings against jl-recon's schema, and apply its decision gates and
+  uncertainty-tracking pattern at the workflow points they govern.
 - Ask whether an inciting issue exists before creating the map, and if one
   does, link the map to it using the provider's native mechanism before
   creating any tickets.
