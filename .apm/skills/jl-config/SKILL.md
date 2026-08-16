@@ -27,6 +27,16 @@ use jl-config without reading this repository's `CONTRIBUTING.md` or learning
 repository-specific conventions. Configuration schema and defaults belong in the
 individual agents/skills that consume them.
 
+## Worked Examples
+
+If you're a repository maintainer learning what to write in CONTRIBUTING.md or AGENTS.md,
+start with [references/EXAMPLES.md](references/EXAMPLES.md) — worked examples showing
+minimal config, override patterns, and resolution precedence in action.
+
+If you're an agent or skill developer implementing config consumption, read the
+[Resolution Pattern](#resolution-pattern) and [Validation Pattern](#validation-pattern)
+sections below.
+
 ## Generic Configuration Model
 
 Repository configuration is expressed as YAML embedded in `AGENTS.md` and/or
