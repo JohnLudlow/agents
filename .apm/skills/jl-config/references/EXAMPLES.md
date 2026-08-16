@@ -11,7 +11,7 @@ For technical details on resolution rules, validation schema, and error handling
 
 - [SKILL.md](../SKILL.md) — the config mechanism
 - [validation-rules.md](../validation-rules.md) — the schema reference
-- [linter-examples.md](../linter-examples.md) — error messages and fixes
+- [LINTER_EXAMPLES.md](../references/LINTER_EXAMPLES.md) — error messages and fixes
 
 ## Example 1: Minimal Config
 
@@ -218,7 +218,7 @@ my_agent:
   interview_mode: a  # Correct: string value, not a list
 ```
 
-For more validation errors and how to fix them, see [linter-examples.md](../linter-examples.md).
+For more validation errors and how to fix them, see [LINTER_EXAMPLES.md](LINTER_EXAMPLES.md).
 
 ---
 
@@ -263,4 +263,4 @@ For more validation errors and how to fix them, see [linter-examples.md](../lint
 
 - [SKILL.md](../SKILL.md) — Complete resolution mechanism and model
 - [validation-rules.md](../validation-rules.md) — Schema reference (per-agent keys, allowed values)
-- [linter-examples.md](../linter-examples.md) — Error messages and how to fix them
+- [LINTER_EXAMPLES.md](../references/LINTER_EXAMPLES.md) — Error messages and how to fix them
