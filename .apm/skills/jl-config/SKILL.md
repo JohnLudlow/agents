@@ -394,6 +394,153 @@ Resolved config:
 - `plan_destination: github_issue` (from CONTRIBUTING.md, not in AGENTS.md)
 - any other jl-quiz settings use defaults
 
+## Reporting Configuration Warnings
+
+Agents should warn users about invalid or missing configuration at startup, making
+problems visible without blocking execution. This section defines the standard
+warning format for all agents using jl-config.
+
+### Warning Occasions
+
+Agents should emit warnings when:
+
+1. **Invalid configuration** detected: YAML syntax error, type mismatch, enum violation, or constraint failure
+2. **Required settings unresolved** after config resolution: a required setting has no default and is not configured
+
+Agents should **not** warn about:
+
+- missing optional/recommended settings (use defaults silently)
+- files that don't exist (this is not an error)
+- settings that resolve to their defaults normally
+
+### Standard Warning Format
+
+Every configuration warning should follow this format:
+
+```text
+[WARN] <agent-or-skill-name>: <specific issue>
+  File: <filename> [<line-number>] (if applicable; omit if only "not found")
+  Fix: <actionable guidance for the user>
+```
+
+**Examples:**
+
+```text
+[WARN] jl-quiz: 'interview_mode' has invalid value 'c' (must be 'a' or 'b')
+  File: CONTRIBUTING.md [line 5]
+  Fix: Change interview_mode to 'a' or 'b' in the jl_quiz config block
+```
+
+```text
+[WARN] jl-recon: 'decision_gates' must be an object, not a list
+  File: AGENTS.md [line 12]
+  Fix: Ensure 'decision_gates' is a YAML object with boolean-valued keys
+```
+
+```text
+[WARN] jl-issue-management: required setting 'plan_destination' not found
+  File: (checked AGENTS.md and CONTRIBUTING.md)
+  Fix: Add 'plan_destination: github_issue' to AGENTS.md or CONTRIBUTING.md under jl_issue_management
+```
+
+### Components
+
+**\[WARN\] prefix** — all config warnings use this prefix for easy filtering in logs
+
+**agent-or-skill-name** — the name of the agent or skill emitting the warning (e.g., `jl-quiz`, `jl-recon`)
+
+**specific issue** — a one-line description of what is wrong, written for the user to understand:
+
+- State what the problem is (e.g., "invalid enum value", "type mismatch", "required setting missing")
+- Avoid jargon; state values concretely
+- If applicable, mention what was found vs. what was expected
+
+**File and line number** (optional):
+
+- Include if the error is in a file and location is known
+- Omit if the issue is "not found" or no specific location applies
+- Format: `File: <filename> [line-number]`
+
+**Fix** — actionable guidance:
+
+- Suggest the exact change the user should make
+- If configuration is required for progress, guide the user to the right file
+- If the issue is in the syntax, explain what the correct format is
+- Be concise but complete
+
+### When to Log Warnings
+
+Agents should log warnings:
+
+1. **At startup/initialization** — as soon as the agent begins resolving config
+2. **To stdout/stderr** — make warnings visible in real time
+3. **Before proceeding with work** — do not silently continue with invalid config
+4. **Without blocking** — emit warnings but continue execution with defaults
+
+Warnings should flow directly to the user, not be hidden in agent-internal logs.
+
+### Warning Volume and Clarity
+
+To keep warnings actionable:
+
+- emit **one warning per distinct problem**
+- do **not** emit cascading warnings (e.g., if an object is malformed, warn about the object,
+  not about every field inside it)
+- do **not** warn about every default applied; only warn about actual problems
+- do **not** repeat the same warning twice in one session
+
+### Consuming Agent Responsibility
+
+Each agent that uses jl-config is responsible for:
+
+1. defining what settings matter and which are required/recommended/optional
+2. implementing validation against its own schema (use `.apm/skills/jl-config/validation-rules.md`
+   as the reference for validation layers)
+3. emitting warnings in the standard format when validation fails or required settings are missing
+4. documenting **exactly which warnings** it may emit (see example below)
+
+### Example: jl-quiz Warning Documentation
+
+In the jl-quiz skill's SKILL.md, add a "Configuration Warnings" section:
+
+```markdown
+## Configuration Warnings
+
+jl-quiz validates its configuration at startup and emits warnings for:
+
+**Type Mismatch**
+\`\`\`
+[WARN] jl-quiz: 'interview_mode' must be a string, not a boolean
+  Fix: Change the value to 'a' or 'b' (keep quotes)
+\`\`\`
+
+**Enum Violation**
+\`\`\`
+[WARN] jl-quiz: 'plan_destination' has invalid value 'slack'
+  (must be one of: github_issue, azure_devops_work_item, local_file,
+  inline_message)
+  Fix: Change to one of the allowed values
+\`\`\`
+
+**Missing Required Setting**
+\`\`\`
+[WARN] jl-quiz: required setting 'plan_destination' not found
+  in AGENTS.md or CONTRIBUTING.md
+  Fix: Add to CONTRIBUTING.md or AGENTS.md under jl_quiz:
+    plan_destination: github_issue
+\`\`\`
+
+**Invalid File Path**
+\`\`\`
+[WARN] jl-quiz: 'file_storage_location' must be repository-relative (no leading / or drive letters)
+  File: AGENTS.md [line 8]
+  Fix: Change '/docs/plans' to 'docs/plans' or use a relative path
+\`\`\`
+```
+
+The agent then implements warnings using these templates, adapting the language
+to match its schema and reporting the line number if known.
+
 ## Portability Contract
 
 For `jl-config` to remain portable across repositories and agents:
@@ -401,6 +548,7 @@ For `jl-config` to remain portable across repositories and agents:
 - the resolution mechanism (precedence, merging) must remain stable
 - individual agents define their own schemas, not jl-config
 - validation depends on the consuming agent's schema, not jl-config's
+- **warning format is standardized** so users see consistent output across all agents
 - examples demonstrate zero-config through full-override cases
 - consuming agents tolerate absent files and partial configs
 - no agent-specific code appears in jl-config itself
@@ -411,7 +559,8 @@ A repository adoption of `jl-config` (by an agent or skill) is considered health
 
 - the agent resolves its config with zero ambiguity across all file-presence states
 - the agent validates its own settings against its own schema
-- missing required settings trigger prompts rather than silent assumptions
+- missing required settings trigger prompts or warnings (not silent assumptions)
 - missing optional/recommended settings fall back to documented defaults
+- **configuration warnings follow the standard format and are visible to the user**
 - the agent works correctly in test scenarios with and without config files
 - another repository can use the same agent and achieve the same behavior

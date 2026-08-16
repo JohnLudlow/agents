@@ -117,6 +117,63 @@ Graceful fallback:
 - If a gate's practical effect is still ambiguous in the current session, ask
   the human rather than inventing a stricter or looser rule.
 
+### Configuration Warnings
+
+jl-recon validates its configuration at startup and emits warnings (in the
+format defined by jl-config) for:
+
+#### Type Mismatch — decision gate
+
+```text
+[WARN] jl-recon: 'decision_gates.destination_confirmation' must be a
+  boolean (true/false), not a string
+  File: AGENTS.md [line 6]
+  Fix: Change the value to a boolean: destination_confirmation: true
+```
+
+#### Type Mismatch — uncertainty tracking pattern
+
+```text
+[WARN] jl-recon: 'uncertainty_tracking.pattern' must be a string, not a list
+  File: CONTRIBUTING.md [line 10]
+  Fix: Change to a markdown heading string: pattern: "## Unknowns"
+```
+
+#### Invalid Heading Format
+
+```text
+[WARN] jl-recon: 'uncertainty_tracking.pattern' must start with #
+  (markdown heading), got "Unknowns"
+  File: AGENTS.md [line 8]
+  Fix: Change to a valid heading: pattern: "## Unknowns" or "### TBD"
+```
+
+#### Empty Pattern String
+
+```text
+[WARN] jl-recon: 'uncertainty_tracking.pattern' cannot be empty
+  File: CONTRIBUTING.md [line 9]
+  Fix: Provide a markdown heading like "## Not Yet Specified"
+```
+
+#### Root Shape Error
+
+```text
+[WARN] jl-recon: 'decision_gates' must be an object with boolean-valued
+  keys, not a list
+  File: AGENTS.md [line 5]
+  Fix: Change to YAML object syntax: decision_gates: { destination_confirmation: true }
+```
+
+#### Malformed decision_gates structure
+
+```text
+[WARN] jl-recon: 'decision_gates.destination_confirmation' must be a
+  boolean (true/false), not a string "yes"
+  File: CONTRIBUTING.md [line 7]
+  Fix: Use boolean values (true or false, not quoted strings)
+```
+
 ## Core Model
 
 - **Destination** — what reaching the end of the map looks like: a spec, a
