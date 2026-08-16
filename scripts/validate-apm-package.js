@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const fs = require("fs");
 const path = require("path");
+const { execSync } = require("child_process");
 
 const root = path.join(__dirname, "..");
 const apmYml = path.join(root, "apm.yml");
@@ -77,6 +78,16 @@ if (fs.existsSync(agentJson)) {
       err("Failed to read agent markdown: " + e.message);
     }
   }
+}
+
+// Run config validation
+try {
+  const configValidatorPath = path.join(__dirname, "validate-config.js");
+  if (fs.existsSync(configValidatorPath)) {
+    execSync(`node "${configValidatorPath}"`, { stdio: "inherit" });
+  }
+} catch (e) {
+  failed = true;
 }
 
 process.exit(failed ? 1 : 0);

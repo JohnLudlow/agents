@@ -1,0 +1,430 @@
+#!/usr/bin/env node
+const fs = require("fs");
+const path = require("path");
+
+// Minimal YAML parser - extracts agent config blocks from markdown
+function extractYamlFromMarkdown(text, agentKey) {
+  // Remove code blocks first (to avoid matching placeholders)
+  let cleanText = text.replace(/```[\s\S]*?```/g, "");
+
+  // Look for the agent key in the text, then extract the YAML block
+  // Pattern: `agentKey:` followed by indented lines until next key or end
+  const pattern = new RegExp(
+    `^${agentKey}:\\s*(?:\\r?\\n)?((?:^  .+$(?:\\r?\\n)?)*)?`,
+    "m"
+  );
+
+  const match = cleanText.match(pattern);
+  if (!match) return null;
+
+  const yamlBlock = `${agentKey}:\n${match[1] || ""}`;
+  return yamlBlock;
+}
+
+// Simple YAML parser for config validation
+function parseYaml(text) {
+  const lines = text.split(/\r?\n/);
+  const root = {};
+  const stack = [{ obj: root, indent: -1 }];
+
+  let lineNum = 0;
+  for (const line of lines) {
+    lineNum++;
+    if (!line.trim() || line.trim().startsWith("#")) continue;
+
+    const indentMatch = line.match(/^( *)/);
+    const indent = indentMatch ? indentMatch[1].length : 0;
+    const trimmed = line.trim();
+
+    // Check for invalid indentation (not multiples of 2)
+    if (indent > 0 && indent % 2 !== 0) {
+      return {
+        error: true,
+        message: `Indentation error: line ${lineNum} has ${indent} spaces (must be multiple of 2)`,
+        lineNum,
+      };
+    }
+
+    // Pop stack if we've decreased indentation
+    while (stack.length > 1 && indent <= stack[stack.length - 1].indent) {
+      stack.pop();
+    }
+
+    if (trimmed.includes(":")) {
+      const [key, ...valueParts] = trimmed.split(":");
+      const value = valueParts.join(":").trim();
+
+      // Check for duplicate keys at this level
+      if (stack[stack.length - 1].obj[key.trim()] !== undefined) {
+        return {
+          error: true,
+          message: `Duplicate key '${key.trim()}' at line ${lineNum}`,
+          lineNum,
+        };
+      }
+
+      if (value === "") {
+        // This is a mapping key - next indented lines are its value
+        const newObj = {};
+        stack[stack.length - 1].obj[key.trim()] = newObj;
+        stack.push({ obj: newObj, indent });
+      } else {
+        // Parse the value
+        let parsedValue = value;
+
+        // Handle quotes
+        if ((value.startsWith('"') && value.endsWith('"')) ||
+            (value.startsWith("'") && value.endsWith("'"))) {
+          parsedValue = value.slice(1, -1);
+        } else if (value === "true") {
+          parsedValue = true;
+        } else if (value === "false") {
+          parsedValue = false;
+        } else if (!isNaN(value) && value !== "") {
+          parsedValue = Number(value);
+        }
+
+        stack[stack.length - 1].obj[key.trim()] = parsedValue;
+      }
+    }
+  }
+
+  return { error: false, parsed: root };
+}
+
+// Validate Layer 2: Root shape (agent config key must be object)
+function validateLayer2(config, agentKey) {
+  if (!(agentKey in config)) {
+    return { valid: true }; // Missing is not a layer 2 error
+  }
+
+  const value = config[agentKey];
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return {
+      valid: false,
+      error: `Config key '${agentKey}' must be an object, got ${
+        Array.isArray(value) ? "array" : typeof value
+      }`,
+    };
+  }
+
+  return { valid: true };
+}
+
+// Validate Layer 3: Semantic validation per agent
+function validateLayer3(config, agentKey) {
+  if (!(agentKey in config)) {
+    return { valid: true };
+  }
+
+  const cfg = config[agentKey];
+
+  if (agentKey === "jl_quiz") {
+    // Required: plan_destination
+    if (!("plan_destination" in cfg)) {
+      return {
+        valid: false,
+        error: `jl_quiz: missing required setting 'plan_destination'`,
+      };
+    }
+
+    const pd = cfg.plan_destination;
+    if (typeof pd !== "string") {
+      return {
+        valid: false,
+        error: `jl_quiz.plan_destination: must be string, got ${typeof pd}`,
+      };
+    }
+
+    const validPD = [
+      "github_issue",
+      "azure_devops_work_item",
+      "local_file",
+      "inline_message",
+    ];
+    if (!validPD.includes(pd)) {
+      return {
+        valid: false,
+        error: `jl_quiz.plan_destination: '${pd}' is not valid. Allowed: ${validPD.join(", ")}`,
+      };
+    }
+
+    // Recommended: interview_mode
+    if ("interview_mode" in cfg) {
+      const im = cfg.interview_mode;
+      if (typeof im !== "string") {
+        return {
+          valid: false,
+          error: `jl_quiz.interview_mode: must be string, got ${typeof im}`,
+        };
+      }
+
+      if (!["a", "b"].includes(im)) {
+        return {
+          valid: false,
+          error: `jl_quiz.interview_mode: must be 'a' or 'b', got '${im}'`,
+        };
+      }
+    }
+
+    // Recommended: file_storage_location
+    if ("file_storage_location" in cfg) {
+      const fsl = cfg.file_storage_location;
+      if (typeof fsl !== "string") {
+        return {
+          valid: false,
+          error: `jl_quiz.file_storage_location: must be string, got ${typeof fsl}`,
+        };
+      }
+
+      if (fsl === "") {
+        return {
+          valid: false,
+          error: `jl_quiz.file_storage_location: cannot be empty string`,
+        };
+      }
+
+      // Check for absolute paths
+      if (fsl.startsWith("/") || /^[a-zA-Z]:/.test(fsl)) {
+        return {
+          valid: false,
+          error: `jl_quiz.file_storage_location: cannot be absolute path (got '${fsl}')`,
+        };
+      }
+
+      // Check for parent directory traversal
+      if (fsl.includes("..")) {
+        return {
+          valid: false,
+          error: `jl_quiz.file_storage_location: cannot contain '..' (got '${fsl}')`,
+        };
+      }
+    }
+  } else if (agentKey === "jl_recon") {
+    // All settings are optional
+    if ("decision_gates" in cfg) {
+      const dg = cfg.decision_gates;
+      if (typeof dg !== "object" || dg === null || Array.isArray(dg)) {
+        return {
+          valid: false,
+          error: `jl_recon.decision_gates: must be object, got ${
+            Array.isArray(dg) ? "array" : typeof dg
+          }`,
+        };
+      }
+
+      for (const key of ["destination_confirmation", "inciting_issue_confirmation", "research_afk"]) {
+        if (key in dg) {
+          if (typeof dg[key] !== "boolean") {
+            return {
+              valid: false,
+              error: `jl_recon.decision_gates.${key}: must be boolean, got ${typeof dg[key]}`,
+            };
+          }
+        }
+      }
+    }
+
+    if ("uncertainty_tracking" in cfg) {
+      const ut = cfg.uncertainty_tracking;
+      if (typeof ut !== "object" || ut === null || Array.isArray(ut)) {
+        return {
+          valid: false,
+          error: `jl_recon.uncertainty_tracking: must be object, got ${
+            Array.isArray(ut) ? "array" : typeof ut
+          }`,
+        };
+      }
+
+      if ("pattern" in ut) {
+        const pattern = ut.pattern;
+        if (typeof pattern !== "string") {
+          return {
+            valid: false,
+            error: `jl_recon.uncertainty_tracking.pattern: must be string, got ${typeof pattern}`,
+          };
+        }
+
+        if (pattern === "") {
+          return {
+            valid: false,
+            error: `jl_recon.uncertainty_tracking.pattern: cannot be empty string`,
+          };
+        }
+
+        if (!pattern.match(/^#+\s/)) {
+          return {
+            valid: false,
+            error: `jl_recon.uncertainty_tracking.pattern: must start with '#' (markdown heading), got '${pattern}'`,
+          };
+        }
+      }
+    }
+  } else if (agentKey === "jl_issue_management") {
+    // Required: plan_destination
+    if (!("plan_destination" in cfg)) {
+      return {
+        valid: false,
+        error: `jl_issue_management: missing required setting 'plan_destination'`,
+      };
+    }
+
+    const pd = cfg.plan_destination;
+    if (typeof pd !== "string") {
+      return {
+        valid: false,
+        error: `jl_issue_management.plan_destination: must be string, got ${typeof pd}`,
+      };
+    }
+
+    const validPD = [
+      "github_issue",
+      "azure_devops_work_item",
+      "local_file",
+      "inline_message",
+    ];
+    if (!validPD.includes(pd)) {
+      return {
+        valid: false,
+        error: `jl_issue_management.plan_destination: '${pd}' is not valid. Allowed: ${validPD.join(", ")}`,
+      };
+    }
+
+    // Recommended: file_storage_location
+    if ("file_storage_location" in cfg) {
+      const fsl = cfg.file_storage_location;
+      if (typeof fsl !== "string") {
+        return {
+          valid: false,
+          error: `jl_issue_management.file_storage_location: must be string, got ${typeof fsl}`,
+        };
+      }
+
+      if (fsl === "") {
+        return {
+          valid: false,
+          error: `jl_issue_management.file_storage_location: cannot be empty string`,
+        };
+      }
+
+      if (fsl.startsWith("/") || /^[a-zA-Z]:/.test(fsl)) {
+        return {
+          valid: false,
+          error: `jl_issue_management.file_storage_location: cannot be absolute path (got '${fsl}')`,
+        };
+      }
+
+      if (fsl.includes("..")) {
+        return {
+          valid: false,
+          error: `jl_issue_management.file_storage_location: cannot contain '..' (got '${fsl}')`,
+        };
+      }
+    }
+
+    // Optional: decision_gates
+    if ("decision_gates" in cfg) {
+      const dg = cfg.decision_gates;
+      if (typeof dg !== "object" || dg === null || Array.isArray(dg)) {
+        return {
+          valid: false,
+          error: `jl_issue_management.decision_gates: must be object, got ${
+            Array.isArray(dg) ? "array" : typeof dg
+          }`,
+        };
+      }
+
+      for (const key of ["destination_confirmation", "inciting_issue_confirmation", "research_afk"]) {
+        if (key in dg) {
+          if (typeof dg[key] !== "boolean") {
+            return {
+              valid: false,
+              error: `jl_issue_management.decision_gates.${key}: must be boolean, got ${typeof dg[key]}`,
+            };
+          }
+        }
+      }
+    }
+  }
+
+  return { valid: true };
+}
+
+// Main validation function
+function validateConfigFile(filePath, fileName) {
+  const content = fs.readFileSync(filePath, "utf8");
+  const agentKeys = ["jl_quiz", "jl_recon", "jl_issue_management"];
+  let hasErrors = false;
+  let message = [];
+
+  for (const agentKey of agentKeys) {
+    const yamlBlock = extractYamlFromMarkdown(content, agentKey);
+    if (!yamlBlock) continue;
+
+    // Layer 1: Parse YAML
+    const parseResult = parseYaml(yamlBlock);
+    if (parseResult.error) {
+      hasErrors = true;
+      message.push(
+        `${fileName}: ${parseResult.message}\n  Fix: Check indentation and YAML syntax. See .apm/skills/jl-config/validation-rules.md`
+      );
+      continue;
+    }
+
+    const config = parseResult.parsed;
+
+    // Layer 2: Validate shape
+    const layer2Result = validateLayer2(config, agentKey);
+    if (!layer2Result.valid) {
+      hasErrors = true;
+      message.push(
+        `${fileName}: [WARN] ${agentKey}: ${layer2Result.error}\n  Fix: Ensure '${agentKey}' is an object (mapping). See .apm/skills/jl-config/validation-rules.md Layer 2`
+      );
+      continue;
+    }
+
+    // Layer 3: Semantic validation
+    const layer3Result = validateLayer3(config, agentKey);
+    if (!layer3Result.valid) {
+      hasErrors = true;
+      message.push(
+        `${fileName}: [WARN] ${layer3Result.error}\n  Fix: Check value types and allowed values. See .apm/skills/jl-config/validation-rules.md Layer 3`
+      );
+    }
+  }
+
+  return { hasErrors, messages: message };
+}
+
+// Main script
+const root = path.join(__dirname, "..");
+const contributingPath = path.join(root, "CONTRIBUTING.md");
+const agentsPath = path.join(root, "AGENTS.md");
+
+let failed = false;
+
+if (fs.existsSync(contributingPath)) {
+  const result = validateConfigFile(contributingPath, "CONTRIBUTING.md");
+  if (result.hasErrors) {
+    failed = true;
+    result.messages.forEach((msg) => console.error("✗", msg));
+  } else {
+    console.log("✓ CONTRIBUTING.md agent config is valid");
+  }
+} else {
+  console.log("ℹ CONTRIBUTING.md not found (optional)");
+}
+
+if (fs.existsSync(agentsPath)) {
+  const result = validateConfigFile(agentsPath, "AGENTS.md");
+  if (result.hasErrors) {
+    failed = true;
+    result.messages.forEach((msg) => console.error("✗", msg));
+  } else {
+    console.log("✓ AGENTS.md agent config is valid");
+  }
+} else {
+  console.log("ℹ AGENTS.md not found (optional)");
+}
+
+process.exit(failed ? 1 : 0);
