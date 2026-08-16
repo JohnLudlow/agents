@@ -288,21 +288,29 @@ For comprehensive installation instructions, see the **[INSTALLATION.md](docs/IN
 
 ### Quick Start (Recommended)
 
-Visit the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases/latest)** to find the latest release.
-Each release includes a `.tgz` asset — copy its URL and use it with `npx`:
+Install using APM (Agent Package Manager) from the latest release:
+
+**Windows (PowerShell):**
+
+```powershell
+apm install JohnLudlow/agents#vX.Y.Z --global --target opencode --force
+```
+
+**macOS/Linux (Bash):**
 
 ```bash
-npx <tgz-url> install --global
+apm install JohnLudlow/agents#vX.Y.Z --global --target opencode --force
 ```
+
+Replace `vX.Y.Z` with the latest version from the **[GitHub Releases page](https://github.com/JohnLudlow/agents/releases/latest)**.
 
 ### Prerequisites
 
-- Node.js 22.0.0+ ([Download](https://nodejs.org/))
-- npm (included with Node.js)
+- **APM CLI** - [Install APM](https://aka.ms/apm)
 
 ### What Gets Installed
 
-The installation script automatically sets up:
+The installation places:
 
 - **Agents** - Top-level agents (planner, implementer, tdd-implementer, documenter,
   tester) and sub-agents (feature-planner, feature-implementer, feature-documenter,
@@ -312,7 +320,6 @@ The installation script automatically sets up:
   - **oh-my-opencode** - Shell environment configuration for OpenCode
   - **opentmux** - Real-time tmux integration for viewing agent execution
   - **@ramtinj95/opencode-tokenscope** - Token usage analysis and cost tracking
-- **GitHub Copilot Plugins** - Recommended development tools (if Copilot CLI is available)
 
 ## Usage
 
@@ -366,28 +373,7 @@ node scripts/validate-apm-package.js
 
 # Install locally with APM (preferred for runtime testing)
 # apm install ./
-
-# Show CLI help
-npx @johnludlow/agents help
 ```
-
-### CLI Tool
-
-The package includes a CLI tool for manual management:
-
-```bash
-# Global installation
-jl-agents [command]
-
-# Local installation  
-npx @johnludlow/agents [command]
-
-# Commands:
-jl-agents install         # Install agents
-jl-agents uninstall       # Remove agents
-jl-agents restore         # Restore from backup
-jl-agents generate-copilot # Create Copilot format
-jl-agents help            # Show help
 jl-agents version         # Show version
 ```
 

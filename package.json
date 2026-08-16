@@ -14,9 +14,6 @@
     "generate:copilot": "node scripts/generate-copilot.js",
     "list": "node scripts/list.js"
   },
-  "bin": {
-    "jl-agents": "./scripts/init.js"
-  },
   "keywords": [
     "opencode",
     "copilot",
