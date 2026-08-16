@@ -3,14 +3,7 @@ name: jl-implementer
 description: "Top-level implementation agent. Implements approved plans."
 mode: primary
 temperature: 0.2
-tools:
-  fs_read: true
-  fs_write: false
-  shell: true
-  grep_search: true
-  lsp: true
-  web_fetch: false
-  invoke_sub_agent: true
+tools: [read, shell, grep, lsp, invoke_sub_agent]
 permission:
   read:
     "*": allow
