@@ -374,8 +374,6 @@ node scripts/validate-apm-package.js
 # Install locally with APM (preferred for runtime testing)
 # apm install ./
 ```
-jl-agents version         # Show version
-```
 
 ## Workflow Example
 

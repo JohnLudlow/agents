@@ -38,12 +38,14 @@ apm install JohnLudlow/agents#vX.Y.Z --global --target opencode --force
 ```
 
 **Flags explained:**
+
 - `#vX.Y.Z` — pins to a specific release (recommended for reproducibility)
 - `--global` — installs system-wide (omit for project-local installation)
 - `--target opencode` — specifies the OpenCode deployment target
 - `--force` — overwrites any existing installation
 
 **Advantages:**
+
 - Simple one-command installation
 - Works on all platforms (Windows, macOS, Linux)
 - Automatically resolves dependencies
@@ -221,6 +223,7 @@ Invoke-WebRequest -Uri "https://aka.ms/apm-win" -OutFile "$env:TEMP\apm-setup.ex
 **Solution:**
 
 1. For global installation on macOS/Linux, use `sudo`:
+
    ```bash
    sudo apm install JohnLudlow/agents#vX.Y.Z --global --target opencode --force
    ```

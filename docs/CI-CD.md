@@ -202,6 +202,7 @@ The automated release process includes installation support via APM:
 When the Release job runs, it automatically generates comprehensive release notes that include:
 
 1. **Installation Instructions** — APM command for all platforms:
+
    ```bash
    apm install JohnLudlow/agents#vX.Y.Z --global --target opencode --force
    ```
