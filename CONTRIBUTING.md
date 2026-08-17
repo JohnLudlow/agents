@@ -3,7 +3,7 @@
 Thank you for your interest in contributing to the johnludlow agents and skills
 repository!
 
-## Getting Started
+## Getting started
 
 1. Fork the repository
 2. Clone your fork locally
@@ -88,108 +88,34 @@ harness cannot honor it.
 
 When creating or modifying agent definitions:
 
-1. **Canonical Authoring Location** — author new and updated agent definitions in:
-   - `.apm/agents/jl-[name].agent.md` — canonical APM agent primitive with YAML frontmatter and agent body
+1. Create `.apm/agents/jl-[agent-name].agent.md` with the new or updated agent
+   definition.
+2. Follow the standard agent schema.
 
-   Legacy `agents/jl-[name].md` plus `agents/jl-[name].json`
-   sidecars are back-compat reference material only. Do not treat `agents/` as the
-   primary authoring location for new repository work.
-
-2. **Markdown Required Sections**
-   - Description: Brief overview of the agent
-   - Purpose: What the agent does
-   - Inputs: What the agent accepts
-   - Outputs: What the agent produces
-   - Requirements: MUST, SHOULD, MUST NOT clauses
-   - Capabilities: What the agent can do
-   - Restrictions: What the agent cannot do
-   - Integration: How it works with other agents
-
-   > **Note:** Do not add a `## Temperature` section to the markdown. For canonical
-   > `.apm/` primitives, temperature belongs in YAML frontmatter. If you are
-   > maintaining a legacy back-compat reference in `agents/`, temperature belongs
-   > in the JSON sidecar instead.
-
-3. **Legacy JSON Sidecar Schema (back-compat only)**
-
-   ```json
-   {
-     "description": "One-line description shown in agent pickers",
-     "mode": "primary",
-     "temperature": 0.2,
-     "permission": {
-       "read": { "*": "allow" },
-       "edit": { "*": "deny" },
-       "bash": { "*": "deny", "git log*": "allow" },
-       "grep": { "*": "allow" },
-       "webfetch": "ask",
-       "task": { "*": "deny" }
-     }
-   }
-   ```
-
-   - Use this only when maintaining a legacy back-compat reference under `agents/`
-   - `mode`: `"primary"` for user-facing agents, `"subagent"` for delegated agents
-   - `temperature`: `0.0`–`1.0`. Lower = more deterministic.
-   - `permission`: OpenCode permission map. Copilot uses description + temperature only.
-
-4. **Naming Convention**
-   - All agent names start with `jl-`
-   - Use hyphen-separated names (e.g., `jl-feature-planner`)
-   - Canonical APM primitive files use the `.agent.md` suffix
-   - Legacy `agents/*.md` plus `agents/*.json` sidecars remain back-compat references only
-
-5. **Documentation**
-   - Use clear, plain English
-   - Define any technical jargon
-   - Include examples where helpful
-   - Link to related agents and skills
+   **For the complete Agent Definitions schema** (naming convention, required sections
+   frontmatter format), see <https://microsoft.github.io/apm/producer/author-primitives/instructions-and-agents/>
+   — it documents the canonical structure for all agent definitions in this repository and is
+   available to agents and tools in downstream repositories.
+3. Validate the package.
+4. Install locally.
+5. Test the agent.
+6. Update `README.md` if the new or changed agent should be documented there.
 
 ### Skill Definitions
 
 When creating or modifying skills:
 
-1. **Canonical Authoring Location** — author new and updated skill definitions in:
-   - `.apm/skills/jl-[name]/SKILL.md` — canonical APM skill primitive
-     (Agent Skills spec-compliant directory) with YAML frontmatter
-     (`name` matching the directory, plus `description`) and skill body
+1. Create `.apm/skills/jl-[skill-name]/SKILL.md` with the new or updated skill
+   definition.
+2. Follow the standard skill schema.
 
-   Supporting documents (templates, reference material, scripts) for a skill
-   live alongside it under `.apm/skills/jl-[name]/assets/`,
-   `references/`, or `scripts/` as appropriate — never as loose files
-   elsewhere in the repo.
-
-   Legacy `skills/jl-[name].md` plus `skills/jl-[name].json`
-   sidecars are back-compat reference material only. Do not treat `skills/` as
-   the primary authoring location for new repository work.
-
-2. **Legacy JSON Sidecar Schema (back-compat only)**
-
-   ```json
-   {
-     "description": "One-line description shown in skill pickers"
-   }
-   ```
-
-3. Markdown Required Sections
-   - Overview: What the skill covers
-   - Key principles or standards
-   - Language-specific guidance (if applicable)
-   - Examples where appropriate
-
-4. Naming Convention
-   - All skill names start with `jl-`
-   - Use descriptive names (e.g., `jl-code-quality`)
-   - Canonical APM primitives are a directory named after the skill
-     containing `SKILL.md` (e.g., `.apm/skills/jl-code-quality/SKILL.md`),
-     per the Agent Skills specification — not a flat `.skill.md` file
-   - The `name` field in `SKILL.md` frontmatter must match the directory name
-   - Legacy `skills/*.md` plus `skills/*.json` sidecars remain back-compat references only
-
-5. Standards
-   - Focus on practical, actionable guidance
-   - Include examples from supported languages (C#, TypeScript, C++)
-   - Link to official documentation where helpful
+   **For the complete Skill Definitions schema** (directory structure, naming
+   convention, required sections), see
+   <https://agentskills.io/home>.
+3. Validate the package.
+4. Install locally.
+5. Test the skill.
+6. Open a pull request with any related documentation updates.
 
 ### Templates
 
