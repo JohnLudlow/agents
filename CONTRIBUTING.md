@@ -109,10 +109,9 @@ When creating or modifying agent definitions:
    definition.
 2. Follow the standard agent schema.
 
-   **For the complete Agent Definitions schema** (naming convention, required
-   sections, frontmatter format), see
-   `.apm/skills/writing-for-agents/references/AGENT_SCHEMA.md`—it documents the
-   canonical structure for all agent definitions in this repository and is
+   **For the complete Agent Definitions schema** (naming convention, required sections
+   frontmatter format), see <https://microsoft.github.io/apm/producer/author-primitives/instructions-and-agents/>
+   — it documents the canonical structure for all agent definitions in this repository and is
    available to agents and tools in downstream repositories.
 3. Validate the package.
 4. Install locally.
@@ -129,7 +128,7 @@ When creating or modifying skills:
 
    **For the complete Skill Definitions schema** (directory structure, naming
    convention, required sections), see
-   `.apm/skills/writing-for-agents/references/SKILL_SCHEMA.md`.
+   <https://agentskills.io/home>.
 3. Validate the package.
 4. Install locally.
 5. Test the skill.
