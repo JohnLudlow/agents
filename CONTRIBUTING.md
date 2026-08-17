@@ -14,6 +14,40 @@ repository!
 
 ## Code Standards
 
+### Subagent Approval Gates
+
+Subagent delegation is governed by approval gates configured via `jl_approval_gates` in `CONTRIBUTING.md` or `AGENTS.md`. All skills use a unified boolean pattern:
+
+#### Schema
+
+Each delegating skill defines one or more boolean gates:
+
+```yaml
+jl_approval_gates:
+  test_approval_required: true              # jl-feature-tester
+  documentation_approval_required: true     # jl-documenter
+  prototype_approval_required: true         # jl-prototype
+  plan_approval_required: true              # jl-planner
+  implementation_approval_required: true    # jl-feature-implementer
+```
+
+#### Behavior
+
+- When a gate is `true`, the agent prompts the user before delegating that category of work.
+- When a gate is `false`, the agent proceeds with delegation pre-authorized.
+- If a gate is missing from config, the delegating skill defaults to `true` (human-in-the-loop by default).
+
+#### Per-gate documentation
+
+For skill-specific approval gates, see:
+
+- `jl-feature-tester`: `.apm/skills/jl-feature-tester/SKILL.md` → Configuration section
+- `jl-documenter`: `.apm/skills/jl-documenter/SKILL.md` → Configuration section
+- `jl-prototype`: `.apm/skills/jl-prototype/SKILL.md` → Configuration section
+- `jl-planner`: `.apm/skills/jl-planner/SKILL.md` → Configuration section
+- `jl-feature-implementer`: `.apm/agents/jl-feature-implementer.agent.md` → Configuration section
+- `jl-recon`: `.apm/skills/jl-recon/SKILL.md` → Configuration section (uses boolean decision_gates pattern)
+
 ### Subagent Model Selection
 
 Phase 3 subagent delegation uses a dedicated `jl_subagent_models` config block.

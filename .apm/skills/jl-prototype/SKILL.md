@@ -55,36 +55,23 @@ session decision when invoked from `jl-recon`.
 
 | Setting | Type | Allowed values | Default | Meaning |
 | --- | --- | --- | --- | --- |
-| `jl_approval_gates.prototype_approval_mode` | string | `always`, `inherit`, `never` | `inherit` | Controls whether delegated prototype subtasks require an approval prompt |
-| `jl_approval_gates.prototype_task_overrides.<task_type>` | string | `always`, `inherit`, `never` | unset | Per-task override for `design`, `implementation`, `test`, or `parallel-research` |
-| `jl_approval_gates.prototype_fallback_on_decline` | string | `inline`, `manual` | `inline` | What to do when the user declines delegation |
+| `jl_approval_gates.prototype_approval_required` | boolean | `true`, `false` | `true` | Controls whether delegated prototype subtasks require an approval prompt |
 
 ### Resolution rules
 
 - Resolve config before delegating any child task.
-- If `prototype_approval_mode` is `inherit`, use the parent session's already
-  resolved prototype gate when `jl-prototype` was entered from `jl-recon`;
-  otherwise treat it as `always`.
-- Apply `prototype_task_overrides.<task_type>` when present; per-task overrides
-  take precedence over the session default.
-- If config is missing, malformed, or unresolved, fall back to
-  `prototype_approval_mode: inherit` and
-  `prototype_fallback_on_decline: inline`.
-- Delegation approval governs whether `jl-prototype` may call
-  `DelegateToSubagent`; it does not require a second prompt after a child
-  agent has already been explicitly approved for that same bounded subtask.
+- When `prototype_approval_required` is `true`, prompt the user before delegation.
+- When `prototype_approval_required` is `false`, delegation is pre-authorized.
+- If config is missing or malformed, default to `prototype_approval_required: true` (human-in-the-loop by default).
+- Delegation approval governs whether `jl-prototype` may call `DelegateToSubagent`; it does not require a second prompt after a child agent has already been explicitly approved for that same bounded subtask.
 
 ### Approval prompt
 
-When the resolved mode for a subtask requires approval, use this exact pattern:
+When `prototype_approval_required` is `true`, use this exact pattern:
 
 `Delegate {task_type} to {target_agent}? [Approve] [Decline]`
 
-If declined:
-
-- continue inline when fallback resolves to `inline`, or
-- mark the subtask as manual in the prototype report when fallback resolves to
-  `manual`.
+If declined, record the gap in the prototype report and explain why delegation was needed.
 
 ## When Invoked
 

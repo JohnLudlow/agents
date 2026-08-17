@@ -114,40 +114,26 @@ Delegation approval is controlled by `jl_approval_gates` configuration in
 
 | Setting | Type | Allowed values | Default | Meaning |
 | --- | --- | --- | --- | --- |
-| `jl_approval_gates.plan_approval_mode` | string | `always`, `inherit`, `never` | `always` | Controls whether delegated planning subtasks require an approval prompt |
-| `jl_approval_gates.plan_task_overrides.breakdown` | string | `always`, `inherit`, `never` | unset | Override for delegated breakdown subtasks |
-| `jl_approval_gates.plan_task_overrides.research` | string | `always`, `inherit`, `never` | unset | Override for delegated research subtasks |
-| `jl_approval_gates.plan_task_overrides.specialist-planning` | string | `always`, `inherit`, `never` | unset | Override for delegated specialist planning subtasks |
-| `jl_approval_gates.plan_task_overrides.risk-analysis` | string | `always`, `inherit`, `never` | unset | Override for delegated risk or security subtasks |
-| `jl_approval_gates.plan_fallback_on_decline` | string | `inline`, `manual` | `inline` | What to do when the user declines delegation |
-| `jl_approval_gates.plan_fallback_when_unavailable` | string | `inline`, `manual`, `warn` | `inline` | What to do when the harness cannot spawn the intended subagent |
+| `jl_approval_gates.plan_approval_required` | boolean | `true`, `false` | `true` | Controls whether delegated planning subtasks require an approval prompt |
 
 ### Resolution rules
 
 - Resolve config before any delegation decision point.
-- If `plan_approval_mode` resolves to `inherit`, inherit an already-resolved
-  parent planning-session decision when one exists; otherwise treat it as
-  `always`.
-- Apply `plan_task_overrides.<task_type>` when present; per-task override takes
-  precedence over the session default.
-- If config is missing, malformed, or unavailable, default to:
-  - `plan_approval_mode: always`
-  - `plan_fallback_on_decline: inline`
-  - `plan_fallback_when_unavailable: inline`
+- When `plan_approval_required` is `true`, prompt before delegation.
+- When `plan_approval_required` is `false`, delegation is pre-authorized.
+- If config is missing or malformed, default to `plan_approval_required: true` (human-in-the-loop by default).
 
 ### Approval prompt
 
-When the effective mode requires approval, use this exact pattern:
-
-`Delegate Breakdown of {component} to {target_agent}? [Approve] [Decline]`
-
-For non-breakdown planning subtasks, keep the same structure:
+When `plan_approval_required` is `true`, use this exact pattern:
 
 `Delegate {task_type} of {subject} to {target_agent}? [Approve] [Decline]`
 
-### Session-level vs per-task behaviour
+### Session-level behaviour
 
-- The session-level gate reduces friction by setting the default behavior for
+- The session-level gate applies to every delegated planning subtask in the session.
+- If the user declines, record the gap in the parent plan and explain why delegation was proposed.
+- Do not silently drop delegated work when declined.
   the planning session.
 - The human may still approve or decline a specific delegated task even when
   session defaults would normally allow it.

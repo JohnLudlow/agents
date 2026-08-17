@@ -162,41 +162,27 @@ at session start.
 
 | Setting | Type | Allowed values | Default | Meaning |
 | --- | --- | --- | --- | --- |
-| `jl_approval_gates.implementation_approval_mode` | string | `always`, `inherit`, `never` | `inherit` | Controls whether delegated implementation subtasks require approval |
-| `jl_approval_gates.implementation_task_overrides.<task_type>` | string | `always`, `inherit`, `never` | unset | Per-task override for `api`, `business-logic`, `ui`, `refactor`, `integration`, `review`, or another bounded component label |
-| `jl_approval_gates.implementation_fallback_on_decline` | string | `inline`, `manual`, `partial` | `inline` | What to do when delegation is declined or unavailable |
-| `jl_approval_gates.implementation_review_gate` | string | `always`, `inherit`, `never` | `inherit` | Whether delegated code must clear an explicit review gate before merge |
+| `jl_approval_gates.implementation_approval_required` | boolean | `true`, `false` | `true` | Controls whether delegated implementation subtasks require approval |
+| `jl_approval_gates.implementation_review_required` | boolean | `true`, `false` | `true` | Whether delegated code must clear an explicit review gate before merge |
 
 ### Resolution rules
 
 - Resolve config before decomposing work into delegated child tasks.
-- If `implementation_approval_mode` resolves to `inherit`, inherit the parent
-  session rule when a parent agent already resolved it; otherwise treat it as
-  `always`.
-- Apply `implementation_task_overrides.<task_type>` when present. Per-task
-  overrides take precedence over the session default.
-- Resolve `implementation_review_gate` separately from delegation approval. A
-  delegated task may be approved to run and still require explicit review
-  before merge.
-- If config is missing, malformed, or unavailable, fall back to:
-  - `implementation_approval_mode: inherit`
-  - `implementation_fallback_on_decline: inline`
-  - `implementation_review_gate: inherit`
+- When `implementation_approval_required` is `true`, prompt before delegation.
+- When `implementation_review_required` is `true`, require explicit review before merge.
+- If config is missing or malformed, default to `implementation_approval_required: true` and `implementation_review_required: true` (human-in-the-loop by default).
 
 ### Approval prompt
 
 When approval is required, use this exact pattern:
 
-`Delegate {subtask} (language: {lang}) to {target_agent}? [Approve] [Decline]`
+`Delegate {subtask} to {target_agent}? [Approve] [Decline]`
 
-### Session-level and per-task behaviour
+### Session-level behaviour
 
-- Use the session-level gate to reduce friction when many similar subtasks are
-  being delegated in one implementation session.
-- Use per-task overrides for sensitive slices, such as data migrations,
-  security-critical integration, or invasive refactors.
-- Do not ask twice for the same bounded child delegation merely because the
-  child agent has its own internal gating rules.
+- Apply the session-level gates consistently to every delegated subtask.
+- If the user declines, record the gap in the implementation plan and explain why delegation was proposed.
+- Do not silently drop delegated work when declined.
 
 ### Graceful fallback
 
@@ -204,8 +190,7 @@ If the current harness cannot spawn or coordinate the desired child agent:
 
 - warn the user that delegation is unavailable in the current harness,
 - offer inline implementation when practical,
-- offer partial delegation for the slices the harness can still support, or
-- mark the subtask manual rather than silently dropping it.
+- mark the subtask as manual rather than silently dropping it.
 
 ## Model Selection
 

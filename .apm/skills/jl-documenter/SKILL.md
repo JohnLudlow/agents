@@ -47,22 +47,18 @@ Use this skill when `jl-documenter` needs to:
 
 | Setting | Type | Allowed values | Default | Meaning |
 | --- | --- | --- | --- | --- |
-| `jl_approval_gates.documentation_approval_mode` | string | `always`, `inherit`, `never` | `inherit` | Controls whether delegated documentation sections require an approval prompt |
-| `jl_approval_gates.documentation_section_overrides.<section_type>` | string | `always`, `inherit`, `never` | unset | Per-section override for `feature`, `api`, `user-guide`, `architecture`, `troubleshooting`, `performance`, `security`, `migration`, or `localization` |
-| `jl_approval_gates.documentation_fallback_on_decline` | string | `inline`, `manual`, `delay-publication` | `inline` | What to do when delegation is declined or unavailable |
-| `jl_approval_gates.documentation_publish_gate` | string | `always`, `inherit`, `never` | `inherit` | Controls whether the final publish step requires explicit approval after section consolidation |
+| `jl_approval_gates.documentation_approval_required` | boolean | `true`, `false` | `true` | Controls whether delegated documentation sections require an approval prompt |
+| `jl_approval_gates.documentation_publish_approval_required` | boolean | `true`, `false` | `true` | Controls whether the final publish step requires explicit approval after section consolidation |
 
 ### Resolution rules
 
 - Resolve config before the first delegation decision.
 
-- If `documentation_approval_mode` is `inherit`, use the parent session's already resolved gate when `jl-documenter` was entered from a parent workflow that already owns delegation approvals; otherwise treat it as `always`.
+- When `documentation_approval_required` is `true`, prompt before delegating each section.
 
-- Apply `documentation_section_overrides.<section_type>` when present. A section override takes precedence over the session-level mode.
+- When `documentation_publish_approval_required` is `true`, require explicit approval before final publication.
 
-- If `documentation_publish_gate` is `inherit`, follow the parent session's publish decision when one exists; otherwise treat it as `always` for multi-section publication and `never` for a single inline section.
-
-- If config is missing, malformed, or unresolved, fall back to `documentation_approval_mode: inherit`, `documentation_fallback_on_decline: inline`, and `documentation_publish_gate: inherit`.
+- If config is missing or malformed, default to `documentation_approval_required: true` and `documentation_publish_approval_required: true` (human-in-the-loop by default).
 
 ### Example configuration
 
@@ -70,20 +66,15 @@ In `CONTRIBUTING.md`:
 
 ```yaml
 jl_approval_gates:
-  documentation_approval_mode: inherit
-  documentation_section_overrides:
-    architecture: always
-    api: never
-  documentation_fallback_on_decline: inline
-  documentation_publish_gate: always
+  documentation_approval_required: true
+  documentation_publish_approval_required: true
 ```
 
 In `AGENTS.md`:
 
 ```yaml
 jl_approval_gates:
-  documentation_section_overrides:
-    security: always
+  documentation_approval_required: false
 ```
 
 ## Approval Gate Integration
@@ -92,7 +83,7 @@ Approval gates apply at each delegation decision point and again before publicat
 
 ### Approval prompt
 
-When the effective mode for a section requires approval, use this exact pattern:
+When `documentation_approval_required` is `true`, use this exact pattern:
 
 `Delegate {section} documentation to {target_agent}? [Approve] [Decline]`
 
@@ -104,19 +95,17 @@ Examples:
 
 ### Session-level and per-section behaviour
 
-1. Resolve `jl_approval_gates.documentation_approval_mode` at session start.
+1. Resolve `jl_approval_gates.documentation_approval_required` at session start.
 
-2. For each candidate delegated section, classify the section type and look for `documentation_section_overrides.<section_type>`.
+2. For each candidate delegated section, check the effective approval mode.
 
-3. If the effective mode is `always`, prompt before calling `DelegateToSubagent`.
+3. If `documentation_approval_required` is `true`, prompt before calling `DelegateToSubagent`.
 
-4. If the effective mode is `never`, delegation is already authorized for that bounded section.
+4. If `documentation_approval_required` is `false`, delegation is pre-authorized.
 
-5. If the effective mode is `inherit`, use the resolved parent-session gate when one exists; otherwise prompt.
+5. If the user declines, record the gap in the documentation plan and explain why delegation was needed.
 
-6. If the user declines, apply the configured fallback.
-
-7. Before publication, resolve `documentation_publish_gate` and require approval if the effective publish mode says so.
+6. Before publication, resolve `documentation_publish_approval_required` and require approval if `true`.
 
 ### Graceful fallback when delegation is unavailable
 
@@ -124,11 +113,9 @@ If the harness cannot spawn subagents, or the needed specialist is unavailable:
 
 - warn the user that delegated documentation is unavailable in the current harness
 
-- offer the inline alternative for the same bounded section when `documentation_fallback_on_decline` resolves to `inline`
+- offer the inline alternative for the same bounded section
 
-- mark the section as a manual handoff when fallback resolves to `manual`
-
-- keep the document unpublished when fallback resolves to `delay-publication` and the missing section is critical
+- mark the section as a manual handoff requiring offline completion
 
 Do not pretend delegation occurred when it did not.
 

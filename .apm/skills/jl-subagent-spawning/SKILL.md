@@ -101,6 +101,171 @@ DelegationResult {
 - `warnings` — includes any model substitution warning caused by harness
   constraints or invalid configuration
 
+## DelegateToSubagent API Status: Pseudocode vs. Callable Implementation
+
+**IMPORTANT CLARIFICATION**: The `DelegationRequest` and `DelegationResult` types
+shown above represent a **reference specification**, not a callable interface
+available today.
+
+### Current Reality (Phase 1–3, as of August 2026)
+
+Agents currently delegate using harness-specific mechanisms:
+
+- **Copilot CLI**: call `task` tool directly, passing bounded agent and prompt
+- **Browser / Copilot Chat**: call skills inline; subagent spawning unavailable
+- **Azure DevOps**: delegate via provider-native work item assignment or call
+  skills inline
+
+Each harness has different capabilities and constraints. There is no unified
+`DelegateToSubagent` function yet.
+
+### Phase 4 Plan (Future)
+
+In Phase 4, GitHub Copilot will introduce a unified `DelegateToSubagent` API
+that:
+
+- accepts a `DelegationRequest` with bounded agent, model preference, and task
+  prompt
+- abstracts harness differences (CLI task tool vs. browser skills vs. provider
+  delegation)
+- returns a `DelegationResult` with model resolution details
+- handles approval gates, model fallbacks, and worktree/branch lifecycle
+
+Until Phase 4 ships:
+
+- Model selection (jl_subagent_models hierarchy) is documented here for
+  future-proofing agents
+- Agents should still resolve model preferences and record them in delegation
+  results, even if Phase 1–3 harnesses don't yet support per-delegation model
+  selection
+- This allows graceful adoption when Phase 4's unified API becomes available
+
+## Canonical Delegation Types
+
+Use these standard delegation-type keys across all agents and configuration.
+Do not invent new delegation types; propose additions to the maintainers if
+your workflow needs a new category.
+
+- `research` — information gathering, API exploration, dependency analysis
+- `implementation` — code generation for one or more components
+- `test_generation` — test suite generation or expansion
+- `documentation` — documentation writing or updates
+- `prototype` — throwaway exploratory code or mockups
+- `review` — code review, quality audit, adversarial feedback
+
+Additional types may be added later, but must remain `snake_case`, stable,
+and documented in `CONTRIBUTING.md` before use in repository configuration.
+
+## When NOT to Delegate: Anti-Patterns
+
+Delegation is not always the right choice. Avoid delegating when:
+
+### Too small to benefit from parallelism
+
+- Task will take under 5 minutes on a simple path
+- Overhead of spawning, context transfer, and merging exceeds the time savings
+- Inline execution is faster and simpler
+
+Example: **Don't delegate** a single missing import or one-line lint fix.
+**Do it inline.**
+
+### No exploration or decision-making needed
+
+- Task outcome is deterministic and fully specified
+- Parent agent has all context and can execute safely without research
+- No benefits from separation of concerns or specialist expertise
+
+Example: **Don't delegate** "run linter and report results if any errors"; you
+already know the command. **Do it inline.** *Do* delegate "analyze these 200
+linting errors and propose a fix strategy" if the analysis is complex.
+
+### Synchronous result needed immediately
+
+- Parent workflow cannot proceed without the child result in hand
+- Subagent spawning latency becomes a bottleneck
+- Inline execution unblocks the parent faster
+
+Example: **Don't delegate** a model inference call needed 10ms later. **Do it
+inline.** *Do* delegate "research and summarize 20 papers on this topic" if
+the parent can collect other work while research runs in parallel.
+
+### No human input or clarification possible
+
+- Task requires mid-stream questions for the human
+- Spawned child cannot reach back to the parent session for guidance
+- Inline execution preserves the conversation loop
+
+Example: **Don't delegate** discovery work whose next steps depend on user
+feedback. **Do it inline.** *Do* delegate bounded, pre-approved research.
+
+### Unbounded depth or nesting
+
+- Risk of delegation chains spiraling into recursion
+- Child agents spawning grandchildren, great-grandchildren, etc.
+- Debugging and failure recovery become exponentially harder
+
+Example: **Don't let** a feature-implementer delegate to a feature-planner
+that delegates to another planner. **Limit depth** to 1–2 levels max (see
+Circular Delegation Prevention below).
+
+## Circular Delegation Prevention
+
+Agents must guard against infinite delegation loops and unbounded nesting.
+
+### Algorithm
+
+Before spawning a subagent, validate:
+
+```text
+parentAgentStack = []  // Track the chain: planner -> feature-planner -> ...
+maxNestingDepth = 3    // Hard limit: planner -> feature-planner -> feature-tester
+
+BEFORE spawning child:
+  if targetAgent in parentAgentStack:
+    ERROR("Circular delegation: " + formatChain(parentAgentStack) + " -> " + targetAgent)
+    => "Cannot delegate to {targetAgent}: already in parent chain"
+
+  if len(parentAgentStack) >= maxNestingDepth:
+    ERROR("Max nesting depth exceeded: would create " + targetAgent + " at depth " + (len + 1))
+    => "Cannot delegate: maximum nesting depth {maxNestingDepth} reached"
+
+  parentAgentStack.push(targetAgent)
+
+AFTER child completes (success or failure):
+  parentAgentStack.pop()
+```
+
+### Rationale
+
+- **Depth 3 limit**: planner spawns feature-planner, feature-planner spawns
+  feature-tester (one review step). This covers most realistic workflows.
+- **Circular detection**: prevents `planner -> feature-planner -> planner`
+  loops
+- **Failure recovery**: shallow call stacks are easier to debug and recover from
+- **Token budget**: each nesting level consumes model tokens; deep chains
+  exhaust budgets faster
+
+### Example: Valid delegation chain (OK)
+
+```text
+User launches jl-planner
+  -> jl-planner delegates to jl-feature-planner (depth 1)
+    -> jl-feature-planner delegates to jl-feature-tester (depth 2)
+      [no further delegation]
+  -> jl-feature-tester returns results
+-> jl-feature-planner consolidates and returns
+-> jl-planner consolidates and presents to user
+```
+
+### Example: Invalid delegation (BLOCKED)
+
+```text
+User launches jl-planner
+  -> jl-planner delegates to jl-feature-planner (depth 1)
+    -> jl-feature-planner tries to delegate to jl-planner
+      [ERROR: circular dependency detected]
+```
+
 ## Hierarchical Model Selection
 
 Model selection resolves with this precedence:

@@ -33,25 +33,19 @@ Every testing session carries the same state:
 
 | Setting | Type | Allowed values | Default | Meaning |
 | --- | --- | --- | --- | --- |
-| `jl_approval_gates.test_approval_mode` | string | `always`, `inherit`, `never` | `inherit` | Controls whether delegated test-generation or verification subtasks require approval |
-| `jl_approval_gates.test_task_overrides.<task_type>` | string | `always`, `inherit`, `never` | unset | Per-task override for `generation`, `verification`, `coverage`, `regression`, `performance`, or `security` |
-| `jl_approval_gates.test_fallback_on_decline` | string | `inline`, `skip`, `manual` | `inline` | What to do when the user declines delegation |
+| `jl_approval_gates.test_approval_required` | boolean | `true`, `false` | `true` | Controls whether delegated test-generation or verification subtasks require explicit user approval |
 | `jl_approval_gates.test_ci_required` | boolean | `true`, `false` | `true` | Whether delegated generated tests must pass CI before acceptance |
 | `jl_approval_gates.test_coverage_threshold` | number | `0`–`100` | unset | Minimum coverage target for delegated test acceptance when the repo defines one |
-| `jl_approval_gates.test_component_overrides.<component>.approval_mode` | string | `always`, `inherit`, `never` | unset | Optional per-component approval override |
-| `jl_approval_gates.test_component_overrides.<component>.fallback_on_decline` | string | `inline`, `skip`, `manual` | unset | Optional per-component fallback override |
 
 ### Resolution rules
 
 - Resolve config before delegating any test-related child task.
 
-- If `test_approval_mode` resolves to `inherit` and a parent workflow has already resolved a test delegation gate, reuse that value; otherwise treat `inherit` as `always`.
+- When `test_approval_required` is `true`, prompt before delegation.
 
-- Apply `test_task_overrides.<task_type>` before the session default.
+- When `test_approval_required` is `false`, delegation may proceed without prompting.
 
-- Apply `test_component_overrides.<component>` after the task-type override when the component is known and explicitly configured.
-
-- If config is missing, malformed, or unresolved, fall back to `test_approval_mode: inherit`, `test_fallback_on_decline: inline`, and `test_ci_required: true`.
+- If config is missing or malformed, default to `test_approval_required: true` (human-in-the-loop by default).
 
 - Approval authorizes calling `DelegateToSubagent` for the bounded subtask; it does not remove the need for CI or result validation later in the flow.
 
@@ -61,18 +55,13 @@ Approval gates apply at each delegation decision point, not only once per sessio
 
 ### Session-level behaviour
 
-1. Resolve `jl_approval_gates.test_approval_mode`.
+1. Resolve `jl_approval_gates.test_approval_required`.
 
-2. Determine the current `task_type` and optional component override.
+2. If `test_approval_required` resolves to `true`, prompt the user before delegation.
 
-3. Compute the effective approval mode in this order:
-   `component override -> task override -> session default -> inherited parent -> fallback`.
+3. If `test_approval_required` resolves to `false`, proceed to delegation without prompting.
 
-4. If the effective mode is `always`, prompt before delegation.
-
-5. If the effective mode is `never`, delegation may proceed without prompting.
-
-6. If the user declines, use the resolved fallback behaviour.
+4. If the user declines, abort the delegated subtask and record the gap in the test report.
 
 ### Approval prompt
 
@@ -86,15 +75,7 @@ For other delegated testing subtasks, use the matching bounded pattern:
 
 ### Decline handling
 
-If the user declines delegation:
-
-- continue with inline test writing or inline analysis when fallback resolves to `inline`,
-
-- skip the delegated subtask and record the gap when fallback resolves to `skip`, or
-
-- mark the subtask as manual in the test report when fallback resolves to `manual`.
-
-Do not silently drop the work item.
+If the user declines delegation, record the gap in the test report and explain why delegation was requested. Do not silently drop the work item.
 
 ### Double-approval avoidance
 
