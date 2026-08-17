@@ -32,13 +32,18 @@ jl_issue_management:
 
 ## Repository Structure and Document Placement Rules
 
-**CRITICAL**: This section exists because agents have repeatedly placed documentation and configuration in the wrong locations. Read it carefully. If your task involves writing or organizing files in this repository, you must follow these rules.
+**CRITICAL**: This section exists because agents have repeatedly placed documentation and configuration in the wrong
+locations. Read it carefully. If your task involves writing or organizing files in this repository, you must follow
+these rules.
 
 ### The Core Problem
 
-This repository produces an NPM package (JohnLudlow/agents) that gets installed in other repositories. Files that agents reference must be **shipped as part of the package** or they will not be available in downstream repositories.
+This repository produces an NPM package (JohnLudlow/agents) that gets installed in other repositories. Files that agents
+reference must be **shipped as part of the package** or they will not be available in downstream repositories.
 
-**Key rule**: If a skill or agent references a file (reads it, uses it as a template, validates against it), that file **must be in `.apm/skills/` or `.apm/agents/`** so it gets shipped. Files in `/docs/`, `/scripts/`, `CONTRIBUTING.md`, or `AGENTS.md` are **repo-local only** and cannot be reliably referenced by agents working in other repositories.
+**Key rule**: If a skill or agent references a file (reads it, uses it as a template, validates against it), that file
+**must be in `.apm/skills/` or `.apm/agents/`** so it gets shipped. Files in `/docs/`, `/scripts/`, `CONTRIBUTING.md`,
+or `AGENTS.md` are **repo-local only** and cannot be reliably referenced by agents working in other repositories.
 
 ### Roles and Contexts
 
@@ -65,18 +70,22 @@ This repository is NOT the only repository. Remember this.
 ### Decision Rules (Use These)
 
 **Rule 1**: If a **skill or agent reads/references** a file during execution, it must be shipped.
+
 - ✅ `jl-config` reads `jl-config/references/validation-rules.md` → it's in references/ → shipped
 - ❌ Agent tries to read `/docs/recon-guide.md` → repo-local → not shipped → fails in other repos
 
 **Rule 2**: If a file is **configuration for how agents work in this specific repo**, it goes in `AGENTS.md`.
+
 - ✅ "jl-quiz should use interview_mode: b in this repo" → AGENTS.md
 - ❌ "Here's how to configure jl-quiz" → That goes in jl-quiz/SKILL.md (shipped)
 
 **Rule 3**: If you're adding content that a **skill needs to function**, add it to the skill's directory.
+
 - ✅ Need a template for jl-feature-planner? → jl-plan-template/assets/plan-template.md
 - ❌ Put it in /docs/ → won't be available in other repos
 
 **Rule 4**: If you're adding **maintenance or setup documentation for humans**, it goes in `/docs/` or `README.md`.
+
 - ✅ "How to install this package" → /docs/INSTALLATION.md
 - ❌ "Configuration for jl-quiz" (that's agent/skill content, not human setup docs)
 
@@ -84,7 +93,7 @@ This repository is NOT the only repository. Remember this.
 
 #### ✅ CORRECT: Adding a configuration schema to a skill
 
-```
+```text
 .apm/skills/jl-quiz/
 ├── SKILL.md                    ← Says "Configuration section below"
 └── references/
@@ -103,6 +112,7 @@ Agent users in other repos can access this because it's shipped.
 ## jl-quiz Configuration Schema
 
 jl-quiz accepts the following settings:
+
 - interview_mode: a or b
 - ...
 
@@ -115,7 +125,7 @@ jl-quiz accepts the following settings:
 
 #### ❌ WRONG: Putting skill guide in /docs/
 
-```
+```text
 /docs/
 └── how-to-use-jl-recon.md      ❌ Not shipped; other repos can't see it
 ```
@@ -126,7 +136,7 @@ If you need to document how to use jl-recon, it goes in `jl-recon/SKILL.md` or `
 
 #### ✅ CORRECT: Putting CI scripts in /scripts/
 
-```
+```text
 /scripts/
 └── validate-apm-package.js     ✅ This is repo-local CI; not shipped
 ```

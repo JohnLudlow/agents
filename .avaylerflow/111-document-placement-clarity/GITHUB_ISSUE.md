@@ -41,6 +41,7 @@ A spec with detailed explanations of:
 **Blockers**: None
 
 Scan current agents in `.apm/agents/` for violations of the framework:
+
 - Do any agents or skills reference files in `/docs/` or `/scripts/`?
 - Are there any skill config details in AGENTS.md or CONTRIBUTING.md?
 - Are there skill templates or guides outside of `.apm/skills/*/references/` or `assets/`?
@@ -57,6 +58,7 @@ Scan current agents in `.apm/agents/` for violations of the framework:
 How do we prevent violations going forward?
 
 **Options**:
+
 - A. Pre-commit hook that runs the linter (developer convenience)
 - B. CI/CD check that blocks merges if violations found (mandatory gate)
 - C. Both A and B (best of both worlds)
@@ -111,4 +113,5 @@ Remediate any violations found by the audit. Move misplaced files to correct loc
 
 ---
 
-**Next step**: Resolve Fog 2 (enforcement timing). Proceed with Ticket 3 (audit) after Ticket 4 (enforcement decision) is made.
+**Next step**: Resolve Fog 2 (enforcement timing). Proceed with Ticket 3 (audit) after Ticket 4 (enforcement decision)
+is made.

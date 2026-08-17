@@ -24,17 +24,21 @@ A spec with detailed explanations of:
 
 1. **Ticket 1: Clarify spec location** ✅ RESOLVED
    - **Decision**: Put detailed framework in `AGENTS.md` + implement linter check
-   - **Rationale**: AGENTS.md is loaded by agents when working in this repo (concrete). Linter check provides automatic enforcement.
-   - **Action taken**: Updated `AGENTS.md` with full role/scenario/document-type framework (section "Repository Structure and Document Placement Rules")
+   - **Rationale**: AGENTS.md is loaded by agents when working in this repo (concrete). Linter check provides automatic
+     enforcement.
+   - **Action taken**: Updated `AGENTS.md` with full role/scenario/document-type framework (section "Repository
+     Structure and Document Placement Rules")
 
 2. **Fog 1: Linter scope and implementation** ✅ RESOLVED
-   - **Decision**: Static analysis (Option A) — scan `.apm/skills/` and `.apm/agents/` for file references to `/docs/` or `/scripts/`
+   - **Decision**: Static analysis (Option A) — scan `.apm/skills/` and `.apm/agents/` for file references to `/docs/`
+     or `/scripts/`
    - **Rationale**: Fast, deterministic, catches violations before they cause problems in other repos
    - **Action taken**: Implemented Ticket 2 (linter script)
 
 3. **Ticket 2: Implement linter check** ✅ COMPLETE
    - **Implementation**: Created `scripts/lint-document-placement.js`
-   - **What it does**: Scans for actual code violations (regex patterns matching require/readFileSync calls to repo-local paths)
+   - **What it does**: Scans for actual code violations (regex patterns matching require/readFileSync calls to
+     repo-local paths)
    - **What it ignores**: Documentation about these files (reducing false positives)
    - **Test result**: ✅ Pass — no violations found in current codebase
    - **Usage**: `node scripts/lint-document-placement.js`
@@ -68,24 +72,29 @@ A spec with detailed explanations of:
 ## Completed Tickets
 
 ### ~~Ticket 1: Clarify spec location~~ ✅ COMPLETE
+
 - **Decision**: Framework in AGENTS.md + linter check
 - **Status**: Resolved
 
 ### ~~Ticket 2: Implement linter check~~ ✅ COMPLETE
+
 - **Implementation**: `scripts/lint-document-placement.js`
 - **Test result**: Zero violations
 - **Status**: Resolved
 
 ### ~~Ticket 3: Audit existing agents~~ ✅ COMPLETE
+
 - **Finding**: Codebase clean; all references appropriate (no violations)
 - **Status**: Resolved
 
 ### ~~Ticket 5: Fix high-severity violation~~ ✅ COMPLETE (NO-OP)
+
 - **Finding**: Code fences in config are CORRECT by design (validator strips them before parsing)
 - **Status**: No violations to fix
 - **Outcome**: Codebase already follows framework correctly
 
 ### ~~Ticket 4: Implement enforcement~~ ✅ COMPLETE
+
 - **CI/CD**: Linter added to `.github/actions/validate/action.yml`
 - **NPM script**: Added `npm run lint:placement` for local development
 - **Documentation**: Updated CONTRIBUTING.md with linter guidance
@@ -98,18 +107,23 @@ A spec with detailed explanations of:
 ## Resolved Fog
 
 ### ✅ Fog 2: Enforcement timing — RESOLVED
+
 - **Decision**: Option D (combination approach)
 - **Implementation**: Pre-commit hook for local developer convenience + CI/CD hard gate for mandatory enforcement
-- **Rationale**: Pre-commit catches ~95% of violations during development (fast feedback); CI/CD ensures no violations slip through if hook is skipped. Critical for a shipped package that must not leak violations to downstream repos.
+- **Rationale**: Pre-commit catches ~95% of violations during development (fast feedback); CI/CD ensures no violations
+  slip through if hook is skipped. Critical for a shipped package that must not leak violations to downstream repos.
 - **Ticket 4** will implement this decision
 
 ---
 
 ### ✅ Fog 3: Remediation scope — RESOLVED
+
 - **Decision**: Option B (fix high-severity only)
-- **High-severity** = violations that break shipping or downstream usage (e.g., skill/agent code referencing `/docs/` or `/scripts/`)
+- **High-severity** = violations that break shipping or downstream usage (e.g., skill/agent code referencing `/docs/`
+  or `/scripts/`)
 - **Low-severity** = documentation comments about placement rules (safe to leave)
-- **Rationale**: Ticket 2 linter already found zero violations in current codebase. If audit finds any, they're likely edge cases or already-filtered documentation. Pragmatic to fix only what breaks; rest becomes future work tickets if needed.
+- **Rationale**: Ticket 2 linter already found zero violations in current codebase. If audit finds any, they're likely
+  edge cases or already-filtered documentation. Pragmatic to fix only what breaks; rest becomes future work tickets if needed.
 - **Ticket 5** will execute remediation using this scope
 
 ## Out of Scope

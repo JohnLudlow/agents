@@ -11,11 +11,15 @@
 
 ✅ **LINTER RESULT**: Zero violations found (no `require()` or `readFileSync()` calls to repo-local files)
 
-✅ **MANUAL REVIEW RESULT**: Found **11 files with 281 references** to `AGENTS.md`, `CONTRIBUTING.md`, `/docs/`, or `/scripts/`. All are **DOCUMENTATION COMMENTS** describing how to configure agents, not code violations.
+✅ **MANUAL REVIEW RESULT**: Found **11 files with 281 references** to `AGENTS.md`, `CONTRIBUTING.md`, `/docs/`, or
+`/scripts/`. All are **DOCUMENTATION COMMENTS** describing how to configure agents, not code violations.
 
-✅ **CONFIG FENCE CLARIFICATION**: The configuration in AGENTS.md IS in a code fence, and this is **CORRECT by design**. The validator (`validate-config.js`) explicitly strips code fences before parsing, so YAML in code fences is the standard format for markdown readability.
+✅ **CONFIG FENCE CLARIFICATION**: The configuration in AGENTS.md IS in a code fence, and this is **CORRECT by design**.
+The validator (`validate-config.js`) explicitly strips code fences before parsing, so YAML in code fences is the
+standard format for markdown readability.
 
 **Severity breakdown**:
+
 - HIGH-severity violations: **0**
 - MEDIUM-severity violations: **0**
 - LOW-severity findings: 2 (edge-case comments, not violations)
@@ -27,7 +31,8 @@
 
 ### Category 1: Configuration Schema Documentation (SAFE ✅)
 
-These files document how to configure agents via `AGENTS.md` and `CONTRIBUTING.md`. This is documentation *about* those files, not a code reference.
+These files document how to configure agents via `AGENTS.md` and `CONTRIBUTING.md`. This is documentation *about* those
+files, not a code reference.
 
 | File | Reference type | Severity | Notes |
 |------|---|---|---|
@@ -39,7 +44,8 @@ These files document how to configure agents via `AGENTS.md` and `CONTRIBUTING.m
 | `jl-issue-management/SKILL.md` | Describes default `file_storage_location: docs/plans/` | LOW | Configuration reference; belongs in skill documentation |
 | `jl-recon/SKILL.md` | Describes reading `jl_recon` config from `CONTRIBUTING.md` and `AGENTS.md` | LOW | Configuration documentation; correct location |
 
-**Verdict**: All are appropriate. Skills that read repository configuration documents *must* document where and how they read them. This is not a violation.
+**Verdict**: All are appropriate. Skills that read repository configuration documents *must* document where and how they
+read them. This is not a violation.
 
 ---
 
@@ -56,7 +62,8 @@ These files describe what agents are permitted to read/write, including `docs/pl
 | `jl-tdd-implementer.agent.md` | Permission block: reference to `docs/plans/` | LOW | Permissions block; correct location |
 | `jl-documenter.agent.md` | Permission block: reference to `docs/plans/` | LOW | Permissions block; correct location |
 
-**Verdict**: All correct. Agent definitions *must* document their permissions. These are part of the agent's metadata, not violations.
+**Verdict**: All correct. Agent definitions *must* document their permissions. These are part of the agent's metadata,
+not violations.
 
 ---
 
@@ -90,12 +97,14 @@ These files are templates or examples that reference `docs/plans/` as an example
 **Key Finding**: Configuration in AGENTS.md and CONTRIBUTING.md IS properly formatted in YAML code fences.
 
 **Why this is CORRECT**:
+
 - The config validator (`scripts/validate-config.js`) explicitly strips code fences before parsing
 - This is the standard format for markdown readability
 - Code is: `let cleanText = text.replace(/```[\s\S]*?```/g, "");` — stripping code fences is by design
 - Config validator confirms: ✅ `AGENTS.md agent config is valid`
 
 **Format verification**:
+
 ```markdown
 ## Repository Configuration
 
@@ -124,18 +133,22 @@ jl_quiz:
 ## Summary by Severity
 
 ### 🟢 HIGH-SEVERITY VIOLATIONS (code refs or config clarity issues)
+
 **Count**: 0  
 **Action**: None required
 
 ### 🟡 MEDIUM-SEVERITY VIOLATIONS (configuration or template issues)
+
 **Count**: 0  
 **Action**: None required
 
 ### 🔵 LOW-SEVERITY FINDINGS (documentation comments)
+
 **Count**: 2 (ROADMAP action item, informational comment)  
 **Action**: No fixes required (per Fog 3: Fix high-severity only)
 
 ### ✅ SAFE FINDINGS (documentation correctly describing repository structure)
+
 **Count**: 11 files, 281 references + proper config format in code fences  
 **Action**: None required; this is appropriate documentation
 
@@ -145,7 +158,8 @@ jl_quiz:
 
 ✅ **Audit PASSED — Codebase is Clean**
 
-The repository follows the document placement framework correctly. All references to repository-local files in shipped agents and skills are:
+The repository follows the document placement framework correctly. All references to repository-local files in shipped
+agents and skills are:
 
 1. **Documentation about configuration** (how skills read repository settings)
 2. **Agent permissions blocks** (what agents are allowed to access)
@@ -159,12 +173,12 @@ None of these are violations. The framework is working as designed.
 
 ## Validator Output
 
-```
+```text
 ✓ CONTRIBUTING.md agent config is valid
 ✓ AGENTS.md agent config is valid
 ```
 
-```
+```text
 Linting document placement in .apm/agents/ and .apm/skills/...
 
 Scanning C:\src\training\JohnLudlow\agents\.apm\agents...
@@ -177,9 +191,12 @@ Scanning C:\src\training\JohnLudlow\agents\.apm\skills...
 ## Recommendations
 
 1. **No immediate action required** — the codebase already follows the framework correctly
-2. **Optional: Clarify the note in AGENTS.md** — The current note says "This example is in a code block and will not be validated", but this is misleading. Better wording: "Configuration is in a YAML code fence for markdown readability; the validator automatically strips code fences before parsing" (improves clarity for future contributors)
+2. **Optional: Clarify the note in AGENTS.md** — The current note says "This example is in a code block and will not be
+   validated", but this is misleading. Better wording: "Configuration is in a YAML code fence for markdown readability;
+   the validator automatically strips code fences before parsing" (improves clarity for future contributors)
 3. **Proceed with Ticket 4** (enforce with pre-commit + CI/CD) to prevent future violations
 
 ---
 
-**Conclusion**: Ticket 5 is now **NO-OP** (no violations found). Codebase already follows the rules. Ticket 4 (enforcement) is ready to proceed.
+**Conclusion**: Ticket 5 is now **NO-OP** (no violations found). Codebase already follows the rules. Ticket 4
+(enforcement) is ready to proceed.
