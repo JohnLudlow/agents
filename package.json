@@ -6,6 +6,7 @@
   "scripts": {
     "build:agents": "node scripts/validate-apm-package.js",
     "validate": "node scripts/validate-apm-package.js",
+    "lint:placement": "node scripts/lint-document-placement.js",
     "apm:compile": "apm compile || true",
     "install:local": "echo \"Use 'apm install <path>' to install this package locally (requires apm).\"",
     "postinstall": "echo \"This package no longer runs an automated postinstall. Use 'apm install' to deploy primitives.\"",

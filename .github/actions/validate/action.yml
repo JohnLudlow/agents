@@ -35,3 +35,8 @@ runs:
       shell: bash
       run: |
         node -e "require('./package.json')" && echo "✓ package.json is valid"
+
+    - name: Validate document placement
+      shell: bash
+      run: |
+        node scripts/lint-document-placement.js
