@@ -108,6 +108,10 @@ Result:
 - Preferred harness for explicit model control and true subagent spawning.
 - Still validate availability rather than assuming every model name is
   enabled.
+- Only harness with `/fleet` mode — a top-level slash command that
+  decomposes an entire request into a DAG of parallel subtasks. See
+  `SKILL.md` → Fleet Mode Utilization (AC1.5) for when to recommend it. It
+  precedes, rather than replaces, individual `DelegateToSubagent` calls.
 
 ### Browser / OpenCode
 

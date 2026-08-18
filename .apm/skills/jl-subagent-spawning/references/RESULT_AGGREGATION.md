@@ -115,9 +115,51 @@ When one delegation in a chain fails and another succeeds, the parent agent:
    `warnings`. Do not force-remove a worktree whose preservation step
    failed.
 
-Do not invent a retry policy or timeout schema here. Retry policy, timeouts,
-and graceful degradation beyond the plain-language warning path are fog on
-the #110 map ("Subagent failure recovery") and are Phase 2 work.
+## Subagent Failure Recovery Policy
+
+Resolves the "Subagent failure recovery" fog item from #110
+([#128](https://github.com/JohnLudlow/agents/issues/128)).
+
+Delegated subagents in this repo typically make real, non-idempotent
+changes — commits, file edits, generated tests. A blind retry risks
+duplicate work or double-committed changes, so this policy is deliberately
+conservative:
+
+### No automatic retry
+
+A failed delegation is never retried automatically, regardless of
+delegation type or failure reason. Every failure surfaces to the human
+before any retry is attempted — see "Graceful degradation" below. This
+applies uniformly; there is no side-effect-free exception for Research or
+Quiz delegations.
+
+### No framework-defined timeout
+
+This framework does not define its own timeout duration or enforce one on
+top of a harness's own limits. **Timeout** is one of the four existing
+Worktree Lifecycle cleanup triggers (Success, Timeout, Error, User
+cancellation) — a harness may report a timeout however it detects one; this
+policy governs what happens *after* that report arrives, not how or when it
+fires.
+
+### Graceful degradation
+
+Once a failure (of any kind — timeout, error, cancellation) has been
+recorded and surfaced to the human, ask explicitly rather than choosing on
+their behalf:
+
+> Delegation to `{targetAgent}` failed: {reason}. Retry manually, fall back
+> to inline execution, or abandon this task?
+
+- **Retry manually** — the human re-issues the delegation; this is not an
+  automatic retry, since a human decision gates it each time.
+- **Fall back to inline** — the parent agent completes the bounded task
+  itself instead of delegating it.
+- **Abandon** — the task is dropped; record the gap plainly rather than
+  silently continuing as if nothing happened.
+
+Do not pick one of these paths automatically on the human's behalf, even
+when a previous session made the same choice for a similar failure.
 
 ## Token and Timing Rollup
 

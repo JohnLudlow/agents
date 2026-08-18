@@ -182,6 +182,44 @@ the worktree's creation, naming, and cleanup follow this lifecycle.
 - A per-caller override may run the delegated task in the shared repository
   instead, when isolation is unnecessary or impractical.
 
+### Task Ticket Worktree-Trigger Detection
+
+Resolves the "Task worktree-trigger detection mechanism" fog item from #110
+([#127](https://github.com/JohnLudlow/agents/issues/127)).
+
+Recon's Decision 11 restricts worktree creation for Task tickets to those
+that "involve making source changes directly." Detecting that condition
+uses a hybrid rule, checked in this order:
+
+1. **Explicit marker** — if the ticket body contains a standalone
+   `worktree: required` line, honor it and create the worktree before
+   starting work. There is no `worktree: not-required` marker; omitting the
+   marker always means "infer," never "definitely not required."
+2. **Inference** — if no marker is present, infer from the task description
+   whether it involves direct source changes.
+3. **Default to inline when ambiguous** — if inference is genuinely
+   ambiguous, default to starting the work inline (no worktree) rather than
+   asking upfront. An unnecessary worktree for a mostly-procedural task
+   costs more than a possible later switch.
+4. **Mid-task discovery** — if the agent discovers partway through inline
+   work that source changes are needed after all, pause immediately and ask
+   before continuing:
+
+   > This task turned out to need source changes. Switch to an isolated
+   > worktree before continuing? [Approve] [Decline]
+
+   If approved, create the worktree, move any already-made changes into it
+   using the same preservation vocabulary as cleanup below (already
+   committed work needs no extra step; uncommitted work is diff-exported
+   and reapplied), then continue in the new worktree. If declined, continue
+   inline and record the declined switch in the task's completion report.
+
+This is a distinct axis from the `capabilities.worktree_isolation` field in
+`references/PLUGIN_CAPABILITY_REGISTRY.md`: that field says whether a
+delegation *target* (a skill or agent) supports running inside a worktree
+at all; this detection rule decides whether a *specific Task ticket* needs
+one.
+
 ### Cleanup triggers
 
 All four outcomes below attempt cleanup; the actual worktree removal is
@@ -191,6 +229,11 @@ gated on the preservation step succeeding first (see Rollback):
 - **Timeout** — the delegated task exceeded its allotted time.
 - **Error** — the delegated task failed.
 - **User cancellation** — the human stopped the delegated task early.
+
+A Timeout or Error trigger here is a delegation failure; see
+`references/RESULT_AGGREGATION.md` → Subagent Failure Recovery Policy for
+what happens next (no automatic retry, always ask before retrying manually,
+falling back to inline, or abandoning the task).
 
 ### Preservation before removal
 
@@ -451,6 +494,55 @@ A delegation proceeds only when both axes agree — the harness supports the
 mechanism *and* the target's manifest doesn't require something the harness
 can't meet. See `references/PLUGIN_CAPABILITY_REGISTRY.md` for the full
 schema, the discovery mechanism, and a worked example.
+
+## Fleet Mode Utilization (AC1.5)
+
+Resolves the "Fleet mode utilization (AC1.5)" fog item from #110
+([#129](https://github.com/JohnLudlow/agents/issues/129)), closing #77's
+AC1.5: "Where special provision such as fleet mode is available (Copilot),
+make use of it."
+
+### Detection: harness identity, not a runtime capability query
+
+Fleet mode is invoked by prefixing a top-level prompt with `/fleet` — it is
+a Copilot CLI slash command the user (or an agent generating a prompt for
+the user) types, not a tool a skill calls to spawn one bounded child. There
+is no separate runtime API to query "is fleet mode available"; its
+availability is exactly the question "is the current harness Copilot CLI?"
+— the same harness-identity check `HARNESS_FALLBACK.md` already performs
+for other CLI-specific behavior. Browser and Azure DevOps harnesses have no
+`/fleet` equivalent.
+
+### Fleet mode and `DelegateToSubagent` operate at different levels
+
+`/fleet` decomposes an entire top-level request into a DAG of subtasks
+before any individual delegation happens. `DelegateToSubagent` spawns one
+bounded child task once work is already broken into a ticket or task. These
+are not competing paths for the same delegation decision — fleet mode is a
+*before* step that can precede any number of individual
+`DelegateToSubagent` calls, not a replacement for them.
+
+### When to recommend it
+
+A delegating skill or agent should recommend `/fleet` to the user — never
+invoke it silently on the user's behalf — when it identifies **two or more
+independent bounded subtasks with no sequential dependency between them**
+(matching GitHub's own "parallelizable work" guidance for `/fleet`). This
+threshold is already latent in this repo's existing "split into parallel
+sections" patterns — see `jl-documenter/SKILL.md`'s decomposition-before-drafting
+step and `jl-feature-tester/SKILL.md`'s parallel-worktree test generation —
+which are exactly the shape of workload `/fleet` targets.
+
+Recommended wording:
+
+> This work splits into {N} independent subtasks with no dependencies
+> between them. Running `/fleet` for this request would let Copilot CLI
+> dispatch them in parallel — would you like to use it instead of
+> delegating them one at a time?
+
+Do not recommend `/fleet` for sequential or tightly dependent subtasks, or
+outside the Copilot CLI harness — matching the AI-credit cost tradeoff and
+harness limitation documented in "Why Not Use Fleet Mode Directly?" below.
 
 ## Why Not Use Fleet Mode Directly?
 
