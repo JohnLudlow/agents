@@ -97,7 +97,7 @@ Result:
 
 | Harness | Status | Models | Subagent Spawning | Notes |
 |---------|--------|--------|-------------------|-------|
-| **Copilot CLI** | Best support | Widest inventory | Full support | Validate availability at runtime |
+| **Copilot CLI** | Best support | Widest inventory | Full support | Validate availability at runtime; see Multi-Harness Presence Routing below for cross-session behavior |
 | **Browser / OpenCode** | Partial support | Subset of models | Limited | May support skills but not full spawning; warn on fallback |
 | **Azure DevOps (Boards)** | Confirmed: capability-gated | N/A directly — delegates to the GitHub Copilot cloud agent | Not supported for Azure Repos; requires a GitHub-hosted repository | Verified 2026-08-18: see "Azure DevOps" below |
 | **Kiro (IDE / CLI)** | Confirmed: full support on IDE/CLI | Inherits the invoking agent's configured models | Full support on IDE/CLI; Web/Mobile limited to Kiro's built-in sub-agents only | Verified 2026-08-18: see "Kiro" below |
@@ -184,6 +184,43 @@ Practical implications for `DelegateToSubagent`:
   not expose a separate model-inventory capability query.
 
 Source: [Invoking as sub-agents, Kiro Docs](https://kiro.dev/docs/custom-agents/subagents/).
+
+## Multi-Harness Presence Routing
+
+Resolves the "Multi-harness presence routing" fog item from #110
+([#132](https://github.com/JohnLudlow/agents/issues/132)).
+
+### Why this is narrower than it sounds
+
+A running agent instance only has visibility into its own harness — there
+is no built-in mechanism for a Copilot CLI session to detect that the same
+human also has a concurrent browser session open, or vice versa. Absent
+some external coordinator, "choosing between simultaneously available
+harnesses" is not a decision a session can make, because it cannot observe
+the other harness exists.
+
+### Default rule: stay in the current harness
+
+A delegation always stays within the harness it is already running in.
+There is no default cross-harness routing or handoff. This is not a
+capability gap to fill later — it is the correct default given that a
+session cannot observe sibling sessions in other harnesses.
+
+### The Herdr exception
+
+When sessions run under Herdr (a terminal multiplexer for coding agents
+that recognizes coding agents running inside its managed panes and exposes
+them through its own CLI; requires `HERDR_ENV=1`), sibling sessions in
+other harnesses *can* become visible and controllable. This is the one case
+where cross-harness presence routing is technically possible at all.
+
+Even when Herdr makes a sibling harness visible, prefer the current harness
+by default. Only route a delegation to a Herdr-visible sibling harness when
+the human **explicitly requests** routing to that specific other
+session — never as a default preference, and never merely because the
+target's capability manifest would be better satisfied elsewhere (that
+capability mismatch is handled by the existing "Fallback when delegation is
+unavailable" rule in `SKILL.md`, not by silently jumping harnesses).
 
 ## Decision Tree Example (Browser Harness Unavailability)
 
