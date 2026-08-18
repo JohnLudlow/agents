@@ -14,6 +14,41 @@ repository!
 
 ## Code Standards
 
+### Subagent Approval Gates
+
+Subagent delegation is governed by approval gates configured via `jl_approval_gates` in `CONTRIBUTING.md` or
+`AGENTS.md`. All skills use a unified boolean pattern:
+
+#### Schema
+
+Each delegating skill defines one or more boolean gates:
+
+```yaml
+jl_approval_gates:
+  test_approval_required: true              # jl-feature-tester
+  documentation_approval_required: true     # jl-documenter
+  prototype_approval_required: true         # jl-prototype
+  plan_approval_required: true              # jl-planner
+  implementation_approval_required: true    # jl-feature-implementer
+```
+
+#### Behavior
+
+- When a gate is `true`, the agent prompts the user before delegating that category of work.
+- When a gate is `false`, the agent proceeds with delegation pre-authorized.
+- If a gate is missing from config, the delegating skill defaults to `true` (human-in-the-loop by default).
+
+#### Per-gate documentation
+
+For skill-specific approval gates, see:
+
+- `jl-feature-tester`: `.apm/skills/jl-feature-tester/SKILL.md` → Configuration section
+- `jl-documenter`: `.apm/skills/jl-documenter/SKILL.md` → Configuration section
+- `jl-prototype`: `.apm/skills/jl-prototype/SKILL.md` → Configuration section
+- `jl-planner`: `.apm/skills/jl-planner/SKILL.md` → Configuration section
+- `jl-feature-implementer`: `.apm/agents/jl-feature-implementer.agent.md` → Configuration section
+- `jl-recon`: `.apm/skills/jl-recon/SKILL.md` → Configuration section (uses boolean decision_gates pattern)
+
 ### Subagent Model Selection
 
 Phase 3 subagent delegation uses a dedicated `jl_subagent_models` config block.
@@ -84,22 +119,30 @@ subset. Configuration should prefer portable defaults where possible, and
 delegating agents must warn when the requested model changes because the current
 harness cannot honor it.
 
-### Approval Gates and Delegation Separation of Concerns
+### Subagent Delegation Depth
 
-Phase 3 subagent delegation depends on two separate, complementary decisions:
+Circular delegation prevention (`parentAgentStack` tracking) uses a
+configurable nesting depth limit, separate from `jl_approval_gates` and
+`jl_subagent_models`.
 
-1. **Approval gates** (`jl_approval_gates` in consuming repository's config) —
-   answer: "Should I ask for permission before delegating this task?"
-2. **Model selection** (`jl_subagent_models` in this section above) —
-   answer: "Given that I'm delegating, which model should run the child task?"
+#### Schema
 
-These concerns are orthogonal. A skill may require approval for all delegations
-while another prefers to delegate immediately. Both flow through the same model
-selection hierarchy.
+```yaml
+jl_subagent_delegation:
+  max_nesting_depth: 3
+```
 
-**For approval gate schema and per-skill configuration**, see the documentation
-in each delegating skill (e.g., `jl-planner/SKILL.md`) — approval gates are
-skill-specific and belong with their implementation, not in a shared config.
+#### Behavior
+
+- `max_nesting_depth` bounds how many delegation levels deep a chain of
+  subagents may go (see `jl-subagent-spawning/SKILL.md` → Circular Delegation
+  Prevention).
+- If omitted, delegating skills default to `3` (planner → feature-planner →
+  feature-tester).
+- The value is read once per session; changing it mid-session does not retroactively
+  affect a delegation chain already in progress.
+- A configured value must be a positive integer; non-numeric or non-positive
+  values are validation warnings and fall back to the documented default of `3`.
 
 ### Agent Definitions
 

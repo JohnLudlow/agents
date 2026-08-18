@@ -229,7 +229,11 @@ for that specific ticket.
   without changing that ticket's fixed type.
 - **Task** — manual work that has to happen before a decision can be made
   (provisioning access, moving data, signing up for a service). Not a
-  decision itself; it unblocks one.
+  decision itself; it unblocks one. When a Task involves making source
+  changes directly, it gets an isolated worktree — see
+  `jl-subagent-spawning/SKILL.md` → Task Ticket Worktree-Trigger Detection
+  for how that's determined (explicit `worktree: required` marker, then
+  inference, defaulting to inline when ambiguous).
 
 ## Modes
 
@@ -291,18 +295,26 @@ Resolving one ticket on an existing map.
 3. Note who's working it — an assignee, or a short marker in the ticket body
    — so another human glancing at the map can tell. No formal claim step;
    this is informational, not a lock.
-4. Resolve it through the mechanism its type maps to (see Ticket Types
+4. If the ticket will be delegated to a subagent (via `jl-subagent-spawning`'s
+   `DelegateToSubagent` action, where the harness supports it and the
+   required approval is present), emit a clear handoff message before
+   spawning — see "Delegation Handoff Messaging" below. If the ticket is
+   resolved inline instead, skip this step.
+5. Resolve it through the mechanism its type maps to (see Ticket Types
    above). A quiz may surface inside any ticket regardless of type. Record
    any new question or uncertainty the work surfaces — from a quiz detour,
    prototype feedback, or research findings — to the map using the resolved
    `uncertainty_tracking.pattern` immediately, in-session, before the pass
    continues.
-5. Record the resolution: close the ticket, then append exactly one line to
+6. If the ticket was delegated, emit a clear completion notification when
+   the delegated work returns — see "Delegation Handoff Messaging" below —
+   before recording the resolution.
+7. Record the resolution: close the ticket, then append exactly one line to
    the map's Decisions-so-far list. One line, one place — if the map already
    shows this natively (GitHub's own sub-issue list), the manual line still
    goes in because some decisions resolve with no child ticket at all; it
    never gets restated a second time as a summary or a status table.
-6. Create any newly-surfaced tickets and graduate any fog the resolution
+8. Create any newly-surfaced tickets and graduate any fog the resolution
    burned off. Log any newly-surfaced uncertainty to the map's fog in the
    same pass, before the pass ends. If the resolution reveals scope the
    destination doesn't cover, close it into Out-of-scope instead of
@@ -311,6 +323,35 @@ Resolving one ticket on an existing map.
 **Completion criterion:** the ticket is closed, the Decisions-so-far list
 carries its one new line, and every new uncertainty the pass surfaced is
 recorded as fog on the map, in-session, before the pass ends.
+
+#### Delegation Handoff Messaging
+
+When a ticket is delegated to a subagent, emit a handoff message before
+spawning that includes:
+
+- the ticket's linked name (never a bare id);
+- its fixed ticket type (Research, Prototype, Quiz, or Task);
+- the reason delegation was chosen for this ticket;
+- an estimated time or scope, if known; and
+- whether it will run AFK (Research only, and only with prior sign-off — see
+  Ticket Types above) or requires human review before it can close.
+
+Recommended wording:
+
+> Delegating **{ticket name}** ({ticket type}) to a subagent — {reason}.
+> {AFK: "This will run unattended; findings will be presented for your review
+> before the ticket closes." | "This requires your input during the
+> delegated task."}
+
+When the delegated work returns, emit a clear completion notification before
+recording the resolution:
+
+> **{ticket name}** delegation complete. {one-line summary of what came
+> back}. {If Research: "Please review the findings before I close this
+> ticket."}
+
+See `jl-subagent-spawning/SKILL.md` for the underlying `DelegateToSubagent`
+approval, capability, and fallback mechanics this messaging sits on top of.
 
 ### 3. Report on implementation status
 
@@ -358,6 +399,9 @@ The agent MUST:
 - Record every new question or uncertainty to the map's fog the moment it
   surfaces — during charting, walking the map, or any ticket work — never
   deferring it until the human asks.
+- Emit a clear delegation handoff message before spawning a subagent for a
+  ticket, and a clear completion notification when the delegated work
+  returns — see "Delegation Handoff Messaging" under Mode 2.
 - Get explicit, per-ticket human sign-off before running any Research ticket
   AFK, and have the human review its findings before closing it.
 - Keep every other ticket type human-in-the-loop: the agent proposes, the

@@ -248,6 +248,31 @@ Each skill and agent defines its own configuration options. Configuration is doc
   inciting issue confirmation, research AFK sign-off), uncertainty tracking pattern
 - **[jl-issue-management Configuration](.apm/skills/jl-issue-management/SKILL.md#configuration)** — Issue destination, file storage location, decision gates
 - **[jl-config Reference](.apm/skills/jl-config/SKILL.md)** — Configuration resolution mechanism and portable config pattern (used by all skills)
+- **[jl-subagent-spawning Configuration](.apm/skills/jl-subagent-spawning/SKILL.md#approval-gates-jl_approval_gates)** —
+  Approval gates, model selection hierarchy, and the plugin capability manifest
+
+### Plugin Capability Manifest
+
+Skills, agents, and plugins declare which delegation-relevant capabilities they support directly
+in their own frontmatter — a `capabilities` block alongside `name` and `description` — rather than
+in a separate registry file:
+
+```yaml
+---
+name: jl-prototype
+description: Build a throwaway prototype to answer a design question.
+capabilities:
+  subagent_spawning: false
+  fleet_mode: false
+  worktree_isolation: true
+---
+```
+
+A missing `capabilities` block means capability-unknown, not capability-denied — no migration is
+required for existing skills. See [Configuration Guide](docs/CONFIGURATION.md#plugin-capability-manifest)
+for worked examples and
+[`PLUGIN_CAPABILITY_REGISTRY.md`](.apm/skills/jl-subagent-spawning/references/PLUGIN_CAPABILITY_REGISTRY.md)
+for the full schema and discovery mechanism.
 
 ### How to Configure
 
