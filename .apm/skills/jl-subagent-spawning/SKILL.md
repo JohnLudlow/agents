@@ -156,6 +156,16 @@ DelegationResult {
 - `warnings` — includes any model substitution warning caused by harness
   constraints or invalid configuration
 
+When a parent session runs more than one delegation — typically an approved
+AFK Research ticket running in parallel with a live Quiz — individual
+`DelegationResult` items are combined into an `AggregatedDelegationResult`, a
+flat ordered list that also carries a combined `warnings` union and an
+optional `totalUsage` rollup. Partial failures use the existing `warnings`
+field and the worktree rollback vocabulary rather than a separate mechanism.
+See `references/RESULT_AGGREGATION.md` for the per-ticket-type output
+shapes, the aggregation and partial-failure rules, and the token/timing
+rollup schema.
+
 ## Worktree Lifecycle
 
 When a delegated task involves source changes and gets an isolated worktree
@@ -447,4 +457,7 @@ See `references/DEPENDENCIES.md` for relationships to `jl-planner`,
 `jl-planning-workflow`. See `references/DELEGATION_HEURISTICS.md` for the
 full "When NOT to delegate" anti-pattern list and overhead threshold. See
 `references/HARNESS_FALLBACK.md` for the full model-fallback algorithm,
-capability matrix, and decision table.
+capability matrix, and decision table. See
+`references/RESULT_AGGREGATION.md` for per-ticket-type output shapes,
+multi-delegation result aggregation, partial-failure handling, and
+token/timing usage rollup.
