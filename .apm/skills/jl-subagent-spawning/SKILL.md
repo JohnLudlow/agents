@@ -212,13 +212,20 @@ Circular Delegation Prevention below).
 
 Agents must guard against infinite delegation loops and unbounded nesting.
 
+### Configuring the Depth Limit
+
+`maxNestingDepth` is configurable per session via `jl_subagent_delegation.max_nesting_depth`
+in `CONTRIBUTING.md` or `AGENTS.md`; see `CONTRIBUTING.md` → Subagent Delegation
+Depth for the schema. If unset or invalid, agents fall back to the documented
+default of `3`.
+
 ### Algorithm
 
 Before spawning a subagent, validate:
 
 ```text
 parentAgentStack = []  // Track the chain: planner -> feature-planner -> ...
-maxNestingDepth = 3    // Hard limit: planner -> feature-planner -> feature-tester
+maxNestingDepth = resolve(jl_subagent_delegation.max_nesting_depth, default: 3)
 
 BEFORE spawning child:
   if targetAgent in parentAgentStack:

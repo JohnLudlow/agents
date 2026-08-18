@@ -118,6 +118,31 @@ subset. Configuration should prefer portable defaults where possible, and
 delegating agents must warn when the requested model changes because the current
 harness cannot honor it.
 
+### Subagent Delegation Depth
+
+Circular delegation prevention (`parentAgentStack` tracking) uses a
+configurable nesting depth limit, separate from `jl_approval_gates` and
+`jl_subagent_models`.
+
+#### Schema
+
+```yaml
+jl_subagent_delegation:
+  max_nesting_depth: 3
+```
+
+#### Behavior
+
+- `max_nesting_depth` bounds how many delegation levels deep a chain of
+  subagents may go (see `jl-subagent-spawning/SKILL.md` → Circular Delegation
+  Prevention).
+- If omitted, delegating skills default to `3` (planner → feature-planner →
+  feature-tester).
+- The value is read once per session; changing it mid-session does not retroactively
+  affect a delegation chain already in progress.
+- A configured value must be a positive integer; non-numeric or non-positive
+  values are validation warnings and fall back to the documented default of `3`.
+
 ### Agent Definitions
 
 When creating or modifying agent definitions:
