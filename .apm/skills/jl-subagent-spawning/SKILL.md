@@ -18,7 +18,9 @@ This reference is relevant when:
 - you need to honor repository or per-task model preferences
 - you need to coordinate multiple agents across harnesses
 - you encounter harness or fleet-mode limitations
-- you are implementing or documenting Phase 3 delegation behavior
+- you are implementing or documenting harness-specific delegation mechanics
+  (see Delegation Maturity Stages below — distinct from #110's Phase 1–4
+  documentation/implementation roadmap)
 
 ## The Core Problem
 
@@ -233,7 +235,16 @@ Recommended wording:
 shown above represent a **reference specification**, not a callable interface
 available today.
 
-### Current Reality (Phase 1–3, as of August 2026)
+**Note on terminology**: The "Delegation Maturity Stages" below describe how
+harness-specific delegation *mechanics* have evolved and may evolve. They are
+a separate axis from [#110](https://github.com/JohnLudlow/agents/issues/110)'s
+Phase 1–4 **documentation/implementation roadmap** (Phase 1 = this written
+contract, Phase 2 = runtime harness detection and dispatch, Phase 3 =
+user-facing docs, Phase 4 = a possible unified callable API). Do not conflate
+the two: today's work is entirely within #110's Phase 1, regardless of which
+maturity stage is described below.
+
+### Current Reality (Delegation Maturity Stages 1–3, as of August 2026)
 
 Agents currently delegate using harness-specific mechanisms:
 
@@ -245,26 +256,31 @@ Agents currently delegate using harness-specific mechanisms:
 Each harness has different capabilities and constraints. There is no unified
 `DelegateToSubagent` function yet.
 
-### Phase 4 Plan (Future)
+### Delegation Maturity Stage 4 (Speculative, Not Committed)
 
-In Phase 4, GitHub Copilot will introduce a unified `DelegateToSubagent` API
-that:
+If the harness ecosystem eventually provides a stable capability to support
+it, a unified `DelegateToSubagent` API could:
 
-- accepts a `DelegationRequest` with bounded agent, model preference, and task
+- accept a `DelegationRequest` with bounded agent, model preference, and task
   prompt
-- abstracts harness differences (CLI task tool vs. browser skills vs. provider
+- abstract harness differences (CLI task tool vs. browser skills vs. provider
   delegation)
-- returns a `DelegationResult` with model resolution details
-- handles approval gates, model fallbacks, and worktree/branch lifecycle
+- return a `DelegationResult` with model resolution details
+- handle approval gates, model fallbacks, and worktree/branch lifecycle
 
-Until Phase 4 ships:
+This is aspirational design guidance, not a GitHub Copilot product commitment
+or announced roadmap item — it corresponds to #110's Phase 4, which is
+explicitly conditional ("if the harness ecosystem provides a stable
+capability to support it").
+
+Until (and unless) such an API ships:
 
 - Model selection (jl_subagent_models hierarchy) is documented here for
   future-proofing agents
 - Agents should still resolve model preferences and record them in delegation
-  results, even if Phase 1–3 harnesses don't yet support per-delegation model
-  selection
-- This allows graceful adoption when Phase 4's unified API becomes available
+  results, even though today's Stage 1–3 harnesses don't support
+  per-delegation model selection natively
+- This allows graceful adoption if a unified API becomes available later
 
 ## Canonical Delegation Types
 
