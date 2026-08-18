@@ -242,6 +242,9 @@ When reporting aggregated results back:
 
 - `SKILL.md` → `DelegationResult` — the individual result type this
   reference extends.
+- `SKILL.md` → Mid-Task Findings Streaming: `DelegationProgressUpdate` —
+  the interim, non-final counterpart to `DelegationResult`, used before a
+  delegation completes.
 - `SKILL.md` → Worktree Lifecycle — the rollback-on-preservation-failure
   rule referenced in Partial Failure Handling above.
 - `jl-recon/SKILL.md` → Mode 2 → Delegation Handoff Messaging — the

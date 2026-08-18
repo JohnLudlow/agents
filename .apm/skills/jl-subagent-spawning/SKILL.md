@@ -170,6 +170,58 @@ See `references/RESULT_AGGREGATION.md` for the per-ticket-type output
 shapes, the aggregation and partial-failure rules, and the token/timing
 rollup schema.
 
+### Mid-Task Findings Streaming: `DelegationProgressUpdate`
+
+Resolves the "Mid-task findings streaming" fog item from #110
+([#130](https://github.com/JohnLudlow/agents/issues/130)).
+
+Findings stream to the parent, in the sense that the parent may observe a
+running delegation's interim state before it completes — but not through a
+push mechanism the child actively sends. A `DelegationProgressUpdate` is
+what the parent constructs when it opportunistically inspects a still-running
+delegation:
+
+```text
+DelegationProgressUpdate {
+  targetAgent: string
+  status: "running" | "idle"
+  observedAt: string             -- timestamp of this check, not the child's
+  interimFindings?: string[]     -- notable findings visible at this point
+  interimArtifacts?: string[]    -- notable artifacts visible at this point
+}
+```
+
+This is distinct from `DelegationResult`: a `DelegationProgressUpdate` is
+never final, never recorded as a resolution, and never aggregated into an
+`AggregatedDelegationResult` — it exists only to give the parent (and,
+through it, the human) visibility into a delegation that hasn't finished
+yet.
+
+#### When the parent checks
+
+Checks are **opportunistic, never a dedicated polling loop**: the parent
+inspects a running delegation's current state when it naturally pauses
+between its own other work, or when the human asks for a status update —
+never on a fixed interval or in a busy-loop dedicated solely to watching
+one delegation.
+
+#### What the parent does with what it finds
+
+When an opportunistic check surfaces an interim finding worth noting, the
+parent **proactively tells the human immediately** — it does not hold
+interim findings back until the human asks or the delegation completes.
+
+Recommended wording:
+
+> `{targetAgent}` is still running. So far it has found: {interimFindings}.
+
+#### Relationship to the final result
+
+An interim finding surfaced via `DelegationProgressUpdate` does not replace
+or pre-empt the final `DelegationResult` when the delegation completes —
+the final result is still the authoritative summary, and may supersede or
+correct anything shown in an earlier progress update.
+
 ## Worktree Lifecycle
 
 When a delegated task involves source changes and gets an isolated worktree
