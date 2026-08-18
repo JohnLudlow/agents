@@ -1,5 +1,14 @@
 # Why Not Use Fleet Mode Directly?
 
+**Status: superseded for the recommend-to-user pattern.** See
+`SKILL.md` → "Fleet Mode Utilization (AC1.5)" and "Why Fleet Mode Isn't
+Always an Option" for the current guidance: a delegating skill recommends
+`/fleet` to the user when genuinely parallelizable work exists; it never
+tries to join a fleet itself. The constraint below only matters for the
+different case this document was originally written for — directly
+coordinating skills *as* fleet members, which this delegation contract
+does not attempt.
+
 Fleet mode would be ideal for coordinating multiple agents, but it has a design
 constraint: only agents can be fleet members; skills cannot be fleet members.
 

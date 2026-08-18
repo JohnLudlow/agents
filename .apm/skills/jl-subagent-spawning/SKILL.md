@@ -93,13 +93,23 @@ jl_approval_gates:
 ### Fallback when delegation is unavailable
 
 If the current harness cannot spawn a subagent at all (see the Harness
-Capability Matrix below):
+Capability Matrix below), resolves #77's AC1.4: **ask** the user what to
+do — do not decide on their behalf:
 
-- warn the user in plain language that delegation is unavailable in this
-  harness;
-- offer the supported inline path as the fallback; and
-- do not silently drop the work — record that delegation was unavailable for
-  this session.
+> Delegation isn't available in this harness. Continue this work inline,
+> or use Herdr to multiplex to a sibling session that can delegate, if one
+> is available?
+
+- If the human chooses inline, continue in the parent — this is the same
+  fallback path described elsewhere in this document.
+- If the human chooses Herdr, this is the same mechanism as
+  `HARNESS_FALLBACK.md` → Multi-Harness Presence Routing's "Herdr
+  exception" — Herdr makes a sibling session in a different, capable
+  harness visible and controllable, and routing to it is legitimate here
+  because it's the human's **explicit request**, exactly the condition
+  that section already requires.
+- Either way, do not silently drop the work — record that delegation was
+  unavailable for this session, and which option the human chose.
 
 ## DelegateToSubagent API
 
@@ -191,11 +201,30 @@ DelegationProgressUpdate {
 }
 ```
 
-This is distinct from `DelegationResult`: a `DelegationProgressUpdate` is
-never final, never recorded as a resolution, and never aggregated into an
+`status` describes the delegated agent's own state at the moment of the
+check, not whether the overall delegation is complete:
+
+- `"running"` — the delegated agent is actively working on its current
+  turn.
+- `"idle"` — the delegated agent has finished its current turn and is
+  paused between turns (for example, waiting to see if follow-up work
+  arrives). This is not completion: an idle child may still receive more
+  work or reach true completion later. A delegation the parent still
+  considers open can legitimately produce several progress updates over
+  time, some `"running"`, some `"idle"`, as the child works through
+  multiple turns.
+
+The typical shape of a delegation the parent observes this way is a
+sequence of `DelegationProgressUpdate`s — running, idle, running again,
+and so on — that eventually culminates in exactly one final
+`DelegationResult` once the child (and the parent) consider the work
+genuinely done. `DelegationProgressUpdate` is distinct from
+`DelegationResult` throughout that sequence: it is never final, never
+recorded as a resolution, and never aggregated into an
 `AggregatedDelegationResult` — it exists only to give the parent (and,
-through it, the human) visibility into a delegation that hasn't finished
-yet.
+through it, the human) visibility into a delegation that hasn't produced
+its final result yet, no matter how many `"idle"` pauses it passes through
+first.
 
 #### When the parent checks
 
@@ -631,14 +660,25 @@ Recommended wording:
 
 Do not recommend `/fleet` for sequential or tightly dependent subtasks, or
 outside the Copilot CLI harness — matching the AI-credit cost tradeoff and
-harness limitation documented in "Why Not Use Fleet Mode Directly?" below.
+harness limitation documented in "Why Fleet Mode Isn't Always an Option"
+below.
 
-## Why Not Use Fleet Mode Directly?
+## Why Fleet Mode Isn't Always an Option
 
-Fleet mode still coordinates agents, not skills. That design limitation does
-not change with model selection. The recommended workaround remains direct
-subagent spawning where supported, or inline execution and agent fallback where
-it is not.
+Fleet mode is a Copilot CLI concept — it doesn't exist in other harnesses at
+all (see "Detection: harness identity" above). That's the actual limit on
+its use, not a design constraint on what fleet mode can coordinate. When the
+current harness is Copilot CLI, recommending `/fleet` for genuinely
+parallelizable work is the correct, encouraged behavior — see "Fleet Mode
+Utilization (AC1.5)" above for exactly when and how.
+
+The one real technical constraint — `/fleet` addresses fleet members by
+agent name, and only agents can be fleet members, not skills directly — no
+longer blocks anything here, because a delegating skill never tries to join
+a fleet itself; it only recommends that the *user* type `/fleet`. See
+`references/DESIGN-RATIONALE.md` for that constraint's history and the
+wrapper-agent workaround for the different case of coordinating skills
+*as* fleet members.
 
 ## Decision Table
 

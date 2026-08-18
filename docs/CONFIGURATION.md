@@ -19,7 +19,9 @@ Notable repository-level namespaces:
   (see [`jl-subagent-spawning`](../.apm/skills/jl-subagent-spawning/SKILL.md#approval-gates-jl_approval_gates))
 - `jl_subagent_models` — model selection hierarchy for delegated subagents
   (see [`jl-subagent-spawning`](../.apm/skills/jl-subagent-spawning/SKILL.md#hierarchical-model-selection))
-- `jl_subagent_delegation.max_nesting_depth` — circular-delegation depth limit, default `3`
+- `jl_subagent_delegation.max_nesting_depth` — circular-delegation depth limit, default `3`; must
+  be a positive integer (see [`jl-subagent-spawning`](../.apm/skills/jl-subagent-spawning/SKILL.md#circular-delegation-prevention)
+  for enforcement and `npm run validate` for the config check)
 
 ## Plugin Capability Manifest
 

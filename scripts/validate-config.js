@@ -152,6 +152,44 @@ function validateApprovalGates(config) {
   return { errors, warnings };
 }
 
+function validateSubagentDelegation(config) {
+  if (!("jl_subagent_delegation" in config)) {
+    return { errors: [], warnings: [] };
+  }
+
+  const errors = [];
+  const warnings = [];
+  const cfg = config.jl_subagent_delegation;
+
+  if (typeof cfg !== "object" || cfg === null || Array.isArray(cfg)) {
+    errors.push("jl_subagent_delegation must be an object");
+    return { errors, warnings };
+  }
+
+  const allowedTopLevelKeys = new Set(["max_nesting_depth"]);
+
+  for (const key of Object.keys(cfg)) {
+    if (!allowedTopLevelKeys.has(key)) {
+      warnings.push(`jl_subagent_delegation.${key}: unrecognized top-level key`);
+    }
+  }
+
+  if ("max_nesting_depth" in cfg) {
+    const value = cfg.max_nesting_depth;
+
+    // Per CONTRIBUTING.md -> Subagent Delegation Depth: non-numeric or
+    // non-positive values are warnings, not hard errors, because delegating
+    // skills fall back to the documented default of 3 rather than failing.
+    if (typeof value !== "number" || !Number.isInteger(value) || value < 1) {
+      warnings.push(
+        `jl_subagent_delegation.max_nesting_depth must be a positive integer, got '${value}'; falling back to the documented default of 3`
+      );
+    }
+  }
+
+  return { errors, warnings };
+}
+
 // Simple YAML parser for config validation
 function parseYaml(text) {
   const lines = text.split(/\r?\n/);
@@ -484,7 +522,14 @@ function validateLayer3(config, agentKey) {
 // Main validation function
 function validateConfigFile(filePath, fileName) {
   const content = fs.readFileSync(filePath, "utf8");
-  const agentKeys = ["jl_quiz", "jl_recon", "jl_issue_management", "jl_subagent_models", "jl_approval_gates"];
+  const agentKeys = [
+    "jl_quiz",
+    "jl_recon",
+    "jl_issue_management",
+    "jl_subagent_models",
+    "jl_approval_gates",
+    "jl_subagent_delegation",
+  ];
   let hasErrors = false;
   let message = [];
 
@@ -529,8 +574,31 @@ function validateConfigFile(filePath, fileName) {
     }
   }
 
+  const subagentDelegationMatch = wholeText.match(/^jl_subagent_delegation:\s*(?:\r?\n)((?:^  .+$(?:\r?\n)?)*)/m);
+  if (subagentDelegationMatch) {
+    const parseResult = parseYaml(`jl_subagent_delegation:\n${subagentDelegationMatch[1] || ""}`);
+    if (parseResult.error) {
+      hasErrors = true;
+      message.push(
+        `${fileName}: ${parseResult.message}\n  Fix: Check jl_subagent_delegation indentation and YAML syntax.`
+      );
+    } else {
+      const delegationValidation = validateSubagentDelegation(parseResult.parsed);
+      for (const error of delegationValidation.errors) {
+        hasErrors = true;
+        message.push(`${fileName}: [WARN] ${error}\n  Fix: Check jl_subagent_delegation schema and value types.`);
+      }
+      for (const warning of delegationValidation.warnings) {
+        message.push(
+          `${fileName}: [WARN] ${warning}\n  Fix: Use a positive integer for max_nesting_depth, or omit it to use the default.`
+        );
+      }
+    }
+  }
+
   for (const agentKey of agentKeys) {
-    if (agentKey === "jl_subagent_models" || agentKey === "jl_approval_gates") continue;
+    if (agentKey === "jl_subagent_models" || agentKey === "jl_approval_gates" || agentKey === "jl_subagent_delegation")
+      continue;
     const yamlBlock = extractYamlFromMarkdown(content, agentKey);
     if (!yamlBlock) continue;
 

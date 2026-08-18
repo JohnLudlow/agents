@@ -222,6 +222,13 @@ target's capability manifest would be better satisfied elsewhere (that
 capability mismatch is handled by the existing "Fallback when delegation is
 unavailable" rule in `SKILL.md`, not by silently jumping harnesses).
 
+This same Herdr exception is also what `SKILL.md` → "Fallback when
+delegation is unavailable" offers as the human's alternative to inline
+execution when the current harness cannot delegate at all — resolving AC1.4
+from #77. The two cases share one rule: Herdr routing only happens on
+the human's explicit request, whether the current harness merely lacks the
+best-suited option (this section) or lacks delegation entirely (AC1.4).
+
 ## Decision Tree Example (Browser Harness Unavailability)
 
 1. User requests `gpt-4-turbo` for documentation.
