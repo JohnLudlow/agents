@@ -158,55 +158,15 @@ and documented in `CONTRIBUTING.md` before use in repository configuration.
 
 ## When NOT to Delegate: Anti-Patterns
 
-Delegation is not always the right choice. Avoid delegating when:
+Delegation is not always the right choice. Avoid delegating when a task is
+too small to benefit from parallelism (under ~5 minutes on a simple path), no
+exploration or decision-making is needed, a synchronous result is needed
+immediately, no human input or clarification is possible mid-task, or the
+delegation chain risks unbounded depth or nesting.
 
-### Too small to benefit from parallelism
-
-- Task will take under 5 minutes on a simple path
-- Overhead of spawning, context transfer, and merging exceeds the time savings
-- Inline execution is faster and simpler
-
-Example: **Don't delegate** a single missing import or one-line lint fix.
-**Do it inline.**
-
-### No exploration or decision-making needed
-
-- Task outcome is deterministic and fully specified
-- Parent agent has all context and can execute safely without research
-- No benefits from separation of concerns or specialist expertise
-
-Example: **Don't delegate** "run linter and report results if any errors"; you
-already know the command. **Do it inline.** *Do* delegate "analyze these 200
-linting errors and propose a fix strategy" if the analysis is complex.
-
-### Synchronous result needed immediately
-
-- Parent workflow cannot proceed without the child result in hand
-- Subagent spawning latency becomes a bottleneck
-- Inline execution unblocks the parent faster
-
-Example: **Don't delegate** a model inference call needed 10ms later. **Do it
-inline.** *Do* delegate "research and summarize 20 papers on this topic" if
-the parent can collect other work while research runs in parallel.
-
-### No human input or clarification possible
-
-- Task requires mid-stream questions for the human
-- Spawned child cannot reach back to the parent session for guidance
-- Inline execution preserves the conversation loop
-
-Example: **Don't delegate** discovery work whose next steps depend on user
-feedback. **Do it inline.** *Do* delegate bounded, pre-approved research.
-
-### Unbounded depth or nesting
-
-- Risk of delegation chains spiraling into recursion
-- Child agents spawning grandchildren, great-grandchildren, etc.
-- Debugging and failure recovery become exponentially harder
-
-Example: **Don't let** a feature-implementer delegate to a feature-planner
-that delegates to another planner. **Limit depth** to 1–2 levels max (see
-Circular Delegation Prevention below).
+See `references/DELEGATION_HEURISTICS.md` for the full anti-pattern list,
+the ~5-minute overhead threshold rationale, and worked examples for each
+case.
 
 ## Circular Delegation Prevention
 
@@ -460,4 +420,5 @@ Parent agents MUST NOT:
 
 See `references/DEPENDENCIES.md` for relationships to `jl-planner`,
 `jl-feature-planner`, `jl-adversarial-review`, `jl-feature-reviewer`, and
-`jl-planning-workflow`.
+`jl-planning-workflow`. See `references/DELEGATION_HEURISTICS.md` for the
+full "When NOT to delegate" anti-pattern list and overhead threshold.
