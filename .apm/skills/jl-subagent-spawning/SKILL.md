@@ -411,6 +411,29 @@ case.
 
 Agents must guard against infinite delegation loops and unbounded nesting.
 
+### Subagent Chaining Permissions
+
+Resolves the "Subagent chaining permissions" fog item from #110
+([#131](https://github.com/JohnLudlow/agents/issues/131)).
+
+An agent whose `task` permission (see `docs/PERMISSIONS.md`) is set to
+`deny` cannot spawn any subagent, full stop — no exceptions or overrides.
+This is not a new rule; it follows directly from the existing permission
+model's own definition of `deny` ("the action is blocked and cannot run").
+`jl-feature-reviewer`'s documented "Cannot delegate to other agents"
+restriction is the existing example of this in practice.
+
+This check is the **first** gate in the spawning algorithm below — it runs
+before the circular-delegation and nesting-depth checks, because a denied
+agent cannot reach the point of pushing onto `parentAgentStack` at all:
+
+```text
+BEFORE anything else:
+  if delegatingAgent.taskPermission == "deny":
+    ERROR("Agent " + delegatingAgent.name + " has task:deny and cannot delegate")
+    => "Cannot delegate: this agent's task permission is denied"
+```
+
 ### Configuring the Depth Limit
 
 `maxNestingDepth` is configurable per session via `jl_subagent_delegation.max_nesting_depth`
@@ -420,13 +443,18 @@ default of `3`.
 
 ### Algorithm
 
-Before spawning a subagent, validate:
+Before spawning a subagent, validate — in this order: the permission gate
+above, then circularity, then depth:
 
 ```text
 parentAgentStack = []  // Track the chain: planner -> feature-planner -> ...
 maxNestingDepth = resolve(jl_subagent_delegation.max_nesting_depth, default: 3)
 
 BEFORE spawning child:
+  if delegatingAgent.taskPermission == "deny":
+    ERROR("Agent " + delegatingAgent.name + " has task:deny and cannot delegate")
+    => "Cannot delegate: this agent's task permission is denied"
+
   if targetAgent in parentAgentStack:
     ERROR("Circular delegation: " + formatChain(parentAgentStack) + " -> " + targetAgent)
     => "Cannot delegate to {targetAgent}: already in parent chain"
