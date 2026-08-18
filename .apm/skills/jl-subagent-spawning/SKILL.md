@@ -500,6 +500,15 @@ User launches jl-planner
       [ERROR: circular dependency detected]
 ```
 
+### Test Coverage
+
+Specification-level test cases validating this algorithm's logic (permission
+gate, circularity, depth boundary) are in
+`references/CIRCULAR_DELEGATION_TEST_CASES.md`. These validate the
+documented pseudocode directly; they are not per-harness integration tests,
+because no harness has real `DelegateToSubagent` runtime dispatch yet — see
+that reference for the exact scope boundary.
+
 ## Hierarchical Model Selection
 
 Model selection resolves with this precedence:
@@ -670,4 +679,7 @@ capability matrix, and decision table. See
 multi-delegation result aggregation, partial-failure handling, and
 token/timing usage rollup. See `references/PLUGIN_CAPABILITY_REGISTRY.md`
 for the capability manifest schema, discovery mechanism, and its
-relationship to the Harness Capability Matrix.
+relationship to the Harness Capability Matrix. See
+`references/CIRCULAR_DELEGATION_TEST_CASES.md` for specification-level test
+cases validating the permission-gate, circularity, and depth-boundary
+algorithm.
