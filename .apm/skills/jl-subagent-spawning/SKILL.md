@@ -156,6 +156,67 @@ DelegationResult {
 - `warnings` — includes any model substitution warning caused by harness
   constraints or invalid configuration
 
+## Worktree Lifecycle
+
+When a delegated task involves source changes and gets an isolated worktree
+(see Recon's Decision 11 in `jl-recon` for which ticket types trigger one),
+the worktree's creation, naming, and cleanup follow this lifecycle.
+
+### Creation and naming
+
+- Baseline: a per-agent isolated worktree, named `worktree-{ticket-id}-{timestamp}`.
+- A per-caller override may run the delegated task in the shared repository
+  instead, when isolation is unnecessary or impractical.
+
+### Cleanup triggers
+
+All four outcomes below attempt cleanup; the actual worktree removal is
+gated on the preservation step succeeding first (see Rollback):
+
+- **Success** — the delegated task completed and its result was accepted.
+- **Timeout** — the delegated task exceeded its allotted time.
+- **Error** — the delegated task failed.
+- **User cancellation** — the human stopped the delegated task early.
+
+### Preservation before removal
+
+Before removing a worktree, preserve any work it contains:
+
+1. If the delegated task already committed its changes to the delegation's
+   branch, no extra preservation step is needed — removing a worktree does
+   not delete the branch it was checked out on; the branch and its commits
+   survive.
+2. If the worktree has uncommitted changes, export a diff patch to a
+   session-durable location (not a `git stash`, which is easy to lose track
+   of once the worktree that created it is gone) before removing the
+   worktree.
+
+### Rollback on preservation failure
+
+If the diff-export step itself fails (for example, disk or permission
+errors):
+
+- abort the cleanup;
+- leave the worktree in place; and
+- warn the user in plain language rather than force-removing the worktree
+  and risking silent data loss.
+
+### Completion messaging
+
+When cleanup completes (or is aborted), tell the user:
+
+- the worktree name that was removed (or left in place, if aborted);
+- whether the work was already committed to a branch, diff-exported, or
+  neither; and
+- where to find the preserved work (branch name or diff-patch location) if
+  it wasn't already merged.
+
+Recommended wording:
+
+> Worktree `{worktree-name}` removed (or left in place if preservation
+> failed — see warning above). Changes were either committed to
+> `{branch}` or, if uncommitted, exported to `{diff-patch-path}`.
+
 ## DelegateToSubagent API Status: Pseudocode vs. Callable Implementation
 
 **IMPORTANT CLARIFICATION**: The `DelegationRequest` and `DelegationResult` types
@@ -367,6 +428,9 @@ Parent agents using `DelegateToSubagent` MUST:
 - validate harness availability before selecting the final model
 - record `modelResolved` in the delegation result
 - warn when harness constraints force a different model than requested
+- preserve any uncommitted worktree changes before removing a worktree, and
+  abort cleanup rather than force-remove if preservation fails
+- tell the user what was preserved and where, when a worktree is cleaned up
 
 Parent agents MUST NOT:
 
@@ -374,6 +438,7 @@ Parent agents MUST NOT:
 - silently ignore an explicit model override
 - silently keep an invalid or misspelled model name
 - report a requested model as used when a fallback model actually ran
+- force-remove a worktree when its preservation step has failed
 
 ## Related Skills & Agents
 
