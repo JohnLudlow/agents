@@ -99,7 +99,8 @@ Result:
 |---------|--------|--------|-------------------|-------|
 | **Copilot CLI** | Best support | Widest inventory | Full support | Validate availability at runtime |
 | **Browser / OpenCode** | Partial support | Subset of models | Limited | May support skills but not full spawning; warn on fallback |
-| **Azure DevOps / Copilot Extensions** | Harness-dependent | Variable | Variable | Task-tool availability varies by host; treat as runtime data |
+| **Azure DevOps (Boards)** | Confirmed: capability-gated | N/A directly — delegates to the GitHub Copilot cloud agent | Not supported for Azure Repos; requires a GitHub-hosted repository | Verified 2026-08-18: see "Azure DevOps" below |
+| **Kiro (IDE / CLI)** | Confirmed: full support on IDE/CLI | Inherits the invoking agent's configured models | Full support on IDE/CLI; Web/Mobile limited to Kiro's built-in sub-agents only | Verified 2026-08-18: see "Kiro" below |
 
 ### Copilot CLI
 
@@ -115,11 +116,70 @@ Result:
 - Should warn when a requested model is unavailable and a fallback model is
   selected instead.
 
-### Azure DevOps / Copilot Extensions
+### Azure DevOps
 
-- Task-tool availability and model inventory may vary by host integration.
-- Parent agents should treat model support as runtime data, not a static
-  guarantee.
+**Status: confirmed, capability-gated** (previously "harness-dependent" /
+deferred; verified 2026-08-18 for
+[#126](https://github.com/JohnLudlow/agents/issues/126)).
+
+Azure Boards can trigger the GitHub Copilot cloud agent — including custom
+agents — directly from a work item, but only when that work item's linked
+repository is hosted on GitHub. Azure Repos (Azure DevOps's own Git hosting)
+is explicitly unsupported for this integration:
+
+> "This integration requires GitHub repositories and GitHub App
+> authentication. Azure Repos (Azure DevOps Git repositories) aren't
+> supported for GitHub Copilot integration."
+> — [Use GitHub Copilot with Azure Boards, Microsoft Learn](https://learn.microsoft.com/en-us/azure/devops/boards/github/work-item-integration-github-copilot?view=azure-devops)
+
+Practical implications for `DelegateToSubagent`:
+
+- Treat Azure DevOps as capability-gated on the linked repository's host,
+  not on Azure DevOps itself: subagent spawning is available only when the
+  Azure Boards work item is linked to a GitHub-hosted repository.
+- When the linked repository is an Azure Repos (ADO-hosted) repository,
+  there is no subagent-spawning path today; apply the "Fallback when
+  delegation is unavailable" rule from `SKILL.md`.
+- Model selection in this path is the GitHub Copilot cloud agent's own
+  model set, not a separate Azure DevOps model inventory.
+
+Source: [Azure Boards integration with GitHub Copilot includes custom agent support, Azure DevOps Blog](https://devblogs.microsoft.com/devops/azure-boards-integration-with-github-copilot-includes-custom-agent-support/),
+[Use GitHub Copilot with Azure Boards, Microsoft Learn](https://learn.microsoft.com/en-us/azure/devops/boards/github/work-item-integration-github-copilot?view=azure-devops).
+
+### Kiro
+
+**Status: confirmed, full support on IDE/CLI** (previously deferred;
+verified 2026-08-18 for [#126](https://github.com/JohnLudlow/agents/issues/126)).
+
+Kiro's own documentation publishes a capability matrix across its four
+surfaces:
+
+| Capability | IDE | CLI | Web | Mobile |
+|---|---|---|---|---|
+| Automatic sub-agent invocation | Yes | Yes | Yes | Yes |
+| Explicit sub-agent invocation | Yes | Yes | Yes | Yes |
+| Custom agents as sub-agents | Yes | Yes | No | No |
+| Parallel execution | Yes | Yes | Yes | Yes |
+
+On Web and Mobile, delegation is limited to Kiro's built-in sub-agents
+("context gathering" and "general purpose"); custom agents defined in
+`.kiro/agents/` can only be invoked as sub-agents from the IDE or CLI.
+
+Practical implications for `DelegateToSubagent`:
+
+- An orchestrator agent must explicitly list `subagent` in its own `tools`
+  array, or it cannot spawn sub-agents at all — this is Kiro's own
+  documented failure mode ("Main agent can't spawn sub-agents → Add
+  `subagent` to the orchestrator agent's `tools` array").
+- Kiro supports DAG-based dependent sub-agent chains and looping
+  stage-review pipelines natively; this exceeds what this skill's own
+  circular-delegation and nesting-depth rules assume, but does not
+  conflict with them — `maxNestingDepth` and `parentAgentStack` still apply
+  to how *this* delegation contract invokes Kiro sub-agents.
+- Model selection follows the invoking agent's own configuration; Kiro does
+  not expose a separate model-inventory capability query.
+
+Source: [Invoking as sub-agents, Kiro Docs](https://kiro.dev/docs/custom-agents/subagents/).
 
 ## Decision Tree Example (Browser Harness Unavailability)
 
@@ -154,6 +214,10 @@ Recommended wording:
 | Spawn subagent with explicit model | Browser | inline or limited delegation + fallback warning | per-type or global fallback |
 | Spawn planning subagent | CLI | task tool (native) | skill inline |
 | Spawn planning subagent | Browser | skill inline | feature-reviewer agent |
+| Spawn subagent from a work item | Azure DevOps (Boards), GitHub-linked repo | GitHub Copilot cloud agent + custom agent selection | skill inline |
+| Spawn subagent from a work item | Azure DevOps (Boards), Azure Repos-linked | not available | warn; work continues inline |
+| Spawn subagent | Kiro (IDE/CLI) | native `subagent` tool | skill inline |
+| Spawn subagent | Kiro (Web/Mobile) | built-in sub-agents only | skill inline |
 | Invoke adversarial review | Any | adversarial-review skill | feature-reviewer agent |
 
 ## Related
