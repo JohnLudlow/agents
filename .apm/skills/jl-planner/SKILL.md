@@ -486,32 +486,36 @@ open-question sections before signoff.
 
 This skill reads planning delegation settings from `jl_approval_gates` in
 `CONTRIBUTING.md` and `AGENTS.md`. It inherits the repository-wide configuration
-resolution approach and should not invent a parallel config mechanism.
+resolution approach and should not invent a parallel config mechanism. See
+`## Approval Gate Integration` above for the boolean schema
+(`plan_approval_required`).
 
 ### Example configuration
 
 ```yaml
 jl_approval_gates:
-  plan_approval_mode: always
-  plan_task_overrides:
-    breakdown: always
-    research: never
-    specialist-planning: always
-    risk-analysis: always
-  plan_fallback_on_decline: inline
-  plan_fallback_when_unavailable: warn
+  plan_approval_required: true
 ```
 
-### Behaviour summary
+### Workflow behaviour (not configuration)
 
-- `always` — ask before delegating that class of plan subtask
-- `inherit` — use the already-resolved parent planning-session decision if one
-  exists; otherwise ask
-- `never` — delegate without prompting unless the user overrides in-session
-- `inline` fallback — continue the work in the parent planner when practical
-- `manual` fallback — leave the task as a manual follow-up item
-- `warn` fallback — explain the harness limitation and let the user choose
-  inline or manual handling
+The following are resolved as workflow rules at each delegation decision
+point, not as separate configuration keys, per the repository's boolean-only
+approval-gate schema:
+
+- **Per-task nuance** — the planner may still judge that a specific delegated
+  task type (e.g. `research`) is lower-risk than another (e.g. `breakdown`);
+  it should still resolve the single `plan_approval_required` boolean and
+  prompt or skip accordingly, rather than expecting a per-task config
+  override.
+- **Inheriting a parent Recon decision** — when `jl-planner` is invoked from
+  `jl-recon`, it inherits the parent session's already-resolved approval
+  decision instead of re-prompting for the same bounded delegation.
+- **Fallback on decline** — if the user declines, continue the work inline in
+  the parent planner and record the gap; do not silently skip the work.
+- **Fallback when delegation is unavailable** — if the harness cannot spawn a
+  subagent, warn the user in plain language and offer inline continuation as
+  the fallback path.
 
 ## Examples
 

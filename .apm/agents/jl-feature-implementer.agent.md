@@ -534,16 +534,30 @@ together, then report the result in the final handoff.
 ## Configuration
 
 This agent inherits approval-gate settings from `CONTRIBUTING.md` through the
-shared `jl_approval_gates` namespace. Relevant knobs:
+shared `jl_approval_gates` namespace — see `## Configuration` above for the
+boolean schema (`implementation_approval_required`,
+`implementation_review_required`).
 
-- `implementation_approval_mode`
-- `implementation_task_overrides.<task_type>`
-- `implementation_fallback_on_decline`
-- `implementation_review_gate`
+### Workflow behaviour (not configuration)
+
+The following are resolved as workflow rules at each delegation decision
+point, not as separate configuration keys, per the repository's boolean-only
+approval-gate schema:
+
+- **Per-task-type nuance** — resolve the single `implementation_approval_required`
+  boolean at each delegation decision point rather than expecting a
+  per-task-type config override.
+- **Fallback on decline** — if the user declines, keep the slice as a manual
+  follow-up item and record why delegation was proposed.
+- **Review gate** — `implementation_review_required` governs whether
+  delegated code must clear an explicit review gate before merge; it is
+  evaluated independently of the approval-to-delegate decision.
 
 Document any repository-specific overrides in `AGENTS.md` or a local skill
-reference. Missing config is not fatal; use the fallback rules above and warn
-when behaviour must degrade because the harness cannot honor delegation.
+reference. Missing config is not fatal; default to
+`implementation_approval_required: true` and
+`implementation_review_required: true`, and warn when behaviour must degrade
+because the harness cannot honor delegation.
 
 ## Examples
 

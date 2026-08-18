@@ -444,7 +444,8 @@ The agent MUST:
 
 - resolve approval-gate configuration before delegating any test-generation or verification subtask.
 
-- evaluate `jl_approval_gates.test_approval_mode` and applicable overrides before calling `DelegateToSubagent`.
+- evaluate `jl_approval_gates.test_approval_required` and any applicable
+  resolution rules before calling `DelegateToSubagent`.
 
 - use the exact generation approval prompt:
   `Generate tests for {component} using {agent}? [Approve] [Decline]`

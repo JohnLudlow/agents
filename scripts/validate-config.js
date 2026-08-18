@@ -21,6 +21,137 @@ function extractYamlFromMarkdown(text, agentKey) {
   return yamlBlock;
 }
 
+// Model name recognition used by jl_subagent_models validation.
+const recognizedModelPatterns = [
+  /^claude-[a-z0-9.-]+$/i,
+  /^gpt-[a-z0-9.-]+$/i,
+  /^gemini-[a-z0-9.-]+$/i,
+  /^grok-[a-z0-9.-]+$/i,
+  /^kimi-[a-z0-9.-]+$/i,
+  /^mai-[a-z0-9.-]+$/i,
+];
+
+const explicitRecognizedModels = new Set([
+  "claude-sonnet-5",
+  "claude-opus-4.5",
+  "gpt-4-turbo",
+  "gpt-5.4",
+  "gpt-5.4-mini",
+  "gemini-3.5-flash",
+  "gemini-3.6-flash",
+]);
+
+function isRecognizedModelName(modelName) {
+  if (typeof modelName !== "string" || modelName.trim() === "") {
+    return false;
+  }
+
+  if (explicitRecognizedModels.has(modelName)) {
+    return true;
+  }
+
+  return recognizedModelPatterns.some((pattern) => pattern.test(modelName));
+}
+
+function validateSubagentModels(config) {
+  if (!("jl_subagent_models" in config)) {
+    return { errors: [], warnings: [] };
+  }
+
+  const errors = [];
+  const warnings = [];
+  const cfg = config.jl_subagent_models;
+
+  if (typeof cfg !== "object" || cfg === null || Array.isArray(cfg)) {
+    errors.push("jl_subagent_models must be an object");
+    return { errors, warnings };
+  }
+
+  const allowedTopLevelKeys = new Set([
+    "default",
+    "research",
+    "implementation",
+    "test_generation",
+    "documentation",
+    "overrides",
+  ]);
+
+  for (const key of Object.keys(cfg)) {
+    if (!allowedTopLevelKeys.has(key)) {
+      warnings.push(`jl_subagent_models.${key}: unrecognized top-level key`);
+    }
+  }
+
+  for (const key of ["default", "research", "implementation", "test_generation", "documentation"]) {
+    if (!(key in cfg)) continue;
+    if (typeof cfg[key] !== "string") {
+      errors.push(`jl_subagent_models.${key} must be a string`);
+      continue;
+    }
+
+    if (!isRecognizedModelName(cfg[key])) {
+      warnings.push(`jl_subagent_models.${key}: unknown model name '${cfg[key]}'`);
+    }
+  }
+
+  if ("overrides" in cfg) {
+    if (typeof cfg.overrides !== "object" || cfg.overrides === null || Array.isArray(cfg.overrides)) {
+      errors.push("jl_subagent_models.overrides must be an object");
+    } else {
+      for (const [taskKey, modelName] of Object.entries(cfg.overrides)) {
+        if (typeof modelName !== "string") {
+          errors.push(`jl_subagent_models.overrides.${taskKey} must be a string`);
+          continue;
+        }
+
+        if (!isRecognizedModelName(modelName)) {
+          warnings.push(`jl_subagent_models.overrides.${taskKey}: unknown model name '${modelName}'`);
+        }
+      }
+    }
+  }
+
+  return { errors, warnings };
+}
+
+function validateApprovalGates(config) {
+  if (!("jl_approval_gates" in config)) {
+    return { errors: [], warnings: [] };
+  }
+
+  const errors = [];
+  const warnings = [];
+  const cfg = config.jl_approval_gates;
+
+  if (typeof cfg !== "object" || cfg === null || Array.isArray(cfg)) {
+    errors.push("jl_approval_gates must be an object");
+    return { errors, warnings };
+  }
+
+  // Recognized non-boolean exceptions to the unified boolean pattern.
+  const numericKeys = new Set(["test_coverage_threshold"]);
+
+  for (const [key, value] of Object.entries(cfg)) {
+    if (numericKeys.has(key)) {
+      if (typeof value !== "number" || value < 0 || value > 100) {
+        errors.push(`jl_approval_gates.${key} must be a number between 0 and 100`);
+      }
+      continue;
+    }
+
+    if (!key.endsWith("_required")) {
+      warnings.push(`jl_approval_gates.${key}: unrecognized key (expected a boolean '*_required' gate)`);
+      continue;
+    }
+
+    if (typeof value !== "boolean") {
+      errors.push(`jl_approval_gates.${key} must be a boolean, got ${typeof value}`);
+    }
+  }
+
+  return { errors, warnings };
+}
+
 // Simple YAML parser for config validation
 function parseYaml(text) {
   const lines = text.split(/\r?\n/);
@@ -43,98 +174,6 @@ function parseYaml(text) {
         message: `Indentation error: line ${lineNum} has ${indent} spaces (must be multiple of 2)`,
         lineNum,
       };
-    }
-
-    const recognizedModelPatterns = [
-      /^claude-[a-z0-9.-]+$/i,
-      /^gpt-[a-z0-9.-]+$/i,
-      /^gemini-[a-z0-9.-]+$/i,
-      /^grok-[a-z0-9.-]+$/i,
-      /^kimi-[a-z0-9.-]+$/i,
-      /^mai-[a-z0-9.-]+$/i,
-    ];
-
-    const explicitRecognizedModels = new Set([
-      "claude-sonnet-5",
-      "claude-opus-4.5",
-      "gpt-4-turbo",
-      "gpt-5.4",
-      "gpt-5.4-mini",
-      "gemini-3.5-flash",
-      "gemini-3.6-flash",
-    ]);
-
-    function isRecognizedModelName(modelName) {
-      if (typeof modelName !== "string" || modelName.trim() === "") {
-        return false;
-      }
-
-      if (explicitRecognizedModels.has(modelName)) {
-        return true;
-      }
-
-      return recognizedModelPatterns.some((pattern) => pattern.test(modelName));
-    }
-
-    function validateSubagentModels(config) {
-      if (!("jl_subagent_models" in config)) {
-        return { errors: [], warnings: [] };
-      }
-
-      const errors = [];
-      const warnings = [];
-      const cfg = config.jl_subagent_models;
-
-      if (typeof cfg !== "object" || cfg === null || Array.isArray(cfg)) {
-        errors.push("jl_subagent_models must be an object");
-        return { errors, warnings };
-      }
-
-      const allowedTopLevelKeys = new Set([
-        "default",
-        "research",
-        "implementation",
-        "test_generation",
-        "documentation",
-        "overrides",
-      ]);
-
-      for (const key of Object.keys(cfg)) {
-        if (!allowedTopLevelKeys.has(key)) {
-          warnings.push(`jl_subagent_models.${key}: unrecognized top-level key`);
-        }
-      }
-
-      for (const key of ["default", "research", "implementation", "test_generation", "documentation"]) {
-        if (!(key in cfg)) continue;
-        if (typeof cfg[key] !== "string") {
-          errors.push(`jl_subagent_models.${key} must be a string`);
-          continue;
-        }
-
-        if (!isRecognizedModelName(cfg[key])) {
-          warnings.push(`jl_subagent_models.${key}: unknown model name '${cfg[key]}'`);
-        }
-      }
-
-      if ("overrides" in cfg) {
-        if (typeof cfg.overrides !== "object" || cfg.overrides === null || Array.isArray(cfg.overrides)) {
-          errors.push("jl_subagent_models.overrides must be an object");
-        } else {
-          for (const [taskKey, modelName] of Object.entries(cfg.overrides)) {
-            if (typeof modelName !== "string") {
-              errors.push(`jl_subagent_models.overrides.${taskKey} must be a string`);
-              continue;
-            }
-
-            if (!isRecognizedModelName(modelName)) {
-              warnings.push(`jl_subagent_models.overrides.${taskKey}: unknown model name '${modelName}'`);
-            }
-          }
-        }
-      }
-
-      return { errors, warnings };
     }
 
     // Pop stack if we've decreased indentation
@@ -445,7 +484,7 @@ function validateLayer3(config, agentKey) {
 // Main validation function
 function validateConfigFile(filePath, fileName) {
   const content = fs.readFileSync(filePath, "utf8");
-  const agentKeys = ["jl_quiz", "jl_recon", "jl_issue_management", "jl_subagent_models"];
+  const agentKeys = ["jl_quiz", "jl_recon", "jl_issue_management", "jl_subagent_models", "jl_approval_gates"];
   let hasErrors = false;
   let message = [];
 
@@ -470,8 +509,28 @@ function validateConfigFile(filePath, fileName) {
     }
   }
 
+  const approvalMatch = wholeText.match(/^jl_approval_gates:\s*(?:\r?\n)((?:^  .+$(?:\r?\n)?)*)/m);
+  if (approvalMatch) {
+    const parseResult = parseYaml(`jl_approval_gates:\n${approvalMatch[1] || ""}`);
+    if (parseResult.error) {
+      hasErrors = true;
+      message.push(
+        `${fileName}: ${parseResult.message}\n  Fix: Check jl_approval_gates indentation and YAML syntax.`
+      );
+    } else {
+      const approvalValidation = validateApprovalGates(parseResult.parsed);
+      for (const error of approvalValidation.errors) {
+        hasErrors = true;
+        message.push(`${fileName}: [WARN] ${error}\n  Fix: Use a boolean true/false value for approval gates.`);
+      }
+      for (const warning of approvalValidation.warnings) {
+        message.push(`${fileName}: [WARN] ${warning}\n  Fix: Verify the gate key spelling and naming convention.`);
+      }
+    }
+  }
+
   for (const agentKey of agentKeys) {
-    if (agentKey === "jl_subagent_models") continue;
+    if (agentKey === "jl_subagent_models" || agentKey === "jl_approval_gates") continue;
     const yamlBlock = extractYamlFromMarkdown(content, agentKey);
     if (!yamlBlock) continue;
 

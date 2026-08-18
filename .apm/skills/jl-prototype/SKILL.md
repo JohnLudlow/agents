@@ -255,14 +255,16 @@ session start.
 
 ### Session-level behaviour
 
-1. Resolve `jl_approval_gates.prototype_approval_mode`.
-2. If `jl-prototype` was launched from `jl-recon`, inherit the parent gate when
-   the mode resolves to `inherit`.
-3. Before calling `DelegateToSubagent`, resolve any per-task override for the
-   current task type.
-4. If the effective mode is `always`, prompt the user.
-5. If the effective mode is `never`, delegate without prompting.
-6. If the user declines, use the configured fallback.
+1. Resolve `jl_approval_gates.prototype_approval_required`.
+2. If `jl-prototype` was launched from `jl-recon`, inherit the parent
+   session's already-resolved approval decision instead of re-prompting for
+   the same bounded delegation.
+3. If `prototype_approval_required` resolves to `true`, prompt the user
+   before calling `DelegateToSubagent`.
+4. If `prototype_approval_required` resolves to `false`, delegate without
+   prompting.
+5. If the user declines, use the configured fallback (see Resolution rules
+   above).
 
 ### Double-approval avoidance
 

@@ -42,6 +42,61 @@ This skill preserves the existing separation of concerns:
 - **Approval gates** decide whether delegation is allowed
 - **Model selection** decides which model powers the delegated task
 
+## Approval Gates: `jl_approval_gates`
+
+This is the shared contract for whether delegation may happen at all, before
+model selection or spawning is considered.
+
+### Schema and defaults
+
+Each delegating skill or agent defines one or more boolean gates under the
+shared `jl_approval_gates` namespace, following a unified pattern:
+
+```yaml
+jl_approval_gates:
+  test_approval_required: true              # jl-feature-tester
+  documentation_approval_required: true     # jl-documenter
+  prototype_approval_required: true         # jl-prototype
+  plan_approval_required: true              # jl-planner
+  implementation_approval_required: true    # jl-feature-implementer
+```
+
+- Every gate is a boolean (`true`/`false`); there is no enum or `_mode`
+  variant. Cascading and fallback behavior is expressed as workflow rules,
+  not as additional configuration keys.
+- If a gate is missing from config, the delegating skill defaults to `true`
+  (human-in-the-loop by default).
+- `jl_approval_gates` is distinct from `jl_recon.decision_gates`, which
+  governs Recon-only gates (destination confirmation, inciting-issue
+  confirmation, Research AFK). Delegation workflows always use
+  `jl_approval_gates`.
+- See each delegating skill's own Configuration section for its specific
+  gate names (for example, `jl-feature-tester` also defines
+  `test_ci_required` and `test_coverage_threshold`).
+
+### Session-level vs. per-task confirmation
+
+- Resolve the relevant gate once per session, then re-apply it at every
+  delegation decision point in that session — do not re-resolve config on
+  every single call.
+- A parent agent invoked from `jl-recon` (or another orchestrating skill)
+  inherits the parent session's already-resolved approval decision instead of
+  re-prompting for the same bounded delegation.
+- A declined gate does not retype or cancel the ticket/task itself; it means
+  the work continues inline in the parent, with the gap recorded for later
+  review.
+
+### Fallback when delegation is unavailable
+
+If the current harness cannot spawn a subagent at all (see the Harness
+Capability Matrix below):
+
+- warn the user in plain language that delegation is unavailable in this
+  harness;
+- offer the supported inline path as the fallback; and
+- do not silently drop the work — record that delegation was unavailable for
+  this session.
+
 ## DelegateToSubagent API
 
 Use the following conceptual API when a parent agent delegates a bounded child
