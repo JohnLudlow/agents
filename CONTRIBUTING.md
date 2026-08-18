@@ -16,7 +16,8 @@ repository!
 
 ### Subagent Approval Gates
 
-Subagent delegation is governed by approval gates configured via `jl_approval_gates` in `CONTRIBUTING.md` or `AGENTS.md`. All skills use a unified boolean pattern:
+Subagent delegation is governed by approval gates configured via `jl_approval_gates` in `CONTRIBUTING.md` or
+`AGENTS.md`. All skills use a unified boolean pattern:
 
 #### Schema
 

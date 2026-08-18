@@ -7,9 +7,14 @@ description: "Feature testing skill: plans, generates, runs, verifies, and repor
 
 ## Overview
 
-`jl-feature-tester` owns the feature-testing lifecycle for a bounded change: discover what should be tested, decide whether to generate or extend tests, run them, verify the results, and present one clear report to the user. It may work inline or delegate bounded test subtasks to specialist agents when that improves quality, speed, or parallelism.
+`jl-feature-tester` owns the feature-testing lifecycle for a bounded change: discover what should
+be tested, decide whether to generate or extend tests, run them, verify the results, and present
+one clear report to the user. It may work inline or delegate bounded test subtasks to specialist
+agents when that improves quality, speed, or parallelism.
 
-Delegation is additive, not a handoff of responsibility. This skill remains the parent coordinator for test scope, approval-gate evaluation, worktree tracking, artifact consolidation, CI validation, and final acceptance or fallback decisions.
+Delegation is additive, not a handoff of responsibility. This skill remains the parent coordinator
+for test scope, approval-gate evaluation, worktree tracking, artifact consolidation, CI
+validation, and final acceptance or fallback decisions.
 
 ## Core Model
 
@@ -17,17 +22,21 @@ Every testing session carries the same state:
 
 - **Feature under test** — the component, behavior, or change being validated.
 
-- **Test scope** — unit, integration, end-to-end, regression, coverage, performance, or security testing required for the session.
+- **Test scope** — unit, integration, end-to-end, regression, coverage, performance, or security
+  testing required for the session.
 
 - **Discovery result** — the inventory of testable components, existing harnesses, missing coverage, and blockers.
 
-- **Delegated subtask** — a bounded child task such as unit-test generation, coverage analysis, regression analysis, or performance/security validation.
+- **Delegated subtask** — a bounded child task such as unit-test generation, coverage analysis,
+  regression analysis, or performance/security validation.
 
-- **Test report** — the consolidated output containing generated artifacts, execution results, CI status, coverage, findings, and recommended next action.
+- **Test report** — the consolidated output containing generated artifacts, execution results, CI
+  status, coverage, findings, and recommended next action.
 
 ## Configuration
 
-`jl-feature-tester` reads settings from `jl_approval_gates` configuration in `CONTRIBUTING.md` and `AGENTS.md`, using `jl-config` for resolution precedence.
+`jl-feature-tester` reads settings from `jl_approval_gates` configuration in `CONTRIBUTING.md` and
+`AGENTS.md`, using `jl-config` for resolution precedence.
 
 ### Schema
 
@@ -47,7 +56,8 @@ Every testing session carries the same state:
 
 - If config is missing or malformed, default to `test_approval_required: true` (human-in-the-loop by default).
 
-- Approval authorizes calling `DelegateToSubagent` for the bounded subtask; it does not remove the need for CI or result validation later in the flow.
+- Approval authorizes calling `DelegateToSubagent` for the bounded subtask; it does not remove the
+  need for CI or result validation later in the flow.
 
 ## Approval Gate Integration
 
@@ -75,7 +85,8 @@ For other delegated testing subtasks, use the matching bounded pattern:
 
 ### Decline handling
 
-If the user declines delegation, record the gap in the test report and explain why delegation was requested. Do not silently drop the work item.
+If the user declines delegation, record the gap in the test report and explain why delegation was
+requested. Do not silently drop the work item.
 
 ### Double-approval avoidance
 
@@ -101,7 +112,8 @@ Discovery should answer:
 
 - whether the work is small enough to handle inline or large enough to benefit from delegated parallel generation or analysis.
 
-For large suites, multi-language repositories, or multiple independent components, delegation is a valid discovery outcome rather than an exceptional path.
+For large suites, multi-language repositories, or multiple independent components, delegation is a
+valid discovery outcome rather than an exceptional path.
 
 ## Test Generation
 
@@ -295,9 +307,11 @@ Choose the narrowest capable agent that matches the language, framework, and tes
 
 ### Selection rules
 
-- Prefer `polyglot-test-agent` for unit-test generation unless a language-specific test agent clearly matches the existing framework better.
+- Prefer `polyglot-test-agent` for unit-test generation unless a language-specific test agent
+  clearly matches the existing framework better.
 
-- Prefer language-specific agents when the repository conventions are obvious and the specialist agent reduces adaptation work.
+- Prefer language-specific agents when the repository conventions are obvious and the specialist
+  agent reduces adaptation work.
 
 - Prefer a performance-focused agent for performance validation rather than treating it as ordinary regression testing.
 
@@ -329,7 +343,8 @@ If a parent feature branch exists, the child branch may nest under it; the impor
 
 - Merge accepted generated test files back into the feature branch only after review and validation.
 
-- Auto-clean child worktrees after merge when the workflow allows it, or retain them temporarily when the user wants reviewable isolation.
+- Auto-clean child worktrees after merge when the workflow allows it, or retain them temporarily
+  when the user wants reviewable isolation.
 
 - Record cleanup status in the consolidated test report.
 
@@ -405,11 +420,13 @@ It should confirm:
 
 - CI requirements are satisfied when configured.
 
-Delegation is appropriate here when result analysis is large, noisy, cross-language, or specialist, such as coverage triage, performance analysis, or security-focused verification.
+Delegation is appropriate here when result analysis is large, noisy, cross-language, or specialist,
+such as coverage triage, performance analysis, or security-focused verification.
 
 ## CI Integration
 
-Delegated test generation is not accepted solely because an agent produced files. Generated tests must be validated through the repository's normal CI expectations.
+Delegated test generation is not accepted solely because an agent produced files. Generated tests
+must be validated through the repository's normal CI expectations.
 
 ### CI gating
 
@@ -434,7 +451,8 @@ tests generated
   -> user accepts / rejects / requests revision
 ```
 
-If CI cannot run in the current environment, say so clearly and treat final acceptance as pending external validation rather than silently complete.
+If CI cannot run in the current environment, say so clearly and treat final acceptance as pending
+external validation rather than silently complete.
 
 ## Requirements
 
@@ -477,7 +495,11 @@ The agent MUST NOT:
 
 ### Example 1 — feature ready for unit tests
 
-A TypeScript feature is implemented with no nearby tests. Discovery finds three changed modules and an existing Jest harness. `jl-feature-tester` resolves the generation gate, asks `Generate tests for user-search using polyglot-test-agent? [Approve] [Decline]`, delegates unit-test generation in parallel worktrees, consolidates the returned test files and run output, then waits for CI before recommending acceptance.
+A TypeScript feature is implemented with no nearby tests. Discovery finds three changed modules and
+an existing Jest harness. `jl-feature-tester` resolves the generation gate, asks `Generate tests for
+user-search using polyglot-test-agent? [Approve] [Decline]`, delegates unit-test generation in
+parallel worktrees, consolidates the returned test files and run output, then waits for CI before
+recommending acceptance.
 
 Model example: no explicit model is provided, so the skill first checks
 `jl_subagent_models.test_generation`, then its per-agent Claude default, then
@@ -485,14 +507,20 @@ the global default.
 
 ### Example 2 — performance requirement identified
 
-A service change includes a latency target and increased load risk. After normal correctness tests pass, `jl-feature-tester` classifies performance validation as a separate bounded task, resolves the performance override, delegates to a performance-focused agent, then folds throughput metrics and regressions into the final test report before the user decides whether the feature is acceptable.
+A service change includes a latency target and increased load risk. After normal correctness tests
+pass, `jl-feature-tester` classifies performance validation as a separate bounded task, resolves the
+performance override, delegates to a performance-focused agent, then folds throughput metrics and
+regressions into the final test report before the user decides whether the feature is acceptable.
 
 Model example: performance-test generation can explicitly request
 `gpt-4-turbo` even when ordinary unit tests default to Claude Opus.
 
 ### Example 3 — harness unavailable, fallback inline
 
-A repository has code changes but no working test harness for the changed component. The user declines delegation or no suitable agent is available. `jl-feature-tester` follows the configured fallback: it writes tests inline when practical, or records a clear skipped/manual gap with the missing harness details instead of pretending the component is covered.
+A repository has code changes but no working test harness for the changed component. The user
+declines delegation or no suitable agent is available. `jl-feature-tester` follows the configured
+fallback: it writes tests inline when practical, or records a clear skipped/manual gap with the
+missing harness details instead of pretending the component is covered.
 
 Model example: a browser harness cannot honor the requested model, so the
 delegation result records the fallback to an available Claude or global default
@@ -500,7 +528,8 @@ before continuing.
 
 ## Relationship to Other Skills
 
-- **jl-subagent-spawning** — defines the `DelegateToSubagent` protocol and harness considerations used for delegated testing subtasks.
+- **jl-subagent-spawning** — defines the `DelegateToSubagent` protocol and harness considerations
+  used for delegated testing subtasks.
 
 - **jl-recon** — provides a documented pattern for approval-gated AFK-style delegation and parent coordination.
 

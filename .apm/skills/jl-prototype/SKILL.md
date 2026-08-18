@@ -62,8 +62,11 @@ session decision when invoked from `jl-recon`.
 - Resolve config before delegating any child task.
 - When `prototype_approval_required` is `true`, prompt the user before delegation.
 - When `prototype_approval_required` is `false`, delegation is pre-authorized.
-- If config is missing or malformed, default to `prototype_approval_required: true` (human-in-the-loop by default).
-- Delegation approval governs whether `jl-prototype` may call `DelegateToSubagent`; it does not require a second prompt after a child agent has already been explicitly approved for that same bounded subtask.
+- If config is missing or malformed, default to `prototype_approval_required: true` (human-in-the-loop
+  by default).
+- Delegation approval governs whether `jl-prototype` may call `DelegateToSubagent`; it does not
+  require a second prompt after a child agent has already been explicitly approved for that same
+  bounded subtask.
 
 ### Approval prompt
 

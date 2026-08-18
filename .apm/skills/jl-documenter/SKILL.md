@@ -7,17 +7,22 @@ description: "Documentation orchestration skill for large, multi-section, or spe
 
 ## Overview
 
-This skill documents how `jl-documenter` should plan, delegate, review, and publish documentation work when one writer is not the right shape for the job. Use it when a documentation request is large enough to split into parallel sections, specialized enough to benefit from an expert documenter, or broad enough to require multi-author coordination.
+This skill documents how `jl-documenter` should plan, delegate, review, and publish documentation work when one writer
+is not the right shape for the job. Use it when a documentation request is large enough to split into parallel sections,
+specialized enough to benefit from an expert documenter, or broad enough to require multi-author coordination.
 
-`jl-documenter` remains the parent orchestrator. Delegation does not transfer ownership of scope, audience, approval handling, consolidation, or publication readiness.
+`jl-documenter` remains the parent orchestrator. Delegation does not transfer ownership of scope, audience, approval
+handling, consolidation, or publication readiness.
 
 ## When to Use This Skill
 
 Use this skill when `jl-documenter` needs to:
 
-- split a large documentation project into parallel sections such as API reference, user guide, architecture guide, and troubleshooting
+- split a large documentation project into parallel sections such as API reference, user guide,
+  architecture guide, and troubleshooting
 
-- delegate specialized documentation such as performance tuning, security guidance, migration notes, or framework-specific guidance
+- delegate specialized documentation such as performance tuning, security guidance, migration
+  notes, or framework-specific guidance
 
 - route implementation-adjacent documentation to `jl-feature-documenter`
 
@@ -41,7 +46,8 @@ Use this skill when `jl-documenter` needs to:
 
 ## Configuration
 
-`jl-documenter` reads settings from `jl_approval_gates` configuration in `CONTRIBUTING.md` and `AGENTS.md`, using `jl-config` for resolution and repository-relative defaults.
+`jl-documenter` reads settings from `jl_approval_gates` configuration in `CONTRIBUTING.md` and
+`AGENTS.md`, using `jl-config` for resolution and repository-relative defaults.
 
 ### Schema
 
@@ -58,7 +64,8 @@ Use this skill when `jl-documenter` needs to:
 
 - When `documentation_publish_approval_required` is `true`, require explicit approval before final publication.
 
-- If config is missing or malformed, default to `documentation_approval_required: true` and `documentation_publish_approval_required: true` (human-in-the-loop by default).
+- If config is missing or malformed, default to `documentation_approval_required: true` and
+  `documentation_publish_approval_required: true` (human-in-the-loop by default).
 
 ### Example configuration
 
@@ -79,7 +86,8 @@ jl_approval_gates:
 
 ## Approval Gate Integration
 
-Approval gates apply at each delegation decision point and again before publication when the resolved publish gate requires it.
+Approval gates apply at each delegation decision point and again before publication when the
+resolved publish gate requires it.
 
 ### Approval prompt
 
@@ -125,9 +133,11 @@ Delegate when one or more of these conditions are true:
 
 - the documentation set is large enough to split into parallel sections without losing coherence
 
-- a section is specialized enough to benefit from an expert writer, such as performance, security, migration, API, or architecture guidance
+- a section is specialized enough to benefit from an expert writer, such as performance, security,
+  migration, API, or architecture guidance
 
-- code documentation should be written by the implementer-facing documenter, especially when implementation details need tight alignment with shipped behavior
+- code documentation should be written by the implementer-facing documenter, especially when
+  implementation details need tight alignment with shipped behavior
 
 - a language-specific or framework-specific section needs focused expertise
 
@@ -137,7 +147,8 @@ Do not delegate tiny edits, trivial wording cleanup, or a section whose dependen
 
 ## Documentation Decomposition
 
-`jl-documenter` should decompose large work before drafting begins. Delegation is a first-class option inside decomposition, not a late escape hatch.
+`jl-documenter` should decompose large work before drafting begins. Delegation is a first-class
+option inside decomposition, not a late escape hatch.
 
 Recommended decomposition order:
 
@@ -242,11 +253,14 @@ Choose the target agent based on document type, audience, and complexity.
 
 Selection rules:
 
-- Prefer `jl-feature-documenter` for feature documentation and implementation-adjacent sections already aligned to repository documentation patterns.
+- Prefer `jl-feature-documenter` for feature documentation and implementation-adjacent sections
+  already aligned to repository documentation patterns.
 
-- Prefer the most audience-matched specialist when the section is a standalone discipline such as API, architecture, or troubleshooting.
+- Prefer the most audience-matched specialist when the section is a standalone discipline such as
+  API, architecture, or troubleshooting.
 
-- Prefer the narrowest competent specialist rather than a general documenter when terminology, examples, or validation are domain-sensitive.
+- Prefer the narrowest competent specialist rather than a general documenter when terminology,
+  examples, or validation are domain-sensitive.
 
 - If no specialist exists in the current harness, document the gap and fall back according to config.
 
@@ -300,7 +314,8 @@ jl_subagent_models:
 
 ## Branch & Worktree Management
 
-Each delegated section gets isolated workspace state so multiple documenters can work in parallel without overwriting one another.
+Each delegated section gets isolated workspace state so multiple documenters can work in parallel
+without overwriting one another.
 
 ### Branch naming
 
@@ -448,7 +463,8 @@ Before delegating, state the intended audience for every section, such as:
 
 - security reviewers
 
-Do not let one section drift into developer depth while its sibling is written for casual end users unless the outline explicitly separates those audiences.
+Do not let one section drift into developer depth while its sibling is written for casual end
+users unless the outline explicitly separates those audiences.
 
 ### Localization and language-specific documentation
 
@@ -460,7 +476,8 @@ If delegating to multiple language-specific documenters:
 
 - note locale-specific examples, legal references, operational assumptions, or screenshots explicitly
 
-- treat translated or locale-specific sections as versioned siblings that must be reviewed for semantic parity, not merely formatting parity
+- treat translated or locale-specific sections as versioned siblings that must be reviewed for
+  semantic parity, not merely formatting parity
 
 ### Synchronization strategy
 
@@ -508,13 +525,15 @@ If a returned section documents the wrong version, treat it as a revision item, 
 
 ## Review Process
 
-The normal documentation review process still applies, but multi-author work adds section-level review and consolidation review.
+The normal documentation review process still applies, but multi-author work adds section-level
+review and consolidation review.
 
 - Review each delegated section before merge into the parent document set.
 
 - Review the consolidated document set for cohesion after section merge.
 
-- Use adversarial or subject-matter review when a section is high-risk, externally visible, or difficult to validate from the repository alone.
+- Use adversarial or subject-matter review when a section is high-risk, externally visible, or
+  difficult to validate from the repository alone.
 
 - Do not treat section approval as automatic publication approval.
 
@@ -526,7 +545,8 @@ Publishing may be a simple handoff for small inline docs or a gated coordination
 
 - Delegated multi-section docs should publish only after all approved sections are consolidated and validated together.
 
-- If a critical delegated section is missing and fallback is `delay-publication`, postpone publication rather than shipping an incomplete guide.
+- If a critical delegated section is missing and fallback is `delay-publication`, postpone
+  publication rather than shipping an incomplete guide.
 
 ## Examples
 

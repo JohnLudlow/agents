@@ -18,6 +18,8 @@ This reference is relevant when:
 - you need to honor repository or per-task model preferences
 - you need to coordinate multiple agents across harnesses
 - you encounter harness or fleet-mode limitations
+- you need to know whether a specific plugin, skill, or agent supports
+  subagent spawning, fleet mode, or worktree isolation before delegating to it
 - you are implementing or documenting harness-specific delegation mechanics
   (see Delegation Maturity Stages below — distinct from #110's Phase 1–4
   documentation/implementation roadmap)
@@ -432,6 +434,24 @@ Recommended wording:
 
 See `references/HARNESS_FALLBACK.md` for a full decision-tree walkthrough.
 
+## Plugin Capability Registry: The Capability Manifest
+
+The Harness Capability Matrix above answers what the *runtime environment*
+can do. It says nothing about what the *specific delegation target* — a
+skill, agent, or plugin — itself supports. A skill or agent declares that
+separately, in a `capabilities` manifest inside its own frontmatter
+(`subagent_spawning`, `fleet_mode`, `worktree_isolation`, optional
+`supported_models`) — the same file that already carries its `name` and
+`description`, so the manifest can never drift out of sync with the artifact
+it describes. A missing manifest means capability-unknown, not
+capability-denied: treat every field as absent and apply the "Fallback when
+delegation is unavailable" rule above.
+
+A delegation proceeds only when both axes agree — the harness supports the
+mechanism *and* the target's manifest doesn't require something the harness
+can't meet. See `references/PLUGIN_CAPABILITY_REGISTRY.md` for the full
+schema, the discovery mechanism, and a worked example.
+
 ## Why Not Use Fleet Mode Directly?
 
 Fleet mode still coordinates agents, not skills. That design limitation does
@@ -476,4 +496,6 @@ full "When NOT to delegate" anti-pattern list and overhead threshold. See
 capability matrix, and decision table. See
 `references/RESULT_AGGREGATION.md` for per-ticket-type output shapes,
 multi-delegation result aggregation, partial-failure handling, and
-token/timing usage rollup.
+token/timing usage rollup. See `references/PLUGIN_CAPABILITY_REGISTRY.md`
+for the capability manifest schema, discovery mechanism, and its
+relationship to the Harness Capability Matrix.

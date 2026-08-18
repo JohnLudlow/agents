@@ -170,7 +170,8 @@ at session start.
 - Resolve config before decomposing work into delegated child tasks.
 - When `implementation_approval_required` is `true`, prompt before delegation.
 - When `implementation_review_required` is `true`, require explicit review before merge.
-- If config is missing or malformed, default to `implementation_approval_required: true` and `implementation_review_required: true` (human-in-the-loop by default).
+- If config is missing or malformed, default to `implementation_approval_required: true` and
+  `implementation_review_required: true` (human-in-the-loop by default).
 
 ### Approval prompt
 
