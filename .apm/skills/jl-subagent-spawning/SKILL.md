@@ -255,116 +255,23 @@ through the hierarchy until an available model is found.
 
 ## Model Resolution Pseudocode
 
-```text
-resolveDelegationModel(request, config, delegatingAgent, harness):
-  candidates = []
-
-  if request.model exists:
-    candidates.append({ source: "explicit", model: request.model })
-
-  if request.taskKey exists and config.jl_subagent_models.overrides[taskKey] exists:
-    candidates.append({
-      source: "task-override",
-      model: config.jl_subagent_models.overrides[taskKey]
-    })
-
-  typeKey = mapDelegationTypeToConfigKey(request.delegationType)
-  if config.jl_subagent_models[typeKey] exists:
-    candidates.append({ source: "per-type", model: config.jl_subagent_models[typeKey] })
-
-  if delegatingAgent.perAgentDefaultModel exists:
-    candidates.append({ source: "per-agent", model: delegatingAgent.perAgentDefaultModel })
-
-  if config.jl_subagent_models.default exists:
-    candidates.append({ source: "global", model: config.jl_subagent_models.default })
-
-  candidates = removeUnknownModelsWithWarnings(candidates)
-  candidates = removeDuplicatesPreservingOrder(candidates)
-
-  for candidate in candidates:
-    if harnessSupportsModel(harness, candidate.model):
-      return {
-        modelResolved: candidate.model,
-        modelResolutionSource: candidate.source,
-        warnings: collectSubstitutionWarningsIfNeeded(request.model, candidate.model)
-      }
-
-  return {
-    modelResolved: delegatingAgent.hardFallbackModel,
-    modelResolutionSource: "fallback",
-    warnings: ["No configured candidate model was available in this harness; used hard fallback."]
-  }
-```
+The full six-candidate cascade (explicit → task-override → per-type →
+per-agent → global → hard fallback) and its resolution pseudocode are
+documented in `references/HARNESS_FALLBACK.md`, along with worked resolution
+examples for common cases (research request, explicit override, browser
+fallback).
 
 ## Example Resolution Flows
 
-### Example 1 — research request with no explicit model
-
-```text
-request.delegationType = "research"
-request.model = unset
-config.jl_subagent_models.research = "claude-sonnet-5"
-delegating skill per-agent default = "claude-sonnet-5"
-config.jl_subagent_models.default = "claude-sonnet-5"
-
-Result:
-  modelResolved = "claude-sonnet-5"
-  source = "per-type"
-```
-
-### Example 2 — explicit override for a complex task
-
-```text
-request.model = "claude-opus-4.5"
-request.delegationType = "research"
-
-If the harness supports "claude-opus-4.5":
-  modelResolved = "claude-opus-4.5"
-  source = "explicit"
-```
-
-### Example 3 — browser harness fallback
-
-```text
-request.model = "gpt-4-turbo"
-request.delegationType = "documentation"
-browser harness does not support "gpt-4-turbo"
-config.jl_subagent_models.documentation = "claude-sonnet-5"
-
-Result:
-  modelResolved = "claude-sonnet-5"
-  source = "per-type"
-  warning = "Requested model 'gpt-4-turbo' unavailable in browser harness; using 'claude-sonnet-5' instead."
-```
+Worked examples (research request, explicit override, browser fallback) are
+in `references/HARNESS_FALLBACK.md`.
 
 ## Harness Model Availability and Constraints
 
-Different harnesses can expose different model sets.
-
-### Copilot CLI
-
-**Status:** best overall support.
-
-- typically exposes the widest model inventory
-- preferred harness for explicit model control and true subagent spawning
-- still validate availability rather than assuming every model name is enabled
-
-### Browser / OpenCode
-
-**Status:** partial support.
-
-- may expose only a subset of models
-- may support skills but not full subagent spawning
-- should warn when a requested model is unavailable and a fallback model is
-  selected instead
-
-### Azure DevOps / Copilot Extensions
-
-**Status:** harness-dependent.
-
-- task-tool availability and model inventory may vary by host integration
-- parent agents should treat model support as runtime data, not a static
-  guarantee
+Different harnesses expose different model sets — Copilot CLI has the
+broadest support, Browser/OpenCode is partial, and Azure DevOps/Copilot
+Extensions is harness-dependent. See `references/HARNESS_FALLBACK.md` for
+the full capability matrix and per-harness notes.
 
 ## Required Warning Behavior
 
@@ -381,6 +288,8 @@ Recommended wording:
 > Requested model `{requested}` is unavailable in this harness. Delegation will
 > continue with `{resolved}`.
 
+See `references/HARNESS_FALLBACK.md` for a full decision-tree walkthrough.
+
 ## Why Not Use Fleet Mode Directly?
 
 Fleet mode still coordinates agents, not skills. That design limitation does
@@ -390,13 +299,8 @@ it is not.
 
 ## Decision Table
 
-| Need | Harness | Recommended | Fallback |
-| --- | --- | --- | --- |
-| Spawn subagent with explicit model | CLI | `DelegateToSubagent` + model resolution | per-type or per-agent fallback |
-| Spawn subagent with explicit model | Browser | inline or limited delegation + fallback warning | per-type or global fallback |
-| Spawn planning subagent | CLI | task tool (native) | skill inline |
-| Spawn planning subagent | Browser | skill inline | feature-reviewer agent |
-| Invoke adversarial review | Any | adversarial-review skill | feature-reviewer agent |
+See `references/HARNESS_FALLBACK.md` for the authoritative decision table
+mapping delegation needs, harness, recommended approach, and fallback.
 
 ## Requirements
 
@@ -421,4 +325,6 @@ Parent agents MUST NOT:
 See `references/DEPENDENCIES.md` for relationships to `jl-planner`,
 `jl-feature-planner`, `jl-adversarial-review`, `jl-feature-reviewer`, and
 `jl-planning-workflow`. See `references/DELEGATION_HEURISTICS.md` for the
-full "When NOT to delegate" anti-pattern list and overhead threshold.
+full "When NOT to delegate" anti-pattern list and overhead threshold. See
+`references/HARNESS_FALLBACK.md` for the full model-fallback algorithm,
+capability matrix, and decision table.
