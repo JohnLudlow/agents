@@ -47,7 +47,7 @@ Example (from a hypothetical jl-quiz skill):
 
 ```yaml
 jl_quiz:
-  interview_mode: a
+  quiz_mode: a
   plan_destination: github_issue
   file_storage_location: docs/plans/
 ```
@@ -117,7 +117,7 @@ If `CONTRIBUTING.md` contains:
 
 ```yaml
 jl_quiz:
-  interview_mode: a
+  quiz_mode: a
   plan_destination: github_issue
 ```
 
@@ -125,18 +125,18 @@ And `AGENTS.md` contains:
 
 ```yaml
 jl_quiz:
-  interview_mode: b
+  quiz_mode: b
 ```
 
 Then the resolved result is:
 
 ```yaml
 jl_quiz:
-  interview_mode: b
+  quiz_mode: b
   plan_destination: github_issue
 ```
 
-`AGENTS.md` overrides only `interview_mode`; it does not erase sibling settings
+`AGENTS.md` overrides only `quiz_mode`; it does not erase sibling settings
 supplied by `CONTRIBUTING.md`.
 
 ## Validation Pattern
@@ -309,7 +309,7 @@ jl-quiz reads settings from `jl_quiz` configuration in AGENTS.md or CONTRIBUTING
 
 | Setting | Type | Allowed values | Default | Sensitivity |
 | --- | --- | --- | --- | --- |
-| `interview_mode` | string | `a` or `b` | `a` | recommended |
+| `quiz_mode` | string | `a` or `b` | `a` | recommended |
 | `plan_destination` | string | github_issue, local_file, ... | (none) | required |
 | `file_storage_location` | string | repository-relative path | `docs/plans/` | recommended |
 
@@ -317,7 +317,7 @@ jl-quiz reads settings from `jl_quiz` configuration in AGENTS.md or CONTRIBUTING
 
 If jl_quiz config is not found, jl-quiz uses:
 
-- interview_mode: a
+- quiz_mode: a
 - plan_destination: (prompts user if required and missing)
 - file_storage_location: docs/plans/
 
@@ -327,13 +327,13 @@ In CONTRIBUTING.md:
 \`\`\`yaml
 jl_quiz:
   plan_destination: github_issue
-  interview_mode: a
+  quiz_mode: a
 \`\`\`
 
-In AGENTS.md (overrides interview_mode only):
+In AGENTS.md (overrides quiz_mode only):
 \`\`\`yaml
 jl_quiz:
-  interview_mode: b
+  quiz_mode: b
 \`\`\`
 ```
 
@@ -357,13 +357,13 @@ Resolved config (any agent):
 
 ```yaml
 jl_quiz:
-  interview_mode: b
+  quiz_mode: b
   plan_destination: github_issue
 ```
 
 Resolved config:
 
-- `interview_mode: b` (from CONTRIBUTING.md)
+- `quiz_mode: b` (from CONTRIBUTING.md)
 - `plan_destination: github_issue` (from CONTRIBUTING.md)
 - any other jl-quiz settings use defaults
 
@@ -387,7 +387,7 @@ Resolved config:
 
 ```yaml
 jl_quiz:
-  interview_mode: a
+  quiz_mode: a
   plan_destination: github_issue
 ```
 
@@ -395,12 +395,12 @@ jl_quiz:
 
 ```yaml
 jl_quiz:
-  interview_mode: b
+  quiz_mode: b
 ```
 
 Resolved config:
 
-- `interview_mode: b` (AGENTS.md overrides CONTRIBUTING.md)
+- `quiz_mode: b` (AGENTS.md overrides CONTRIBUTING.md)
 - `plan_destination: github_issue` (from CONTRIBUTING.md, not in AGENTS.md)
 - any other jl-quiz settings use defaults
 
@@ -436,9 +436,9 @@ Every configuration warning should follow this format:
 **Examples:**
 
 ```text
-[WARN] jl-quiz: 'interview_mode' has invalid value 'c' (must be 'a' or 'b')
+[WARN] jl-quiz: 'quiz_mode' has invalid value 'c' (must be 'a' or 'b')
   File: CONTRIBUTING.md [line 5]
-  Fix: Change interview_mode to 'a' or 'b' in the jl_quiz config block
+  Fix: Change quiz_mode to 'a' or 'b' in the jl_quiz config block
 ```
 
 ```text
@@ -520,7 +520,7 @@ jl-quiz validates its configuration at startup and emits warnings for:
 
 **Type Mismatch**
 \`\`\`
-[WARN] jl-quiz: 'interview_mode' must be a string, not a boolean
+[WARN] jl-quiz: 'quiz_mode' must be a string, not a boolean
   Fix: Change the value to 'a' or 'b' (keep quotes)
 \`\`\`
 

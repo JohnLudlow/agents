@@ -23,7 +23,7 @@ For technical details on resolution rules, validation schema, and error handling
 ## Agent config
 
 my_agent:
-  interview_mode: b
+  quiz_mode: b
 ```
 
 **AGENTS.md**: (not present in this repository)
@@ -32,7 +32,7 @@ my_agent:
 
 ```yaml
 my_agent:
-  interview_mode: b
+  quiz_mode: b
   plan_destination: github_issue    # default
   file_storage_location: docs/plans/ # default
 ```
@@ -40,7 +40,7 @@ my_agent:
 **What happened**:
 
 1. `my_agent` block read from CONTRIBUTING.md
-2. `interview_mode: b` set explicitly
+2. `quiz_mode: b` set explicitly
 3. `plan_destination` and `file_storage_location` filled in by defaults (not in any file)
 4. Result: agent runs with one custom setting + two defaults
 
@@ -57,7 +57,7 @@ it via AGENTS.md.
 ## Agent config
 
 my_agent:
-  interview_mode: a
+  quiz_mode: a
   plan_destination: github_issue
   file_storage_location: docs/plans/
 ```
@@ -68,14 +68,14 @@ my_agent:
 # AGENTS.md — Claude harness specific config
 
 my_agent:
-  interview_mode: b
+  quiz_mode: b
 ```
 
 **Resolution result** (what the agent reads at startup):
 
 ```yaml
 my_agent:
-  interview_mode: b              # from AGENTS.md (override)
+  quiz_mode: b              # from AGENTS.md (override)
   plan_destination: github_issue # from CONTRIBUTING.md (fallback)
   file_storage_location: docs/plans/ # from CONTRIBUTING.md (fallback)
 ```
@@ -84,8 +84,8 @@ my_agent:
 
 1. Start with defaults
 2. Merge CONTRIBUTING.md onto defaults → sets all three settings
-3. Merge AGENTS.md onto result → overrides `interview_mode` only
-4. Result: AGENTS.md wins for `interview_mode`, CONTRIBUTING.md provides fallback for the rest
+3. Merge AGENTS.md onto result → overrides `quiz_mode` only
+4. Result: AGENTS.md wins for `quiz_mode`, CONTRIBUTING.md provides fallback for the rest
 
 **Why this pattern matters**:
 
@@ -105,7 +105,7 @@ my_agent:
 ## Agent config
 
 my_quiz_agent:
-  interview_mode: a
+  quiz_mode: a
   plan_destination: github_issue
 
 my_planning_agent:
@@ -133,7 +133,7 @@ my_planning_agent:
 
 ```yaml
 my_quiz_agent:
-  interview_mode: a            # from CONTRIBUTING.md
+  quiz_mode: a            # from CONTRIBUTING.md
   plan_destination: markdown   # from AGENTS.md (override)
 
 my_planning_agent:
@@ -148,7 +148,7 @@ my_planning_agent:
 
 - Precedence is **per setting**, not per agent or per file
 - `my_quiz_agent.plan_destination` came from AGENTS.md
-- `my_quiz_agent.interview_mode` came from CONTRIBUTING.md
+- `my_quiz_agent.quiz_mode` came from CONTRIBUTING.md
 - `my_planning_agent.decision_gates.destination_confirmation` came from AGENTS.md
 - `my_planning_agent.decision_gates.research_afk` came from CONTRIBUTING.md
 - `my_planning_agent.uncertainty_tracking` came entirely from CONTRIBUTING.md (not overridden)
@@ -167,7 +167,7 @@ my_planning_agent:
 
 ```yaml
 my_agent:
-  interview_mode: a                   # default
+  quiz_mode: a                   # default
   plan_destination: github_issue      # default
   file_storage_location: docs/plans/  # default
 ```
@@ -197,16 +197,16 @@ my_agent:
 ## Agent config
 
 my_agent:
-  interview_mode: ["a", "b"]  # Wrong! Should be a string, not a list
+  quiz_mode: ["a", "b"]  # Wrong! Should be a string, not a list
 ```
 
 **What the validator reports**:
 
 ```text
-✗ CONTRIBUTING.md: [ERROR] my_agent.interview_mode must be a string or valid enum
+✗ CONTRIBUTING.md: [ERROR] my_agent.quiz_mode must be a string or valid enum
   File: CONTRIBUTING.md [line 4]
   Got: list (["a", "b"])
-  Fix: Change to a single value: interview_mode: a
+  Fix: Change to a single value: quiz_mode: a
 ```
 
 **How to fix**:
@@ -215,7 +215,7 @@ my_agent:
 ## Agent config
 
 my_agent:
-  interview_mode: a  # Correct: string value, not a list
+  quiz_mode: a  # Correct: string value, not a list
 ```
 
 For more validation errors and how to fix them, see [LINTER_EXAMPLES.md](LINTER_EXAMPLES.md).

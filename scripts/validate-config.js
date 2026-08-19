@@ -318,20 +318,20 @@ function validateLayer3(config, agentKey) {
       };
     }
 
-    // Recommended: interview_mode
-    if ("interview_mode" in cfg) {
-      const im = cfg.interview_mode;
+    // Recommended: quiz_mode
+    if ("quiz_mode" in cfg) {
+      const im = cfg.quiz_mode;
       if (typeof im !== "string") {
         return {
           valid: false,
-          error: `jl_quiz.interview_mode: must be string, got ${typeof im}`,
+          error: `jl_quiz.quiz_mode: must be string, got ${typeof im}`,
         };
       }
 
       if (!["a", "b"].includes(im)) {
         return {
           valid: false,
-          error: `jl_quiz.interview_mode: must be 'a' or 'b', got '${im}'`,
+          error: `jl_quiz.quiz_mode: must be 'a' or 'b', got '${im}'`,
         };
       }
     }

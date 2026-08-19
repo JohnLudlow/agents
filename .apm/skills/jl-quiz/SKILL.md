@@ -84,14 +84,14 @@ validation.
 
 | Setting | Type | Allowed values | Default | Sensitivity |
 | --- | --- | --- | --- | --- |
-| `interview_mode` | string | `a`, `b` | `a` | recommended |
+| `quiz_mode` | string | `a`, `b` | `a` | recommended |
 | `plan_destination` | string | `github_issue`, `azure_devops_work_item`, `local_file`, `inline_message` | none | required |
 | `file_storage_location` | string | repository-relative path | `docs/plans/` | recommended |
 
 ### Validation and defaults
 
 - validate that `jl_quiz`, if present, is an object
-- validate `interview_mode` against the `a` / `b` enum
+- validate `quiz_mode` against the `a` / `b` enum
 - validate `plan_destination` against the documented destination enum
 - validate `file_storage_location` as a repository-relative string when present
 - use defaults for recommended settings when absent
@@ -104,7 +104,7 @@ In `CONTRIBUTING.md`:
 
 ```yaml
 jl_quiz:
-  interview_mode: a
+  quiz_mode: a
   plan_destination: github_issue
   file_storage_location: docs/plans/
 ```
@@ -113,7 +113,7 @@ In `AGENTS.md`:
 
 ```yaml
 jl_quiz:
-  interview_mode: b
+  quiz_mode: b
 ```
 
 ## When This Skill is Invoked
@@ -127,7 +127,7 @@ preferences through `jl-config`.
 
 **Settings this skill consumes from `jl_quiz`:**
 
-- `interview_mode`
+- `quiz_mode`
   - `a` = in-chat interview
   - `b` = questionnaire/document-first workflow
 - `plan_destination`
@@ -147,10 +147,10 @@ preferences through `jl-config`.
    - merge `CONTRIBUTING.md`
    - merge `AGENTS.md`
 4. Validate the resolved `jl_quiz` object against jl-quiz's own schema:
-   - `interview_mode` must be `a` or `b`
+   - `quiz_mode` must be `a` or `b`
    - `plan_destination` must be one of the documented destination values
    - `file_storage_location`, if present, must be a repository-relative path
-5. Use the resolved values for `interview_mode`, `plan_destination`, and
+5. Use the resolved values for `quiz_mode`, `plan_destination`, and
    `file_storage_location`.
 6. If a required value still cannot be used safely in the current session,
    ask the user with explicit options and continue with their session answer.
@@ -171,7 +171,7 @@ preferences through `jl-config`.
   config value as the repository default rather than the live instruction.
 
 **Completion criterion:** The skill has resolved usable values for
-`interview_mode`, `plan_destination`, and `file_storage_location` from
+`quiz_mode`, `plan_destination`, and `file_storage_location` from
 resolved `jl_quiz` config, or has asked the user only for the still-missing
 choice needed to proceed safely.
 
@@ -180,18 +180,11 @@ choice needed to proceed safely.
 jl-quiz validates its configuration at startup and emits warnings (in the
 format defined by jl-config) for:
 
-#### Type Mismatch
+
+#### Enum Violation — quiz_mode
 
 ```text
-[WARN] jl-quiz: 'interview_mode' must be a string ("a" or "b"), not a boolean
-  File: CONTRIBUTING.md [line 5]
-  Fix: Change the value to a string: interview_mode: a
-```
-
-#### Enum Violation — interview_mode
-
-```text
-[WARN] jl-quiz: 'interview_mode' has invalid value "c" (must be "a" or "b")
+[WARN] jl-quiz: 'quiz_mode' has invalid value "c" (must be "a" or "b")
   File: AGENTS.md [line 8]
   Fix: Change to one of: a, b
 ```
@@ -224,6 +217,14 @@ format defined by jl-config) for:
   Fix: Change "/docs/plans" to "docs/plans"
 ```
 
+#### Type Mismatch — quiz_mode
+
+```text
+[WARN] jl-quiz: 'quiz_mode' must be a string ("a" or "b"), not a boolean
+  File: CONTRIBUTING.md [line 5]
+  Fix: Change the value to a string: quiz_mode: a
+```
+
 #### Invalid File Path — parent directory
 
 ```text
@@ -254,7 +255,7 @@ format defined by jl-config) for:
    - If a prior decision has been made in this session about what mode to
      operate in, continue in that mode until instructed otherwise, continue
      to step 4
-   - If `jl_quiz.interview_mode` resolves to a mode, continue
+   - If `jl_quiz.quiz_mode` resolves to a mode, continue
      in that mode until instructed otherwise, continue to step 4
    - If the ***Scope*** is ***small***, AND the ***Complexity*** is
      ***simple***, AND the ***shared understanding*** is ***deep*** AND

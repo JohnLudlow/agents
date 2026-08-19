@@ -10,7 +10,7 @@ Configuration is in a YAML code fence for markdown readability; the linter autom
 
 ```yaml
 jl_quiz:
-  interview_mode: a
+  quiz_mode: a
   plan_destination: github_issue
   file_storage_location: docs/plans/
 
@@ -76,7 +76,7 @@ This repository is NOT the only repository. Remember this.
 
 **Rule 2**: If a file is **configuration for how agents work in this specific repo**, it goes in `AGENTS.md`.
 
-- ✅ "jl-quiz should use interview_mode: b in this repo" → AGENTS.md
+- ✅ "jl-quiz should use quiz_mode: b in this repo" → AGENTS.md
 - ❌ "Here's how to configure jl-quiz" → That goes in jl-quiz/SKILL.md (shipped)
 
 **Rule 3**: If you're adding content that a **skill needs to function**, add it to the skill's directory.
@@ -113,7 +113,7 @@ Agent users in other repos can access this because it's shipped.
 
 jl-quiz accepts the following settings:
 
-- interview_mode: a or b
+- quiz_mode: a or b
 - ...
 
 ❌ This won't be available in other repos. If an agent in a downstream

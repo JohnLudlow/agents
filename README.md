@@ -283,7 +283,7 @@ For downstream repositories installing this APM package:
 
    ```yaml
    jl_quiz:
-     interview_mode: b    # Override: use questionnaires instead of live chat
+     quiz_mode: b    # Override: use questionnaires instead of live chat
    ```
 
 3. Run `npm run validate` (if your repository uses this package's validation) to check syntax and schema

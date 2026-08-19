@@ -37,15 +37,15 @@ evaluated until earlier layers pass.
 
 ```yaml
 jl_quiz:
-  interview_mode: a
-  interview_mode: b
+  quiz_mode: a
+  quiz_mode: b
 ```
 
 **Example (VALID):**
 
 ```yaml
 jl_quiz:
-  interview_mode: a
+  quiz_mode: a
 ```
 
 ---
@@ -83,7 +83,7 @@ jl_quiz:
 
 ```yaml
 jl_quiz:
-  interview_mode: a
+  quiz_mode: a
 ```
 
 **Success case (missing key):**
@@ -109,7 +109,7 @@ Agent key: `jl_quiz`
 
 #### Recommended Settings
 
-- **`interview_mode`** (string)
+- **`quiz_mode`** (string)
   - Allowed values: `a`, `b`
   - Failure if: value is not one of these strings
   - Failure if: value is present but is not a string
@@ -127,7 +127,7 @@ Agent key: `jl_quiz`
 
 ```yaml
 jl_quiz:
-  interview_mode: a
+  quiz_mode: a
   plan_destination: github_issue
   file_storage_location: docs/plans/
 ```
@@ -143,14 +143,14 @@ jl_quiz:
 
 ```yaml
 jl_quiz:
-  interview_mode: 1  # must be string "a" or "b"
+  quiz_mode: 1  # must be string "a" or "b"
 ```
 
 #### Example (INVALID — missing required)
 
 ```yaml
 jl_quiz:
-  interview_mode: a
+  quiz_mode: a
   # plan_destination missing — required
 ```
 
@@ -329,7 +329,7 @@ If a required setting has no default, runtime prompts the user.
 
 ```yaml
 jl_quiz:
-  interview_mode: a
+  quiz_mode: a
   plan_destination: github_issue
 
 jl_recon:
@@ -342,14 +342,14 @@ jl_recon:
 
 ```yaml
 jl_quiz:
-  interview_mode: b
+  quiz_mode: b
 ```
 
 **Result:** ✓ VALID
 
 - All keys are objects
 - All values conform to their enums and types
-- Resolved config (after merge): `interview_mode: b` (from AGENTS.md override),
+- Resolved config (after merge): `quiz_mode: b` (from AGENTS.md override),
   `plan_destination: github_issue` (from CONTRIBUTING.md), all jl-recon defaults applied
 
 ---
@@ -393,7 +393,7 @@ jl_recon:
 
 ```yaml
 jl_quiz:
-  interview_mode: a
+  quiz_mode: a
   # plan_destination missing
 ```
 
@@ -401,7 +401,7 @@ jl_quiz:
 
 ```yaml
 jl_quiz:
-  interview_mode: b
+  quiz_mode: b
 ```
 
 **Result:** ✓ VALID (Config shape is valid)
