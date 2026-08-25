@@ -10,7 +10,7 @@ Configuration is in a YAML code fence for markdown readability; the linter autom
 
 ```yaml
 jl_quiz:
-  quiz_mode: a
+  quiz_mode: in_chat
   plan_destination: github_issue
   file_storage_location: docs/plans/
 

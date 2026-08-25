@@ -84,14 +84,14 @@ validation.
 
 | Setting | Type | Allowed values | Default | Sensitivity |
 | --- | --- | --- | --- | --- |
-| `quiz_mode` | string | `a`, `b` | `a` | recommended |
+| `quiz_mode` | string | `in_chat`, `questionnaire` | `in_chat` | recommended |
 | `plan_destination` | string | `github_issue`, `azure_devops_work_item`, `local_file`, `inline_message` | none | required |
 | `file_storage_location` | string | repository-relative path | `docs/plans/` | recommended |
 
 ### Validation and defaults
 
 - validate that `jl_quiz`, if present, is an object
-- validate `quiz_mode` against the `a` / `b` enum
+- validate `quiz_mode` against the `in_chat` / `questionnaire` enum
 - validate `plan_destination` against the documented destination enum
 - validate `file_storage_location` as a repository-relative string when present
 - use defaults for recommended settings when absent
@@ -104,7 +104,7 @@ In `CONTRIBUTING.md`:
 
 ```yaml
 jl_quiz:
-  quiz_mode: a
+  quiz_mode: in_chat
   plan_destination: github_issue
   file_storage_location: docs/plans/
 ```
@@ -113,7 +113,7 @@ In `AGENTS.md`:
 
 ```yaml
 jl_quiz:
-  quiz_mode: b
+  quiz_mode: questionnaire
 ```
 
 ## When This Skill is Invoked
@@ -128,8 +128,8 @@ preferences through `jl-config`.
 **Settings this skill consumes from `jl_quiz`:**
 
 - `quiz_mode`
-  - `a` = in-chat interview
-  - `b` = questionnaire/document-first workflow
+  - `in_chat` = in-chat interview
+  - `questionnaire` = questionnaire/document-first workflow
 - `plan_destination`
   - `github_issue`
   - `azure_devops_work_item`
@@ -147,7 +147,7 @@ preferences through `jl-config`.
    - merge `CONTRIBUTING.md`
    - merge `AGENTS.md`
 4. Validate the resolved `jl_quiz` object against jl-quiz's own schema:
-   - `quiz_mode` must be `a` or `b`
+   - `quiz_mode` must be `in_chat` or `questionnaire`
    - `plan_destination` must be one of the documented destination values
    - `file_storage_location`, if present, must be a repository-relative path
 5. Use the resolved values for `quiz_mode`, `plan_destination`, and
@@ -183,9 +183,9 @@ format defined by jl-config) for:
 #### Enum Violation — quiz_mode
 
 ```text
-[WARN] jl-quiz: 'quiz_mode' has invalid value "c" (must be "a" or "b")
+[WARN] jl-quiz: 'quiz_mode' has invalid value "c" (must be "in_chat" or "questionnaire")
   File: AGENTS.md [line 8]
-  Fix: Change to one of: a, b
+  Fix: Change to one of: in_chat, questionnaire
 ```
 
 #### Enum Violation — plan_destination
