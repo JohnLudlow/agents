@@ -179,26 +179,167 @@ When a map is created, apply the resolved `labels.map` configuration (or
 
 ### Label Application on Ticket Creation
 
-When a ticket is created as a child of a map, apply labels in three stages
-(additive, not replacement):
+When a ticket is created as a child of a map, resolve its labels using the
+same configuration pipeline described for map creation and the same additive
+inheritance rule described in issue #153 (Map Label Application). The ticket
+label formula is:
 
-1. **Configured type labels**: Use the resolved labels for the ticket's type
-   (e.g., `labels.quiz` for a Quiz ticket). If not configured, use
-   `labels.default`.
-2. **Inherited map labels**: Copy every label the map carries. If this is the
-   first ticket created for a map, the map's labels come from step 1 above
-   (usually `labels.map` or `labels.default`).
-3. **Ticket type label**: Add the ticket's own `recon:<type>` label
-   (`recon:quiz`, `recon:research`, `recon:prototype`, `recon:task`).
+```text
+Ticket Labels = Configured Type Labels + Inherited Map Labels + recon:<type>
+```
 
-**Result**: A ticket receives the union of (configured type labels +
-inherited map labels + `recon:<type>` label). Labels do not duplicate if the
-same label appears in multiple sets.
+Configuration resolution for `Configured Type Labels` follows the same
+precedence described in issue #152 (Config Resolution): defaults first, then
+CONTRIBUTING.md, then AGENTS.md, with any session-level user override applied
+last.
 
-**User override**: If the user provides a label override during ticket
-creation, use that set entirely; it replaces the configured labels (stages 1
-and 3 above still apply with their full sets, but stage 2 — map inheritance —
-is skipped when user override is active).
+#### Resolution Order
+
+Apply ticket labels in this order:
+
+1. **Start with configured labels for the ticket type**: Read
+   `jl_recon.labels.<type>` for the ticket's type (`quiz`, `research`,
+   `prototype`, or `task`). If that type-specific key is not configured, fall
+   back to `labels.default`.
+2. **Add inherited labels from the parent map**: Copy every label the map
+   already carries. This is additive, not a replacement. If the map was
+   created from configured labels, those created labels are what the ticket
+   inherits.
+3. **Add the ticket's required recon label**: Append the ticket's own
+   `recon:<type>` label.
+4. **De-duplicate**: Treat the final label set as a set union. If the same
+   label appears in the type configuration, the map, and/or the required
+   `recon:<type>` label, apply it once.
+5. **Apply user override if present**: If the user provided a label override
+   for this ticket during the current session, that override replaces the
+   entire computed set. It is not additive.
+
+#### Ticket Type Mapping
+
+Each ticket type always receives its own dedicated `recon:<type>` label:
+
+- **Quiz** → `recon:quiz`
+- **Research** → `recon:research`
+- **Prototype** → `recon:prototype`
+- **Task** → `recon:task`
+
+#### Inheritance Behavior
+
+**Labels are inherited, not replaced.** Ticket labels are always additive
+unless the user explicitly provides a session-level override for that specific
+ticket creation action.
+
+In practical terms:
+
+- Keep the configured labels for the ticket type
+- Keep the labels already present on the map
+- Add the ticket's required `recon:<type>` label
+- Remove duplicates
+
+This means inheritance respects both configured and inherited sets. The map's
+labels do not replace the type's labels, and the type's labels do not replace
+the map's labels.
+
+#### Type-by-Type Examples
+
+##### Quiz Tickets
+
+```text
+Ticket Labels = jl_recon.labels.quiz + map labels + recon:quiz
+```
+
+Example:
+
+- `jl_recon.labels.quiz = ["type:question", "needs-answer"]`
+- Map labels = `["recon:map", "area:auth"]`
+- Final set = `["area:auth", "needs-answer", "recon:map", "recon:quiz", "type:question"]`
+
+##### Research Tickets
+
+```text
+Ticket Labels = jl_recon.labels.research + map labels + recon:research
+```
+
+Example:
+
+- `jl_recon.labels.research = ["type:research", "recon-output"]`
+- Map labels = `["recon:map", "area:billing"]`
+- Final set = `["area:billing", "recon-output", "recon:map", "recon:research", "type:research"]`
+
+##### Prototype Tickets
+
+```text
+Ticket Labels = jl_recon.labels.prototype + map labels + recon:prototype
+```
+
+Example:
+
+- `jl_recon.labels.prototype = ["type:prototype", "spike"]`
+- Map labels = `["recon:map", "area:editor"]`
+- Final set = `["area:editor", "recon:map", "recon:prototype", "spike", "type:prototype"]`
+
+##### Task Tickets
+
+```text
+Ticket Labels = jl_recon.labels.task + map labels + recon:task
+```
+
+Example:
+
+- `jl_recon.labels.task = ["type:task", "decision-unblocker"]`
+- Map labels = `["recon:map", "priority:high"]`
+- Final set = `["decision-unblocker", "priority:high", "recon:map", "recon:task", "type:task"]`
+
+#### Configuration Examples
+
+Example `CONTRIBUTING.md` configuration:
+
+```yaml
+jl_recon:
+  labels:
+    default: ["recon:map"]
+    map: ["recon:map", "planning"]
+    quiz: ["type:question", "needs-answer"]
+    research: ["type:research", "recon-output"]
+    prototype: ["type:prototype", "spike"]
+    task: ["type:task", "decision-unblocker"]
+```
+
+Example `AGENTS.md` override:
+
+```yaml
+jl_recon:
+  labels:
+    research: ["type:research", "recon-output", "team:platform"]
+```
+
+With the configuration above, a Research ticket under a map labeled
+`["recon:map", "planning"]` resolves as:
+
+```text
+["planning", "recon:map", "recon-output", "recon:research", "team:platform", "type:research"]
+```
+
+#### Determinism and Consistency
+
+- Treat label computation as a set union.
+- If a label is duplicated across configured labels, inherited map labels, or
+  `recon:<type>`, apply it once.
+- Preserve deterministic behavior by resolving the same inputs to the same
+  label set every time.
+- When passed through the GitHub CLI, labels may appear sorted
+  alphabetically in output and UI-adjacent tooling; document examples in
+  alphabetical order for consistency.
+- Azure DevOps and markdown providers should still use the same logical set,
+  even if display order differs by provider.
+
+#### Acceptance Criteria
+
+- [x] Ticket labels = configured labels (for type) + inherited map labels +
+      `recon:<type>` label
+- [x] Label inheritance respects both configured and inherited sets
+      (additive, not replacement)
+- [x] Works for all four ticket types (quiz, research, prototype, task)
 
 ### Per-Provider Application Details
 
