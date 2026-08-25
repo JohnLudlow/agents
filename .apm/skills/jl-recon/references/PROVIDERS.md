@@ -42,11 +42,11 @@ and **implementation work** (actual changes). This distinction is structural:
 
 ```plain
 Inciting Issue (user's original request)
-├── Map (recon planning artifact)
-│   ├── Research ticket (investigation)
-│   ├── Quiz ticket (decision clarification)
-│   ├── Prototype ticket (raise fidelity)
-│   └── Task ticket (unblock a decision)
+├── Map (recon planning artifact)                            # never try to implement or commit work here
+│   ├── Research ticket (investigation)                      # never try to implement or commit work here
+│   ├── Quiz ticket (decision clarification)                 # never try to implement or commit work here
+│   ├── Prototype ticket (raise fidelity)                    # never try to implement or commit work here
+│   └── Task ticket (unblock a decision)                     # never try to implement or commit work here
 ├── Implementation Ticket (actual change, sibling of map)
 ├── Implementation Ticket (another change, sibling of map)
 └── ...

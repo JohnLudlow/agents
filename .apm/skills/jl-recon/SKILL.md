@@ -445,6 +445,7 @@ The agent MUST:
 - Ask the human, per candidate, before resolving or archiving a stale item —
   never batch without individual confirmation.
 - Refer to every ticket by its linked name, never a bare id or number.
+- Notify the user when the current task is completed, and ask what to do next.
 
 The agent MUST NOT:
 
@@ -463,6 +464,9 @@ The agent MUST NOT:
   except an approved AFK Research ticket.
 - Archive or close a stale item without that specific item's human
   confirmation.
+- "Commit changes during any map work (charting, exploring, or working through the map).
+  Map work is planning and exploration; implementation happens separately under child
+  implementation tickets."
 
 ## Relationship to Other Skills
 
