@@ -12,13 +12,13 @@ exploration work, while still supporting user overrides when needed.
 
 Without custom configuration, jl-recon uses sensible defaults:
 
-| Ticket Type | Default Template |
-|:------------|:-----------------|
-| Map | `Map: {destination}` |
-| Quiz | `Quiz: {question}` |
-| Research | `Research: {topic}` |
-| Prototype | `Prototype: {concept}` |
-| Task | `Task: {work}` |
+| Ticket Type | Default Template       |
+| :---------- | :--------------------- |
+| Map         | `Map: {destination}`   |
+| Quiz        | `Quiz: {question}`     |
+| Research    | `Research: {topic}`    |
+| Prototype   | `Prototype: {concept}` |
+| Task        | `Task: {work}`         |
 
 Examples:
 
@@ -84,13 +84,13 @@ jl_recon:
 
 Each template type supports one variable for automatic substitution:
 
-| Ticket Type | Variable | Filled from |
-|:------------|:---------|:------------|
-| Map | `{destination}` | The map's resolved destination (what reaching the end looks like) |
-| Quiz | `{question}` | The quiz question or decision being made |
-| Research | `{topic}` | The research topic or investigation focus |
-| Prototype | `{concept}` | The prototype concept or idea being explored |
-| Task | `{work}` | The task work description |
+| Ticket Type | Variable        | Filled from                                                       |
+| :---------- | :-------------- | :---------------------------------------------------------------- |
+| Map         | `{destination}` | The map's resolved destination (what reaching the end looks like) |
+| Quiz        | `{question}`    | The quiz question or decision being made                          |
+| Research    | `{topic}`       | The research topic or investigation focus                         |
+| Prototype   | `{concept}`     | The prototype concept or idea being explored                      |
+| Task        | `{work}`        | The task work description                                         |
 
 **Example substitution:**
 
@@ -162,12 +162,12 @@ Configuration is validated at startup. Invalid settings produce clear warnings:
 
 Common issues:
 
-| Problem | Fix |
-|:--------|:----|
-| `title_format` is a list, not an object | Use YAML object syntax with key-value pairs |
-| A template value is not a string (e.g., a number) | Wrap the value in quotes: `map: "Map: {destination}"` |
-| An invalid ticket type like `quiz_question` | Use one of: `map`, `quiz`, `research`, `prototype`, `task` |
-| A template is an empty string | Provide a non-empty template or remove the key to use the default |
+| Problem                                           | Fix                                                               |
+| :------------------------------------------------ | :---------------------------------------------------------------- |
+| `title_format` is a list, not an object           | Use YAML object syntax with key-value pairs                       |
+| A template value is not a string (e.g., a number) | Wrap the value in quotes: `map: "Map: {destination}"`             |
+| An invalid ticket type like `quiz_question`       | Use one of: `map`, `quiz`, `research`, `prototype`, `task`        |
+| A template is an empty string                     | Provide a non-empty template or remove the key to use the default |
 
 ## Examples
 
