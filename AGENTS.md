@@ -47,25 +47,25 @@ or `AGENTS.md` are **repo-local only** and cannot be reliably referenced by agen
 
 ### Roles and Contexts
 
-| Role | Acting in | Sees what |
-|------|-----------|-----------|
+| Role                 | Acting in              | Sees what                                                                                                                    |
+| -------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | **Agent maintainer** | JohnLudlow/agents repo | All local files (`CONTRIBUTING.md`, `AGENTS.md`, `/docs/`, `/scripts/`) + all shipped files (`.apm/agents/`, `.apm/skills/`) |
-| **Agent user** | Any other repository | Only shipped files (agents, skills, references) |
+| **Agent user**       | Any other repository   | Only shipped files (agents, skills, references)                                                                              |
 
 This repository is NOT the only repository. Remember this.
 
 ### Document Types: Where They Go
 
-| Document Type | Purpose | Shipped? | Correct Location | Examples of Wrong Places |
-|---|---|---|---|---|
-| **Agent or skill definition** | Source code for an agent or skill | Yes | `.apm/agents/*.md` or `.apm/skills/*/SKILL.md` | N/A (these are in the right place) |
-| **Configuration schema or reference** | Documentation of what config settings a skill accepts | Yes | `<skill>/SKILL.md` (Configuration section) or `<skill>/references/CONFIG_SCHEMA.md` | ❌ CONTRIBUTING.md, ❌ /docs/, ❌ AGENTS.md |
-| **Skill examples or templates** | Example usage, template files, sample input/output | Yes | `<skill>/references/*.md` or `<skill>/assets/*` | ❌ /docs/, ❌ CONTRIBUTING.md |
-| **Skill guide or walkthrough** | Detailed guide on how to use a skill | Yes | `<skill>/SKILL.md` or `<skill>/references/GUIDE.md` | ❌ /docs/, ❌ CONTRIBUTING.md |
-| **Repository contribution guidelines** | Rules for contributing to JohnLudlow/agents (human-facing) | No | `CONTRIBUTING.md` | N/A (repo-local only) |
-| **Agent configuration for this repo** | Settings for how agents work *in this repository* | No | `AGENTS.md` | ❌ /docs/, ❌ CONTRIBUTING.md, ❌ in a skill SKILL.md |
-| **General documentation** | Setup, installation, usage guides for humans | No | `/docs/` or `README.md` | Can reference shipped files, but should not contain them |
-| **CI/CD scripts** | Scripts run by GitHub Actions or other CI | No | `/scripts/` | N/A (repo-local only) |
+| Document Type                          | Purpose                                                    | Shipped? | Correct Location                                                                    | Examples of Wrong Places                                 |
+| -------------------------------------- | ---------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| **Agent or skill definition**          | Source code for an agent or skill                          | Yes      | `.apm/agents/*.md` or `.apm/skills/*/SKILL.md`                                      | N/A (these are in the right place)                       |
+| **Configuration schema or reference**  | Documentation of what config settings a skill accepts      | Yes      | `<skill>/SKILL.md` (Configuration section) or `<skill>/references/CONFIG_SCHEMA.md` | ❌ CONTRIBUTING.md, ❌ /docs/, ❌ AGENTS.md              |
+| **Skill examples or templates**        | Example usage, template files, sample input/output         | Yes      | `<skill>/references/*.md` or `<skill>/assets/*`                                     | ❌ /docs/, ❌ CONTRIBUTING.md                            |
+| **Skill guide or walkthrough**         | Detailed guide on how to use a skill                       | Yes      | `<skill>/SKILL.md` or `<skill>/references/GUIDE.md`                                 | ❌ /docs/, ❌ CONTRIBUTING.md                            |
+| **Repository contribution guidelines** | Rules for contributing to JohnLudlow/agents (human-facing) | No       | `CONTRIBUTING.md`                                                                   | N/A (repo-local only)                                    |
+| **Agent configuration for this repo**  | Settings for how agents work *in this repository*          | No       | `AGENTS.md`                                                                         | ❌ /docs/, ❌ CONTRIBUTING.md, ❌ in a skill SKILL.md    |
+| **General documentation**              | Setup, installation, usage guides for humans               | No       | `/docs/` or `README.md`                                                             | Can reference shipped files, but should not contain them |
+| **CI/CD scripts**                      | Scripts run by GitHub Actions or other CI                  | No       | `/scripts/`                                                                         | N/A (repo-local only)                                    |
 
 ### Decision Rules (Use These)
 
@@ -144,6 +144,21 @@ If you need to document how to use jl-recon, it goes in `jl-recon/SKILL.md` or `
 This is only used in JohnLudlow/agents, so it stays local.
 
 ---
+
+#### ❌ WRONG: Updating deployed agents and skills
+
+```text
+~/.agents/skills/jl-recon
+└── SKILL.md                    ❌ Not within the repo, and therefore won't be built and would be overriden by the next 
+                                   deployment
+```
+
+If you need to update an agent, update the relevant file in [.apm/agents].
+
+If you need to update a skill, update the relevant file in [.apm/skills].
+
+---
+
 
 ### When You're Unsure
 
