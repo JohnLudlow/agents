@@ -180,7 +180,6 @@ choice needed to proceed safely.
 jl-quiz validates its configuration at startup and emits warnings (in the
 format defined by jl-config) for:
 
-
 #### Enum Violation — quiz_mode
 
 ```text
