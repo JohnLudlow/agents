@@ -173,6 +173,11 @@ If you answer "yes" to #4, use a shipped location. If you answer "yes" to #2 or 
 
 ---
 
+## What Agents MUST NOT do
+
+- Commit or push changes without explicit user permission
+- Create or complete pull requests (PRs) without explicit user permission
+
 ## References
 
 - Full configuration validation schema: `.apm/skills/jl-config/validation-rules.md`
