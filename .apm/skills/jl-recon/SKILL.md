@@ -38,15 +38,27 @@ mechanism; jl-recon owns this schema, its defaults, and its validation.
 | `decision_gates.inciting_issue_confirmation` | boolean | `true`, `false` | `false` | required by recon |
 | `decision_gates.research_afk` | boolean | `true`, `false` | `false` | required by recon |
 | `uncertainty_tracking.pattern` | string | any markdown heading string | `## Not Yet Specified (Fog of War)` | optional |
+| `labels.default` | array of strings | any label names | `["recon:map"]` | optional |
+| `labels.map` | array of strings | any label names | defaults to `labels.default` | optional |
+| `labels.quiz` | array of strings | any label names | defaults to `labels.default` | optional |
+| `labels.research` | array of strings | any label names | defaults to `labels.default` | optional |
+| `labels.prototype` | array of strings | any label names | defaults to `labels.default` | optional |
+| `labels.task` | array of strings | any label names | defaults to `labels.default` | optional |
 
 ### Validation and defaults
 
 - validate that `jl_recon`, if present, is an object
 - validate `decision_gates`, if present, as an object of booleans
 - validate `uncertainty_tracking`, if present, as an object
+- validate `labels`, if present, as an object with keys limited to: `default`, `map`, `quiz`, `research`, `prototype`, `task`
+- validate each `labels.*` value as an array of non-empty strings
+- validate that no `labels.*` array is empty
 - default each missing decision gate to `false`
 - default missing `uncertainty_tracking.pattern` to
   `## Not Yet Specified (Fog of War)`
+- default `labels.default` to `["recon:map"]`
+- default each of `labels.map`, `labels.quiz`, `labels.research`, `labels.prototype`, `labels.task` to inherit from `labels.default`
+- apply resolved label values when creating maps and tickets, per the resolved behavior below
 - apply resolved gate values at their workflow decision points rather than
   relying on separate hardcoded gate rules
 
@@ -62,6 +74,20 @@ jl_recon:
     research_afk: false
   uncertainty_tracking:
     pattern: "## Not Yet Specified (Fog of War)"
+  labels:
+    default:
+      - "recon:map"
+    map:
+      - "recon:map"
+      - "planning"
+    quiz:
+      - "recon:quiz"
+    research:
+      - "recon:research"
+    prototype:
+      - "recon:prototype"
+    task:
+      - "recon:task"
 ```
 
 In `AGENTS.md`:
@@ -70,6 +96,11 @@ In `AGENTS.md`:
 jl_recon:
   decision_gates:
     destination_confirmation: true
+  labels:
+    map:
+      - "recon:map"
+      - "planning"
+      - "urgent"
 ```
 
 ## Configuration via `jl-config`
@@ -84,6 +115,12 @@ This skill consumes:
 - `jl_recon.decision_gates.inciting_issue_confirmation`
 - `jl_recon.decision_gates.research_afk`
 - `jl_recon.uncertainty_tracking.pattern`
+- `jl_recon.labels.default`
+- `jl_recon.labels.map`
+- `jl_recon.labels.quiz`
+- `jl_recon.labels.research`
+- `jl_recon.labels.prototype`
+- `jl_recon.labels.task`
 
 Resolved behaviour:
 
@@ -106,6 +143,22 @@ Resolved behaviour:
     in any textual artifact that mirrors the map structure
   - if not configured, default to `## Not Yet Specified (Fog of War)` through
     jl-recon's own defaults
+- `labels.default`
+  - applied to all maps and tickets unless overridden by type-specific config
+  - always inherited and combined with `recon:<type>` label (additive, not replacement)
+  - defaults to `["recon:map"]` if not configured
+- `labels.map`
+  - applied to map artifacts at creation time
+  - if not configured, inherits from `labels.default`
+  - combined with any inherited labels from parent (if any) and does not duplicate
+  - on GitHub/Azure DevOps: applied as issue labels or work item tags
+  - on Markdown: stored in frontmatter `labels:` field
+- `labels.quiz`, `labels.research`, `labels.prototype`, `labels.task`
+  - applied to each respective ticket type at creation time
+  - if not configured for a type, inherits from `labels.default`
+  - combined with map labels (if part of a map) plus the ticket's `recon:<type>` label
+  - inheritance is additive: ticket receives its own type-specific labels + map labels + `recon:<type>`
+  - if the session user provides a label override during ticket creation (user session preference), it replaces the configured labels entirely (not additive to them)
 
 Graceful fallback:
 
@@ -172,6 +225,46 @@ format defined by jl-config) for:
   boolean (true/false), not a string "yes"
   File: CONTRIBUTING.md [line 7]
   Fix: Use boolean values (true or false, not quoted strings)
+```
+
+#### Type Mismatch — labels (object required)
+
+```text
+[WARN] jl-recon: 'labels' must be an object, not a string
+  File: AGENTS.md [line 12]
+  Fix: Change to YAML object syntax: labels: { default: ["recon:map"] }
+```
+
+#### Invalid labels type key
+
+```text
+[WARN] jl-recon: 'labels.category' is not a valid labels key
+  File: CONTRIBUTING.md [line 14]
+  Fix: Use only: default, map, quiz, research, prototype, or task
+```
+
+#### Non-array labels value
+
+```text
+[WARN] jl-recon: 'labels.map' must be an array, not a string
+  File: AGENTS.md [line 16]
+  Fix: Change to array syntax: map: ["recon:map", "planning"]
+```
+
+#### Non-string value in labels array
+
+```text
+[WARN] jl-recon: 'labels.quiz' contains a non-string value: 123
+  File: CONTRIBUTING.md [line 18]
+  Fix: All label values must be strings: quiz: ["recon:quiz", "active"]
+```
+
+#### Empty labels array
+
+```text
+[WARN] jl-recon: 'labels.research' cannot be an empty array
+  File: AGENTS.md [line 20]
+  Fix: Provide at least one label: research: ["recon:research"]
 ```
 
 ## Core Model
@@ -420,14 +513,19 @@ The agent MUST:
   creating the map (Chart mode) — never invent scope on the agent's own
   read of a loose request.
 - Resolve `jl-config` before acting, validate the resolved `jl_recon`
-  settings against jl-recon's schema, and apply its decision gates and
-  uncertainty-tracking pattern at the workflow points they govern.
+  settings against jl-recon's schema, and apply its decision gates,
+  uncertainty-tracking pattern, and label configuration at the workflow points they govern.
 - Ask whether an inciting issue exists before creating the map, and if one
   does, link the map to it using the provider's native mechanism before
   creating any tickets.
-- Copy the map's labels or tags onto every ticket created on GitHub or
-  Azure DevOps, in addition to the ticket's own `recon:<type>`
-  classification — never in place of it.
+- Apply resolved label configuration when creating the map: use
+  `labels.map` (or `labels.default` if not configured) as the map's labels.
+- Apply resolved label configuration when creating each ticket: combine the
+  ticket type's configured labels (e.g., `labels.quiz`) + inherited map labels
+  (if the ticket is a child of a map) + the ticket's `recon:<type>` label.
+  Labels are additive, not replacement — a ticket receives all three sets.
+- Allow user session preference to override configured labels entirely (user
+  session preference replaces config, not additive to it).
 - Record every new question or uncertainty to the map's fog the moment it
   surfaces — during charting, walking the map, or any ticket work — never
   deferring it until the human asks.
@@ -453,8 +551,8 @@ The agent MUST NOT:
   fine; launching it is not.
 - Create a map without asking whether an inciting issue exists, or leave a
   confirmed inciting issue unlinked once the map is created.
-- Create a GitHub or Azure DevOps ticket without the map's labels or tags
-  carried over.
+- Create a GitHub or Azure DevOps ticket without applying the resolved label
+  configuration (map labels + ticket type labels + `recon:<type>`).
 - Let a ticket's type change because a quiz or other detour occurred inside
   it — spin off a child ticket instead. A Quiz ticket that internally runs
   quiz-as-mechanism does not retype the ticket.
