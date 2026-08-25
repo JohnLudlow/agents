@@ -33,6 +33,60 @@ Never silently duplicate a map.
 
 See provider subsections below for check procedures.
 
+## Ticket Hierarchy and Structure
+
+Recon distinguishes between **map work** (exploration, planning, decisions)
+and **implementation work** (actual changes). This distinction is structural:
+
+### The Hierarchy
+
+```plain
+Inciting Issue (user's original request)
+├── Map (recon planning artifact)
+│   ├── Research ticket (investigation)
+│   ├── Quiz ticket (decision clarification)
+│   ├── Prototype ticket (raise fidelity)
+│   └── Task ticket (unblock a decision)
+├── Implementation Ticket (actual change, sibling of map)
+├── Implementation Ticket (another change, sibling of map)
+└── ...
+```
+
+### Key Points
+
+- **Map is a planning artifact, not an implementation artifact.** The map's job
+  is to surface decisions and reduce fog before implementation begins. The map
+  itself is not where code changes happen.
+- **Map tickets (Research, Quiz, Prototype, Task) are children of the map.**
+  They resolve the individual decisions blocking the map's destination.
+- **Implementation tickets are siblings of the map, both under the inciting
+  issue.** When the map is "ready for implementation" (all decisions resolved,
+  fog cleared), implementation work proceeds in separate tickets that are
+  **siblings of the map**, not children. This keeps implementation separate
+  from planning.
+- **Maps can outlive individual implementation cycles.** If implementation work
+  surfaces new questions or splits into multiple phases, those work items link
+  back to the same map (as cross-references, not as parent/child), rather than
+  replacing or nesting under it.
+
+### Practical Workflow
+
+1. User opens an inciting issue ("Build the widgetizer")
+2. Recon charts a map under that issue ("Plan: widgetizer design decisions")
+3. Recon creates map tickets (research, quiz, etc.) as children of the map
+4. When the map is ready, recon surfaces this to the user with guidance to
+   create implementation tickets
+5. Implementation tickets are created as **siblings of the map** (both children
+   of the inciting issue), labeled `implementation:` or equivalent
+6. Implementation work proceeds independently; if new questions surface, they
+   thread back to the map (cross-reference), not into the map's child list
+
+### Documentation Per Provider
+
+See the provider-specific sections below for how to create the parent/child
+and sibling relationships in each system (GitHub sub-issues, Azure DevOps
+parent/child links, markdown files).
+
 ## GitHub
 
 ### Checking for Existing Maps (GitHub)

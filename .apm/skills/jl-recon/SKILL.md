@@ -244,8 +244,10 @@ ends on its own completion criterion.
 
 Starting a map from a loose idea.
 
-1. Name the destination — run `jl-quiz`, in whichever mode (A or B)
-   the scope calls for.
+1. Name the destination — run `jl-quiz`, using the resolved `quiz_mode`
+   from configuration (in-chat interview or questionnaire document). User
+   preference always overrides config — if the user requests a different mode
+   during this step, switch immediately.
    If resolved `decision_gates.destination_confirmation` is `true`, confirm the
    destination explicitly before creating the map artifact.
 2. Map the frontier — run `jl-quiz` again, breadth-first, to surface
@@ -282,6 +284,36 @@ Starting a map from a loose idea.
 populated (even if Decisions-so-far is still empty), it is linked to its
 inciting issue if one exists, and every ticket specifiable today has been
 created.
+
+#### Handoff to Implementation
+
+When a map reaches a state where all urgent decisions are resolved and
+remaining fog is clearly understood, the map transitions from active planning
+to reference mode. At this point, guide the user to create implementation
+tickets that will be siblings of the map under the inciting issue.
+
+**Signals that a map is ready for implementation:**
+
+- Destination is clear and confirmed
+- Major decisions are recorded in Decisions-so-far
+- Remaining fog (if any) is explicitly listed and scoped
+- All out-of-scope decisions are recorded
+
+**What to communicate to the user:**
+
+- "The map is ready for implementation. The next step is to create
+  implementation tickets as siblings of this map under the inciting issue
+  [issue name]."
+- Point to [PROVIDERS.md](references/PROVIDERS.md) → "Ticket Hierarchy and
+  Structure" for the structural details
+- Clarify: implementation tickets are **not** children of the map; they are
+  separate work items at the same level as the map, both under the inciting
+  issue
+- If using GitHub: implementation tickets use a label like `implementation:`
+  or `area:<name>` to distinguish them from recon planning work
+- Do not create implementation tickets as part of this skill; they are out of
+  scope for recon. Only map the work that needs to be done, not the doing of
+  it.
 
 ### 2. Work through the map
 
