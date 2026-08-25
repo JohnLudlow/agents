@@ -15,6 +15,7 @@ resolution mechanism (`AGENTS.md`/`CONTRIBUTING.md` merge rules, precedence, and
 Notable repository-level namespaces:
 
 - `jl_quiz`, `jl_recon`, `jl_issue_management` — per-skill workflow settings
+  - `jl_recon.title_format` — customize issue title formatting for maps and tickets (see [jl-recon Title Format Configuration](./jl-recon-title-format.md))
 - `jl_approval_gates` — boolean gates controlling whether delegation may happen at all
   (see [`jl-subagent-spawning`](../.apm/skills/jl-subagent-spawning/SKILL.md#approval-gates-jl_approval_gates))
 - `jl_subagent_models` — model selection hierarchy for delegated subagents

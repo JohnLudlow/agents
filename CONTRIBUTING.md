@@ -12,6 +12,21 @@ repository!
 5. Test your changes
 6. Submit a pull request
 
+## Issue Management
+
+Issues are stored in Github, generally on this repo, and generally added to the [AI Development](https://github.com/users/JohnLudlow/projects/9/views/1)
+project in GitHub.
+
+Issue states are as follows:
+
+| Description                                      | Issue State | Issue Project State |
+| ------------------------------------------------ | ----------- | ------------------- |
+| Issue has not been investigated yet              | Open        | Todo                |
+| Issue has been investigated                      | Open        | Todo                |
+| Issue has started development                    | Open        | In progress         |
+| Issue has completed development, pending testing | Open        | Test / Review       |
+| Issue has successfully completed testing         | Closed      | Done                |
+
 ## Code Standards
 
 ### Subagent Approval Gates
