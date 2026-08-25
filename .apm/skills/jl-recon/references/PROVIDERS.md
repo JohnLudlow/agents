@@ -4,12 +4,77 @@ How the map, tickets, blocking, and assignee tracking are represented per
 provider. Only the provider actually in use for a given map matters — read
 the section for that provider, not all three.
 
+## Checking for Existing Maps (Pre-Chart Detection)
+
+Before Chart mode creates a map, check whether a map for this destination
+already exists. A map may exist under its original name, or under a variant
+name if the destination was rephrased or the map was renamed mid-session.
+
+### What is a "variant"?
+
+A **variant** is an existing map that may not exactly match the proposed
+destination name but serves the same purpose. Variants arise when:
+
+- User's destination name changed between sessions
+- Map was renamed during prior work
+- Multiple similar maps exist for related (but distinct) destinations
+- Destination name was slug-ified, abbreviated, or rephrased in storage
+
+### Detection strategy per provider
+
+In all cases, the map is a child of its inciting issue. If an inciting issue
+was provided by the user, check its children first. If an existing map or
+plausible variant is found, surface it to the user with two options:
+
+- "Link to the existing map and reuse it"
+- "Create a new map for this destination" (if the user is confident it's a different scope)
+
+Never silently duplicate a map.
+
+See provider subsections below for check procedures.
+
 ## GitHub
 
+### Checking for Existing Maps (GitHub)
+
+**The map is always a child of the inciting issue.** If the user provided an
+inciting issue, check it first.
+
+**Step 1: Inciting-issue check** (if provided)
+
+- Query the inciting issue's sub-issues:
+
+  ```bash
+  gh issue view <inciting_issue_number> --json title,body,projectItems
+  ```
+
+- Look for sub-issues with the `recon:map` label.
+- If found, confirm with the user whether to reuse it.
+
+**Step 2: Label + Title search** (if inciting issue not provided, or no map found under it)
+
+- Query all `recon:map` issues and search by destination name:
+
+  ```bash
+  gh issue list --repo <owner>/<repo> --label "recon:map" \
+    --json title,number,state
+  ```
+
+- Filter for issues whose title contains destination keywords.
+
+**Step 3: Variant search** (if Steps 1–2 found nothing)
+
+- Case-insensitive search: replace spaces with hyphens, convert to lowercase
+- Search for partial matches if the destination name is multi-word
+- Show user recently-updated `recon:map` issues as possible variants
+
+**If found:** Ask user whether to reuse the existing map or create a new one.
+
+### Provider Implementation Details (GitHub)
+
 - **Map**: an issue labelled `recon:map`.
-- **Inciting issue link**: if the map was charted because an existing issue
-  turned out too big, make the map a native sub-issue of that issue (GitHub's
-  sub-issue feature), so it appears in that issue's task list and the map is
+- **Inciting issue link**: the map is always a native sub-issue of its inciting issue
+  (GitHub's sub-issue feature), so it appears in that issue's task list and the map is
   discoverable from where the request started. If the inciting issue is
   itself already a sub-issue of something else, still link the map under it
   directly — do not skip a level. If native sub-issue linking is unavailable
@@ -38,9 +103,50 @@ the section for that provider, not all three.
 
 ## Azure DevOps
 
+### Checking for Existing Maps (Azure DevOps)
+
+**The map is always a child of the inciting issue.** If the user provided an
+inciting issue, check it first. Note: Azure DevOps has no native "sub-issue"
+concept like GitHub. Maps are parent work items with a parent/child link to
+the inciting work item.
+
+**Step 1: Inciting-issue check** (if provided)
+
+- Query work items linked as children to the inciting issue:
+
+  ```bash
+  az boards query --wiql 'SELECT [System.Id], [System.Title] FROM WorkItems 
+    WHERE [System.Parent] = "<inciting_issue_id>"' \
+    --org <org> --project <project>
+  ```
+
+- Filter for work items with the `recon:map` tag.
+- If found, confirm with the user whether to reuse it.
+
+**Step 2: Title + tag search** (if inciting issue not provided, or no map found under it)
+
+- Query work items by title and tag:
+
+  ```bash
+  az boards query --wiql 'SELECT [System.Id], [System.Title] FROM WorkItems 
+    WHERE [System.Title] Contains "<destination>" 
+    AND [System.Tags] Contains "recon:map"' \
+    --org <org> --project <project>
+  ```
+
+**Step 3: Variant search** (if Steps 1–2 found nothing)
+
+- Area path search: if maps are stored in a specific area path (e.g., "Project/Recon"),
+  search there first
+- Tag-based search: look for `recon:map` tag regardless of title
+- Show user recently-updated recon:map work items as possible variants
+
+**If found:** Ask user whether to reuse the existing map or create a new one.
+
+### Provider Implementation Details (Azure DevOps)
+
 - **Map**: a parent work item.
-- **Inciting issue link**: if the map was charted because an existing work
-  item turned out too big, link the map as a **child** of that work item
+- **Inciting issue link**: the map is always a **child** of the inciting work item
   using Azure DevOps's native parent/child link type — the map becomes a
   child of the inciting work item even though the map itself is also a
   parent to its own tickets. This nesting is expected and is how Azure
@@ -61,6 +167,39 @@ the section for that provider, not all three.
 - **Assignee tracking**: the work item's native `Assigned To` field.
 
 ## Markdown-only
+
+### Checking for Existing Maps (Markdown)
+
+**The map is always a child of the inciting issue.** If the user provided an
+inciting issue, check for maps referencing it in their frontmatter first.
+Note: Markdown maps are not indexed centrally. This check requires scanning
+the configured storage directory.
+
+**Step 1: Inciting-issue check** (if provided)
+
+- Scan the configured storage directory (from `file_storage_location` config)
+- Parse frontmatter of all `.md` files
+- Look for `inciting-issue: <id>` field matching the provided inciting issue
+- If found, confirm with the user whether to reuse it.
+
+**Step 2: Frontmatter + destination scan** (if inciting issue not provided, or no map found)
+
+- Scan all `.md` files in storage directory
+- Parse frontmatter and look for `type: recon-map` and matching `destination` field
+- Filter for maps whose destination contains destination keywords
+
+**Step 3: Filename pattern search** (if Steps 1–2 found nothing)
+
+- Search for common filename patterns: `recon-*.md`, `map-*.md`, `*-map.md`
+- Match against slug version of destination name (lowercase, hyphens instead of spaces)
+
+**Performance note:** Markdown maps are not indexed centrally. For large
+repositories with many plans/maps, the scan may take time. Consider indexing
+strategies if performance becomes an issue.
+
+**If found:** Ask user whether to reuse the existing map or create a new one.
+
+### Provider Implementation Details (Markdown)
 
 - **Map**: a markdown document built from
   [`assets/recon-map-template.md`](../assets/recon-map-template.md),
