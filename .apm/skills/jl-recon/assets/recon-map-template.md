@@ -14,7 +14,12 @@ Use this template when charting a Recon map as a markdown document. It
 extends `jl-plan-template`'s frontmatter and governance conventions;
 replace every placeholder value before use.
 
-# The `labels:` field is populated at map creation time based on configuration and resolved labels.
+## Frontmatter Fields
+
+The `labels:` field is populated at map creation time by the jl-recon agent,
+reading `jl_recon.labels` from `CONTRIBUTING.md` or `AGENTS.md`, resolving it
+with jl-config defaults, and recording the resolved label set as a YAML list.
+Example: `labels: [recon:map, feature-planning, ac3.6]`
 
 ## Plan Target and Governance
 
