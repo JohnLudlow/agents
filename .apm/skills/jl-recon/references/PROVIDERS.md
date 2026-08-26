@@ -343,6 +343,11 @@ With the configuration above, a Research ticket under a map labeled
 
 ### Per-Provider Application Details
 
+**Implementation**: Use the helper scripts documented in
+[LABEL-APPLICATION-HELPERS.md](./LABEL-APPLICATION-HELPERS.md) to apply labels
+and tags deterministically across providers. The examples below show what the
+scripts do under the hood.
+
 #### GitHub
 
 **Map creation**:
@@ -360,6 +365,11 @@ configured labels must be created in the repository first; if a label does not
 exist, `gh issue create` will fail. Handle missing labels gracefully (warn and
 skip, or auto-create if the repository allows it).
 
+**Implementation**: Use `scripts/apply-ticket-labels.ps1` (PowerShell) or
+`scripts/apply-ticket-labels.sh` (Bash) after creating the map issue. See
+[LABEL-APPLICATION-HELPERS.md](./LABEL-APPLICATION-HELPERS.md) →
+`apply-ticket-labels.ps1` for parameter details.
+
 **Ticket creation** (as sub-issue):
 
 ```bash
@@ -372,6 +382,11 @@ gh issue create --repo <owner>/<repo> \
 
 Where `<resolved_label_1>` etc. are the union of configured type labels +
 inherited map labels.
+
+**Implementation**: Use `scripts/apply-ticket-labels.ps1` or
+`scripts/apply-ticket-labels.sh` after creating the ticket. Provide the
+ticket's configured labels, inherited labels from the map, and the ticket
+type; the script computes the additive set and applies it deterministically.
 
 #### Azure DevOps
 
@@ -410,6 +425,12 @@ az boards work-item create \
   --type "Issue" \
   --tags "tag1;tag2;tag3"
 ```
+
+**Implementation**: After creating the map work item, use
+`scripts/apply-ado-map-tags.ps1` to apply resolved tags. See
+[LABEL-APPLICATION-HELPERS.md](./LABEL-APPLICATION-HELPERS.md) →
+`apply-ado-map-tags.ps1` for parameter details. The script handles tag
+resolution, alphabetic sorting, and Azure DevOps semicolon-delimited format.
 
 **Configuration example**:
 
@@ -473,6 +494,13 @@ az boards work-item create \
   --parent <map_work_item_id> \
   --tags "resolved_tag1;resolved_tag2;recon:research"
 ```
+
+**Implementation**: After creating the ticket work item, use
+`scripts/apply-ado-ticket-tags.ps1` to apply resolved tags. See
+[LABEL-APPLICATION-HELPERS.md](./LABEL-APPLICATION-HELPERS.md) →
+`apply-ado-ticket-tags.ps1` for parameter details. Provide the ticket type,
+configured labels, and inherited map tags; the script computes the additive
+set and applies it in Azure DevOps's semicolon-delimited format.
 
 Then link it to the parent using `--parent` flag or:
 
@@ -622,6 +650,13 @@ labels:
 The map template includes a `labels:` field which is populated at map creation
 time with this resolved set.
 
+**Implementation**: Use `scripts/record-markdown-map-labels.ps1` to create or
+update the map markdown file with resolved labels in frontmatter. See
+[LABEL-APPLICATION-HELPERS.md](./LABEL-APPLICATION-HELPERS.md) →
+`record-markdown-map-labels.ps1` for parameter details. The script parses
+existing frontmatter (if present), preserves other fields, and records the
+resolved label set in deterministic order.
+
 ##### Ticket label recording
 
 Tickets use the same additive inheritance formula as the GitHub and Azure
@@ -733,6 +768,15 @@ the source of truth.
 
 The `**Labels:**` line may appear before or alongside other metadata notes such
 as `**Blocked by:**`.
+
+**Implementation**: Use `scripts/record-markdown-ticket-labels.ps1` to create or
+update the ticket markdown file with resolved labels. See
+[LABEL-APPLICATION-HELPERS.md](./LABEL-APPLICATION-HELPERS.md) →
+`record-markdown-ticket-labels.ps1` for parameter details. Provide the ticket
+type, configured labels, and inherited map labels; the script computes the
+additive set (including `recon:<type>`), sorts it alphabetically, and records
+it in frontmatter. The script also sets the `type:` frontmatter field to the
+ticket type for machine readability.
 
 ##### Acceptance Criteria
 

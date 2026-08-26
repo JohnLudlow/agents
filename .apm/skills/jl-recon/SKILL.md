@@ -594,8 +594,27 @@ The agent MUST NOT:
   issue links, label/tag inheritance, blocking, and assignee tracking are
   represented on GitHub, Azure DevOps, and markdown-only, including the
   current no-dedicated-field stance for Azure DevOps ticket typing.
+- [LABEL-APPLICATION-HELPERS.md](references/LABEL-APPLICATION-HELPERS.md) —
+  concrete implementation scripts for applying deterministic labels and tags
+  to maps and tickets across providers. Agents use these scripts to implement
+  the label resolution logic documented in PROVIDERS.md.
 
 ## Assets
 
 - `assets/recon-map-template.md` — markdown map template, extending
   `jl-plan-template`'s template, for markdown-provider maps.
+
+## Scripts
+
+- `scripts/apply-ticket-labels.ps1` — PowerShell script to apply deterministic
+  labels to GitHub issues (implements label resolution for all platforms)
+- `scripts/apply-ticket-labels.sh` — POSIX shell equivalent of
+  `apply-ticket-labels.ps1` for Bash/sh environments
+- `scripts/apply-ado-map-tags.ps1` — PowerShell script to apply deterministic
+  tags to Azure DevOps map work items
+- `scripts/apply-ado-ticket-tags.ps1` — PowerShell script to apply deterministic
+  tags to Azure DevOps ticket work items (children of maps)
+- `scripts/record-markdown-map-labels.ps1` — PowerShell script to record
+  deterministic labels in markdown map YAML frontmatter
+- `scripts/record-markdown-ticket-labels.ps1` — PowerShell script to record
+  deterministic labels in markdown ticket YAML frontmatter

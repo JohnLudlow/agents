@@ -7,6 +7,10 @@ exclude = [".apm/skills/*/assets/*.md"]
 # MD013 - Line length should not be excessive
 [MD013]
 line_length = 120
+exclude = [
+    ".apm/skills/jl-subagent-spawning/references/HARNESS_FALLBACK.md",
+    "docs/jl-recon-title-format.md"
+]
 
 # MD041 - First line in file should be a top level heading
 [MD041]
