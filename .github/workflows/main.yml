@@ -27,9 +27,41 @@ jobs:
 
       - uses: ./.github/actions/validate
 
+  test:
+    name: Integration Tests
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Pester
+        run: |
+          Install-Module -Name Pester -Force -Scope CurrentUser -SkipPublisherCheck
+        shell: pwsh
+
+      - name: Run Markdown Label Tests
+        run: |
+          $testPath = ".apm/skills/jl-recon/tests/pester/markdown-labels.tests.ps1"
+          Invoke-Pester -Path $testPath -Verbose
+        shell: pwsh
+        continue-on-error: false
+
+      - name: Run GitHub Label Tests
+        run: |
+          $testPath = ".apm/skills/jl-recon/tests/pester/github-labels.tests.ps1"
+          Invoke-Pester -Path $testPath -Verbose
+        shell: pwsh
+        continue-on-error: false
+
+      - name: Run Azure DevOps Tag Tests
+        run: |
+          $testPath = ".apm/skills/jl-recon/tests/pester/azure-devops-tags.tests.ps1"
+          Invoke-Pester -Path $testPath -Verbose
+        shell: pwsh
+        continue-on-error: false
+
   build:
     name: Build
-    needs: [setup, validate]
+    needs: [setup, validate, test]
     runs-on: ubuntu-latest
     permissions:
       contents: read
