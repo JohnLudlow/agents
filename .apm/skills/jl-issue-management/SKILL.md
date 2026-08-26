@@ -447,6 +447,59 @@ Examples of relevant provider-specific skills include:
 These skills should be treated as optional helpers, not as required dependencies
 for basic planning or issue-management reasoning.
 
+## Label and Tag Application
+
+Maps and tickets may be labeled or tagged according to repository configuration. jl-issue-management provides
+provider-specific scripts and a decision model for consistent label application across GitHub, Azure DevOps, and
+markdown:
+
+- **Decision model**: see [Label Inheritance](references/LABEL_INHERITANCE.md)
+- **Helper scripts**: see [Label Application Helpers](references/LABEL_APPLICATION_HELPERS.md)
+
+### Overview
+
+**Maps** receive configured labels for the map type.
+
+**Tickets** receive configured labels + inherited map labels + a type classification label (`recon:quiz`,
+`recon:research`, etc.).
+
+User overrides replace the computed set entirely (not additive).
+
+All label sets are:
+
+- Automatically deduplicated
+- Sorted alphabetically
+- Formatted appropriately for the provider (GitHub: comma-separated; Azure DevOps: semicolon-separated)
+
+### Provider Support
+
+| Provider | Support | Mechanics |
+| --- | --- | --- |
+| **GitHub** | Full | Bash and PowerShell scripts use `gh CLI` |
+| **Azure DevOps** | Full | PowerShell scripts use `az boards` |
+| **Markdown** | Full | PowerShell scripts write YAML frontmatter |
+
+### Asset Scripts
+
+Ready-to-use label application scripts are included in the `scripts/` subdirectory:
+
+**GitHub (maps and tickets):**
+
+- `scripts/apply-ticket-labels.sh` — Bash/Linux/macOS
+- `scripts/apply-ticket-labels.ps1` — PowerShell/Windows
+
+**Azure DevOps (maps and tickets):**
+
+- `scripts/apply-ado-map-tags.ps1` — Map work items
+- `scripts/apply-ado-ticket-tags.ps1` — Ticket work items
+
+**Markdown (maps and tickets):**
+
+- `scripts/record-markdown-map-labels.ps1` — Map frontmatter
+- `scripts/record-markdown-ticket-labels.ps1` — Ticket frontmatter
+
+All scripts follow the same resolution logic and validation patterns.
+
 ## Recommended Agent Behavior
 
 When applying this skill, agents should:
@@ -459,6 +512,14 @@ When applying this skill, agents should:
 5. decide whether the work needs a parent item, child items, or both
 6. pause for approval before provider-native writes
 7. keep the source of record explicit
+
+When applying labels:
+
+1. Determine the configured label set for the artifact type (map or ticket)
+2. For tickets, resolve inherited labels from the parent map
+3. Apply user overrides if provided; otherwise, compute the deterministic set
+4. Call the appropriate provider-specific script
+5. Validate the exit code and report any errors
 
 ## Examples
 
