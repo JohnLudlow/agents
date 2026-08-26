@@ -346,6 +346,7 @@ With the configuration above, a Research ticket under a map labeled
 #### GitHub
 
 **Map creation**:
+
 ```bash
 gh issue create --repo <owner>/<repo> \
   --title "<map title>" \
@@ -360,6 +361,7 @@ exist, `gh issue create` will fail. Handle missing labels gracefully (warn and
 skip, or auto-create if the repository allows it).
 
 **Ticket creation** (as sub-issue):
+
 ```bash
 gh issue create --repo <owner>/<repo> \
   --title "<ticket title>" \
@@ -564,51 +566,179 @@ against `[System.Tags]`.
 
 #### Markdown
 
-**Map creation**:
+Markdown uses the same label resolution logic as GitHub and Azure DevOps. The
+provider difference is only how the resolved set is recorded: markdown stores
+the final, deterministic label set in YAML frontmatter and may also repeat it
+in the body for human readability.
 
-Create a markdown file from the recon-map template (`.apm/skills/jl-recon/assets/recon-map-template.md`)
-with frontmatter:
+##### Map label recording
+
+Maps receive the resolved map label set:
+
+```text
+Map Labels = resolved jl_recon.labels.map
+          or resolved jl_recon.labels.default when labels.map is not configured
+```
+
+Use the same configuration resolution pipeline described above:
+
+1. Start with defaults
+2. Apply `CONTRIBUTING.md` overrides
+3. Apply `AGENTS.md` overrides
+4. Apply any session-level user override last
+
+Example configuration:
+
+```yaml
+jl_recon:
+  labels:
+    default: ["recon:map"]
+    map: ["recon:map", "planning"]
+```
+
+Resolved map labels are recorded in the map frontmatter as a flat YAML list.
+Keep examples sorted alphabetically for determinism.
+
+Inline format:
 
 ```yaml
 ---
-title: "<map title>"
-labels:
-  - "<label1>"
-  - "<label2>"
-  - ...
+title: "Authentication Recon Map"
+labels: ["planning", "recon:map"]
 ---
-
-<map body>
 ```
 
-The `labels:` field is an array of strings representing the resolved label set.
-
-**Ticket creation** (as separate markdown file, or inline if markdown does not
-support sub-issues):
-
-Create a markdown file with frontmatter:
+Multiline format:
 
 ```yaml
 ---
-title: "<ticket title>"
+title: "Authentication Recon Map"
 labels:
-  - "<resolved_label_1>"
-  - "<resolved_label_2>"
-  - ...
-  - "recon:<type>"
-parent: "<map file or identifier>"
+  - "planning"
+  - "recon:map"
 ---
-
-<ticket body>
 ```
 
-For readability, optionally include a body-level note:
+The map template includes a `labels:` field which is populated at map creation
+time with this resolved set.
+
+##### Ticket label recording
+
+Tickets use the same additive inheritance formula as the GitHub and Azure
+DevOps providers:
+
+```text
+Ticket Labels = Configured Type Labels + Inherited Map Labels + recon:<type>
+```
+
+Resolution order:
+
+1. Start with `jl_recon.labels.<type>` for the ticket type (`quiz`,
+   `research`, `prototype`, `task`), or `labels.default` if the type-specific
+   key is not configured.
+2. Add every label already present on the parent map.
+3. Add the required `recon:<type>` label.
+4. De-duplicate.
+5. Sort alphabetically before writing YAML examples and generated markdown.
+
+Example configuration:
+
+```yaml
+jl_recon:
+  labels:
+    default: ["recon:map"]
+    map: ["recon:map", "planning"]
+    quiz: ["needs-answer", "type:question"]
+    research: ["recon-output", "type:research"]
+    prototype: ["spike", "type:prototype"]
+    task: ["decision-unblocker", "type:task"]
+```
+
+Expected ticket frontmatter format:
+
+Inline format:
+
+```yaml
+---
+title: "Verify auth refresh token rotation"
+labels: ["needs-answer", "planning", "recon:map", "recon:quiz", "type:question"]
+parent: "docs/plans/authentication-recon-map.md"
+---
+```
+
+Multiline format:
+
+```yaml
+---
+title: "Verify auth refresh token rotation"
+labels:
+  - "needs-answer"
+  - "planning"
+  - "recon:map"
+  - "recon:quiz"
+  - "type:question"
+parent: "docs/plans/authentication-recon-map.md"
+---
+```
+
+##### Type-by-type examples
+
+Quiz ticket:
+
+```text
+Configured Type Labels = ["needs-answer", "type:question"]
+Inherited Map Labels   = ["planning", "recon:map"]
+Required Type Label    = ["recon:quiz"]
+Final Labels           = ["needs-answer", "planning", "recon:map", "recon:quiz", "type:question"]
+```
+
+Research ticket:
+
+```text
+Configured Type Labels = ["recon-output", "type:research"]
+Inherited Map Labels   = ["planning", "recon:map"]
+Required Type Label    = ["recon:research"]
+Final Labels           = ["planning", "recon-output", "recon:map", "recon:research", "type:research"]
+```
+
+Prototype ticket:
+
+```text
+Configured Type Labels = ["spike", "type:prototype"]
+Inherited Map Labels   = ["planning", "recon:map"]
+Required Type Label    = ["recon:prototype"]
+Final Labels           = ["planning", "recon:map", "recon:prototype", "spike", "type:prototype"]
+```
+
+Task ticket:
+
+```text
+Configured Type Labels = ["decision-unblocker", "type:task"]
+Inherited Map Labels   = ["planning", "recon:map"]
+Required Type Label    = ["recon:task"]
+Final Labels           = ["decision-unblocker", "planning", "recon:map", "recon:task", "type:task"]
+```
+
+##### Optional body note
+
+For readability, optionally repeat the resolved labels near the top of the
+ticket body. This is recommended, but not required, because the frontmatter is
+the source of truth.
 
 ```markdown
-**Labels:** recon:quiz, planning, high-priority
+**Labels:** needs-answer, planning, recon:map, recon:quiz, type:question
 
-**Blocked by:** [Title of blocking ticket](link)
+**Blocked by:** [Auth token storage decision](auth-token-storage-decision.md)
 ```
+
+The `**Labels:**` line may appear before or alongside other metadata notes such
+as `**Blocked by:**`.
+
+##### Acceptance Criteria
+
+- [ ] Map frontmatter includes `labels:` field with resolved label set
+- [ ] Tickets include `labels:` frontmatter + optional body note
+- [ ] Label format matches examples in PROVIDERS.md
 
 ## Azure DevOps
 

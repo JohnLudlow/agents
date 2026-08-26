@@ -158,7 +158,8 @@ Resolved behaviour:
   - if not configured for a type, inherits from `labels.default`
   - combined with map labels (if part of a map) plus the ticket's `recon:<type>` label
   - inheritance is additive: ticket receives its own type-specific labels + map labels + `recon:<type>`
-  - if the session user provides a label override during ticket creation (user session preference), it replaces the configured labels entirely (not additive to them)
+  - if the session user provides a label override during ticket creation (user session preference), 
+    it replaces the configured labels entirely (not additive to them)
 
 Graceful fallback:
 

@@ -5,6 +5,7 @@ author: "jl-recon"
 date: "YYYY-MM-DD"
 status: "Charting"
 inciting-issue: "[Link to the issue/work item/document that prompted this map, or 'None']"
+labels: []
 ---
 
 # [Map Title]
@@ -12,6 +13,8 @@ inciting-issue: "[Link to the issue/work item/document that prompted this map, o
 Use this template when charting a Recon map as a markdown document. It
 extends `jl-plan-template`'s frontmatter and governance conventions;
 replace every placeholder value before use.
+
+# The `labels:` field is populated at map creation time based on configuration and resolved labels.
 
 ## Plan Target and Governance
 
