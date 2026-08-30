@@ -113,9 +113,9 @@ Each criterion should be:
 ```markdown
 ## Acceptance Criteria
 
-- [ ] Understand how templates work  ❌ Not measurable; "understand" is vague
-- [ ] Improve code quality  ❌ Not specific; improvement is subjective
-- [ ] Create a good validator  ❌ "good" is subjective; what makes it good?
+- [ ] Understand how templates work ❌ Not measurable; "understand" is vague
+- [ ] Improve code quality ❌ Not specific; improvement is subjective
+- [ ] Create a good validator ❌ "good" is subjective; what makes it good?
 ```
 
 ## Common Sections
@@ -233,16 +233,20 @@ parent: ""
 ---
 
 ## Overview
+
 [...]
 
 ## Acceptance Criteria
+
 - [ ] [Criterion 1]
 - [ ] [Criterion 2]
 
 ## Clarification Strategy
+
 [Quiz-specific section]
 
 ## Question Categories
+
 [Quiz-specific section]
 ```
 

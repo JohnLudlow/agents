@@ -101,13 +101,13 @@ canonical structure documented in this file.
 
 The validator contract is intentionally simple and portable.
 
-**Input**
+#### Input
 
 - one template object
 - optional validation context from the caller, such as target provider,
   allowed placeholder names, or template purpose
 
-**Output**
+#### Output
 
 - one validation result object
 - zero or more structured errors

@@ -79,7 +79,7 @@ When `jl-quiz` is about to create a quiz ticket:
 When validation fails, report **one error per issue**, not all at once.
 Use this format:
 
-```
+```markdown
 Validation Error: [Error title]
 
 Issue: [What is wrong]
@@ -92,7 +92,7 @@ Example of correct format:
 
 ### Example error: Missing required frontmatter field
 
-```
+```markdown
 Validation Error: Missing or empty 'date' field
 
 Issue: The 'date' field in frontmatter is empty or missing
@@ -107,7 +107,7 @@ date: "2026-08-30"
 
 ### Example error: Invalid date format
 
-```
+```markdown
 Validation Error: Date format not ISO 8601
 
 Issue: The 'date' field contains "Aug 30, 2026" but must be YYYY-MM-DD
@@ -122,12 +122,13 @@ date: "2026-08-30"
 
 ### Example error: Decision statement missing
 
-```
+```markdown
 Validation Error: Missing 'Decision Statement' section
 
 Issue: The ticket body does not contain a '## Decision Statement' section
 Location: Ticket body
-Guidance: Add a section titled "## Decision Statement" with a neutral question phrased as "Should we..." or "How should we...?"
+Guidance: Add a section titled "## Decision Statement" with a neutral question phrased as "Should we..." or 
+          "How should we...?"
 
 Example of correct format:
 ## Decision Statement
@@ -137,7 +138,7 @@ Should we adopt TypeScript strict mode for this codebase?
 
 ### Example error: Only one option provided
 
-```
+```markdown
 Validation Error: Not enough options
 
 Issue: The Options section lists only 1 option, but a decision requires at least 2
@@ -164,7 +165,7 @@ Example of correct format:
 
 ### Example error: Empty reasoning
 
-```
+```markdown
 Validation Error: 'Reasoning' section is empty
 
 Issue: The Reasoning section contains no text explaining which option was chosen
@@ -183,7 +184,7 @@ time to retrofit existing code without disrupting the team.
 
 When validation fails, jl-quiz MUST offer the user an explicit override option:
 
-```
+```markdown
 Validation failed with [N] error(s):
 [List errors]
 
@@ -198,7 +199,7 @@ Which would you like to do?
 If the user chooses **Override**, they are explicitly approving creation despite
 validation failures. Record this approval in a comment on the created ticket:
 
-```
+```markdown
 <!-- Validation Override -->
 Created with validation override by [user] on [date].
 Issues noted:

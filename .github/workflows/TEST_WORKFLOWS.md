@@ -9,6 +9,7 @@ Automated test execution for label application across all providers.
 Runs on pull requests and pushes that touch the `jl-recon` skill or test files.
 
 **Triggers:**
+
 - Push to `main` or `develop` branches when jl-recon files changed
 - Pull requests to `main` or `develop` that modify jl-recon
 - Any change to `.github/workflows/test.yml` itself
@@ -41,12 +42,14 @@ Runs on pull requests and pushes that touch the `jl-recon` skill or test files.
 Standard build workflow that now includes tests.
 
 **Pipeline:**
-```
+
+```text
 setup → validate → test ↘
                          → build → release
 ```
 
 **Test Job:**
+
 - Runs on Windows (for PowerShell/Pester)
 - Executes 3 Pester test suites
 - Blocks build if any test fails
@@ -73,11 +76,13 @@ bats ".apm/skills/jl-recon/tests/bats/label-resolution.bats" --filter "config re
 ### GitHub Actions
 
 **In PR/commit:**
+
 - Tests automatically run on push/PR
 - Results appear in PR checks (test status, details)
 - Build continues only if tests pass
 
 **View Results:**
+
 1. Click "Details" on the test job in PR checks
 2. Or go to Actions tab → select workflow → select run
 3. Scroll to "Integration Tests" section
@@ -85,6 +90,7 @@ bats ".apm/skills/jl-recon/tests/bats/label-resolution.bats" --filter "config re
 ### Test Output
 
 **Pester:**
+
 - NUnit XML files uploaded as artifacts
 - Parsed and displayed in PR with:
   - Pass/fail counts
@@ -92,6 +98,7 @@ bats ".apm/skills/jl-recon/tests/bats/label-resolution.bats" --filter "config re
   - Execution time
 
 **Bats:**
+
 - TAP format output
 - Added to GitHub step summary
 - Shows all test cases with status
@@ -101,24 +108,28 @@ bats ".apm/skills/jl-recon/tests/bats/label-resolution.bats" --filter "config re
 The automated tests verify:
 
 ✅ **GitHub Labels**
+
 - Map creation with labels
 - Ticket labels (quiz, research, prototype, task)
 - Label inheritance (additive, not replacement)
 - User override (replaces entire set)
 
 ✅ **Azure DevOps Tags**
+
 - Map work item tag application
 - Ticket tag application (all 4 types)
 - Semicolon-delimited format
 - Same inheritance logic as GitHub
 
 ✅ **Markdown Frontmatter**
+
 - YAML list formatting
 - File I/O and updates
 - Ticket body notes
 - Parent link references
 
 ✅ **Edge Cases**
+
 - Special characters (colons, hyphens, underscores)
 - Empty label lists
 - Very long label lists (20+)
@@ -126,6 +137,7 @@ The automated tests verify:
 - Alphabetical sorting for determinism
 
 ✅ **Config Resolution**
+
 - Default → CONTRIBUTING.md → AGENTS.md precedence
 - Label inheritance across all ticket types
 - Cross-provider consistency
@@ -133,12 +145,14 @@ The automated tests verify:
 ## CI/CD Integration
 
 **Pass/Fail Logic:**
+
 - All Pester tests must pass
 - All Bats tests must pass
 - Both jobs must succeed for build to proceed
 - Failures block merges to main/develop
 
 **Artifact Retention:**
+
 - Test results preserved for 30 days
 - Available in Actions → Artifacts
 - Downloadable for post-incident analysis

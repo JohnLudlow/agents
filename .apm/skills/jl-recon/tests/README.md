@@ -4,7 +4,7 @@ Comprehensive test suite for label application across GitHub, Azure DevOps, and 
 
 ## Test Structure
 
-```
+```text
 tests/
 ├── pester/
 │   ├── markdown-labels.tests.ps1      # File I/O, YAML frontmatter recording
@@ -20,12 +20,14 @@ tests/
 ### Pester Tests (PowerShell)
 
 #### `markdown-labels.tests.ps1`
+
 - **Map label recording:** Basic, empty labels, deduplication, user override
 - **Ticket label recording:** Per type (quiz, research, prototype, task), inheritance, body note
 - **Edge cases:** Special characters, long label lists, frontmatter updates
 - **Determinism:** Alphabetical sorting
 
 #### `github-labels.tests.ps1`
+
 - **Map labels:** Configuration application, defaults, override
 - **Ticket labels:** All 4 types, inheritance (additive), label union
 - **Inheritance model:** No duplication, all three sources present
@@ -33,6 +35,7 @@ tests/
 - **Edge cases:** Special characters, empty lists, single label, 20+ labels
 
 #### `azure-devops-tags.tests.ps1`
+
 - **Map tags:** Configuration, defaults, override
 - **Ticket tags:** All 4 types, inheritance, tag union
 - **Semicolon serialization:** Format validation, alphabetical sorting
@@ -42,6 +45,7 @@ tests/
 ### Bats Tests (Bash)
 
 #### `label-resolution.bats`
+
 - **Config resolution:** Defaults → CONTRIBUTING.md → AGENTS.md precedence
 - **Label inheritance:** Type + inherited + required label formula
 - **Deduplication:** Removes duplicates from all sources
@@ -97,11 +101,13 @@ bats ./tests/bats/label-resolution.bats --filter "alphabetical sorting"
 ### Mocking Strategy
 
 **Pester tests** use function mocking for external dependencies:
+
 - GitHub API: Mock `Invoke-GhIssueCreate` and `Invoke-GhIssueEdit`
 - Azure DevOps API: Mock `Invoke-AzWorkItemCreate` and `Invoke-AzWorkItemUpdate`
 - File system: Use `[System.IO.Path]::GetTempFileName()` for isolated test files
 
 **Bats tests** focus on:
+
 - Configuration file parsing (YAML CONTRIBUTING.md, AGENTS.md)
 - Label combining and deduplication logic
 - Format conversion (CSV → semicolon, YAML list generation)
