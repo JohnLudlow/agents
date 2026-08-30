@@ -1,12 +1,14 @@
 # JL-Recon Integration Tests
 
-Comprehensive test suite for label application across GitHub, Azure DevOps, and Markdown providers.
+Comprehensive test suite for jl-recon label application and Mode 2 quality checks.
 
 ## Test Structure
 
 ```text
 tests/
 ├── pester/
+│   ├── mode2-checks.tests.ps1         # Unit tests for Mode 2 check logic
+│   ├── mode2-workflow.tests.ps1       # Integration tests for Mode 2 resolution workflow
 │   ├── markdown-labels.tests.ps1      # File I/O, YAML frontmatter recording
 │   ├── github-labels.tests.ps1        # GitHub API mocks, per-label tests
 │   └── azure-devops-tags.tests.ps1    # Azure DevOps API mocks, semicolon format
@@ -18,6 +20,25 @@ tests/
 ## Test Coverage
 
 ### Pester Tests (PowerShell)
+
+#### `mode2-checks.tests.ps1`
+
+- **Configuration gating:** enabled, disabled, missing config defaults, timeout override
+- **Fallback invocation:** subagent → Herdr → session, all-failed, timeout, parse error, partial availability
+- **Findings parsing:** structured objects, malformed JSON degradation, empty findings, missing optional fields
+- **Findings display:** markdown table columns, severity sorting, file/line context, escaping
+- **Prompt generation:** unavailable-check prompt, partial-availability prompt
+- **User decisions:** approve, proceed, override, cancel, audit logging, invalid-input retry
+
+#### `mode2-workflow.tests.ps1`
+
+- **Happy path:** checks pass, user approves, resolution recorded
+- **Findings path:** findings displayed before approval and recording
+- **Override path:** critical finding overridden and logged
+- **Cancel path:** returns to resolve step, no record until re-resolution
+- **Degradation path:** all checks unavailable, proceed without blocking
+- **Partial availability path:** available findings preserved while failed checks degrade gracefully
+- **Disabled checks path:** skips invocation entirely and logs skip status
 
 #### `markdown-labels.tests.ps1`
 
@@ -123,6 +144,12 @@ bats ./tests/bats/label-resolution.bats --filter "alphabetical sorting"
 
 ## Acceptance Criteria Status
 
+- ✅ Mode 2 checks configuration gating tested
+- ✅ Mode 2 fallback hierarchy tested
+- ✅ Mode 2 findings parsing and markdown rendering tested
+- ✅ Mode 2 approve / override / cancel flows tested
+- ✅ Mode 2 proceed-without-checks flow tested
+- ✅ Mode 2 graceful degradation and disabled-check paths tested
 - ✅ GitHub map label application tested
 - ✅ GitHub ticket label application (with inheritance) tested for all 4 types
 - ✅ Azure DevOps tag application tested

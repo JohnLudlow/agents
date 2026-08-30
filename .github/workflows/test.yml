@@ -14,7 +14,7 @@ on:
 
 jobs:
   pester-tests:
-    name: Pester Tests (Label Application)
+    name: Pester Tests
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -51,6 +51,22 @@ jobs:
           $testPath = ".apm/skills/jl-recon/tests/pester/azure-devops-tags.tests.ps1"
           Write-Host "Running tests from: $testPath"
           Invoke-Pester -Path $testPath -Verbose -OutputFile pester-ado.xml -OutputFormat NUnitXml
+        shell: pwsh
+        continue-on-error: false
+
+      - name: Run Mode 2 Check Logic Tests
+        run: |
+          $testPath = ".apm/skills/jl-recon/tests/pester/mode2-checks.tests.ps1"
+          Write-Host "Running tests from: $testPath"
+          Invoke-Pester -Path $testPath -Verbose -OutputFile pester-mode2-unit.xml -OutputFormat NUnitXml
+        shell: pwsh
+        continue-on-error: false
+
+      - name: Run Mode 2 Workflow Integration Tests
+        run: |
+          $testPath = ".apm/skills/jl-recon/tests/pester/mode2-workflow.tests.ps1"
+          Write-Host "Running tests from: $testPath"
+          Invoke-Pester -Path $testPath -Verbose -OutputFile pester-mode2-integration.xml -OutputFormat NUnitXml
         shell: pwsh
         continue-on-error: false
 
@@ -127,10 +143,14 @@ jobs:
           echo "## Integration Test Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Test Suites" >> $GITHUB_STEP_SUMMARY
+          echo "- **Mode 2 Pester Tests:** Quality-check gating, fallback hierarchy, findings review, resolution decisions" >> $GITHUB_STEP_SUMMARY
           echo "- **Pester Tests:** Label application across GitHub, Azure DevOps, Markdown" >> $GITHUB_STEP_SUMMARY
           echo "- **Bats Tests:** Configuration resolution, inheritance, determinism, edge cases" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "✓ Mode 2 check configuration enable/disable/default behavior" >> $GITHUB_STEP_SUMMARY
+          echo "✓ Mode 2 subagent → Herdr → session fallback hierarchy" >> $GITHUB_STEP_SUMMARY
+          echo "✓ Mode 2 findings parsing, markdown display, audit decisions, graceful degradation" >> $GITHUB_STEP_SUMMARY
           echo "✓ GitHub map and ticket labels (all 4 ticket types)" >> $GITHUB_STEP_SUMMARY
           echo "✓ Azure DevOps map and ticket tags (all 4 types)" >> $GITHUB_STEP_SUMMARY
           echo "✓ Markdown frontmatter label recording" >> $GITHUB_STEP_SUMMARY

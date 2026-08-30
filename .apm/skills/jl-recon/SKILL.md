@@ -160,6 +160,9 @@ Resolved behaviour:
 - `checks.on_ticket_resolution_enabled`
   - `true` (default): run quality checks before recording ticket resolutions in Mode 2 (Work through the map)
   - `false`: skip quality checks in Mode 2; proceed directly to resolution
+- `checks.timeout_seconds`
+  - positive integer, default `30`
+  - applies to each Mode 2 quality check attempt before the workflow degrades gracefully
 - `checks.on_status_report_enabled`
   - `true` (default): run quality checks on generated status reports in Mode 3 (Report on implementation status)
   - `false`: skip quality checks in Mode 3; proceed directly to report output
@@ -483,20 +486,113 @@ Resolving one ticket on an existing map.
 6. If the ticket was delegated, emit a clear completion notification when
    the delegated work returns — see "Delegation Handoff Messaging" below —
    before recording the resolution.
-7. Record the resolution: close the ticket, then append exactly one line to
+7. If resolved `checks.on_ticket_resolution_enabled` is true, run quality checks
+   on the resolved ticket before recording the resolution. See "Quality Checks
+   in Mode 2" below for the full workflow: invoke jl-adversarial-reviewer,
+   display findings, collect user review/override. If checks are unavailable
+   or disabled, skip this step and proceed directly to step 8.
+8. Record the resolution: close the ticket, then append exactly one line to
    the map's Decisions-so-far list. One line, one place — if the map already
    shows this natively (GitHub's own sub-issue list), the manual line still
    goes in because some decisions resolve with no child ticket at all; it
    never gets restated a second time as a summary or a status table.
-8. Create any newly-surfaced tickets and graduate any fog the resolution
+9. Create any newly-surfaced tickets and graduate any fog the resolution
    burned off. Log any newly-surfaced uncertainty to the map's fog in the
    same pass, before the pass ends. If the resolution reveals scope the
    destination doesn't cover, close it into Out-of-scope instead of
    recording it as a decision.
 
 **Completion criterion:** the ticket is closed, the Decisions-so-far list
-carries its one new line, and every new uncertainty the pass surfaced is
-recorded as fog on the map, in-session, before the pass ends.
+carries its one new line, every new uncertainty the pass surfaced is
+recorded as fog on the map, in-session, before the pass ends, and any quality
+checks (if enabled) were presented for user review before the resolution was
+recorded.
+
+#### Quality Checks in Mode 2
+
+When a ticket is resolved and `checks.on_ticket_resolution_enabled` is true,
+run quality checks using jl-adversarial-reviewer before recording the
+resolution. This workflow is always human-in-the-loop: the user reviews
+findings and explicitly confirms the resolution.
+
+**Workflow:**
+
+1. **Invoke checks** — Call jl-adversarial-reviewer using `jl-subagent-spawning`'s
+   fallback hierarchy: try subagent → try Herdr → read into session. Pass the
+   resolved ticket's content (resolution text, findings, context from the map).
+   Apply a per-check timeout of `checks.timeout_seconds` (default: `30`). On
+   harness unavailability, timeout, network error, or malformed findings, do
+   not block Mode 2: warn the user, keep any successful findings, and continue
+   to an explicit user decision.
+
+2. **Collect findings** — jl-adversarial-reviewer returns a structured report with
+   findings (each with severity: critical/major/minor/nit, description, and
+   recommendation). If some checks succeed and others fail, keep only the
+   successful findings table and warn about the failed checks. If a check
+   returns malformed findings, treat that check as failed and degrade
+   gracefully. If no findings are returned (all-pass or no report), inform the
+   user and proceed to confirmation.
+
+3. **Display findings** — Format findings as a markdown table:
+   ```
+   | Severity | Check | Finding | Recommendation |
+   | --- | --- | --- | --- |
+   | critical | ... | ... | ... |
+   | major | ... | ... | ... |
+   ```
+   Sort by severity, highest first (critical → major → minor → nit).
+   Include file/location context in the Finding column if available.
+
+4. **User review and decision** — Present the findings table to the user and ask
+   one of these prompts, depending on check availability:
+
+   When checks are unavailable or all fail:
+
+   ```text
+   ⚠️ Quality checks unavailable: [reason]
+
+   Would you like to:
+   1. Proceed without checks and record the resolution
+   2. Cancel and revise the ticket
+   3. Override and record anyway
+
+   (User can always override and proceed)
+   ```
+
+   When some checks succeed and some fail:
+
+   ```text
+   ⚠️ Some quality checks failed: [failed-checks]
+
+   Available findings:
+   [findings table - only successful checks]
+
+   Would you like to:
+   1. Approve and record resolution
+   2. Override and record anyway
+   3. Cancel and revise
+
+   (Proceed with available findings)
+   ```
+
+   When checks complete normally:
+   - "Approve and record resolution" (findings acknowledged, ready to record)
+   - "Override and record anyway" (user disagrees with findings, force record)
+   - "Cancel resolution" (pause and revise the ticket before recording)
+
+5. **Graceful degradation** — If any checks fail (harness unavailable, network
+   error, timeout, malformed findings):
+   - Skip unavailable checks and keep running the remaining checks
+   - If some checks succeed: show the successful findings and warn about failed checks
+   - If all checks fail: warn the user and allow either "Proceed without checks"
+     or "Override and record anyway"
+   - Record the degraded check outcome and the user's decision in the audit trail
+   - Never block Mode 2 workflow — user can always override and record
+
+**Post-decision:**
+- If user approves or overrides, proceed to step 8 (Record the resolution)
+- If user cancels, return to step 5 (resolve ticket) without recording
+- Log the user's decision (approve/override) alongside the resolution for audit trail
 
 #### Delegation Handoff Messaging
 
@@ -578,6 +674,14 @@ The agent MUST:
 - Apply resolved checks configuration when running Mode 2 (Work through the map):
   if `checks.on_ticket_resolution_enabled` is true, run quality checks before
   recording ticket resolutions; otherwise skip checks and proceed directly.
+- When running Mode 2 checks, use jl-subagent-spawning's fallback hierarchy (try
+  subagent → try Herdr → read into session); handle unavailable checks gracefully
+  by warning the user, keeping partial findings when available, and allowing
+  proceed or override.
+- Display Mode 2 check findings as a markdown table sorted by severity (critical → major → minor → nit),
+  with columns: Severity | Check | Finding | Recommendation.
+- Collect explicit user confirmation (approve/override/cancel) for each ticket resolution after
+  quality checks are presented; never record a resolution without user decision.
 - Apply resolved checks configuration when running Mode 3 (Report on implementation status):
   if `checks.on_status_report_enabled` is true, run quality checks on generated
   status reports; otherwise skip checks and proceed directly to report output.
