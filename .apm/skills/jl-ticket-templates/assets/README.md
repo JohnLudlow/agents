@@ -50,6 +50,8 @@ names descriptive and close to the target platform vocabulary.
   with options and reasoning); inherits from shared base schema
 - `research-ticket-template.md` — markdown template for research tickets
   (investigations with evidence and findings); inherits from shared base schema
+- `prototype-ticket-template.md` — markdown template for prototype tickets
+  (time-boxed explorations with verification); inherits from shared base schema
 
 ## How to Add a New Platform Template
 

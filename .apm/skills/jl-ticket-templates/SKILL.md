@@ -35,7 +35,7 @@ Load this skill when another skill or agent needs one of these behaviors:
 - **validator** — check that a template contains the required fields and
   platform metadata before ticket creation
 - **template** — load a predefined GitHub Issue or Azure DevOps work item
-  template from `assets/`; includes templates for quiz and research tickets
+  template from `assets/`; includes templates for quiz, research, and prototype tickets
 - **ticket schema** — reference the shared base schema that all tickets
   (quiz, research, prototype, task, map) inherit from; documented in
   `references/SHARED_BASE_SCHEMA.md`
@@ -355,6 +355,8 @@ that behavior in this section and keep the validation contract stable.
   jl-quiz when creating new quiz decisions
 - `assets/research-ticket-template.md` — the research ticket type template;
   copied by jl-recon when creating new research tickets
+- `assets/prototype-ticket-template.md` — the prototype ticket type template;
+  copied by jl-recon when creating new prototype tickets
 - `references/SHARED_BASE_SCHEMA.md` — the inherited base frontmatter,
   acceptance-criteria format, and common sections all ticket types (quiz,
   research, prototype, task, map) use; referenced by type-specific templates
@@ -363,6 +365,9 @@ that behavior in this section and keep the validation contract stable.
   override flow
 - `references/RESEARCH_VALIDATION_GUIDE.md` — integration guidance for jl-recon:
   how to validate research tickets before creation, error messages, and user
+  override flow
+- `references/PROTOTYPE_VALIDATION_GUIDE.md` — integration guidance for jl-recon:
+  how to validate prototype tickets before creation, error messages, and user
   override flow
 - `references/` — detailed validation rules, template schemas, and extension
   guidance for future providers

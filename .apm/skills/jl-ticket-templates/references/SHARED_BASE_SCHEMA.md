@@ -279,7 +279,7 @@ against this contract before creating or updating tickets.
 - **Type-specific templates**: (To be created or in progress)
   - `QUIZ_TEMPLATE.md` — for quiz tickets (decisions with options and reasoning); stored as asset `quiz-ticket-template.md`
   - `RESEARCH_TEMPLATE.md` — for research tickets (investigations with evidence and findings); stored as asset `research-ticket-template.md`
-  - `PROTOTYPE_TEMPLATE.md` — for prototype tickets
+  - `PROTOTYPE_TEMPLATE.md` — for prototype tickets (time-boxed explorations with verification); stored as asset `prototype-ticket-template.md`
   - `TASK_TEMPLATE.md` — for task tickets
   - `MAP_TEMPLATE.md` — for map tickets
 - **Validator API**: See `SKILL.md` for the contract that validates tickets
@@ -290,3 +290,5 @@ against this contract before creating or updating tickets.
   jl-quiz integrates validation before creating quiz tickets
 - **Research validation guide**: `references/RESEARCH_VALIDATION_GUIDE.md` — how
   jl-recon integrates validation before creating research tickets
+- **Prototype validation guide**: `references/PROTOTYPE_VALIDATION_GUIDE.md` — how
+  jl-recon integrates validation before creating prototype tickets

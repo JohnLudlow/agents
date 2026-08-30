@@ -606,6 +606,46 @@ When `jl-recon` creates a research ticket:
 3. If override approved, record the approval in a ticket comment for audit trail
 4. Create the ticket only after validation passes or override is approved
 
+## Prototype Ticket Validation
+
+Prototype tickets are validated before creation to ensure research question
+and throwaway scope are explicit. When `jl-recon` creates a new prototype ticket,
+it validates the ticket structure against the prototype template schema before
+committing to the target provider (GitHub Issues, Azure DevOps, etc.).
+
+### Validation workflow
+
+1. **Load the prototype content** from the user-filled template or created content
+2. **Parse and validate** the frontmatter against required fields (type, status, author, date, etc.)
+3. **Extract and validate** body sections (Research Question, Implementation Approach, Verification, Throwaway Plan, Findings, Acceptance Criteria)
+4. **Report validation result**:
+   - If valid: proceed to ticket creation
+   - If invalid: report errors with remediation guidance; offer user override option
+
+### Validation contract
+
+A prototype ticket is **valid** when:
+- Frontmatter contains all required fields with correct types and values
+- Research Question is stated as a single, clear exploration question (not too broad)
+- Implementation Approach explicitly lists what will and will not be built
+- Verification contains at least 3 specific, measurable success criteria
+- Throwaway Plan explicitly states what code will be discarded and what findings carry forward
+- Findings contain specific observations or data (not generalizations)
+- Acceptance Criteria contains at least 3 checkable items
+
+See `references/PROTOTYPE_VALIDATION_GUIDE.md` for:
+- Complete validation contract and error messages
+- User override workflow and audit trail
+- Integration points and test cases
+
+### Integration points
+
+When `jl-recon` creates a prototype ticket:
+1. Call the prototype validator with the filled template
+2. If validation fails, report errors and ask user to fix or approve override
+3. If override approved, record the approval in a ticket comment for audit trail
+4. Create the ticket only after validation passes or override is approved
+
 ## Relationship to Other Skills
 
 - **jl-quiz** — the mechanism behind naming the destination, mapping
