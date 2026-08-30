@@ -36,6 +36,9 @@ Load this skill when another skill or agent needs one of these behaviors:
   platform metadata before ticket creation
 - **template** — load a predefined GitHub Issue or Azure DevOps work item
   template from `assets/`
+- **ticket schema** — reference the shared base schema that all tickets
+  (quiz, research, prototype, task, map) inherit from; documented in
+  `references/SHARED_BASE_SCHEMA.md`
 - **infrastructure** — reuse the same template contract across
   `jl-recon`, `jl-issue-management`, or future ticket-producing skills
 
@@ -348,6 +351,9 @@ that behavior in this section and keep the validation contract stable.
 ## References
 
 - `assets/` — canonical provider template assets for reuse by other skills
+- `references/SHARED_BASE_SCHEMA.md` — the inherited base frontmatter,
+  acceptance-criteria format, and common sections all ticket types (quiz,
+  research, prototype, task, map) use; referenced by type-specific templates
 - `references/` — detailed validation rules, template schemas, and extension
   guidance for future providers
 - `./assets/github-issue-template.json` — GitHub Issue template asset
