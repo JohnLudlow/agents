@@ -44,6 +44,8 @@ mechanism; jl-recon owns this schema, its defaults, and its validation.
 | `labels.research` | array of strings | any label names | defaults to `labels.default` | optional |
 | `labels.prototype` | array of strings | any label names | defaults to `labels.default` | optional |
 | `labels.task` | array of strings | any label names | defaults to `labels.default` | optional |
+| `checks.on_ticket_resolution_enabled` | boolean | `true`, `false` | `true` | optional |
+| `checks.on_status_report_enabled` | boolean | `true`, `false` | `true` | optional |
 
 ### Validation and defaults
 
@@ -53,14 +55,18 @@ mechanism; jl-recon owns this schema, its defaults, and its validation.
 - validate `labels`, if present, as an object with keys limited to: `default`, `map`, `quiz`, `research`, `prototype`, `task`
 - validate each `labels.*` value as an array of non-empty strings
 - validate that no `labels.*` array is empty
+- validate `checks`, if present, as an object of booleans with keys limited to: `on_ticket_resolution_enabled`, `on_status_report_enabled`
 - default each missing decision gate to `false`
 - default missing `uncertainty_tracking.pattern` to
   `## Not Yet Specified (Fog of War)`
 - default `labels.default` to `["recon:map"]`
 - default each of `labels.map`, `labels.quiz`, `labels.research`, `labels.prototype`, `labels.task` to inherit from `labels.default`
+- default `checks.on_ticket_resolution_enabled` to `true`
+- default `checks.on_status_report_enabled` to `true`
 - apply resolved label values when creating maps and tickets, per the resolved behavior below
 - apply resolved gate values at their workflow decision points rather than
   relying on separate hardcoded gate rules
+- apply resolved checks configuration when Mode 2 (ticket resolution) or Mode 3 (status report) runs
 
 ### Example configuration
 
@@ -74,6 +80,9 @@ jl_recon:
     research_afk: false
   uncertainty_tracking:
     pattern: "## Not Yet Specified (Fog of War)"
+  checks:
+    on_ticket_resolution_enabled: true
+    on_status_report_enabled: true
   labels:
     default:
       - "recon:map"
@@ -96,6 +105,9 @@ In `AGENTS.md`:
 jl_recon:
   decision_gates:
     destination_confirmation: true
+  checks:
+    on_ticket_resolution_enabled: true
+    on_status_report_enabled: true
   labels:
     map:
       - "recon:map"
@@ -121,6 +133,8 @@ This skill consumes:
 - `jl_recon.labels.research`
 - `jl_recon.labels.prototype`
 - `jl_recon.labels.task`
+- `jl_recon.checks.on_ticket_resolution_enabled`
+- `jl_recon.checks.on_status_report_enabled`
 
 Resolved behaviour:
 
@@ -143,6 +157,12 @@ Resolved behaviour:
     in any textual artifact that mirrors the map structure
   - if not configured, default to `## Not Yet Specified (Fog of War)` through
     jl-recon's own defaults
+- `checks.on_ticket_resolution_enabled`
+  - `true` (default): run quality checks before recording ticket resolutions in Mode 2 (Work through the map)
+  - `false`: skip quality checks in Mode 2; proceed directly to resolution
+- `checks.on_status_report_enabled`
+  - `true` (default): run quality checks on generated status reports in Mode 3 (Report on implementation status)
+  - `false`: skip quality checks in Mode 3; proceed directly to report output
 - `labels.default`
   - applied to all maps and tickets unless overridden by type-specific config
   - always inherited and combined with `recon:<type>` label (additive, not replacement)
@@ -170,6 +190,9 @@ Graceful fallback:
   recording decision points.
 - If a gate's practical effect is still ambiguous in the current session, ask
   the human rather than inventing a stricter or looser rule.
+- If quality checks are unavailable or fail (harness not installed, timeout, network error),
+  gracefully degrade: skip the unavailable check, run available checks, and allow user
+  to override if all checks fail. Never block Mode 2 or Mode 3 workflow.
 
 ### Configuration Warnings
 
@@ -266,6 +289,31 @@ format defined by jl-config) for:
 [WARN] jl-recon: 'labels.research' cannot be an empty array
   File: AGENTS.md [line 20]
   Fix: Provide at least one label: research: ["recon:research"]
+```
+
+#### Type Mismatch — checks config (object required)
+
+```text
+[WARN] jl-recon: 'checks' must be an object, not a string
+  File: AGENTS.md [line 22]
+  Fix: Change to YAML object syntax: checks: { on_ticket_resolution_enabled: true }
+```
+
+#### Invalid checks config key
+
+```text
+[WARN] jl-recon: 'checks.on_prototype_validation' is not a valid checks key
+  File: CONTRIBUTING.md [line 24]
+  Fix: Use only: on_ticket_resolution_enabled or on_status_report_enabled
+```
+
+#### Type Mismatch — checks gate (boolean required)
+
+```text
+[WARN] jl-recon: 'checks.on_ticket_resolution_enabled' must be a
+  boolean (true/false), not a string
+  File: AGENTS.md [line 23]
+  Fix: Change the value to a boolean: on_ticket_resolution_enabled: true
 ```
 
 ## Core Model
@@ -515,7 +563,7 @@ The agent MUST:
   read of a loose request.
 - Resolve `jl-config` before acting, validate the resolved `jl_recon`
   settings against jl-recon's schema, and apply its decision gates,
-  uncertainty-tracking pattern, and label configuration at the workflow points they govern.
+  uncertainty-tracking pattern, label configuration, and checks configuration at the workflow points they govern.
 - Ask whether an inciting issue exists before creating the map, and if one
   does, link the map to it using the provider's native mechanism before
   creating any tickets.
@@ -527,6 +575,12 @@ The agent MUST:
   Labels are additive, not replacement — a ticket receives all three sets.
 - Allow user session preference to override configured labels entirely (user
   session preference replaces config, not additive to it).
+- Apply resolved checks configuration when running Mode 2 (Work through the map):
+  if `checks.on_ticket_resolution_enabled` is true, run quality checks before
+  recording ticket resolutions; otherwise skip checks and proceed directly.
+- Apply resolved checks configuration when running Mode 3 (Report on implementation status):
+  if `checks.on_status_report_enabled` is true, run quality checks on generated
+  status reports; otherwise skip checks and proceed directly to report output.
 - Record every new question or uncertainty to the map's fog the moment it
   surfaces — during charting, walking the map, or any ticket work — never
   deferring it until the human asks.
