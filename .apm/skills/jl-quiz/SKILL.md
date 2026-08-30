@@ -361,6 +361,65 @@ The agent MUST NOT:
 - Continue asking questions in chat while a questionnaire document is
   outstanding, unless the user asks to switch back.
 
+## Ticket Template Validation
+
+When jl-quiz creates a quiz ticket to be stored in an issue tracker (GitHub,
+Azure DevOps, etc.), it MUST validate the ticket structure before creation.
+
+### Validation Workflow
+
+Before committing a quiz ticket:
+
+1. **Load the quiz template** from `jl-ticket-templates/assets/quiz-ticket-template.md`
+2. **Validate the ticket content** against the shared base schema and quiz-specific contract
+3. **Report validation results**:
+   - If valid: proceed to ticket creation
+   - If invalid: report errors with remediation guidance and offer user override
+
+### Validation Contract
+
+A quiz ticket is **valid** when:
+
+- **Frontmatter**: all required fields from the shared base schema are present
+  and non-empty (`title`, `description`, `type: "quiz"`, `status`, `author`, `date`,
+  `related_links`, `parent`)
+- **Date format**: ISO 8601 (YYYY-MM-DD)
+- **Type field**: must be exactly `"quiz"`
+- **Required sections**: Decision Statement, at least 2 Options (each with Pros
+  and Cons), Reasoning, and Acceptance Criteria
+- **Decision statement**: non-empty and phrased neutrally as a question
+- **Options**: minimum 2, each with non-empty Pros and Cons
+- **Reasoning**: non-empty and references the chosen option and trade-offs
+- **Acceptance Criteria**: checklist with at least 3 specific, measurable criteria
+
+### Error Handling
+
+When validation fails:
+
+- Report **one error at a time** with clear guidance
+- Include remediation steps and a correct format example
+- Offer the user two choices: fix the ticket or override validation
+- If override is approved, add a comment to the created ticket recording
+  the override
+
+### Integration
+
+jl-quiz MUST import and call the validator from `jl-ticket-templates`:
+
+```text
+load module: jl-ticket-templates/validator
+result = validator.validateQuizTicket(ticketContent, targetProvider)
+
+if result.valid:
+  proceed to creation
+else:
+  report errors
+  ask user: "Fix or override?"
+```
+
+For detailed validation rules, error messages, and test cases, see:
+**`jl-ticket-templates/references/QUIZ_VALIDATION_GUIDE.md`**
+
 ## Relationship to Other Skills and Commands
 
 See **[DEPENDENCIES.md](references/DEPENDENCIES.md)** for relationships to jl-issue-management,

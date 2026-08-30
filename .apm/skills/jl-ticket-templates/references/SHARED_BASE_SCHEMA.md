@@ -272,8 +272,8 @@ against this contract before creating or updating tickets.
 
 ## Related Documents
 
-- **Type-specific templates**: (To be created)
-  - `QUIZ_TEMPLATE.md` — for quiz tickets
+- **Type-specific templates**: (To be created or in progress)
+  - `QUIZ_TEMPLATE.md` — for quiz tickets (decisions with options and reasoning); stored as asset `quiz-ticket-template.md`
   - `RESEARCH_TEMPLATE.md` — for research tickets
   - `PROTOTYPE_TEMPLATE.md` — for prototype tickets
   - `TASK_TEMPLATE.md` — for task tickets
@@ -282,3 +282,5 @@ against this contract before creating or updating tickets.
   against this schema
 - **Platform templates**: `assets/` folder contains platform-specific
   payload templates (GitHub Issues, Azure DevOps)
+- **Quiz validation guide**: `references/QUIZ_VALIDATION_GUIDE.md` — how
+  jl-quiz integrates validation before creating quiz tickets

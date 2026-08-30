@@ -351,9 +351,14 @@ that behavior in this section and keep the validation contract stable.
 ## References
 
 - `assets/` — canonical provider template assets for reuse by other skills
+- `assets/quiz-ticket-template.md` — the quiz ticket type template; copied by
+  jl-quiz when creating new quiz decisions
 - `references/SHARED_BASE_SCHEMA.md` — the inherited base frontmatter,
   acceptance-criteria format, and common sections all ticket types (quiz,
   research, prototype, task, map) use; referenced by type-specific templates
+- `references/QUIZ_VALIDATION_GUIDE.md` — integration guidance for jl-quiz:
+  how to validate quiz tickets before creation, error messages, and user
+  override flow
 - `references/` — detailed validation rules, template schemas, and extension
   guidance for future providers
 - `./assets/github-issue-template.json` — GitHub Issue template asset

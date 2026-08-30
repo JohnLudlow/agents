@@ -46,6 +46,8 @@ names descriptive and close to the target platform vocabulary.
 - `github-issue-template.json` — baseline GitHub issue payload example
 - `azure-devops-template.json` — baseline Azure DevOps work item payload
   example
+- `quiz-ticket-template.md` — markdown template for quiz tickets (decisions
+  with options and reasoning); inherit from shared base schema
 
 ## How to Add a New Platform Template
 
