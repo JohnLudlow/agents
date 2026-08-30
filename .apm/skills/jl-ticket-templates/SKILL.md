@@ -379,6 +379,10 @@ that behavior in this section and keep the validation contract stable.
 - `references/MAP_VALIDATION_GUIDE.md` — integration guidance for jl-recon:
   how to validate map tickets before creation, error messages, and user
   override flow
+- `references/VALIDATION_TEST_GUIDE.md` — comprehensive test coverage for all
+  validators; includes valid and invalid fixtures for each ticket type, error
+  message tests, override workflow tests, and cross-skill validation consistency
+  tests
 - `references/` — detailed validation rules, template schemas, and extension
   guidance for future providers
 - `./assets/github-issue-template.json` — GitHub Issue template asset
