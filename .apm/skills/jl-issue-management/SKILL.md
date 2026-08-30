@@ -590,7 +590,7 @@ reach the external tracker.
 When validating a ticket for provider-native publish:
 
 1. **Frontmatter contract** — required fields per type (title, type, status, author, date from SHARED_BASE_SCHEMA)
-2. **Type-specific sections** — Quiz uses Decision/Options/Reasoning; Research uses Investigation Goal/Scope/Findings/Recommendation; 
+2. **Type-specific sections** — Quiz uses Decision/Options/Reasoning; Research uses Investigation Goal/Scope/Findings/Recommendation;
    Task uses Work Scope/Criteria; Map uses Destination/Decisions/Fog/Frontier/Blocked
 3. **Acceptance Criteria format** — every type must include 3+ Specific/Measurable/Checkable criteria
 4. **Optional override flag** — if user has explicitly approved invalid content for publication, record the approval in provider-native comment or metadata

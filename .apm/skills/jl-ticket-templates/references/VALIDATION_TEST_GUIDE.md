@@ -9,6 +9,7 @@ consistency checks. Use this guide when implementing validators or verifying val
 ### Test Structure
 
 Each ticket type has:
+
 - **Valid fixture** — a complete, correct ticket that passes validation
 - **Invalid fixtures** — one per error type, testing each validation rule
 - **Error message tests** — verify error messages are clear and actionable
@@ -18,6 +19,7 @@ Each ticket type has:
 ### Test Execution
 
 For each validator type:
+
 1. Load the validator (e.g., `validateQuizTicket()`)
 2. Run test fixtures through the validator
 3. Check result: valid fixtures return `{ valid: true }`; invalid fixtures return specific error
@@ -88,7 +90,7 @@ Session-based would add complexity for this use case.
 
 For each error, verify the message includes:
 
-```
+```text
 Title: [Error name]
 Issue: [What's wrong]
 Location: [File + line or section name]
@@ -98,7 +100,7 @@ Example: [Correct format]
 
 Example:
 
-```
+```text
 Title: Missing Reasoning section
 Issue: Quiz ticket missing "## Reasoning" explaining why chosen option was selected
 Location: quiz-ticket-template.md (after "## Options" section)
@@ -216,7 +218,7 @@ Verify error messages follow the same structure as quiz (Title, Issue, Location,
 
 Example:
 
-```
+```text
 Title: Investigation goal too broad
 Issue: Research question is too wide in scope to investigate thoroughly
 Location: research-ticket-template.md (Investigation Goal section)
@@ -339,7 +341,7 @@ Verify error messages include Title, Issue, Location, Guidance, Example.
 
 Example:
 
-```
+```text
 Title: Research question too broad
 Issue: Research question is not specific enough to explore in a time-boxed prototype
 Location: prototype-ticket-template.md (Research Question section)
@@ -422,7 +424,7 @@ Verify error messages follow structure: Title, Issue, Location, Guidance, Exampl
 
 Example:
 
-```
+```text
 Title: Insufficient acceptance criteria
 Issue: Fewer than 3 acceptance criteria present
 Location: task-ticket-template.md (Acceptance Criteria section)
@@ -508,7 +510,7 @@ and deployment runbook in /docs/runbooks. API is production-ready and monitored.
 
 | Ticket | Type | Blocked by | Reason |
 |--------|------|-----------|--------|
-| [Implement cache invalidation](../tasks/cache) | Task | [Caching strategy](../plans/cache-research) | BLOCKED: cannot implement cache without knowing cache layer choice |
+| [Implement cache invalidation](../tasks/cache) | Task | [Caching strategy](../plans/cache-research) | BLOCKED: cannot implement without cache layer choice |
 
 ## Revision History
 
@@ -538,7 +540,7 @@ Verify error messages: Title, Issue, Location, Guidance, Example.
 
 Example:
 
-```
+```text
 Title: Fog items incomplete
 Issue: Fog of War items present but not tagged with kind (what / how)
 Location: map-ticket-template.md (Not Yet Specified section, item #2)
@@ -565,6 +567,7 @@ Example:
 ## Cross-Skill Validation Consistency Tests
 
 Verify that validation rules are enforced consistently across all consuming skills:
+
 - jl-quiz validates quiz tickets before creation
 - jl-recon validates research, prototype, task, map tickets before creation
 - jl-issue-management validates all types before publishing to GitHub/Azure DevOps/Linear
@@ -572,6 +575,7 @@ Verify that validation rules are enforced consistently across all consuming skil
 ### Test 1: Same Error, Same Message
 
 Validate the same quiz ticket through:
+
 1. jl-quiz's validator
 2. jl-issue-management's validator
 
@@ -583,6 +587,7 @@ Create an invalid research ticket in jl-recon with user override approved.
 Create an identical invalid research ticket through jl-issue-management with user override approved.
 
 Both should:
+
 1. Report the same error
 2. Record the override in a ticket comment (format may vary by provider, but content must match)
 3. Log the override outcome
@@ -590,6 +595,7 @@ Both should:
 ### Test 3: Error Precedence Consistent
 
 If a ticket has multiple errors, verify all validators report them in the same order:
+
 1. Frontmatter errors first
 2. Section/structure errors second
 3. Content quality errors last
@@ -614,6 +620,7 @@ If a ticket has multiple errors, verify all validators report them in the same o
 ## Test Data Repository
 
 Store reusable test fixtures in:
+
 - `references/test-fixtures/quiz-valid.md`
 - `references/test-fixtures/quiz-invalid-*.md`
 - `references/test-fixtures/research-valid.md`
