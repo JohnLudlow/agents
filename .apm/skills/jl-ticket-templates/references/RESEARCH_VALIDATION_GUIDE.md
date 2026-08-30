@@ -147,10 +147,12 @@ Example of correct format:
 ## Research Scope
 
 **In scope:**
+
 - Database performance under load (1000+ concurrent users)
 - Deployment and operational complexity
 
 **Out of scope:**
+
 - Cost of managed database services (not applicable to this architecture)
 - NoSQL alternatives (team requires relational schema)
 ```
@@ -173,6 +175,7 @@ Example of correct format:
 ## Findings
 
 ### PostgreSQL deployment
+
 - Deployment via Docker takes ~30 minutes (tested with nginx + PostgreSQL 15)
 - Systemd integration documented in [PostgreSQL official guide](https://example.com)
 - Team familiarity: 2 developers know PostgreSQL; 3 need ramp-up time (~2 weeks)
@@ -194,6 +197,7 @@ Example of correct format:
 ## Recommendation
 
 PostgreSQL is recommended because:
+
 - Deployment overhead is acceptable (30 minutes via Docker; one-time cost)
 - Eliminates custom multi-server coordination logic (estimated 80 hours development)
 - Our team can learn PostgreSQL in 2–3 weeks
@@ -235,9 +239,11 @@ Examples of checkable verbs: document, verify, test, validate, list, create,
 measure. Avoid vague verbs: understand, explore, improve, consider.
 
 Bad:
+
 - [ ] Explore PostgreSQL ❌
 
 Good:
+
 - [ ] Document PostgreSQL deployment procedure (Docker + systemd) with examples
 - [ ] Create test migration from SQLite with sample data
 - [ ] Record ramp-up time estimate for each team member
@@ -256,7 +262,7 @@ When validation fails, offer the user this workflow:
 
 Example override workflow:
 
-```
+```text
 Validation Error: Acceptance criteria do not meet minimum requirements
 (See error message above for remediation)
 
@@ -284,10 +290,10 @@ Research validation integrates into jl-recon at the **ticket creation** step.
 const createResearchTicket = async (ticketContent, targetProvider, userOptions = {}) => {
   // Step 1: Import validator module
   const { validateResearchTicket } = require('./validators/validator-research.js');
-  
+
   // Step 2: Validate ticket structure
   const validation = validateResearchTicket(ticketContent, targetProvider);
-  
+
   if (validation.valid) {
     // Validation passed; create ticket
     const ticket = await targetProvider.createIssue({
@@ -300,7 +306,7 @@ const createResearchTicket = async (ticketContent, targetProvider, userOptions =
     // Validation failed; report errors
     const errors = validation.errors.map(e => formatError(e)).join('\n\n');
     console.log(errors);
-    
+
     if (userOptions.override) {
       // User approved override; add audit comment
       const ticketWithComment = await targetProvider.createIssue({

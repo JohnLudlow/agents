@@ -158,11 +158,13 @@ Example of correct format:
 ## Implementation Approach
 
 **Will build:**
+
 - Simple 2-user collaboration UI with shared text editing
 - WebSocket server using ws library
 - State sync on every keystroke
 
 **Will not build:**
+
 - Persistence layer or database (in-memory state only)
 - Conflict resolution (last-write-wins only)
 - Production-grade error handling
@@ -180,9 +182,11 @@ Guidance: Rewrite each criterion using specific, measurable conditions.
 Include numbers where appropriate (latency, scale, count, time limits).
 
 Bad:
+
 - [ ] Websockets perform well ❌
 
 Good:
+
 - [ ] Edits appear in <100ms latency on a local connection
 - [ ] Connection loss recovers automatically within 2 seconds
 - [ ] Handles 10+ concurrent users without visible lag
@@ -197,6 +201,7 @@ Issue: The 'Throwaway Plan' section is blank or does not clearly state
 what will be discarded and what findings carry forward
 Location: Throwaway Plan
 Guidance: Add or update the 'Throwaway Plan' section with explicit statements:
+
 - What code/work will be discarded
 - What findings from the prototype will inform the next decision
 - Clear assertion that this is not production code
@@ -265,9 +270,11 @@ Examples of checkable verbs: document, verify, test, validate, record, measure.
 Avoid vague verbs: understand, explore, improve, consider, assess.
 
 Bad:
+
 - [ ] Understand websocket performance ❌
 
 Good:
+
 - [ ] Record websocket latency measurements and connection recovery time
 - [ ] Document all verification criteria results (passed/failed)
 - [ ] Verify throwaway code will not be merged
@@ -286,7 +293,7 @@ When validation fails, offer the user this workflow:
 
 Example override workflow:
 
-```
+```text
 Validation Error: Verification criteria are not specific or measurable
 (See error message above for remediation)
 
@@ -314,10 +321,10 @@ Prototype validation integrates into jl-recon at the **ticket creation** step.
 const createPrototypeTicket = async (ticketContent, targetProvider, userOptions = {}) => {
   // Step 1: Import validator module
   const { validatePrototypeTicket } = require('./validators/validator-prototype.js');
-  
+
   // Step 2: Validate ticket structure
   const validation = validatePrototypeTicket(ticketContent, targetProvider);
-  
+
   if (validation.valid) {
     // Validation passed; create ticket
     const ticket = await targetProvider.createIssue({
@@ -330,7 +337,7 @@ const createPrototypeTicket = async (ticketContent, targetProvider, userOptions 
     // Validation failed; report errors
     const errors = validation.errors.map(e => formatError(e)).join('\n\n');
     console.log(errors);
-    
+
     if (userOptions.override) {
       // User approved override; add audit comment
       const ticketWithComment = await targetProvider.createIssue({

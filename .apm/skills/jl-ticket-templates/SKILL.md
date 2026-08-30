@@ -35,7 +35,7 @@ Load this skill when another skill or agent needs one of these behaviors:
 - **validator** — check that a template contains the required fields and
   platform metadata before ticket creation
 - **template** — load a predefined GitHub Issue or Azure DevOps work item
-  template from `assets/`; includes templates for quiz, research, and prototype tickets
+  template from `assets/`; includes templates for quiz, research, prototype, task, and map tickets
 - **ticket schema** — reference the shared base schema that all tickets
   (quiz, research, prototype, task, map) inherit from; documented in
   `references/SHARED_BASE_SCHEMA.md`
@@ -357,6 +357,10 @@ that behavior in this section and keep the validation contract stable.
   copied by jl-recon when creating new research tickets
 - `assets/prototype-ticket-template.md` — the prototype ticket type template;
   copied by jl-recon when creating new prototype tickets
+- `assets/task-ticket-template.md` — the task ticket type template; copied by
+  jl-recon when creating new task tickets
+- `assets/map-ticket-template.md` — the map ticket type template; copied by
+  jl-recon when creating new map tickets
 - `references/SHARED_BASE_SCHEMA.md` — the inherited base frontmatter,
   acceptance-criteria format, and common sections all ticket types (quiz,
   research, prototype, task, map) use; referenced by type-specific templates
@@ -368,6 +372,12 @@ that behavior in this section and keep the validation contract stable.
   override flow
 - `references/PROTOTYPE_VALIDATION_GUIDE.md` — integration guidance for jl-recon:
   how to validate prototype tickets before creation, error messages, and user
+  override flow
+- `references/TASK_VALIDATION_GUIDE.md` — integration guidance for jl-recon:
+  how to validate task tickets before creation, error messages, and user
+  override flow
+- `references/MAP_VALIDATION_GUIDE.md` — integration guidance for jl-recon:
+  how to validate map tickets before creation, error messages, and user
   override flow
 - `references/` — detailed validation rules, template schemas, and extension
   guidance for future providers

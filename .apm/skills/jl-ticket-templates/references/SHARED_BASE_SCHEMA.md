@@ -280,8 +280,8 @@ against this contract before creating or updating tickets.
   - `QUIZ_TEMPLATE.md` — for quiz tickets (decisions with options and reasoning); stored as asset `quiz-ticket-template.md`
   - `RESEARCH_TEMPLATE.md` — for research tickets (investigations with evidence and findings); stored as asset `research-ticket-template.md`
   - `PROTOTYPE_TEMPLATE.md` — for prototype tickets (time-boxed explorations with verification); stored as asset `prototype-ticket-template.md`
-  - `TASK_TEMPLATE.md` — for task tickets
-  - `MAP_TEMPLATE.md` — for map tickets
+  - `TASK_TEMPLATE.md` — for task tickets (bounded implementation work); stored as asset `task-ticket-template.md`
+  - `MAP_TEMPLATE.md` — for map tickets (complex efforts with decisions and blocking edges); stored as asset `map-ticket-template.md`
 - **Validator API**: See `SKILL.md` for the contract that validates tickets
   against this schema
 - **Platform templates**: `assets/` folder contains platform-specific
@@ -292,3 +292,7 @@ against this contract before creating or updating tickets.
   jl-recon integrates validation before creating research tickets
 - **Prototype validation guide**: `references/PROTOTYPE_VALIDATION_GUIDE.md` — how
   jl-recon integrates validation before creating prototype tickets
+- **Task validation guide**: `references/TASK_VALIDATION_GUIDE.md` — how
+  jl-recon integrates validation before creating task tickets
+- **Map validation guide**: `references/MAP_VALIDATION_GUIDE.md` — how
+  jl-recon integrates validation before creating map tickets

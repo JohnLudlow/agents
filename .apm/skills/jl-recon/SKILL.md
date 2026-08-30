@@ -586,6 +586,7 @@ committing to the target provider (GitHub Issues, Azure DevOps, etc.).
 ### Validation contract
 
 A research ticket is **valid** when:
+
 - Frontmatter contains all required fields with correct types and values
 - Investigation Goal is stated as a neutral research question (not advocacy)
 - Research Scope explicitly lists in-scope and out-of-scope boundaries
@@ -594,6 +595,7 @@ A research ticket is **valid** when:
 - Acceptance Criteria contains at least 3 checkable items
 
 See `references/RESEARCH_VALIDATION_GUIDE.md` for:
+
 - Complete validation contract and error messages
 - User override workflow and audit trail
 - Integration points and test cases
@@ -601,6 +603,7 @@ See `references/RESEARCH_VALIDATION_GUIDE.md` for:
 ### Integration points
 
 When `jl-recon` creates a research ticket:
+
 1. Call the research validator with the filled template
 2. If validation fails, report errors and ask user to fix or approve override
 3. If override approved, record the approval in a ticket comment for audit trail
@@ -617,7 +620,8 @@ committing to the target provider (GitHub Issues, Azure DevOps, etc.).
 
 1. **Load the prototype content** from the user-filled template or created content
 2. **Parse and validate** the frontmatter against required fields (type, status, author, date, etc.)
-3. **Extract and validate** body sections (Research Question, Implementation Approach, Verification, Throwaway Plan, Findings, Acceptance Criteria)
+3. **Extract and validate** body sections (Research Question, Implementation Approach, Verification, Throwaway Plan,
+   Findings, Acceptance Criteria)
 4. **Report validation result**:
    - If valid: proceed to ticket creation
    - If invalid: report errors with remediation guidance; offer user override option
@@ -625,6 +629,7 @@ committing to the target provider (GitHub Issues, Azure DevOps, etc.).
 ### Validation contract
 
 A prototype ticket is **valid** when:
+
 - Frontmatter contains all required fields with correct types and values
 - Research Question is stated as a single, clear exploration question (not too broad)
 - Implementation Approach explicitly lists what will and will not be built
@@ -634,6 +639,7 @@ A prototype ticket is **valid** when:
 - Acceptance Criteria contains at least 3 checkable items
 
 See `references/PROTOTYPE_VALIDATION_GUIDE.md` for:
+
 - Complete validation contract and error messages
 - User override workflow and audit trail
 - Integration points and test cases
@@ -641,7 +647,95 @@ See `references/PROTOTYPE_VALIDATION_GUIDE.md` for:
 ### Integration points
 
 When `jl-recon` creates a prototype ticket:
+
 1. Call the prototype validator with the filled template
+2. If validation fails, report errors and ask user to fix or approve override
+3. If override approved, record the approval in a ticket comment for audit trail
+4. Create the ticket only after validation passes or override is approved
+
+## Task Ticket Validation
+
+Task tickets are validated before creation to ensure work scope and acceptance
+criteria are explicit. When `jl-recon` creates a new task ticket, it validates
+the ticket structure against the task template schema before committing to the
+target provider (GitHub Issues, Azure DevOps, etc.).
+
+### Validation workflow
+
+1. **Load the task content** from the user-filled template or created content
+2. **Parse and validate** the frontmatter against required fields (type, status, author, date, etc.)
+3. **Extract and validate** body sections (Work Scope, Acceptance Criteria)
+4. **Report validation result**:
+   - If valid: proceed to ticket creation
+   - If invalid: report errors with remediation guidance; offer user override option
+
+### Validation contract
+
+A task ticket is **valid** when:
+
+- Frontmatter contains all required fields with correct types and values
+- Type is set to "task"
+- Work Scope explicitly lists "What will be done" and "What will NOT be done"
+- Acceptance Criteria contains at least 3 items, each specific/measurable/checkable (SMC pattern)
+- Each acceptance criterion includes or implies a way to verify (test command, build, code review)
+
+See `references/TASK_VALIDATION_GUIDE.md` for:
+
+- Complete validation contract and error messages (SMC pattern details)
+- User override workflow and audit trail
+- Integration points and test cases
+
+### Integration points
+
+When `jl-recon` creates a task ticket:
+
+1. Call the task validator with the filled template
+2. If validation fails, report errors and ask user to fix or approve override
+3. If override approved, record the approval in a ticket comment for audit trail
+4. Create the ticket only after validation passes or override is approved
+
+## Map Ticket Validation
+
+Map tickets are validated before creation to ensure decision tracking and blocking
+edges are explicit. When `jl-recon` creates a new map ticket, it validates the
+ticket structure against the map template schema before committing to the target
+provider (GitHub Issues, Azure DevOps, etc.).
+
+### Validation workflow
+
+1. **Load the map content** from the user-filled template or created content
+2. **Parse and validate** the frontmatter against required fields (type, status, author, date, etc.)
+3. **Extract and validate** body sections (Destination, Acceptance Criteria, Decisions, Fog of War, Frontier, Blocked)
+4. **Report validation result**:
+   - If valid: proceed to ticket creation
+   - If invalid: report errors with remediation guidance; offer user override option
+
+### Validation contract
+
+A map ticket is **valid** when:
+
+- Frontmatter contains all required fields with correct types and values
+- Type is set to "map"
+- Status is one of: Charting, Walked, Completed, Stale
+- Destination is clear and specific (specific deliverable or shipped feature, not vague goal)
+- Acceptance Criteria contains at least 5 items covering decisions, fog, scope, frontier, and completion
+- Decisions section either lists decisions with links or includes note explaining why empty
+- Fog of War items each tagged with kind: **what** (goal fuzzy) or **how** (means fuzzy)
+- Open Tickets (Frontier) table shows unblocked work with Status column
+- Blocked Tickets table shows blocking edges with Reason column
+
+See `references/MAP_VALIDATION_GUIDE.md` for:
+
+- Complete validation contract and error messages
+- Fog of War tagging rules (what vs. how)
+- User override workflow and audit trail
+- Integration points and test cases
+
+### Integration points
+
+When `jl-recon` creates a map ticket:
+
+1. Call the map validator with the filled template
 2. If validation fails, report errors and ask user to fix or approve override
 3. If override approved, record the approval in a ticket comment for audit trail
 4. Create the ticket only after validation passes or override is approved

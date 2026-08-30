@@ -52,6 +52,12 @@ names descriptive and close to the target platform vocabulary.
   (investigations with evidence and findings); inherits from shared base schema
 - `prototype-ticket-template.md` — markdown template for prototype tickets
   (time-boxed explorations with verification); inherits from shared base schema
+- `task-ticket-template.md` — markdown template for task tickets (bounded
+  implementation work with explicit scope and acceptance criteria); inherits
+  from shared base schema
+- `map-ticket-template.md` — markdown template for map tickets (complex efforts
+  organized into decisions, open work, and blocking edges); inherits from shared
+  base schema
 
 ## How to Add a New Platform Template
 

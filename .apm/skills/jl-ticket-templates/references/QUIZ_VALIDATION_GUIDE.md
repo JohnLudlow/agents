@@ -99,8 +99,9 @@ Issue: The 'date' field in frontmatter is empty or missing
 Location: Frontmatter
 Guidance: Add or update the date field in YAML frontmatter using ISO 8601 format (YYYY-MM-DD)
 
-Example of correct format:
+Example of correct format
 ---
+
 date: "2026-08-30"
 ---
 ```
@@ -114,8 +115,9 @@ Issue: The 'date' field contains "Aug 30, 2026" but must be YYYY-MM-DD
 Location: Frontmatter → date field
 Guidance: Reformat to YYYY-MM-DD (e.g., "2026-08-30")
 
-Example of correct format:
+Example of correct format
 ---
+
 date: "2026-08-30"
 ---
 ```
@@ -127,10 +129,11 @@ Validation Error: Missing 'Decision Statement' section
 
 Issue: The ticket body does not contain a '## Decision Statement' section
 Location: Ticket body
-Guidance: Add a section titled "## Decision Statement" with a neutral question phrased as "Should we..." or 
+Guidance: Add a section titled "## Decision Statement" with a neutral question phrased as "Should we..." or
           "How should we...?"
 
 Example of correct format:
+
 ## Decision Statement
 
 Should we adopt TypeScript strict mode for this codebase?
@@ -146,20 +149,25 @@ Location: Options section
 Guidance: Add at least one more option with its own pros and cons
 
 Example of correct format:
+
 ### Option 1: Adopt strict mode immediately
 
 **Pros:**
+
 - Catch type errors sooner
 
 **Cons:**
+
 - Blocks all PRs during retrofit
 
 ### Option 2: Adopt strict mode gradually
 
 **Pros:**
+
 - Allows phased implementation
 
 **Cons:**
+
 - Mixed enforcement during transition
 ```
 
@@ -173,6 +181,7 @@ Location: Reasoning section
 Guidance: Write 1–2 paragraphs explaining which option was selected and why, including trade-offs considered
 
 Example of correct format:
+
 ## Reasoning
 
 We chose gradual adoption because immediate adoption would block all PRs.
@@ -189,6 +198,7 @@ Validation failed with [N] error(s):
 [List errors]
 
 You can:
+
 1. Fix the ticket and resubmit
 2. Override validation and create anyway (requires approval)
 
@@ -203,6 +213,7 @@ validation failures. Record this approval in a comment on the created ticket:
 <!-- Validation Override -->
 Created with validation override by [user] on [date].
 Issues noted:
+
 - [Error 1]
 - [Error 2]
 ```
