@@ -278,7 +278,7 @@ against this contract before creating or updating tickets.
 
 - **Type-specific templates**: (To be created or in progress)
   - `QUIZ_TEMPLATE.md` — for quiz tickets (decisions with options and reasoning); stored as asset `quiz-ticket-template.md`
-  - `RESEARCH_TEMPLATE.md` — for research tickets
+  - `RESEARCH_TEMPLATE.md` — for research tickets (investigations with evidence and findings); stored as asset `research-ticket-template.md`
   - `PROTOTYPE_TEMPLATE.md` — for prototype tickets
   - `TASK_TEMPLATE.md` — for task tickets
   - `MAP_TEMPLATE.md` — for map tickets
@@ -288,3 +288,5 @@ against this contract before creating or updating tickets.
   payload templates (GitHub Issues, Azure DevOps)
 - **Quiz validation guide**: `references/QUIZ_VALIDATION_GUIDE.md` — how
   jl-quiz integrates validation before creating quiz tickets
+- **Research validation guide**: `references/RESEARCH_VALIDATION_GUIDE.md` — how
+  jl-recon integrates validation before creating research tickets

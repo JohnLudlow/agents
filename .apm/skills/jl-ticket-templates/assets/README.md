@@ -47,7 +47,9 @@ names descriptive and close to the target platform vocabulary.
 - `azure-devops-template.json` — baseline Azure DevOps work item payload
   example
 - `quiz-ticket-template.md` — markdown template for quiz tickets (decisions
-  with options and reasoning); inherit from shared base schema
+  with options and reasoning); inherits from shared base schema
+- `research-ticket-template.md` — markdown template for research tickets
+  (investigations with evidence and findings); inherits from shared base schema
 
 ## How to Add a New Platform Template
 

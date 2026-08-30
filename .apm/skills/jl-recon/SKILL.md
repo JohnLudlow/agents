@@ -567,6 +567,45 @@ The agent MUST NOT:
   Map work is planning and exploration; implementation happens separately under child
   implementation tickets."
 
+## Ticket Template Validation
+
+Research tickets are validated before creation to ensure investigation scope
+and methodology are clear. When `jl-recon` creates a new research ticket, it
+validates the ticket structure against the research template schema before
+committing to the target provider (GitHub Issues, Azure DevOps, etc.).
+
+### Validation workflow
+
+1. **Load the research content** from the user-filled template or created content
+2. **Parse and validate** the frontmatter against required fields (type, status, author, date, etc.)
+3. **Extract and validate** body sections (Investigation Goal, Research Scope, Findings, Recommendation, Acceptance Criteria)
+4. **Report validation result**:
+   - If valid: proceed to ticket creation
+   - If invalid: report errors with remediation guidance; offer user override option
+
+### Validation contract
+
+A research ticket is **valid** when:
+- Frontmatter contains all required fields with correct types and values
+- Investigation Goal is stated as a neutral research question (not advocacy)
+- Research Scope explicitly lists in-scope and out-of-scope boundaries
+- Findings contain specific evidence or observations (not generalizations)
+- Recommendation cites specific findings and acknowledges trade-offs
+- Acceptance Criteria contains at least 3 checkable items
+
+See `references/RESEARCH_VALIDATION_GUIDE.md` for:
+- Complete validation contract and error messages
+- User override workflow and audit trail
+- Integration points and test cases
+
+### Integration points
+
+When `jl-recon` creates a research ticket:
+1. Call the research validator with the filled template
+2. If validation fails, report errors and ask user to fix or approve override
+3. If override approved, record the approval in a ticket comment for audit trail
+4. Create the ticket only after validation passes or override is approved
+
 ## Relationship to Other Skills
 
 - **jl-quiz** — the mechanism behind naming the destination, mapping
