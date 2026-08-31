@@ -134,12 +134,16 @@ Describe "Mode 2 check invocation" {
             session = { param($checkName, $ticket) throw "session unavailable" }
         }
 
-        $result = Invoke-JlReconCheckWithFallback -CheckName "jl-adversarial-reviewer" -StrategyHandlers $handlers -Ticket $script:ticket
+        $warnings = $null
+        $result = Invoke-JlReconMode2Checks -CheckRequests @("jl-adversarial-reviewer") -StrategyHandlers $handlers -Ticket $script:ticket -WarningAction SilentlyContinue -WarningVariable warnings
 
-        $result.Status | Should -Be "failed"
-        $result.Error | Should -Be "All fallback strategies failed."
-        $result.Attempts.Count | Should -Be 3
-        $result.FailureCategory | Should -Be "timeout"
+        $result.AllFailed | Should -BeTrue
+        $result.FailedChecks.Count | Should -Be 1
+        $result.FailedChecks[0].Error | Should -Be "All fallback strategies failed."
+        $result.FailedChecks[0].Attempts.Count | Should -Be 3
+        $result.FailedChecks[0].FailureCategory | Should -Be "timeout"
+        @($warnings).Count | Should -Be 1
+        @($warnings)[0].ToString() | Should -Be 'Check jl-adversarial-reviewer timed out after 30s'
     }
 
     It "classifies parse failures as degraded checks" {
@@ -147,11 +151,13 @@ Describe "Mode 2 check invocation" {
             subagent = { param($checkName, $ticket) "{not-json" }
         }
 
-        $result = Invoke-JlReconMode2Checks -CheckRequests @("jl-adversarial-reviewer") -StrategyHandlers $handlers -Ticket $script:ticket
+        $warnings = $null
+        $result = Invoke-JlReconMode2Checks -CheckRequests @("jl-adversarial-reviewer") -StrategyHandlers $handlers -Ticket $script:ticket -WarningAction SilentlyContinue -WarningVariable warnings
 
         $result.AllFailed | Should -BeTrue
         $result.FailedChecks.Count | Should -Be 1
         $result.FailedChecks[0].FailureCategory | Should -Be "parse"
+        @($warnings)[0].ToString() | Should -Match '^Check jl-adversarial-reviewer returned malformed findings:'
     }
 
     It "detects timeout based on configured timeout seconds" {
@@ -181,6 +187,7 @@ Describe "Mode 2 check invocation" {
                             @{
                                 severity = "major"
                                 description = "Inconsistent resolution note"
+                                recommendation = "Align the resolution note"
                             }
                         )
                     }
@@ -192,10 +199,11 @@ Describe "Mode 2 check invocation" {
             session = { param($checkName, $ticket) throw "session unavailable" }
         }
 
+        $warnings = $null
         $result = Invoke-JlReconMode2Checks -CheckRequests @(
             [pscustomobject]@{ Name = "jl-adversarial-reviewer" },
             [pscustomobject]@{ Name = "doublecheck" }
-        ) -StrategyHandlers $handlers -Ticket $script:ticket
+        ) -StrategyHandlers $handlers -Ticket $script:ticket -WarningAction SilentlyContinue -WarningVariable warnings
 
         $result.AnySucceeded | Should -BeTrue
         $result.PartialFailure | Should -BeTrue
@@ -204,6 +212,157 @@ Describe "Mode 2 check invocation" {
         $result.FailedChecks.Count | Should -Be 1
         $result.Findings.Count | Should -Be 1
         $result.Findings[0].Check | Should -Be "jl-adversarial-reviewer"
+        $result.WarningMessages.Count | Should -Be 1
+        $result.FailureSummary | Should -Match 'doublecheck failed due to network error'
+        @($warnings)[0].ToString() | Should -Be 'Check doublecheck failed due to network error — network error'
+    }
+
+    It "handles typed timeout exceptions with a warning and degraded result" {
+        $handlers = @{
+            subagent = {
+                param($checkName, $ticket)
+                throw [System.TimeoutException]::new("provider deadline exceeded")
+            }
+        }
+
+        $warnings = $null
+        $result = Invoke-JlReconMode2Checks -CheckRequests @("jl-adversarial-reviewer") -StrategyHandlers $handlers -Ticket $script:ticket -WarningAction SilentlyContinue -WarningVariable warnings
+
+        $result.AllFailed | Should -BeTrue
+        $result.FailedChecks[0].FailureCategory | Should -Be "timeout"
+        @($warnings)[0].ToString() | Should -Be 'Check jl-adversarial-reviewer timed out after 30s'
+    }
+
+    It "handles network exceptions with a warning and degraded result" {
+        $handlers = @{
+            subagent = {
+                param($checkName, $ticket)
+                throw [System.Net.Http.HttpRequestException]::new("Connection refused")
+            }
+        }
+
+        $warnings = $null
+        $result = Invoke-JlReconMode2Checks -CheckRequests @("jl-adversarial-reviewer") -StrategyHandlers $handlers -Ticket $script:ticket -WarningAction SilentlyContinue -WarningVariable warnings
+
+        $result.AllFailed | Should -BeTrue
+        $result.FailedChecks[0].FailureCategory | Should -Be "network"
+        @($warnings)[0].ToString() | Should -Match '^Check jl-adversarial-reviewer failed due to network error'
+        @($warnings)[0].ToString() | Should -Match 'network error'
+        @($warnings)[0].ToString() | Should -Match 'Connection refused'
+    }
+
+    It "reports unavailable handlers distinctly from general errors" {
+        $handlers = @{}
+
+        $warnings = $null
+        $result = Invoke-JlReconMode2Checks -CheckRequests @(
+            [pscustomobject]@{
+                Name = "doublecheck"
+                StrategyOrder = @("session")
+            }
+        ) -StrategyHandlers $handlers -Ticket $script:ticket -WarningAction SilentlyContinue -WarningVariable warnings
+
+        $result.AllFailed | Should -BeTrue
+        $result.FailedChecks[0].FailureCategory | Should -Be "unavailable"
+        @($warnings)[0].ToString() | Should -Be 'Check doublecheck is not available in this harness — No handler registered.'
+    }
+
+    It "handles malformed responses with a warning and skips findings" {
+        $handlers = @{
+            subagent = {
+                param($checkName, $ticket)
+                return @{
+                    findings = @(
+                        @{
+                            severity = "major"
+                            description = "Missing recommendation"
+                        }
+                    )
+                }
+            }
+        }
+
+        $warnings = $null
+        $result = Invoke-JlReconMode2Checks -CheckRequests @("jl-adversarial-reviewer") -StrategyHandlers $handlers -Ticket $script:ticket -WarningAction SilentlyContinue -WarningVariable warnings
+
+        $result.AllFailed | Should -BeTrue
+        $result.Findings.Count | Should -Be 0
+        $result.FailedChecks[0].FailureCategory | Should -Be "parse"
+        @($warnings)[0].ToString() | Should -Match '^Check jl-adversarial-reviewer returned malformed findings:'
+        @($warnings)[0].ToString() | Should -Match 'missing recommendation'
+    }
+
+    It "handles general exceptions with a warning and degraded result" {
+        $handlers = @{
+            subagent = {
+                param($checkName, $ticket)
+                throw [System.InvalidOperationException]::new("Unexpected provider state")
+            }
+        }
+
+        $warnings = $null
+        $result = Invoke-JlReconMode2Checks -CheckRequests @("jl-adversarial-reviewer") -StrategyHandlers $handlers -Ticket $script:ticket -WarningAction SilentlyContinue -WarningVariable warnings
+
+        $result.AllFailed | Should -BeTrue
+        $result.FailedChecks[0].FailureCategory | Should -Be "error"
+        @($warnings)[0].ToString() | Should -Be 'Check jl-adversarial-reviewer failed: Unexpected provider state'
+    }
+
+    It "collects warnings when all checks fail" {
+        $handlers = @{
+            subagent = { param($checkName, $ticket) throw [System.TimeoutException]::new("deadline exceeded") }
+            herdr = { param($checkName, $ticket) throw [System.Net.WebException]::new("DNS failure") }
+            session = { param($checkName, $ticket) throw [System.InvalidOperationException]::new("Session read failed") }
+        }
+
+        $warnings = $null
+        $result = Invoke-JlReconMode2Checks -CheckRequests @("jl-adversarial-reviewer", "doublecheck") -StrategyHandlers $handlers -Ticket $script:ticket -WarningAction SilentlyContinue -WarningVariable warnings
+
+        $result.AllFailed | Should -BeTrue
+        $result.FailedChecks.Count | Should -Be 2
+        $result.WarningMessages.Count | Should -Be 2
+        @($warnings).Count | Should -Be 2
+        @($warnings)[0].ToString() | Should -Match '^Check jl-adversarial-reviewer'
+        @($warnings)[1].ToString() | Should -Match '^Check doublecheck'
+    }
+
+    It "logs the start of Mode 2 checks with the configured timeout" {
+        $handlers = @{
+            subagent = {
+                param($checkName, $ticket)
+                return @{ findings = @() }
+            }
+        }
+
+        $informationMessages = $null
+        $result = Invoke-JlReconMode2Checks -CheckRequests @("jl-adversarial-reviewer") -StrategyHandlers $handlers -Ticket $script:ticket -TimeoutSeconds 45 -InformationAction Continue -InformationVariable informationMessages
+
+        $result.ChecksStatus | Should -Be "completed"
+        @($informationMessages).Count | Should -BeGreaterThan 0
+        @($informationMessages)[0].ToString() | Should -Be 'Starting Mode 2 checks (timeout: 45s)'
+    }
+
+    It "preserves check names in multi-check failure summaries" {
+        $failedChecks = @(
+            [pscustomobject]@{
+                CheckName = "jl-adversarial-reviewer"
+                FailureReason = "jl-adversarial-reviewer timed out after 30s"
+                FailureCategory = "timeout"
+                TimeoutSeconds = 30
+                Error = "deadline exceeded"
+            },
+            [pscustomobject]@{
+                CheckName = "doublecheck"
+                FailureReason = "doublecheck is not available in this harness"
+                FailureCategory = "unavailable"
+                TimeoutSeconds = 30
+                Error = "No handler registered."
+            }
+        )
+
+        $summary = Get-JlReconFailedChecksSummary -FailedChecks $failedChecks
+
+        $summary | Should -Be 'jl-adversarial-reviewer timed out after 30s; doublecheck is not available in this harness'
     }
 }
 
@@ -241,27 +400,28 @@ Describe "Mode 2 findings collection" {
     It "collects multiple severities in normalized order-independent form" {
         $findings = ConvertFrom-JlReconCheckResponse -CheckName "jl-adversarial-reviewer" -Response @{
             findings = @(
-                @{ severity = "nit"; description = "Typo in summary" }
-                @{ severity = "major"; description = "Decision omits mitigation" }
-                @{ severity = "minor"; description = "Map wording is unclear" }
+                @{ severity = "nit"; description = "Typo in summary"; recommendation = "Fix the typo" }
+                @{ severity = "major"; description = "Decision omits mitigation"; recommendation = "Add the mitigation details" }
+                @{ severity = "minor"; description = "Map wording is unclear"; recommendation = "Clarify the map wording" }
             )
         }
 
         @($findings | Select-Object -ExpandProperty Severity) | Should -Be @("nit", "major", "minor")
     }
 
-    It "handles missing optional fields without failing" {
+    It "handles missing location fields without failing" {
         $findings = ConvertFrom-JlReconCheckResponse -CheckName "jl-adversarial-reviewer" -Response @{
             findings = @(
                 @{
                     severity = "major"
                     description = "Recommendation omitted"
+                    recommendation = "Add the missing recommendation"
                 }
             )
         }
 
         $findings.Count | Should -Be 1
-        $findings[0].Recommendation | Should -Be $null
+        $findings[0].Recommendation | Should -Be "Add the missing recommendation"
         $findings[0].File | Should -Be $null
         $findings[0].Line | Should -Be $null
     }

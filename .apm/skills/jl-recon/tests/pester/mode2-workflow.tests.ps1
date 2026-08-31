@@ -185,6 +185,7 @@ Describe "Mode 2 resolution workflow integration" {
     }
 
     It "degradation path: warns through unavailable status and proceeds without blocking" {
+        $warnings = $null
         $workflow = Invoke-JlReconMode2ResolutionWorkflow `
             -Ticket $script:ticket `
             -Config @{ checks = @{ on_ticket_resolution_enabled = $true } } `
@@ -198,19 +199,24 @@ Describe "Mode 2 resolution workflow integration" {
                 param($ticket, $result)
                 $script:resolutionRecords.Add($result)
             } `
-            -AuditTrail $script:auditTrail
+            -AuditTrail $script:auditTrail `
+            -WarningAction SilentlyContinue `
+            -WarningVariable warnings
 
         $workflow.Status | Should -Be "resolved"
         $workflow.Decision | Should -Be "proceed"
         $workflow.ChecksStatus | Should -Be "unavailable"
         $workflow.CheckRun.AllFailed | Should -BeTrue
+        $workflow.WarningMessages.Count | Should -Be 1
         $workflow.DecisionPrompt | Should -Match 'Proceed without checks'
         $workflow.ResolutionRecorded | Should -BeTrue
+        @($warnings)[0].ToString() | Should -Match 'timed out after 30s'
         $script:resolutionRecords.Count | Should -Be 1
         $script:resolutionRecords[0].ChecksStatus | Should -Be "unavailable"
     }
 
     It "partial availability path: preserves findings while warning about failed checks" {
+        $warnings = $null
         $workflow = Invoke-JlReconMode2ResolutionWorkflow `
             -Ticket $script:ticket `
             -Config @{ checks = @{ on_ticket_resolution_enabled = $true } } `
@@ -243,13 +249,17 @@ Describe "Mode 2 resolution workflow integration" {
                 param($ticket, $result)
                 $script:resolutionRecords.Add($result)
             } `
-            -AuditTrail $script:auditTrail
+            -AuditTrail $script:auditTrail `
+            -WarningAction SilentlyContinue `
+            -WarningVariable warnings
 
         $workflow.Status | Should -Be "resolved"
         $workflow.ChecksStatus | Should -Be "partial"
         $workflow.Findings.Count | Should -Be 1
+        $workflow.WarningMessages.Count | Should -Be 1
         $workflow.DecisionPrompt | Should -Match 'Some quality checks failed'
         $workflow.DecisionPrompt | Should -Match 'Approve and record resolution'
+        @($warnings)[0].ToString() | Should -Match 'network error'
         $workflow.ChecksAuditEntry.FailedChecks | Should -Contain 'doublecheck'
     }
 
@@ -273,8 +283,35 @@ Describe "Mode 2 resolution workflow integration" {
         $workflow.CheckRun | Should -Be $null
         $workflow.ChecksAuditEntry.AuditType | Should -Be "checks"
         $workflow.ChecksAuditEntry.ChecksStatus | Should -Be "disabled"
+        $workflow.WarningMessages.Count | Should -Be 0
         $script:resolutionRecords.Count | Should -Be 1
         $script:auditTrail.Count | Should -Be 1
     }
-}
 
+    It "user override path: can proceed despite check failures" {
+        $warnings = $null
+        $workflow = Invoke-JlReconMode2ResolutionWorkflow `
+            -Ticket $script:ticket `
+            -Config @{ checks = @{ on_ticket_resolution_enabled = $true } } `
+            -StrategyHandlers @{
+                subagent = { param($checkName, $ticket) throw [System.Net.Http.HttpRequestException]::new("Connection refused") }
+            } `
+            -DecisionProvider { param($prompt, $allowed) "override" } `
+            -ResolutionRecorder {
+                param($ticket, $result)
+                $script:resolutionRecords.Add($result)
+            } `
+            -AuditTrail $script:auditTrail `
+            -WarningAction SilentlyContinue `
+            -WarningVariable warnings
+
+        $workflow.Status | Should -Be "resolved"
+        $workflow.Decision | Should -Be "override"
+        $workflow.ChecksStatus | Should -Be "unavailable"
+        $workflow.DecisionPrompt | Should -Match 'Override and record anyway'
+        $workflow.WarningMessages.Count | Should -Be 1
+        @($warnings)[0].ToString() | Should -Match 'network error'
+        $script:resolutionRecords.Count | Should -Be 1
+        $script:resolutionRecords[0].Decision | Should -Be "override"
+    }
+}
