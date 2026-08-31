@@ -534,12 +534,14 @@ findings and explicitly confirms the resolution.
    user and proceed to confirmation.
 
 3. **Display findings** — Format findings as a markdown table:
-   ```
+
+   ```markdown
    | Severity | Check | Finding | Recommendation |
    | --- | --- | --- | --- |
    | critical | ... | ... | ... |
    | major | ... | ... | ... |
    ```
+
    Sort by severity, highest first (critical → major → minor → nit).
    Include file/location context in the Finding column if available.
 
@@ -590,6 +592,7 @@ findings and explicitly confirms the resolution.
    - Never block Mode 2 workflow — user can always override and record
 
 **Post-decision:**
+
 - If user approves or overrides, proceed to step 8 (Record the resolution)
 - If user cancels, return to step 5 (resolve ticket) without recording
 - Log the user's decision (approve/override) alongside the resolution for audit trail
@@ -634,6 +637,99 @@ presents.
 
 **Completion criterion:** the human has the full status list and nothing on
 the map has been altered.
+
+#### Quality Checks in Mode 3
+
+When a status report is generated and `checks.on_status_report_enabled` is true,
+run quality checks using doublecheck before presenting the report to the user.
+This workflow is always human-in-the-loop: the user reviews findings and
+explicitly confirms publication.
+
+**Workflow:**
+
+1. **Invoke checks** — Call doublecheck using `jl-subagent-spawning`'s fallback
+   hierarchy: try subagent → try Herdr → read into session. Pass the generated
+   status report text. Doublecheck will analyze each claim in the report and
+   return per-claim verification results (VERIFIED/PLAUSIBLE/UNVERIFIED/
+   DISPUTED/FABRICATION_RISK with confidence levels and source links). Apply a
+   per-check timeout of `checks.timeout_seconds` (default: `30`). On harness
+   unavailability, timeout, network error, or malformed findings, do not block
+   Mode 3: warn the user, keep any successful findings, and continue to an
+   explicit user decision.
+
+2. **Collect findings** — Doublecheck returns a structured report with per-claim
+   verification results (each with status: VERIFIED/PLAUSIBLE/UNVERIFIED/
+   DISPUTED/FABRICATION_RISK, confidence level 0-100, description, source links,
+   and recommendation). If some claims are verified and others disputed, keep
+   only the successful verification results and warn about the failed checks.
+   If doublecheck returns malformed findings, treat that check as failed and
+   degrade gracefully. If all claims verify or no findings are needed, inform
+   the user and proceed to confirmation.
+
+3. **Display findings** — Format findings as a markdown table:
+
+   ```markdown
+   | Claim | Status | Confidence | Sources |
+   | --- | --- | --- | --- |
+   | "Status report text..." | VERIFIED | 95% | link1, link2 |
+   | "Another claim..." | DISPUTED | 40% | link |
+   ```
+
+   Sort by status, highest risk first (FABRICATION_RISK → DISPUTED →
+   UNVERIFIED → PLAUSIBLE → VERIFIED). Include source links and confidence
+   percentages in the Sources column.
+
+4. **User review and decision** — Present the findings table to the user and ask
+   one of these prompts, depending on check availability:
+
+   When checks are unavailable or all fail:
+
+   ```text
+   ⚠️ Quality checks unavailable: [reason]
+
+   Would you like to:
+   1. Publish the report without verification
+   2. Cancel and revise the status report
+   3. Override and publish anyway
+
+   (User can always override and proceed)
+   ```
+
+   When some claims verify and some are disputed:
+
+   ```text
+   ⚠️ Some claims could not be verified: [disputed-claims-summary]
+
+   Verification results:
+   [findings table - verification status for all claims]
+
+   Would you like to:
+   1. Approve and publish report
+   2. Override and publish anyway
+   3. Cancel and revise
+
+   (Proceed with verification results shown)
+   ```
+
+   When checks complete normally:
+   - "Approve and publish report" (findings acknowledged, ready to publish)
+   - "Override and publish anyway" (user disagrees with findings, force publish)
+   - "Cancel report" (pause and revise the report before publishing)
+
+5. **Graceful degradation** — If any checks fail (harness unavailable, network
+   error, timeout, malformed findings):
+   - Skip unavailable checks and keep running the remaining checks
+   - If some claims verify: show the verification results and warn about failed checks
+   - If all checks fail: warn the user and allow either "Publish without checks"
+     or "Override and publish anyway"
+   - Record the degraded check outcome and the user's decision in an audit log
+   - Never block Mode 3 workflow — user can always override and publish
+
+**Post-decision:**
+
+- If user approves or overrides, proceed to publish the status report
+- If user cancels, return to report generation for revision
+- Log the user's decision (approve/override) alongside the report publication for audit trail
 
 ### 4. Resolve or archive stale items
 
@@ -685,6 +781,15 @@ The agent MUST:
 - Apply resolved checks configuration when running Mode 3 (Report on implementation status):
   if `checks.on_status_report_enabled` is true, run quality checks on generated
   status reports; otherwise skip checks and proceed directly to report output.
+- When running Mode 3 checks, use jl-subagent-spawning's fallback hierarchy (try
+  subagent → try Herdr → read into session); handle unavailable checks gracefully
+  by warning the user, keeping partial verification results when available, and allowing
+  proceed or override.
+- Display Mode 3 check findings as a markdown table sorted by verification risk
+  (FABRICATION_RISK → DISPUTED → UNVERIFIED → PLAUSIBLE → VERIFIED),
+  with columns: Claim | Status | Confidence | Sources.
+- Collect explicit user confirmation (approve/override/cancel) for each status report
+  publication after quality checks are presented; never publish a report without user decision.
 - Record every new question or uncertainty to the map's fog the moment it
   surfaces — during charting, walking the map, or any ticket work — never
   deferring it until the human asks.
