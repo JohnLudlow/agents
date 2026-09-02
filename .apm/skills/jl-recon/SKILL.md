@@ -46,6 +46,7 @@ mechanism; jl-recon owns this schema, its defaults, and its validation.
 | `labels.task` | array of strings | any label names | defaults to `labels.default` | optional |
 | `checks.on_ticket_resolution_enabled` | boolean | `true`, `false` | `true` | optional |
 | `checks.on_status_report_enabled` | boolean | `true`, `false` | `true` | optional |
+| `checks.timeout_seconds` | integer | any positive integer | `30` | optional |
 
 ### Validation and defaults
 
@@ -55,7 +56,8 @@ mechanism; jl-recon owns this schema, its defaults, and its validation.
 - validate `labels`, if present, as an object with keys limited to: `default`, `map`, `quiz`, `research`, `prototype`, `task`
 - validate each `labels.*` value as an array of non-empty strings
 - validate that no `labels.*` array is empty
-- validate `checks`, if present, as an object of booleans with keys limited to: `on_ticket_resolution_enabled`, `on_status_report_enabled`
+- validate `checks`, if present, as an object with keys limited to: `on_ticket_resolution_enabled` (boolean), `on_status_report_enabled` (boolean), `timeout_seconds` (positive integer)
+- validate `checks.timeout_seconds` is a positive integer if present; values ≤ 0 are treated as invalid and default to 30
 - default each missing decision gate to `false`
 - default missing `uncertainty_tracking.pattern` to
   `## Not Yet Specified (Fog of War)`
@@ -660,9 +662,10 @@ explicitly confirms publication.
 2. **Collect findings** — Doublecheck returns a structured report with per-claim
    verification results (each with status: VERIFIED/PLAUSIBLE/UNVERIFIED/
    DISPUTED/FABRICATION_RISK, confidence level 0-100, description, source links,
-   and recommendation). If some claims are verified and others disputed, keep
-   only the successful verification results and warn about the failed checks.
-   If doublecheck returns malformed findings, treat that check as failed and
+   and recommendation). Display all claims in the findings table with their
+   per-claim verification status. If some claims are verified and others disputed,
+   show all claims in the table and warn the user about any disputed or failed
+   claims. If doublecheck returns malformed findings, treat that check as failed and
    degrade gracefully. If all claims verify or no findings are needed, inform
    the user and proceed to confirmation.
 
@@ -679,10 +682,16 @@ explicitly confirms publication.
    UNVERIFIED → PLAUSIBLE → VERIFIED). Include source links and confidence
    percentages in the Sources column.
 
-4. **User review and decision** — Present the findings table to the user and ask
-   one of these prompts, depending on check availability:
+4. **User review and decision** — Present findings to the user and collect
+   explicit decision (approve/override/cancel). The prompt depends on check availability:
 
-   When checks are unavailable or all fail:
+   **Decision tree:** If doublecheck is unavailable or all checks fail (timeout,
+   network error, malformed findings), show the unavailable prompt. If doublecheck
+   succeeds (fully or partially), always show the findings table and ask for user
+   decision. User can always choose "override and publish anyway" — checks never
+   block Mode 3 publication.
+
+   **When checks are unavailable or all checks fail:**
 
    ```text
    ⚠️ Quality checks unavailable: [reason]
@@ -692,29 +701,21 @@ explicitly confirms publication.
    2. Cancel and revise the status report
    3. Override and publish anyway
 
-   (User can always override and proceed)
+   (You can always publish)
    ```
 
-   When some claims verify and some are disputed:
+   **When checks succeed (fully or partially) and findings are available:**
 
    ```text
-   ⚠️ Some claims could not be verified: [disputed-claims-summary]
+   ✓ Verification complete
 
-   Verification results:
-   [findings table - verification status for all claims]
+   [Findings table with all claims and per-claim status]
 
    Would you like to:
    1. Approve and publish report
    2. Override and publish anyway
    3. Cancel and revise
-
-   (Proceed with verification results shown)
    ```
-
-   When checks complete normally:
-   - "Approve and publish report" (findings acknowledged, ready to publish)
-   - "Override and publish anyway" (user disagrees with findings, force publish)
-   - "Cancel report" (pause and revise the report before publishing)
 
 5. **Graceful degradation** — If any checks fail (harness unavailable, network
    error, timeout, malformed findings):
