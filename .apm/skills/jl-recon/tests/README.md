@@ -9,6 +9,8 @@ tests/
 ├── pester/
 │   ├── mode2-checks.tests.ps1         # Unit tests for Mode 2 check logic
 │   ├── mode2-workflow.tests.ps1       # Integration tests for Mode 2 resolution workflow
+│   ├── mode3-checks.tests.ps1         # Unit tests for Mode 3 check logic
+│   ├── mode3-workflow.tests.ps1       # Integration tests for Mode 3 publication workflow
 │   ├── markdown-labels.tests.ps1      # File I/O, YAML frontmatter recording
 │   ├── github-labels.tests.ps1        # GitHub API mocks, per-label tests
 │   └── azure-devops-tags.tests.ps1    # Azure DevOps API mocks, semicolon format
@@ -39,6 +41,22 @@ tests/
 - **Degradation path:** all checks unavailable, proceed without blocking
 - **Partial availability path:** available findings preserved while failed checks degrade gracefully
 - **Disabled checks path:** skips invocation entirely and logs skip status
+
+#### `mode3-checks.tests.ps1`
+
+- **Configuration gating:** enabled, disabled, missing config defaults, timeout override
+- **Fallback invocation:** subagent → Herdr → session, all-failed, timeout, parse error, partial availability
+- **Findings parsing/display:** claim normalization, risk ordering, confidence formatting, source links, edge cases
+- **User decisions:** approve, publish-without-verification, override, cancel, invalid-input retry
+- **Audit logging:** findings summary, degradation details, override tracking
+
+#### `mode3-workflow.tests.ps1`
+
+- **GitHub Issues flow:** approved publication after successful verification
+- **Azure DevOps flow:** override publication with disputed findings
+- **Degraded path:** unavailable checks still permit explicit publish
+- **Cancel path:** blocks publication and returns to report generation
+- **Disabled checks path:** skips invocation but still requires user approval
 
 #### `markdown-labels.tests.ps1`
 
@@ -150,6 +168,8 @@ bats ./tests/bats/label-resolution.bats --filter "alphabetical sorting"
 - ✅ Mode 2 approve / override / cancel flows tested
 - ✅ Mode 2 proceed-without-checks flow tested
 - ✅ Mode 2 graceful degradation and disabled-check paths tested
+- ✅ Mode 3 checks configuration, parsing, prompts, and audit logging tested
+- ✅ Mode 3 publication workflow tested across approve / override / cancel / disabled paths
 - ✅ GitHub map label application tested
 - ✅ GitHub ticket label application (with inheritance) tested for all 4 types
 - ✅ Azure DevOps tag application tested
