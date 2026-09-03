@@ -2,7 +2,7 @@
 title: Harness Detection Module
 ---
 
-# Harness Detection Module (AC5.1)
+## Harness Detection Module (AC5.1)
 
 Reliable runtime detection of Copilot harness type and capability flags for fleet mode coordination.
 
@@ -103,6 +103,7 @@ console.log(`Harness: ${capabilities.harness} (${capabilities.detectionReason})`
 ```
 
 The reason explains which detection mechanism fired, which is useful when:
+
 - Debugging why fleet mode is unavailable
 - Investigating fallback behavior
 - Validating harness detection in CI/CD

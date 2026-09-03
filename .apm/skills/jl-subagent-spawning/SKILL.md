@@ -569,12 +569,14 @@ through the hierarchy until an available model is found.
 Fleet mode is a top-level coordination mechanism (Copilot CLI: `/fleet` command) that launches multiple subagents in parallel, each with its own clean session context. It is distinct from sequential delegation (one subagent at a time) and from skills invoked inline (no spawning).
 
 **Fleet mode is appropriate when:**
+
 - the work has multiple independent or weakly-dependent subtasks
 - each subtask benefits from its own fresh context (parallelization outweighs context-splitting overhead)
 - results can be easily reassembled after all tasks complete
 - the task set is known upfront (not data-dependent discovery)
 
 **Fleet mode is NOT appropriate when:**
+
 - subtasks are tightly sequential or dependent
 - you need immediate synchronous results
 - the task involves discovering what to do next (single decision tree)
@@ -645,6 +647,7 @@ AT SESSION START:
 > Multiple independent subtasks detected. Running `/fleet /agent1 /agent2 ...` would parallelize this work across isolated sessions, keeping each focused and preventing context depletion.
 
 **Do NOT recommend `/fleet` for:**
+
 - Sequential or tightly dependent work
 - Single-threaded decision trees
 - Immediate synchronous results needed
@@ -731,6 +734,7 @@ These detection mechanisms are documented in reference materials (#185 research 
 - [ ] **Sequential fallback refinement** — Should sequential fallback prefer herdr if available, or other mechanism?
 
 For now, agents should:
+
 1. Detect Copilot CLI reliably (COPILOT_CLI_MODE env var)
 2. Detect Browser reliably (window object)
 3. Gracefully degrade to sequential/inline for unknown harnesses
