@@ -53,16 +53,21 @@ mechanism; jl-recon owns this schema, its defaults, and its validation.
 - validate that `jl_recon`, if present, is an object
 - validate `decision_gates`, if present, as an object of booleans
 - validate `uncertainty_tracking`, if present, as an object
-- validate `labels`, if present, as an object with keys limited to: `default`, `map`, `quiz`, `research`, `prototype`, `task`
+- validate `labels`, if present, as an object with keys limited to: `default`,
+  `map`, `quiz`, `research`, `prototype`, `task`
 - validate each `labels.*` value as an array of non-empty strings
 - validate that no `labels.*` array is empty
-- validate `checks`, if present, as an object with keys limited to: `on_ticket_resolution_enabled` (boolean), `on_status_report_enabled` (boolean), `timeout_seconds` (positive integer)
-- validate `checks.timeout_seconds` is a positive integer if present; values ≤ 0 are treated as invalid and default to 30
+- validate `checks`, if present, as an object with keys limited to:
+  `on_ticket_resolution_enabled` (boolean), `on_status_report_enabled` (boolean),
+  `timeout_seconds` (positive integer)
+- validate `checks.timeout_seconds` is a positive integer if present; values ≤ 0
+  are treated as invalid and default to 30
 - default each missing decision gate to `false`
 - default missing `uncertainty_tracking.pattern` to
   `## Not Yet Specified (Fog of War)`
 - default `labels.default` to `["recon:map"]`
-- default each of `labels.map`, `labels.quiz`, `labels.research`, `labels.prototype`, `labels.task` to inherit from `labels.default`
+- default each of `labels.map`, `labels.quiz`, `labels.research`,
+  `labels.prototype`, `labels.task` to inherit from `labels.default`
 - default `checks.on_ticket_resolution_enabled` to `true`
 - default `checks.on_status_report_enabled` to `true`
 - apply resolved label values when creating maps and tickets, per the resolved behavior below
@@ -649,6 +654,97 @@ explicitly confirms publication.
 
 **Workflow:**
 
+1. **Invoke checks** — Call doublecheck using jl-subagent-spawning's fallback
+   hierarchy (attempt subagent → fallback to Herdr when subagent unavailable
+   → read into session when multi-harness is unavailable). Pass the generated
+   status report text. Doublecheck will analyze each claim in the report and
+   return per-claim verification results (VERIFIED/PLAUSIBLE/UNVERIFIED/
+   DISPUTED/FABRICATION_RISK with confidence levels and source links). Apply a
+   per-check timeout of `checks.timeout_seconds` (default: `30`). On harness
+   unavailability, timeout, network error, or malformed findings, do not block
+   Mode 3: warn the user, keep any successful findings, and continue to an
+   explicit user decision.
+
+2. **Collect findings** — Doublecheck returns a structured report with per-claim
+   verification results (each with status: VERIFIED/PLAUSIBLE/UNVERIFIED/
+   DISPUTED/FABRICATION_RISK, confidence level 0-100, description, source links,
+   and recommendation). Display all claims in the findings table with their
+   per-claim verification status. If some claims are verified and others disputed,
+   show all claims in the table and warn the user about any disputed or failed
+   claims. If doublecheck returns malformed findings, treat that check as failed and
+   degrade gracefully. If all claims verify or no findings are needed, inform
+   the user and proceed to confirmation.
+
+3. **Display findings** — Format findings as a markdown table:
+
+   ```markdown
+   | Claim | Status | Confidence | Sources |
+   | --- | --- | --- | --- |
+   | "Status report text..." | VERIFIED | 95% | link1, link2 |
+   | "Another claim..." | DISPUTED | 40% | link |
+   ```
+
+   Sort by status, highest risk first (FABRICATION_RISK → DISPUTED →
+   UNVERIFIED → PLAUSIBLE → VERIFIED). Include source links and confidence
+   percentages in the Sources column.
+
+4. **User review and decision** — Present findings to the user and collect
+   explicit decision (approve/override/cancel). The prompt depends on check availability:
+
+   **Decision tree:** If doublecheck is unavailable or all checks fail (timeout,
+   network error, malformed findings), show the unavailable prompt. If doublecheck
+   succeeds (fully or partially), always show the findings table and ask for user
+   decision. User can always choose "override and publish anyway" — checks never
+   block Mode 3 publication.
+
+   **When checks are unavailable or all checks fail:**
+
+   ```text
+   ⚠️ Quality checks unavailable: [reason]
+
+   Would you like to:
+   1. Publish the report without verification
+   2. Cancel and revise the status report
+   3. Override and publish anyway
+
+   (You can always publish)
+   ```
+
+   **When checks succeed (fully or partially) and findings are available:**
+
+   ```text
+   ✓ Verification complete
+
+   [Findings table with all claims and per-claim status]
+
+   Would you like to:
+   1. Approve and publish report
+   2. Override and publish anyway
+   3. Cancel and revise
+   ```
+
+5. **Graceful degradation** — If any checks fail (harness unavailable, network
+   error, timeout, malformed findings):
+   - Skip unavailable checks and keep running the remaining checks
+   - If some claims verify: show the verification results and warn about failed checks
+   - If all checks fail: warn the user and allow either "Publish without checks"
+     or "Override and publish anyway"
+   - Record the degraded check outcome and the user's decision in an audit log
+   - Never block Mode 3 workflow — user can always override and publish
+
+**Post-decision:**
+
+- If user approves or overrides, proceed to publish the status report
+- If user cancels, return to report generation for revision
+- Log the user's decision (approve/override) alongside the report publication for audit trail
+
+When a status report is generated and `checks.on_status_report_enabled` is true,
+run quality checks using doublecheck before presenting the report to the user.
+This workflow is always human-in-the-loop: the user reviews findings and
+explicitly confirms publication.
+
+**Workflow:**
+
 1. **Invoke checks** — Call doublecheck using `jl-subagent-spawning`'s fallback
    hierarchy: try subagent → try Herdr → read into session. Pass the generated
    status report text. Doublecheck will analyze each claim in the report and
@@ -746,6 +842,360 @@ answer.
 **Completion criterion:** every surfaced candidate has an explicit human
 answer recorded against it (resolved, archived, kept open, or the
 destination itself was redrawn).
+
+## User Guide: Understanding Quality Checks
+
+Quality checks are optional guardrails that review your work before it's recorded.
+They run in Mode 2 (ticket resolution) and Mode 3 (status reports) when enabled
+by configuration.
+
+### What Are Quality Checks?
+
+#### Mode 2 — Ticket Resolution Checks (jl-adversarial-reviewer)
+
+When you resolve a ticket, jl-adversarial-reviewer performs an adversarial review
+of your resolution, looking for logical flaws, incomplete reasoning, or assumptions
+that need validation. It surfaces findings organized by severity (critical, major,
+minor, nit) so you can address high-impact issues before recording the decision.
+
+#### Mode 3 — Status Report Checks (doublecheck)
+
+When you publish a status report, doublecheck analyzes each claim in the report
+and verifies it against sources (documentation, code, pull requests, issue history).
+For each claim, it returns a verification status (VERIFIED, PLAUSIBLE, UNVERIFIED,
+DISPUTED, or FABRICATION_RISK) with confidence levels and source links.
+
+### How to Interpret Findings
+
+#### Mode 2 Findings Table
+
+```markdown
+| Severity | Check | Finding | Recommendation |
+| --- | --- | --- | --- |
+| critical | logic | Assumption lacks evidence; needs validation | Confirm with stakeholder |
+| major | scope | Resolution incomplete; doesn't cover edge case | Expand scope or document |
+| minor | clarity | Wording could be clearer | Revise for readability |
+```
+
+**Severity levels:**
+
+- **critical** — blocks recording; address before approving
+- **major** — significant issue but recordable with override; consider fixing
+- **minor** — polish; nice to fix but not blocking
+- **nit** — style or preference; lowest priority
+
+#### Mode 3 Findings Table
+
+```markdown
+| Claim | Status | Confidence | Sources |
+| --- | --- | --- | --- |
+| "Completed 42% of tasks" | VERIFIED | 95% | PR #123, issue comment |
+| "All tests passing" | DISPUTED | 40% | CI log shows 3 failures |
+| "Performance improved by 50%" | UNVERIFIED | 30% | No benchmark data found |
+```
+
+**Status levels (by risk, highest first):**
+
+- **FABRICATION_RISK** — claim unsupported by any evidence; likely false
+- **DISPUTED** — evidence contradicts claim; confidence in the dispute
+- **UNVERIFIED** — claim not contradicted, but no supporting evidence found
+- **PLAUSIBLE** — sounds reasonable; some supporting context but not definitive
+- **VERIFIED** — direct evidence supports the claim; high confidence
+
+**Confidence** ranges from 0–100% and reflects how certain the check is.
+A 40% DISPUTED finding means the evidence against it is weak; a 95% VERIFIED
+finding is very strong.
+
+### When and Why Checks Are Skipped
+
+Checks **skip gracefully** when:
+
+1. **Disabled by configuration** — `checks.on_ticket_resolution_enabled: false`
+   or `checks.on_status_report_enabled: false` — checks are intentionally off
+2. **Harness unavailable** — the environment doesn't support running subagents
+   (e.g., running in a limited CLI harness). jl-recon falls back to reading
+   checks into the current session if available
+3. **Timeout** — checks take longer than `checks.timeout_seconds` (default 30s).
+   Slow network or compute constraints can trigger this
+4. **Network error** — checks can't reach required services. Retry or override
+5. **Malformed findings** — checks return invalid results. Treated as failed
+   and skipped for that check
+
+**Graceful degradation means:**
+
+- If some checks fail, successful checks still run and show findings
+- If all checks fail, you get a warning and can choose to proceed anyway
+- Checks **never block** your work — you can always override and proceed
+
+### How to Override Findings
+
+After reviewing findings, you have three choices:
+
+**Mode 2 (Ticket Resolution):**
+
+1. **Approve and record** — findings acknowledged, proceed as-is
+2. **Override and record anyway** — you disagree with findings; record anyway
+3. **Cancel resolution** — return to the ticket and revise before recording
+
+**Mode 3 (Status Report):**
+
+1. **Approve and publish** — findings reviewed, publish the report as-is
+2. **Override and publish anyway** — you disagree with verification results; publish anyway
+3. **Cancel and revise** — return to report generation to revise claims
+
+**Override strategy:**
+
+- Use "Override" when you have context the check doesn't (e.g., "I verified
+  this manually outside the automated sources")
+- Use "Cancel" when the check found a real problem worth fixing
+- Override decisions are logged in the audit trail for accountability
+
+### Configuration Knobs and Defaults
+
+| Setting | Type | Default | Effect |
+| --- | --- | --- | --- |
+| `checks.on_ticket_resolution_enabled` | boolean | `true` | Enable/disable Mode 2 checks |
+| `checks.on_status_report_enabled` | boolean | `true` | Enable/disable Mode 3 checks |
+| `checks.timeout_seconds` | integer | `30` | Wait time per check before timeout |
+
+**Configuration example** (in `CONTRIBUTING.md` or `AGENTS.md`):
+
+```yaml
+jl_recon:
+  checks:
+    on_ticket_resolution_enabled: true
+    on_status_report_enabled: true
+    timeout_seconds: 45
+```
+
+To disable Mode 2 checks:
+
+```yaml
+jl_recon:
+  checks:
+    on_ticket_resolution_enabled: false
+```
+
+To disable Mode 3 checks:
+
+```yaml
+jl_recon:
+  checks:
+    on_status_report_enabled: false
+```
+
+## Troubleshooting Quality Checks
+
+### Problem: Checks Time Out
+
+**Symptom:** Warning message says "Quality checks timed out after 30 seconds"
+
+**Why it happens:**
+
+- Network latency to the check service
+- Check service is under load
+- Your `checks.timeout_seconds` value is too short
+
+**Solutions:**
+
+1. **Increase the timeout:**
+
+   ```yaml
+   jl_recon:
+     checks:
+       timeout_seconds: 60
+   ```
+
+2. **Retry the check** — run the same resolution again; transient network issues often clear
+3. **Skip this check** — proceed with "Override and record anyway" if you trust your work
+
+### Problem: Checks Fail Repeatedly
+
+**Symptom:** "Quality checks unavailable" or "All checks failed"
+
+**Why it happens:**
+
+- Harness doesn't support subagent delegation (limited CLI environment)
+- Check service is offline or unreachable
+- Configuration issue prevents check invocation
+
+**Solutions:**
+
+1. **Check the harness capabilities:**
+   - Verify you're running in a harness that supports subagents (GitHub Copilot chat, Azure DevOps, or Herdr)
+   - If in a limited harness, checks will degrade gracefully
+2. **Verify network connectivity** — check service requires internet access
+3. **Disable checks temporarily:**
+
+   ```yaml
+   jl_recon:
+     checks:
+       on_ticket_resolution_enabled: false
+       on_status_report_enabled: false
+   ```
+
+   Then re-enable after the service recovers
+
+### Problem: Malformed or Unexpected Findings
+
+**Symptom:** Findings table looks wrong or contains errors
+
+**Why it happens:**
+
+- Check service returned invalid format (API change, bug)
+- Integration issue between jl-recon and the check service
+- Partial network failure corrupted the response
+
+**Solutions:**
+
+1. **Document the malformation** — include the findings output in your report
+2. **Override and proceed** — malformed findings are treated as failed checks
+3. **Contact support** — report with the actual findings output for investigation
+
+### Problem: Mode 2 Check Findings Are Too Strict
+
+**Symptom:** Critical findings block resolution, but you believe they're overly cautious
+
+**Why it happens:**
+
+- jl-adversarial-reviewer is intentionally aggressive (that's its job)
+- Your context (recent decisions, broader scope) isn't visible to the check
+- Legitimate exceptions to the rule that the check doesn't know about
+
+**Solutions:**
+
+1. **Review and revise** if the finding points to a real gap:
+   - Add evidence or stakeholder sign-off
+   - Document the assumption explicitly
+   - Cancel resolution, fix the issue, and try again
+2. **Override if you have context** the check doesn't:
+   - Choose "Override and record anyway"
+   - Document your reasoning in the ticket or map notes
+   - Your override decision is logged for audit trail
+
+### Problem: Mode 3 Verification Claims DISPUTED or FABRICATION_RISK
+
+**Symptom:** Status report claims are marked DISPUTED or FABRICATION_RISK
+
+**Why it happens:**
+
+- Evidence contradicts the claim (CI shows failures, but claim says "all tests pass")
+- Claim contains unsupported numbers or metrics
+- Source is out of date or missing
+
+**Solutions:**
+
+1. **If the claim is wrong:**
+   - Cancel and revise the status report
+   - Correct the claim to match actual evidence
+   - Re-run checks to verify
+2. **If the claim is right but evidence is missing:**
+   - Update the source (add test results to PR, link issue comments, etc.)
+   - Re-run checks with updated evidence
+3. **If doublecheck is looking in the wrong place:**
+   - Override and publish if you're confident
+   - Document why the check's evidence source was incomplete
+   - Your override decision is logged
+
+### Problem: Checks Never Finish (Stuck)
+
+**Symptom:** Checks appear to hang indefinitely
+
+**Why it happens:**
+
+- Subagent never starts (harness issue)
+- Network connection is broken
+- Check service crashed mid-operation
+
+**Solutions:**
+
+1. **Wait for timeout** — jl-recon will timeout after `checks.timeout_seconds` and gracefully degrade
+2. **Manually cancel** — if UI supports it, cancel the check invocation
+3. **Skip checks** — proceed with "Proceed without checks" or disable them in config
+
+## Quality Checks Architecture
+
+### Subagent Spawning Fallback Hierarchy
+
+Quality checks are invoked using `jl-subagent-spawning`'s multi-harness fallback
+mechanism. This ensures checks work in any environment (GitHub Copilot chat,
+Azure DevOps, limited CLI, Herdr multiplexer) without blocking the workflow.
+
+**Fallback order:**
+
+1. **Try subagent** (primary) — Delegate to a new subagent running
+   jl-adversarial-reviewer (Mode 2) or doublecheck (Mode 3) in the current
+   harness. This is preferred when the harness supports subagent delegation.
+
+2. **Try Herdr** (fallback) — If the current harness doesn't support
+   subagents (e.g., limited CLI), attempt to route the check request to a
+   sibling session running in Herdr (a terminal multiplexer). Herdr can
+   spawn subagents even when the parent harness cannot.
+
+3. **Read into session** (final fallback) — If neither subagent nor Herdr
+   is available, attempt to run the check inline in the current session
+   by reading the check skill's logic directly. This is slower but works
+   in any environment (no network required, no multiplexer needed).
+
+**Decision tree:**
+
+```text
+Is subagent delegation available in this harness?
+├─ Yes → Try subagent
+│        ├─ Succeeds? → Use findings, proceed
+│        ├─ Timeout? → Degrade (warning, partial findings if any)
+│        ├─ Network error? → Degrade gracefully
+│        └─ Harness dies? → Fall through to Herdr
+└─ No → Is Herdr active (HERDR_ENV=1)?
+         ├─ Yes → Try Herdr delegation
+         │        ├─ Succeeds? → Use findings, proceed
+         │        ├─ Timeout? → Degrade (warning, partial findings if any)
+         │        └─ Network error? → Degrade gracefully
+         └─ No → Read into session (inline check execution)
+                 ├─ Succeeds? → Use findings, proceed
+                 └─ Fails? → Warn, allow override
+```
+
+### Timeout and Graceful Degradation
+
+Each check invocation has a per-operation timeout (`checks.timeout_seconds`,
+default: 30s). If the check doesn't complete within the timeout:
+
+1. **Warn the user** — "Quality check timed out; proceeding with available findings"
+2. **Keep partial findings** — If the check returned any results before timing out,
+   display them
+3. **Degrade gracefully** — Never block Mode 2 or Mode 3. User can always proceed
+   or override
+
+Example: Mode 2 times out but returns 3 of 5 severity-scored findings.
+jl-recon displays the 3 findings and warns about the 2 that timed out.
+
+### Check Service Integration
+
+**Mode 2 — jl-adversarial-reviewer:**
+
+- Invoked with: resolved ticket content (title, body, context from map)
+- Returns: structured findings with severity (critical/major/minor/nit),
+  description, and recommendation
+- Used for: adversarial review of ticket resolution logic and completeness
+
+**Mode 3 — doublecheck:**
+
+- Invoked with: generated status report text
+- Returns: per-claim verification results (status, confidence 0–100,
+  sources with links)
+- Used for: claim verification against documentation, code, PRs, and
+  issue history
+
+### Audit Trail
+
+Every check invocation and user decision is logged:
+
+- Mode 2: check results + user decision (approve/override/cancel) + timestamp
+- Mode 3: verification results + user decision (approve/override/cancel) + timestamp
+
+This audit trail is stored in the ticket or report body and provides
+accountability for why overrides were made.
 
 ## Requirements
 
