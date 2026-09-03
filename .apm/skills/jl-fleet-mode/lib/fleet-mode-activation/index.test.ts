@@ -14,6 +14,8 @@
  * - Subagent spawning respects activation mode
  */
 
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 import {
   SpawningMode,
   initializeFleetModeSession,
@@ -21,9 +23,10 @@ import {
   resolveSpawningMode,
   getActivationLog,
   getLastSelectedMode
-} from '../index';
+} from './index.ts';
 
-import { HarnessCapabilities, Harness } from '@copilot/harness-detection';
+import type { HarnessCapabilities } from '../harness-detection/index.ts';
+import { Harness } from '../harness-detection/index.ts';
 
 describe('Fleet Mode Activation Strategy', () => {
   describe('Spawning Mode Selection', () => {
@@ -38,7 +41,7 @@ describe('Fleet Mode Activation Strategy', () => {
 
       const mode = selectSpawningMode(capabilities);
 
-      expect(mode).toBe(SpawningMode.FLEET);
+      assert.equal(mode, SpawningMode.FLEET);
     });
 
     it('falls back to sequential when fleet unavailable', () => {
@@ -53,7 +56,7 @@ describe('Fleet Mode Activation Strategy', () => {
       const mode = selectSpawningMode(capabilities);
 
       // Browser has no spawning support; falls back to inline
-      expect(mode).toBe(SpawningMode.INLINE);
+      assert.equal(mode, SpawningMode.INLINE);
     });
 
     it('falls back to sequential when fleet unavailable but sequential available', () => {
@@ -68,7 +71,7 @@ describe('Fleet Mode Activation Strategy', () => {
 
       const mode = selectSpawningMode(capabilities);
 
-      expect(mode).toBe(SpawningMode.SEQUENTIAL);
+      assert.equal(mode, SpawningMode.SEQUENTIAL);
     });
 
     it('falls back to inline when only inline available', () => {
@@ -82,7 +85,7 @@ describe('Fleet Mode Activation Strategy', () => {
 
       const mode = selectSpawningMode(capabilities);
 
-      expect(mode).toBe(SpawningMode.INLINE);
+      assert.equal(mode, SpawningMode.INLINE);
     });
   });
 
@@ -98,10 +101,10 @@ describe('Fleet Mode Activation Strategy', () => {
 
       const session = initializeFleetModeSession(capabilities);
 
-      expect(session.harnessCapabilities).toEqual(capabilities);
-      expect(session.selectedMode).toBe(SpawningMode.FLEET);
-      expect(session.activationLog.length).toBe(1);
-      expect(session.activationLog[0].event).toBe('mode_selected');
+      assert.deepEqual(session.harnessCapabilities, capabilities);
+      assert.equal(session.selectedMode, SpawningMode.FLEET);
+      assert.equal(session.activationLog.length, 1);
+      assert.equal(session.activationLog[0].event, 'mode_selected');
     });
 
     it('creates log entry with timestamp and reason', () => {
@@ -116,9 +119,9 @@ describe('Fleet Mode Activation Strategy', () => {
       const session = initializeFleetModeSession(capabilities);
       const logEntry = session.activationLog[0];
 
-      expect(logEntry.timestamp).toBeDefined();
-      expect(logEntry.mode).toBe(SpawningMode.FLEET);
-      expect(logEntry.reason).toContain('COPILOT_CLI');
+      assert.ok(logEntry.timestamp);
+      assert.equal(logEntry.mode, SpawningMode.FLEET);
+      assert.match(logEntry.reason, /COPILOT_CLI/);
     });
   });
 
@@ -135,7 +138,7 @@ describe('Fleet Mode Activation Strategy', () => {
       const session = initializeFleetModeSession(capabilities);
       const { mode } = resolveSpawningMode(session);
 
-      expect(mode).toBe(SpawningMode.FLEET);
+      assert.equal(mode, SpawningMode.FLEET);
     });
 
     it('silently accepts requested mode if available', () => {
@@ -150,8 +153,8 @@ describe('Fleet Mode Activation Strategy', () => {
       const session = initializeFleetModeSession(capabilities);
       const { mode, log } = resolveSpawningMode(session, SpawningMode.FLEET);
 
-      expect(mode).toBe(SpawningMode.FLEET);
-      expect(log.event).not.toBe('fallback_attempted');
+      assert.equal(mode, SpawningMode.FLEET);
+      assert.notEqual(log.event, 'fallback_attempted');
     });
 
     it('silently falls back when requested mode unavailable', () => {
@@ -166,9 +169,9 @@ describe('Fleet Mode Activation Strategy', () => {
       const session = initializeFleetModeSession(capabilities);
       const { mode, log } = resolveSpawningMode(session, SpawningMode.FLEET);
 
-      expect(mode).toBe(SpawningMode.INLINE);
-      expect(log.event).toBe('fallback_attempted');
-      expect(log.reason).toContain('requested');
+      assert.equal(mode, SpawningMode.INLINE);
+      assert.equal(log.event, 'fallback_attempted');
+      assert.match(log.reason, /requested/);
     });
 
     it('logs fallback decision without prompting user', () => {
@@ -182,13 +185,9 @@ describe('Fleet Mode Activation Strategy', () => {
 
       const session = initializeFleetModeSession(capabilities);
 
-      // Agent requests fleet mode
-      expect(() => {
+      assert.doesNotThrow(() => {
         resolveSpawningMode(session, SpawningMode.FLEET);
-      }).not.toThrow();
-
-      // No user prompt occurs; fallback is silent
-      // (We can't directly test "no prompt" but we can verify no exception)
+      });
     });
   });
 
@@ -203,13 +202,13 @@ describe('Fleet Mode Activation Strategy', () => {
       };
 
       const session = initializeFleetModeSession(capabilities);
-      expect(session.activationLog.length).toBe(1);
+      assert.equal(session.activationLog.length, 1);
 
       resolveSpawningMode(session);
-      expect(session.activationLog.length).toBe(2);
+      assert.equal(session.activationLog.length, 2);
 
       resolveSpawningMode(session, SpawningMode.SEQUENTIAL);
-      expect(session.activationLog.length).toBe(3);
+      assert.equal(session.activationLog.length, 3);
     });
 
     it('provides human-readable log summary', () => {
@@ -226,9 +225,9 @@ describe('Fleet Mode Activation Strategy', () => {
 
       const logSummary = getActivationLog(session);
 
-      expect(logSummary).toContain('mode_selected');
-      expect(logSummary).toContain('fleet');
-      expect(logSummary).toMatch(/\[\d{4}-\d{2}-\d{2}T/); // timestamp format
+      assert.match(logSummary, /mode_selected/);
+      assert.match(logSummary, /fleet/);
+      assert.match(logSummary, /\[\d{4}-\d{2}-\d{2}T/);
     });
 
     it('includes timestamp for each log entry', () => {
@@ -243,8 +242,8 @@ describe('Fleet Mode Activation Strategy', () => {
       const session = initializeFleetModeSession(capabilities);
       const entry = session.activationLog[0];
 
-      expect(entry.timestamp).toBeDefined();
-      expect(() => new Date(entry.timestamp)).not.toThrow();
+      assert.ok(entry.timestamp);
+      assert.doesNotThrow(() => new Date(entry.timestamp));
     });
   });
 
@@ -260,13 +259,13 @@ describe('Fleet Mode Activation Strategy', () => {
 
       const session = initializeFleetModeSession(capabilities);
       const { mode: mode1 } = resolveSpawningMode(session);
-      expect(getLastSelectedMode(session)).toBe(mode1);
+      assert.equal(getLastSelectedMode(session), mode1);
 
-      // Simulate harness change (hypothetical)
+      // Simulate harness capability change
       session.harnessCapabilities.fleetModeAvailable = false;
       session.harnessCapabilities.sequentialSpawningAvailable = true;
       const { mode: mode2 } = resolveSpawningMode(session);
-      expect(getLastSelectedMode(session)).toBe(mode2);
+      assert.equal(getLastSelectedMode(session), mode2);
     });
   });
 
@@ -282,9 +281,9 @@ describe('Fleet Mode Activation Strategy', () => {
 
       const session = initializeFleetModeSession(capabilities);
 
-      expect(() => {
+      assert.doesNotThrow(() => {
         resolveSpawningMode(session, SpawningMode.FLEET);
-      }).not.toThrow();
+      });
     });
 
     it('guarantees inline mode is always available', () => {
@@ -299,11 +298,11 @@ describe('Fleet Mode Activation Strategy', () => {
       const session = initializeFleetModeSession(capabilities);
       const { mode } = resolveSpawningMode(session);
 
-      expect(mode).toBe(SpawningMode.INLINE);
+      assert.equal(mode, SpawningMode.INLINE);
     });
   });
 
-  describe('Per-Harness Behavior', () => {
+  describe('Per-Harness Behavior across all 6 harnesses', () => {
     const testCases = [
       {
         harness: Harness.COPILOT_CLI,
@@ -317,7 +316,23 @@ describe('Fleet Mode Activation Strategy', () => {
         expectedMode: SpawningMode.INLINE
       },
       {
+        harness: Harness.AZURE_DEVOPS,
+        fleetAvailable: true,
+        expectedMode: SpawningMode.FLEET
+      },
+      {
+        harness: Harness.KIRO,
+        fleetAvailable: true,
+        expectedMode: SpawningMode.FLEET
+      },
+      {
         harness: Harness.PI,
+        fleetAvailable: false,
+        sequentialAvailable: false,
+        expectedMode: SpawningMode.INLINE
+      },
+      {
+        harness: Harness.OPENCODE,
         fleetAvailable: false,
         sequentialAvailable: false,
         expectedMode: SpawningMode.INLINE
@@ -343,7 +358,7 @@ describe('Fleet Mode Activation Strategy', () => {
 
         const mode = selectSpawningMode(capabilities);
 
-        expect(mode).toBe(testCase.expectedMode);
+        assert.equal(mode, testCase.expectedMode);
       });
     }
   });

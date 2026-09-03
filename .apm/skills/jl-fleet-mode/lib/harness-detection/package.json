@@ -1,6 +1,7 @@
 {
   "name": "@copilot/harness-detection",
   "version": "1.0.0",
+  "type": "module",
   "description": "Reliable runtime detection of Copilot harness type and capability flags for fleet mode coordination",
   "main": "index.ts",
   "exports": {

@@ -11,17 +11,19 @@
  *            SKILL.md § Activation Strategy: Automatic with Fallback
  */
 
-import { HarnessCapabilities, Harness } from '@copilot/harness-detection';
+import type { HarnessCapabilities } from '../harness-detection/index.ts';
+import { Harness } from '../harness-detection/index.ts';
 
 /**
  * Spawning modes in priority order (best to worst).
  * Agents try fleet first, fallback to sequential, fallback to inline.
  */
-export enum SpawningMode {
-  FLEET = 'fleet',
-  SEQUENTIAL = 'sequential',
-  INLINE = 'inline'
-}
+export const SpawningMode = {
+  FLEET: 'fleet',
+  SEQUENTIAL: 'sequential',
+  INLINE: 'inline'
+} as const;
+export type SpawningMode = typeof SpawningMode[keyof typeof SpawningMode];
 
 /**
  * Session state for fleet mode coordination.

@@ -8,21 +8,23 @@
  * Reference: SKILL.md § Fleet Mode Utilization and Harness Detection
  */
 
-export enum Harness {
-  COPILOT_CLI = 'copilot-cli',
-  BROWSER = 'browser',
-  AZURE_DEVOPS = 'azure-devops',
-  KIRO = 'kiro',
-  OPENCODE = 'opencode',
-  PI = 'pi',
-  UNKNOWN = 'unknown'
-}
+export const Harness = {
+  COPILOT_CLI: 'copilot-cli',
+  BROWSER: 'browser',
+  AZURE_DEVOPS: 'azure-devops',
+  KIRO: 'kiro',
+  OPENCODE: 'opencode',
+  PI: 'pi',
+  UNKNOWN: 'unknown'
+} as const;
+export type Harness = typeof Harness[keyof typeof Harness];
 
-export enum AzureRepoType {
-  GITHUB = 'github',
-  AZURE_REPOS = 'azure-repos',
-  UNKNOWN = 'unknown'
-}
+export const AzureRepoType = {
+  GITHUB: 'github',
+  AZURE_REPOS: 'azure-repos',
+  UNKNOWN: 'unknown'
+} as const;
+export type AzureRepoType = typeof AzureRepoType[keyof typeof AzureRepoType];
 
 /**
  * Capability flags for the current harness.
