@@ -82,8 +82,12 @@ Create user documentation:
 
 ## Open Questions (Phase 2 Blockers)
 
-- [ ] **Kiro detection API** — What environment variable, file, or API should agents check to detect Kiro CLI at session start? (Currently: unknown, defaulting to "unknown" harness)
-- [ ] **Azure DevOps detection API** — What API should agents check at runtime to (a) detect Azure DevOps context, and (b) distinguish GitHub vs. Azure Repos? (Currently: unknown, defaulting to "unknown" harness)
+- [ ] **Kiro detection API** — What environment variable, file, or API should agents
+  check to detect Kiro CLI at session start? (Currently: unknown, defaulting to
+  "unknown" harness)
+- [ ] **Azure DevOps detection API** — What API should agents check at runtime to
+  (a) detect Azure DevOps context, and (b) distinguish GitHub vs Azure Repos?
+  (Currently: unknown, defaulting to "unknown" harness)
 - [ ] **Pi capabilities** — Does Pi support subagent spawning? Upstream documentation? Vendor confirmation needed.
 - [ ] **OpenCode capabilities** — Does OpenCode support subagent spawning? Upstream documentation? Vendor confirmation needed.
 - [ ] **Result coordination** — How should agents coordinate results from parallel subagents? Automatic or manual? API shape?

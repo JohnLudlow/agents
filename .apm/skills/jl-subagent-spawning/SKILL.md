@@ -560,18 +560,26 @@ through the hierarchy until an available model is found.
 
 ## Fleet Mode Utilization and Harness Detection (AC5.1)
 
-**Decision [#186]**: Agents automatically use fleet mode when available, with graceful fallback. No user opt-in required.
+**Decision [#186]**: Agents automatically use fleet mode when available, with
+graceful fallback. No user opt-in required.
 
-**Rationale**: Each subagent spawns with clean, isolated context containing only task-relevant information. Automatic fleet mode activation maximizes parallelization and prevents context depletion that occurs when everything happens in the same session.
+**Rationale**: Each subagent spawns with clean, isolated context containing
+only task-relevant information. Automatic fleet mode activation maximizes
+parallelization and prevents context depletion that occurs when everything
+happens in the same session.
 
 ### What Fleet Mode Is
 
-Fleet mode is a top-level coordination mechanism (Copilot CLI: `/fleet` command) that launches multiple subagents in parallel, each with its own clean session context. It is distinct from sequential delegation (one subagent at a time) and from skills invoked inline (no spawning).
+Fleet mode is a top-level coordination mechanism (Copilot CLI: `/fleet`
+command) that launches multiple subagents in parallel, each with its own clean
+session context. It is distinct from sequential delegation (one subagent at a
+time) and from skills invoked inline (no spawning).
 
 **Fleet mode is appropriate when:**
 
 - the work has multiple independent or weakly-dependent subtasks
-- each subtask benefits from its own fresh context (parallelization outweighs context-splitting overhead)
+- each subtask benefits from its own fresh context (parallelization outweighs
+  context-splitting overhead)
 - results can be easily reassembled after all tasks complete
 - the task set is known upfront (not data-dependent discovery)
 
@@ -644,7 +652,9 @@ AT SESSION START:
 
 **Recommended wording when recommending fleet mode:**
 
-> Multiple independent subtasks detected. Running `/fleet /agent1 /agent2 ...` would parallelize this work across isolated sessions, keeping each focused and preventing context depletion.
+> Multiple independent subtasks detected. Running `/fleet /agent1 /agent2 ...`
+> would parallelize this work across isolated sessions, keeping each focused
+> and preventing context depletion.
 
 **Do NOT recommend `/fleet` for:**
 
@@ -742,7 +752,10 @@ For now, agents should:
 
 ### Relationship to DelegateToSubagent
 
-This section documents fleet mode *usage and activation patterns*. The `DelegateToSubagent` API (documented earlier in this skill) handles individual delegations once fleet mode is active or after fallback to sequential/inline. The two are complementary:
+This section documents fleet mode *usage and activation patterns*. The
+`DelegateToSubagent` API (documented earlier in this skill) handles individual
+delegations once fleet mode is active or after fallback to sequential/inline.
+The two are complementary:
 
 - **Fleet Mode Utilization**: "Should I parallelize this work across harnesses?"
 - **DelegateToSubagent**: "Given a single bounded subtask, which model should run it?"
