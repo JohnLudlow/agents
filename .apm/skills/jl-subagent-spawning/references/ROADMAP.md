@@ -13,6 +13,7 @@ Implement harness detection in both planner agents and automatically activate fl
 ### Key Decisions from AC5.1 (#185, #186)
 
 **Harness Detection Pattern (from #185 Research):**
+
 ```text
 AT SESSION START:
   harness = detect_harness()
@@ -24,6 +25,7 @@ AT SESSION START:
 ```
 
 **Verified Capabilities:**
+
 - ✅ Copilot CLI: Full fleet mode support via `task` tool (native, use mode="background")
 - ✅ Kiro IDE/CLI: Full subagent spawning (requires `subagent` in tools array, but detection API not yet documented)
 - ⚠️ Azure DevOps: Subagent spawning ONLY for GitHub-linked repos (NOT Azure Repos); detection API not yet documented
@@ -32,6 +34,7 @@ AT SESSION START:
 - ❓ OpenCode: Capabilities completely unknown; vendor confirmation needed
 
 **Activation Strategy (from #186 Quiz):**
+
 - Automatic: Agents always use fleet mode when available (no user opt-in required)
 - Fallback chain: Fleet mode → sequential subagent dispatch → herdr (expert workaround) → inline
 - Rationale: Clean per-subagent context prevents context depletion; silent fallback with logging
@@ -71,11 +74,9 @@ Create user documentation:
 - Document how to detect your harness (Copilot CLI vs. browser vs. Azure DevOps vs. Kiro)
 - Examples: when to use `/fleet`, how fallback chain works
 
-**Implementation effort:** ~1–1.5 hours
-
-## Phase 4 (Speculative: Unified DelegateToSubagent API)
-
-If harness ecosystem provides stable capability, implement a unified `DelegateToSubagent` API that abstracts harness differences. See SKILL.md "DelegateToSubagent API Status" section for details.
+**Implementation effort:*If harness ecosystem provides stable capability, implement a unified `DelegateToSubagent` API that abstracts harness differences. See SKILL.md
+"DelegateToSubagent API Status" section for details.
+ differences. See SKILL.md "DelegateToSubagent API Status" section for details.
 
 **Implementation effort:** TBD (depends on harness API availability)
 
