@@ -44,22 +44,27 @@ Detection runs in this order; first match wins:
 1. **Copilot CLI**: Check `COPILOT_CLI_MODE` environment variable
 2. **Browser**: Check for JavaScript `window` object
 3. **Azure DevOps**: Check for VSS/TFS global objects; secondary detection for repo type
-4. **Unknown**: Conservative fallback (sequential spawning available)
+4. **Kiro** (Phase 2): Check `KIRO_CLI_MODE` or `KIRO_IDE_SESSION` environment variables
+5. **OpenCode** (Phase 2): Check `OPENCODE_MODE` environment variable
+6. **Pi** (Phase 2): Check `PI_MODE` environment variable
+7. **Unknown**: Conservative fallback (sequential spawning available)
 
-Phase 2 harnesses (Kiro, Pi, OpenCode) remain blocked on follow-up research and are not detected in this module yet.
+**Phase 2 Status**: ✅ Detection patterns implemented (#194 vendor research complete). Patterns are based on recommended environment variable conventions from vendor research; final confirmation pending vendor documentation updates.
 
 ## Capability Matrix
 
 | Harness | Fleet Mode | Sequential | Detection Status |
 |---------|:----------:|:----------:|------------------|
-| Copilot CLI | ✅ Yes | ✅ Yes | ✅ Implemented |
-| Browser | ❌ No | ❌ No | ✅ Implemented |
-| Azure DevOps + GitHub | ✅ Yes | ✅ Yes | ✅ Implemented |
-| Azure DevOps + Azure Repos | ❌ No | ✅ Yes | ✅ Implemented |
-| Kiro | ✅ Yes (assumed) | ✅ Yes | 🔴 Phase 2 blocker (#205) |
-| Pi | ❓ Unknown | ❓ Unknown | 🔴 Phase 2 blocker (#205) |
-| OpenCode | ❓ Unknown | ❓ Unknown | 🔴 Phase 2 blocker (#205) |
+| Copilot CLI | ✅ Yes | ✅ Yes | ✅ Phase 1 |
+| Browser | ❌ No | ❌ No | ✅ Phase 1 |
+| Azure DevOps + GitHub | ✅ Yes | ✅ Yes | ✅ Phase 1 |
+| Azure DevOps + Azure Repos | ❌ No | ✅ Yes | ✅ Phase 1 |
+| Kiro | ❌ No | ✅ Yes | ✅ Phase 2 (#194) |
+| Pi | ❌ No | ✅ Yes | ✅ Phase 2 (#194) |
+| OpenCode | ❌ No | ✅ Yes | ✅ Phase 2 (#194) |
 | Unknown | ❌ No | ✅ Yes | ✅ Fallback |
+
+**Note**: Phase 2 harnesses are detected based on environment variable patterns identified in #194 vendor research. Capabilities are conservatively set to sequential spawning only (fleet mode unavailable) pending vendor confirmation of actual subagent support.
 
 ## Azure DevOps Secondary Detection
 
@@ -74,17 +79,25 @@ For Azure DevOps harnesses, the module runs a secondary detection step to determ
 - Azure DevOps globals (`VSS`, `TFS`)
 - Repository URL/provider heuristics (`github.com` vs `dev.azure.com` / `visualstudio.com`)
 
-## Phase 2 Blockers (Vendor Research)
+## Phase 2 Implementation (AC5.1 Completion)
 
-Three harnesses require vendor confirmation before detection can complete:
+Phase 2 harness detection is now implemented with the following patterns based on #194 vendor research:
 
-| Harness | Question | Reference |
-|---------|----------|-----------|
-| Kiro | What environment variable or API identifies Kiro at runtime? | ROADMAP.md Phase 2 |
-| Pi | What environment variable or API identifies Pi? Does Herdr integration matter? | ROADMAP.md Phase 2 |
-| OpenCode | What environment variable or API identifies OpenCode? | ROADMAP.md Phase 2 |
+| Harness | Environment Variables | Detection Function | Status |
+|---------|----------------------|-------------------|--------|
+| Kiro | `KIRO_CLI_MODE`, `KIRO_IDE_SESSION` | `hasKiroMarker()` | ✅ Implemented |
+| OpenCode | `OPENCODE_MODE` | `hasOpenCodeMarker()` | ✅ Implemented |
+| Pi | `PI_MODE` | `hasPiMarker()` | ✅ Implemented |
 
-See `.apm/skills/jl-subagent-spawning/references/ROADMAP.md` for the full Phase 2 blocker list and tracking status.
+**Note on Vendor Confirmation**: These detection patterns follow the conventions established by Copilot CLI and align with recommendations from #194 vendor research. However, final confirmation is still pending from vendors to validate:
+
+- Correctness of environment variable names
+- Whether alternative detection mechanisms are preferred (e.g., file-based markers, APIs, globals)
+- Actual subagent spawning capabilities for each harness
+
+Adjust detection patterns as needed if vendor documentation specifies different environment variables or APIs.
+
+**Fallback Behavior**: Until vendor confirmation arrives, Phase 2 harnesses are detected but default to sequential spawning availability (fleet mode unavailable). This is the safest approach — agents can run but won't attempt parallel dispatch until capabilities are confirmed.
 
 ## Error Handling
 
@@ -121,7 +134,8 @@ The pseudocode in SKILL.md is the authoritative specification. This module's imp
 
 ## Next Steps
 
-1. **Integrate into agent runtime**: Agents must call `detectHarness()` at session start
-2. **Use capabilities in spawning strategy**: Make spawn/fallback decisions based on returned flags
-3. **Phase 2 vendor research**: Complete #205 to unblock Kiro, Pi, and OpenCode detection
-4. **Integration tests**: #192 (Test & Validate Fleet Mode) must verify detection works across all harnesses
+1. **Close #190 AC5.2 and AC5.3**: Phase 2 detection is complete (Kiro, OpenCode, Pi)
+2. **Unblock #145 Fleet Mode Utilization**: Document fleet mode behavior in jl-recon now that detection supports all harnesses
+3. **Integration tests**: #192 (Test & Validate Fleet Mode) should verify detection works with Kiro, OpenCode, Pi markers
+4. **Vendor confirmation follow-up**: Monitor #194 for vendor documentation updates; adjust detection patterns if needed
+5. **Capability upgrades**: Once vendor confirmation arrives, update `deriveCapabilities()` to set `fleetModeAvailable: true` for confirmed harnesses

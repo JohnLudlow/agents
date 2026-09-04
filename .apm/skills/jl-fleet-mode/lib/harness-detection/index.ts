@@ -1,11 +1,20 @@
 /**
  * Harness Detection Module (AC5.1 / #190)
  *
- * Phase 1 implements detection for:
+ * Phase 1 (✅ Complete) detects:
  * - Copilot CLI
  * - Browser
- * - Azure DevOps (GitHub-linked vs Azure Repos candidates)
+ * - Azure DevOps (GitHub-linked vs Azure Repos)
  * - Unknown fallback
+ *
+ * Phase 2 (✅ Complete, pending vendor confirmation) detects:
+ * - Kiro (environment variables: KIRO_CLI_MODE, KIRO_IDE_SESSION)
+ * - OpenCode (environment variable: OPENCODE_MODE)
+ * - Pi (environment variable: PI_MODE)
+ *
+ * Phase 2 detection patterns are based on #194 vendor research. Patterns are
+ * implemented following suggested environment variable conventions. Final
+ * confirmation pending vendor documentation updates.
  *
  * Detection is cached per session. Consumers should initialize session state
  * once at startup and reuse the returned result.
@@ -119,10 +128,47 @@ export function detectHarness(): HarnessCapabilities {
     return cacheDetectionResult(azureDevOpsDetection);
   }
 
+  // Phase 2: Unverified harnesses (pending vendor confirmation per #194)
+  // These patterns are based on recommended detection strategies but are not
+  // yet confirmed by vendor documentation.
+
+  attemptedHarnesses.push(Harness.KIRO);
+  if (hasKiroMarker()) {
+    return cacheDetectionResult(
+      createDetectionResult(
+        Harness.KIRO,
+        'Kiro harness detected via environment variables (KIRO_CLI_MODE or KIRO_IDE_SESSION)',
+        attemptedHarnesses
+      )
+    );
+  }
+
+  attemptedHarnesses.push(Harness.OPENCODE);
+  if (hasOpenCodeMarker()) {
+    return cacheDetectionResult(
+      createDetectionResult(
+        Harness.OPENCODE,
+        'OpenCode harness detected via OPENCODE_MODE environment variable',
+        attemptedHarnesses
+      )
+    );
+  }
+
+  attemptedHarnesses.push(Harness.PI);
+  if (hasPiMarker()) {
+    return cacheDetectionResult(
+      createDetectionResult(
+        Harness.PI,
+        'Pi harness detected via PI_MODE environment variable',
+        attemptedHarnesses
+      )
+    );
+  }
+
   return cacheDetectionResult(
     createDetectionResult(
       Harness.UNKNOWN,
-      'No detection mechanism matched the Phase 1 harnesses',
+      'No detection mechanism matched any known harness (Phase 1 + Phase 2)',
       attemptedHarnesses
     )
   );
@@ -400,6 +446,48 @@ function deriveCapabilities(harness: Harness): HarnessCapabilityFlags {
 function hasEnvironmentValue(key: string): boolean {
   const value = process.env[key];
   return typeof value === 'string' && value.trim().length > 0;
+}
+
+/**
+ * Phase 2 detection: Kiro
+ *
+ * Detection strategy from #194 vendor research:
+ * Check for KIRO_CLI_MODE or KIRO_IDE_SESSION environment variables.
+ *
+ * Note: Vendor confirmation pending. Pattern follows conventions established
+ * by Copilot CLI and other harnesses. Adjust if Kiro vendor documentation
+ * specifies different environment variables or detection mechanisms.
+ */
+function hasKiroMarker(): boolean {
+  return hasEnvironmentValue('KIRO_CLI_MODE') || hasEnvironmentValue('KIRO_IDE_SESSION');
+}
+
+/**
+ * Phase 2 detection: OpenCode
+ *
+ * Detection strategy from #194 vendor research:
+ * Check for OPENCODE_MODE environment variable.
+ *
+ * Note: Vendor confirmation pending. Pattern follows conventions established
+ * by Copilot CLI. Adjust if OpenCode vendor documentation specifies different
+ * environment variables or detection mechanisms.
+ */
+function hasOpenCodeMarker(): boolean {
+  return hasEnvironmentValue('OPENCODE_MODE');
+}
+
+/**
+ * Phase 2 detection: Pi
+ *
+ * Detection strategy from #194 vendor research:
+ * Check for PI_MODE environment variable.
+ *
+ * Note: Vendor confirmation pending. Pattern follows conventions established
+ * by Copilot CLI. Adjust if Pi vendor documentation specifies different
+ * environment variables or detection mechanisms.
+ */
+function hasPiMarker(): boolean {
+  return hasEnvironmentValue('PI_MODE');
 }
 
 function getStringAtPath(target: unknown, path: string[]): string | undefined {

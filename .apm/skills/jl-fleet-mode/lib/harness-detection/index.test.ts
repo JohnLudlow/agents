@@ -26,7 +26,12 @@ const originalEnv = {
   BUILD_REPOSITORY_PROVIDER: process.env.BUILD_REPOSITORY_PROVIDER,
   SYSTEM_PULLREQUEST_SOURCEREPOSITORYURI: process.env.SYSTEM_PULLREQUEST_SOURCEREPOSITORYURI,
   SYSTEM_PULLREQUEST_SOURCEREPOSITORYPROVIDER:
-    process.env.SYSTEM_PULLREQUEST_SOURCEREPOSITORYPROVIDER
+    process.env.SYSTEM_PULLREQUEST_SOURCEREPOSITORYPROVIDER,
+  // Phase 2 environment variables
+  KIRO_CLI_MODE: process.env.KIRO_CLI_MODE,
+  KIRO_IDE_SESSION: process.env.KIRO_IDE_SESSION,
+  OPENCODE_MODE: process.env.OPENCODE_MODE,
+  PI_MODE: process.env.PI_MODE
 };
 
 const originalGlobals = {
@@ -147,7 +152,7 @@ describe('Harness Detection', () => {
       const detection = detectHarness();
 
       assert.equal(detection.harness, Harness.UNKNOWN);
-      assert.match(detection.detectionReason, /Phase 1 harnesses/);
+      assert.match(detection.detectionReason, /Phase 1.*Phase 2/);
     });
   });
 
@@ -208,7 +213,10 @@ describe('Harness Detection', () => {
       assert.deepEqual(logEntries[0].data?.tried, [
         Harness.COPILOT_CLI,
         Harness.BROWSER,
-        Harness.AZURE_DEVOPS
+        Harness.AZURE_DEVOPS,
+        Harness.KIRO,
+        Harness.OPENCODE,
+        Harness.PI
       ]);
     });
   });
@@ -228,6 +236,107 @@ describe('Harness Detection', () => {
         Harness.AZURE_DEVOPS
       ]);
       assert.equal(detection.harness, Harness.AZURE_DEVOPS_AZURE_REPOS);
+    });
+  });
+
+  describe('Phase 2: Kiro detection', () => {
+    it('detects Kiro from KIRO_CLI_MODE environment variable', () => {
+      process.env.KIRO_CLI_MODE = '1';
+
+      const detection = detectHarness();
+
+      assert.equal(detection.harness, Harness.KIRO);
+      assert.equal(detection.fleetModeAvailable, false);
+      assert.equal(detection.sequentialSpawningAvailable, true);
+    });
+
+    it('detects Kiro from KIRO_IDE_SESSION environment variable', () => {
+      process.env.KIRO_IDE_SESSION = 'session-123';
+
+      const detection = detectHarness();
+
+      assert.equal(detection.harness, Harness.KIRO);
+      assert.equal(detection.detectionReason, 'Kiro harness detected via environment variables (KIRO_CLI_MODE or KIRO_IDE_SESSION)');
+    });
+
+    it('prioritizes Kiro detection after Azure DevOps in sequence', () => {
+      process.env.KIRO_CLI_MODE = '1';
+
+      const detection = detectHarness();
+
+      assert.deepEqual(detection.attemptedHarnesses, [
+        Harness.COPILOT_CLI,
+        Harness.BROWSER,
+        Harness.AZURE_DEVOPS,
+        Harness.KIRO
+      ]);
+    });
+  });
+
+  describe('Phase 2: OpenCode detection', () => {
+    it('detects OpenCode from OPENCODE_MODE environment variable', () => {
+      process.env.OPENCODE_MODE = '1';
+
+      const detection = detectHarness();
+
+      assert.equal(detection.harness, Harness.OPENCODE);
+      assert.equal(detection.fleetModeAvailable, false);
+      assert.equal(detection.sequentialSpawningAvailable, true);
+    });
+
+    it('prioritizes OpenCode after Kiro in sequence', () => {
+      process.env.OPENCODE_MODE = '1';
+
+      const detection = detectHarness();
+
+      assert.deepEqual(detection.attemptedHarnesses, [
+        Harness.COPILOT_CLI,
+        Harness.BROWSER,
+        Harness.AZURE_DEVOPS,
+        Harness.KIRO,
+        Harness.OPENCODE
+      ]);
+    });
+  });
+
+  describe('Phase 2: Pi detection', () => {
+    it('detects Pi from PI_MODE environment variable', () => {
+      process.env.PI_MODE = '1';
+
+      const detection = detectHarness();
+
+      assert.equal(detection.harness, Harness.PI);
+      assert.equal(detection.fleetModeAvailable, false);
+      assert.equal(detection.sequentialSpawningAvailable, true);
+    });
+
+    it('prioritizes Pi after OpenCode in sequence', () => {
+      process.env.PI_MODE = '1';
+
+      const detection = detectHarness();
+
+      assert.deepEqual(detection.attemptedHarnesses, [
+        Harness.COPILOT_CLI,
+        Harness.BROWSER,
+        Harness.AZURE_DEVOPS,
+        Harness.KIRO,
+        Harness.OPENCODE,
+        Harness.PI
+      ]);
+    });
+
+    it('falls back to unknown when no Phase 2 harness markers are found', () => {
+      const detection = detectHarness();
+
+      assert.equal(detection.harness, Harness.UNKNOWN);
+      assert.deepEqual(detection.attemptedHarnesses, [
+        Harness.COPILOT_CLI,
+        Harness.BROWSER,
+        Harness.AZURE_DEVOPS,
+        Harness.KIRO,
+        Harness.OPENCODE,
+        Harness.PI
+      ]);
     });
   });
 });
@@ -250,6 +359,11 @@ function restoreEnvironment(): void {
     'SYSTEM_PULLREQUEST_SOURCEREPOSITORYPROVIDER',
     originalEnv.SYSTEM_PULLREQUEST_SOURCEREPOSITORYPROVIDER
   );
+  // Phase 2 restoration
+  restoreEnvKey('KIRO_CLI_MODE', originalEnv.KIRO_CLI_MODE);
+  restoreEnvKey('KIRO_IDE_SESSION', originalEnv.KIRO_IDE_SESSION);
+  restoreEnvKey('OPENCODE_MODE', originalEnv.OPENCODE_MODE);
+  restoreEnvKey('PI_MODE', originalEnv.PI_MODE);
 }
 
 function restoreGlobals(): void {
