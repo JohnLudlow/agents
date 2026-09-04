@@ -23,11 +23,12 @@ The decision is automatic; no user prompt. If a fallback occurs, the decision is
 Initialize the session with detected harness capabilities:
 
 ```typescript
-import { detectHarness } from '@copilot/harness-detection';
+import { detectHarness, initializeHarnessSessionState } from '@copilot/harness-detection';
 import { initializeFleetModeSession } from '@copilot/fleet-mode-activation';
 
-const capabilities = detectHarness();
-const session = initializeFleetModeSession(capabilities);
+const detection = detectHarness();
+const sessionState = initializeHarnessSessionState();
+const session = initializeFleetModeSession(detection);
 
 // Reuse session throughout the agent's lifetime
 // Log is accumulated: session.activationLog
@@ -123,8 +124,9 @@ Typical agent workflow:
 
 ```typescript
 // At session start
-const capabilities = detectHarness();
-const session = initializeFleetModeSession(capabilities);
+const detection = detectHarness();
+const sessionState = initializeHarnessSessionState();
+const session = initializeFleetModeSession(detection);
 
 // At delegation time (potentially many times)
 for (const task of independentTasks) {

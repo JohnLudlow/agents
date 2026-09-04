@@ -222,9 +222,21 @@ export const HARNESS_ACTIVATION_BEHAVIOR = {
 
   [Harness.AZURE_DEVOPS]: {
     mode: 'CONDITIONAL',
-    reason: 'Depends on linked repo type: GitHub (fleet) vs Azure Repos (inline)',
+    reason: 'Legacy Azure DevOps alias; prefer the concrete GitHub/Azure Repos harness values',
     userRecommendation:
-      'Check repo type. If GitHub-linked: recommend /fleet. If Azure Repos: inline only.'
+      'Prefer concrete detection: GitHub-linked repos use fleet; Azure Repos falls back.'
+  },
+
+  [Harness.AZURE_DEVOPS_GITHUB]: {
+    mode: SpawningMode.FLEET,
+    reason: 'Azure DevOps linked to GitHub supports Copilot custom agent spawning',
+    userRecommendation: 'Fleet mode is available. Recommend /fleet for parallelizable work.'
+  },
+
+  [Harness.AZURE_DEVOPS_AZURE_REPOS]: {
+    mode: SpawningMode.SEQUENTIAL,
+    reason: 'Azure DevOps linked to Azure Repos does not support custom agent spawning',
+    userRecommendation: 'Use sequential fallback or inline work.'
   },
 
   [Harness.KIRO]: {

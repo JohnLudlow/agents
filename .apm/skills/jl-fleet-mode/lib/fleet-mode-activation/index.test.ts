@@ -316,9 +316,15 @@ describe('Fleet Mode Activation Strategy', () => {
         expectedMode: SpawningMode.INLINE
       },
       {
-        harness: Harness.AZURE_DEVOPS,
+        harness: Harness.AZURE_DEVOPS_GITHUB,
         fleetAvailable: true,
         expectedMode: SpawningMode.FLEET
+      },
+      {
+        harness: Harness.AZURE_DEVOPS_AZURE_REPOS,
+        fleetAvailable: false,
+        sequentialAvailable: true,
+        expectedMode: SpawningMode.SEQUENTIAL
       },
       {
         harness: Harness.KIRO,

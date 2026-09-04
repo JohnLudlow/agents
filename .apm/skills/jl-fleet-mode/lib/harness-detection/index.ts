@@ -1,17 +1,22 @@
 /**
- * Harness Detection Module (AC5.1)
+ * Harness Detection Module (AC5.1 / #190)
  *
- * Reliable runtime detection of Copilot harness type and capability flags.
- * Agents use this module at session start to determine whether fleet mode,
- * sequential dispatch, or inline work is available.
+ * Phase 1 implements detection for:
+ * - Copilot CLI
+ * - Browser
+ * - Azure DevOps (GitHub-linked vs Azure Repos candidates)
+ * - Unknown fallback
  *
- * Reference: SKILL.md § Fleet Mode Utilization and Harness Detection
+ * Detection is cached per session. Consumers should initialize session state
+ * once at startup and reuse the returned result.
  */
 
 export const Harness = {
   COPILOT_CLI: 'copilot-cli',
   BROWSER: 'browser',
   AZURE_DEVOPS: 'azure-devops',
+  AZURE_DEVOPS_GITHUB: 'azure-devops-github',
+  AZURE_DEVOPS_AZURE_REPOS: 'azure-devops-azure-repos',
   KIRO: 'kiro',
   OPENCODE: 'opencode',
   PI: 'pi',
@@ -26,224 +31,419 @@ export const AzureRepoType = {
 } as const;
 export type AzureRepoType = typeof AzureRepoType[keyof typeof AzureRepoType];
 
-/**
- * Capability flags for the current harness.
- * Agents use these to decide spawning strategy without consulting docs.
- */
-export interface HarnessCapabilities {
-  harness: Harness;
+export interface HarnessCapabilityFlags {
   fleetModeAvailable: boolean;
-  sequentialSpawningAvailable: boolean;
-  canDetectAtRuntime: boolean;
-  azureRepoType?: AzureRepoType; // populated only for AZURE_DEVOPS
-  detectionReason: string; // why this harness was detected (for logging)
+  subagentSpawningAvailable: boolean;
+  sequentialSpawningFallback: boolean;
 }
 
 /**
- * Detect current harness at session start.
- *
- * Runs detection in order of specificity; first match wins.
- * Returns UNKNOWN with sequential fallback if detection fails.
- * All harnesses support at least inline work.
+ * Backward-compatible top-level flags are duplicated alongside the nested
+ * `capabilities` object so existing fleet-mode consumers can keep using the
+ * flat fields while new callers use the Phase 1 API shape.
+ */
+export interface HarnessCapabilities extends HarnessCapabilityFlags {
+  harness: Harness;
+  capabilities: HarnessCapabilityFlags;
+  detectionReason: string;
+  attemptedHarnesses: string[];
+  azureRepoType?: AzureRepoType;
+  canDetectAtRuntime: boolean;
+  sequentialSpawningAvailable: boolean;
+}
+
+export interface HarnessSessionState extends HarnessCapabilities {
+  initializedAt: string;
+}
+
+export interface StructuredLogger {
+  info(message: string, data?: Record<string, unknown>): void;
+}
+
+const AZURE_DEVOPS_ENV_KEYS = [
+  'SYSTEM_TEAMFOUNDATIONCOLLECTIONURI',
+  'SYSTEM_COLLECTIONURI',
+  'SYSTEM_TEAMPROJECT',
+  'BUILD_REPOSITORY_URI',
+  'BUILD_REPOSITORY_PROVIDER',
+  'SYSTEM_PULLREQUEST_SOURCEREPOSITORYURI'
+] as const;
+
+const GITHUB_URL_PATTERN = /(^|:\/\/|@)([^/]*\.)?github\.com([/:]|$)/i;
+const AZURE_REPOS_URL_PATTERN =
+  /(^|:\/\/|@)(dev\.azure\.com|vs-ssh\.visualstudio\.com|[^/]+\.visualstudio\.com)([/:]|$)/i;
+
+let cachedDetection: HarnessCapabilities | undefined;
+let cachedSessionState: HarnessSessionState | undefined;
+
+/**
+ * Detects the current harness. The first match wins and the result is cached
+ * for the lifetime of the current process/session.
  */
 export function detectHarness(): HarnessCapabilities {
-  // Check Copilot CLI first (most specific: env var)
-  if (process.env.COPILOT_CLI_MODE) {
-    return {
-      harness: Harness.COPILOT_CLI,
-      fleetModeAvailable: true,
-      sequentialSpawningAvailable: true,
-      canDetectAtRuntime: true,
-      detectionReason: 'COPILOT_CLI_MODE environment variable exists'
+  if (cachedSessionState) {
+    return cloneDetection(cachedSessionState);
+  }
+
+  if (cachedDetection) {
+    return cloneDetection(cachedDetection);
+  }
+
+  const attemptedHarnesses: string[] = [];
+
+  attemptedHarnesses.push(Harness.COPILOT_CLI);
+  if (hasCopilotCliMarker()) {
+    return cacheDetectionResult(
+      createDetectionResult(
+        Harness.COPILOT_CLI,
+        'COPILOT_CLI_MODE environment variable exists',
+        attemptedHarnesses
+      )
+    );
+  }
+
+  attemptedHarnesses.push(Harness.BROWSER);
+  if (isBrowserHarness()) {
+    return cacheDetectionResult(
+      createDetectionResult(
+        Harness.BROWSER,
+        'window object detected',
+        attemptedHarnesses
+      )
+    );
+  }
+
+  attemptedHarnesses.push(Harness.AZURE_DEVOPS);
+  const azureDevOpsDetection = detectAzureDevOps(attemptedHarnesses);
+  if (azureDevOpsDetection) {
+    return cacheDetectionResult(azureDevOpsDetection);
+  }
+
+  return cacheDetectionResult(
+    createDetectionResult(
+      Harness.UNKNOWN,
+      'No detection mechanism matched the Phase 1 harnesses',
+      attemptedHarnesses
+    )
+  );
+}
+
+/**
+ * Initializes and returns the cached session state for downstream consumers.
+ * Structured logs are emitted once per session, when the state is first
+ * initialized.
+ */
+export function initializeHarnessSessionState(
+  logger: StructuredLogger = structuredConsoleLogger
+): HarnessSessionState {
+  if (cachedSessionState) {
+    return cloneSessionState(cachedSessionState);
+  }
+
+  const detection = detectHarness();
+  const initializedAt = new Date().toISOString();
+
+  cachedSessionState = {
+    ...detection,
+    initializedAt
+  };
+
+  if (cachedSessionState.harness === Harness.UNKNOWN) {
+    logger.info('Harness detection falling back to unknown', {
+      fallbackHarness: Harness.UNKNOWN,
+      reason: cachedSessionState.detectionReason,
+      tried: cachedSessionState.attemptedHarnesses,
+      timestamp: initializedAt
+    });
+  }
+
+  logger.info('Harness detected', {
+    harness: cachedSessionState.harness,
+    azureRepoType: cachedSessionState.azureRepoType,
+    detectionReason: cachedSessionState.detectionReason,
+    timestamp: initializedAt
+  });
+
+  logger.info('Harness capabilities initialized', {
+    harness: cachedSessionState.harness,
+    ...cachedSessionState.capabilities,
+    timestamp: initializedAt
+  });
+
+  return cloneSessionState(cachedSessionState);
+}
+
+export function getHarnessSessionState(): HarnessSessionState | undefined {
+  return cachedSessionState ? cloneSessionState(cachedSessionState) : undefined;
+}
+
+export function resetHarnessDetectionStateForTests(): void {
+  cachedDetection = undefined;
+  cachedSessionState = undefined;
+}
+
+function cacheDetectionResult(result: HarnessCapabilities): HarnessCapabilities {
+  cachedDetection = { ...result, capabilities: { ...result.capabilities } };
+  return cloneDetection(cachedDetection);
+}
+
+function hasCopilotCliMarker(): boolean {
+  return Boolean(process.env.COPILOT_CLI_MODE);
+}
+
+function isBrowserHarness(): boolean {
+  try {
+    const browserWindow = (globalThis as { window?: { document?: unknown } }).window;
+    return typeof browserWindow !== 'undefined';
+  } catch {
+    return false;
+  }
+}
+
+function detectAzureDevOps(attemptedHarnesses: string[]): HarnessCapabilities | null {
+  if (!hasAzureDevOpsContext()) {
+    return null;
+  }
+
+  const azureRepoType = detectAzureRepoType();
+  if (azureRepoType === AzureRepoType.UNKNOWN) {
+    return null;
+  }
+
+  if (azureRepoType === AzureRepoType.GITHUB) {
+    return createDetectionResult(
+      Harness.AZURE_DEVOPS_GITHUB,
+      'Azure DevOps context detected with GitHub-linked repository',
+      attemptedHarnesses,
+      azureRepoType
+    );
+  }
+
+  return createDetectionResult(
+    Harness.AZURE_DEVOPS_AZURE_REPOS,
+    'Azure DevOps context detected with Azure Repos-hosted repository',
+    attemptedHarnesses,
+    azureRepoType
+  );
+}
+
+function hasAzureDevOpsContext(): boolean {
+  try {
+    const hasAzureDevOpsEnv = AZURE_DEVOPS_ENV_KEYS.some((key) => hasEnvironmentValue(key));
+    const globals = globalThis as {
+      VSS?: unknown;
+      TFS?: unknown;
+      azureDevOps?: unknown;
     };
+    const hasAzureDevOpsGlobal =
+      typeof globals.VSS !== 'undefined' ||
+      typeof globals.TFS !== 'undefined' ||
+      typeof globals.azureDevOps !== 'undefined';
+
+    return hasAzureDevOpsEnv || hasAzureDevOpsGlobal;
+  } catch {
+    return false;
+  }
+}
+
+function detectAzureRepoType(): AzureRepoType {
+  const providerCandidates = collectAzureRepositoryProviders();
+  for (const providerCandidate of providerCandidates) {
+    const normalizedProvider = providerCandidate.toLowerCase();
+    if (normalizedProvider.includes('github')) {
+      return AzureRepoType.GITHUB;
+    }
+
+    if (
+      normalizedProvider.includes('azure') ||
+      normalizedProvider.includes('tfs') ||
+      normalizedProvider.includes('git')
+    ) {
+      return AzureRepoType.AZURE_REPOS;
+    }
   }
 
-  // Check Browser (specific: JavaScript window object)
-  if (isInBrowser()) {
-    return {
-      harness: Harness.BROWSER,
-      fleetModeAvailable: false,
-      sequentialSpawningAvailable: false,
-      canDetectAtRuntime: true,
-      detectionReason: 'window object detected (JavaScript global)'
-    };
+  const repositoryUrlCandidates = collectAzureRepositoryUrls();
+  for (const repositoryUrlCandidate of repositoryUrlCandidates) {
+    if (GITHUB_URL_PATTERN.test(repositoryUrlCandidate)) {
+      return AzureRepoType.GITHUB;
+    }
+
+    if (AZURE_REPOS_URL_PATTERN.test(repositoryUrlCandidate)) {
+      return AzureRepoType.AZURE_REPOS;
+    }
   }
 
-  // Check Azure DevOps (requires secondary detection for repo type)
-  const azureDevOpsCapabilities = detectAzureDevOps();
-  if (azureDevOpsCapabilities) {
-    return azureDevOpsCapabilities;
+  return AzureRepoType.UNKNOWN;
+}
+
+function collectAzureRepositoryProviders(): string[] {
+  return uniqueNonEmptyStrings([
+    process.env.BUILD_REPOSITORY_PROVIDER,
+    process.env.SYSTEM_PULLREQUEST_SOURCEREPOSITORYPROVIDER,
+    getStringAtPath((globalThis as Record<string, unknown>).VSS, ['context', 'repository', 'provider']),
+    getStringAtPath((globalThis as Record<string, unknown>).VSS, [
+      'context',
+      'repository',
+      'providerName'
+    ]),
+    getStringAtPath((globalThis as Record<string, unknown>).TFS, ['context', 'repository', 'provider']),
+    getStringAtPath((globalThis as Record<string, unknown>).TFS, [
+      'context',
+      'repository',
+      'providerName'
+    ])
+  ]);
+}
+
+function collectAzureRepositoryUrls(): string[] {
+  const vssGlobal = (globalThis as Record<string, unknown>).VSS;
+  const tfsGlobal = (globalThis as Record<string, unknown>).TFS;
+  const webContext =
+    getAzureWebContext(vssGlobal) ??
+    getAzureWebContext(tfsGlobal) ??
+    undefined;
+
+  return uniqueNonEmptyStrings([
+    process.env.BUILD_REPOSITORY_URI,
+    process.env.SYSTEM_PULLREQUEST_SOURCEREPOSITORYURI,
+    getStringAtPath(vssGlobal, ['context', 'repository', 'url']),
+    getStringAtPath(vssGlobal, ['repository', 'url']),
+    getStringAtPath(tfsGlobal, ['context', 'repository', 'url']),
+    getStringAtPath(tfsGlobal, ['repository', 'url']),
+    getStringAtPath(webContext, ['repository', 'url']),
+    getStringAtPath(webContext, ['gitRepository', 'url'])
+  ]);
+}
+
+function getAzureWebContext(target: unknown): unknown {
+  if (!target || typeof target !== 'object') {
+    return undefined;
   }
 
-  // Check Kiro (detection API unknown; treat as possible)
-  if (isKiroEnvironment()) {
-    return {
-      harness: Harness.KIRO,
-      fleetModeAvailable: true,
-      sequentialSpawningAvailable: true,
-      canDetectAtRuntime: false, // detection mechanism unknown (fog item)
-      detectionReason: 'Kiro-specific environment detected (detection API undocumented)'
-    };
+  const candidate = target as { getWebContext?: () => unknown };
+  if (typeof candidate.getWebContext !== 'function') {
+    return undefined;
   }
 
-  // Check Pi (detection API unknown)
-  if (isPiEnvironment()) {
-    return {
-      harness: Harness.PI,
-      fleetModeAvailable: false, // unknown; conservative default
-      sequentialSpawningAvailable: false, // unknown; conservative default
-      canDetectAtRuntime: false,
-      detectionReason: 'Pi environment detected (detection API undocumented)'
-    };
+  try {
+    return candidate.getWebContext();
+  } catch {
+    return undefined;
   }
+}
 
-  // Check OpenCode (detection API unknown)
-  if (isOpenCodeEnvironment()) {
-    return {
-      harness: Harness.OPENCODE,
-      fleetModeAvailable: false, // unknown; conservative default
-      sequentialSpawningAvailable: false, // unknown; conservative default
-      canDetectAtRuntime: false,
-      detectionReason: 'OpenCode environment detected (detection API undocumented)'
-    };
-  }
+function createDetectionResult(
+  harness: Harness,
+  detectionReason: string,
+  attemptedHarnesses: string[],
+  azureRepoType?: AzureRepoType
+): HarnessCapabilities {
+  const capabilities = deriveCapabilities(harness);
+  const canDetectAtRuntime = harness !== Harness.UNKNOWN;
 
-  // Unknown harness: conservative fallback
   return {
-    harness: Harness.UNKNOWN,
-    fleetModeAvailable: false,
-    sequentialSpawningAvailable: true, // at least try sequential
-    canDetectAtRuntime: false,
-    detectionReason: 'No detection mechanism matched; using conservative default'
+    harness,
+    ...capabilities,
+    capabilities,
+    sequentialSpawningAvailable: capabilities.sequentialSpawningFallback,
+    detectionReason,
+    attemptedHarnesses: [...attemptedHarnesses],
+    azureRepoType,
+    canDetectAtRuntime
   };
 }
 
-/**
- * Browser detection: JavaScript global `window` object.
- * Used by Copilot Chat in the browser and browser-based environments.
- */
-function isInBrowser(): boolean {
-  try {
-    return typeof window !== 'undefined' && typeof window.document !== 'undefined';
-  } catch {
-    return false;
+function deriveCapabilities(harness: Harness): HarnessCapabilityFlags {
+  switch (harness) {
+    case Harness.COPILOT_CLI:
+      return {
+        fleetModeAvailable: true,
+        subagentSpawningAvailable: true,
+        sequentialSpawningFallback: true
+      };
+
+    case Harness.BROWSER:
+      return {
+        fleetModeAvailable: false,
+        subagentSpawningAvailable: false,
+        sequentialSpawningFallback: false
+      };
+
+    case Harness.AZURE_DEVOPS_GITHUB:
+      return {
+        fleetModeAvailable: true,
+        subagentSpawningAvailable: true,
+        sequentialSpawningFallback: true
+      };
+
+    case Harness.AZURE_DEVOPS_AZURE_REPOS:
+    case Harness.UNKNOWN:
+      return {
+        fleetModeAvailable: false,
+        subagentSpawningAvailable: false,
+        sequentialSpawningFallback: true
+      };
+
+    case Harness.AZURE_DEVOPS:
+    case Harness.KIRO:
+    case Harness.OPENCODE:
+    case Harness.PI:
+      return {
+        fleetModeAvailable: false,
+        subagentSpawningAvailable: false,
+        sequentialSpawningFallback: true
+      };
   }
 }
 
-/**
- * Azure DevOps detection and secondary detection for repo type.
- *
- * Returns capabilities adjusted for GitHub-linked (supports fleet) vs
- * Azure Repos (no fleet due to API differences).
- *
- * See ROADMAP.md § Phase 2 blockers: "What API detects Azure DevOps and
- * distinguishes repo types at runtime?"
- */
-function detectAzureDevOps(): HarnessCapabilities | null {
-  try {
-    // Check for Azure DevOps SDK objects
-    // TODO: Exact detection mechanism to be filled in by Phase 2 vendor research
-    // For now, check common patterns agents might use
+function hasEnvironmentValue(key: string): boolean {
+  const value = process.env[key];
+  return typeof value === 'string' && value.trim().length > 0;
+}
 
-    // Check for Azure DevOps global object
-    const hasAzureDevOpsGlobal = (globalThis as any).VSS !== undefined;
+function getStringAtPath(target: unknown, path: string[]): string | undefined {
+  let current: unknown = target;
 
-    // Check for TFS SDK
-    const hasTfsGlobal = (globalThis as any).TFS !== undefined;
-
-    if (!hasAzureDevOpsGlobal && !hasTfsGlobal) {
-      return null; // Not Azure DevOps
+  for (const pathSegment of path) {
+    if (!current || typeof current !== 'object' || !(pathSegment in current)) {
+      return undefined;
     }
 
-    // Detect linked repo type (GitHub vs Azure Repos)
-    const repoType = detectAzureRepoType();
-
-    return {
-      harness: Harness.AZURE_DEVOPS,
-      fleetModeAvailable: repoType === AzureRepoType.GITHUB,
-      sequentialSpawningAvailable: true,
-      canDetectAtRuntime: true,
-      azureRepoType: repoType,
-      detectionReason: `Azure DevOps detected (linked repo: ${repoType})`
-    };
-  } catch {
-    return null;
+    current = (current as Record<string, unknown>)[pathSegment];
   }
+
+  return typeof current === 'string' && current.trim().length > 0 ? current : undefined;
 }
 
-/**
- * Detect whether Azure DevOps is linked to GitHub or using Azure Repos.
- *
- * GitHub-linked repos support fleet mode; Azure Repos do not due to API differences.
- *
- * TODO: Phase 2 blocker: What API reliably distinguishes these at runtime?
- * Reference ROADMAP.md § Phase 2 Open Questions.
- */
-function detectAzureRepoType(): AzureRepoType {
-  try {
-    // Placeholder detection logic; to be filled in by Phase 2 vendor research
-    const azureObj = (globalThis as any).VSS || (globalThis as any).TFS;
-    if (!azureObj) return AzureRepoType.UNKNOWN;
-
-    // TODO: Replace with actual detection API from Phase 2 research
-    // For now, return unknown (conservative default)
-    return AzureRepoType.UNKNOWN;
-  } catch {
-    return AzureRepoType.UNKNOWN;
-  }
+function uniqueNonEmptyStrings(values: Array<string | undefined>): string[] {
+  return [...new Set(values.filter((value): value is string => Boolean(value && value.trim())))];
 }
 
-/**
- * Kiro environment detection.
- *
- * TODO: Phase 2 blocker: What env var or API detects Kiro at runtime?
- * Reference ROADMAP.md § Phase 2 Open Questions.
- *
- * Currently returns false (conservative default) until detection API is documented.
- */
-function isKiroEnvironment(): boolean {
-  try {
-    // Placeholder: check for Kiro-specific environment variable or global
-    // To be filled in by Phase 2 vendor research (#205)
-    return false; // Conservative default until detection documented
-  } catch {
-    return false;
-  }
+function cloneSessionState(state: HarnessSessionState): HarnessSessionState {
+  return {
+    ...state,
+    capabilities: { ...state.capabilities },
+    attemptedHarnesses: [...state.attemptedHarnesses]
+  };
 }
 
-/**
- * Pi environment detection.
- *
- * TODO: Phase 2 blocker: What env var or API detects Pi at runtime?
- * Is Herdr integration relevant for detection?
- * Reference ROADMAP.md § Phase 2 Open Questions.
- *
- * Currently returns false (conservative default) until detection API is documented.
- */
-function isPiEnvironment(): boolean {
-  try {
-    // Placeholder: check for Pi-specific environment markers
-    // To be filled in by Phase 2 vendor research (#205)
-    return false; // Conservative default until detection documented
-  } catch {
-    return false;
-  }
+function cloneDetection(state: HarnessCapabilities): HarnessCapabilities {
+  return {
+    ...state,
+    capabilities: { ...state.capabilities },
+    attemptedHarnesses: [...state.attemptedHarnesses]
+  };
 }
 
-/**
- * OpenCode environment detection.
- *
- * TODO: Phase 2 blocker: What env var or API detects OpenCode at runtime?
- * Reference ROADMAP.md § Phase 2 Open Questions.
- *
- * Currently returns false (conservative default) until detection API is documented.
- */
-function isOpenCodeEnvironment(): boolean {
-  try {
-    // Placeholder: check for OpenCode-specific environment markers
-    // To be filled in by Phase 2 vendor research (#205)
-    return false; // Conservative default until detection documented
-  } catch {
-    return false;
+const structuredConsoleLogger: StructuredLogger = {
+  info(message, data = {}) {
+    console.info(
+      JSON.stringify({
+        level: 'info',
+        message,
+        ...data
+      })
+    );
   }
-}
+};
