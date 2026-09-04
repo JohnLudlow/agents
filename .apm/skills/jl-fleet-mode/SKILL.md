@@ -29,17 +29,18 @@ Use this skill when:
 
 **File:** `lib/harness-detection/`
 
-Detects current harness at session start and returns capability flags.
+Detects current harness at session start and returns the detected harness plus capability flags.
 
 ```typescript
-import { detectHarness, Harness } from '@copilot/harness-detection';
+import { detectHarness, initializeHarnessSessionState } from '@copilot/harness-detection';
 
-const capabilities = detectHarness();
+const detection = detectHarness();
+const sessionState = initializeHarnessSessionState();
 
-if (capabilities.fleetModeAvailable) {
-  // Copilot CLI, Kiro, or Azure DevOps with GitHub
-} else if (capabilities.sequentialSpawningAvailable) {
-  // Browser, Pi, OpenCode, or unknown harness
+if (detection.capabilities.fleetModeAvailable) {
+  // Copilot CLI or Azure DevOps with GitHub
+} else if (detection.capabilities.sequentialSpawningFallback) {
+  // Azure Repos or unknown harness
 }
 ```
 
@@ -47,7 +48,8 @@ if (capabilities.fleetModeAvailable) {
 
 - Copilot CLI (fleet available, COPILOT_CLI_MODE env var)
 - Browser (inline only, window object)
-- Azure DevOps (conditional, repo type detection via Phase 2 research)
+- Azure DevOps GitHub-linked (fleet available)
+- Azure DevOps Azure Repos (sequential fallback)
 - Kiro (Phase 2 blocker: detection API unknown)
 - Pi (Phase 2 blocker: capabilities unknown)
 - OpenCode (Phase 2 blocker: capabilities unknown)
@@ -64,8 +66,9 @@ Selects spawning mode (fleet/sequential/inline) with automatic fallback and logg
 ```typescript
 import { initializeFleetModeSession, resolveSpawningMode, SpawningMode } from '@copilot/fleet-mode-activation';
 
-const capabilities = detectHarness();
-const session = initializeFleetModeSession(capabilities);
+const detection = detectHarness();
+const sessionState = initializeHarnessSessionState();
+const session = initializeFleetModeSession(detection);
 
 const { mode } = resolveSpawningMode(session);
 
@@ -102,11 +105,12 @@ Typical agent workflow:
 
 ```typescript
 // At session start
-import { detectHarness } from '@copilot/harness-detection';
+import { detectHarness, initializeHarnessSessionState } from '@copilot/harness-detection';
 import { initializeFleetModeSession } from '@copilot/fleet-mode-activation';
 
-const capabilities = detectHarness();
-const session = initializeFleetModeSession(capabilities);
+const detection = detectHarness();
+const sessionState = initializeHarnessSessionState();
+const session = initializeFleetModeSession(detection);
 
 // Store session in agent state for reuse throughout session
 

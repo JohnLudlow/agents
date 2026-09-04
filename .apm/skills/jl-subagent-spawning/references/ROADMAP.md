@@ -41,29 +41,53 @@ AT SESSION START:
 
 ### Implementation Tasks
 
-Both planner agents should detect their harness at startup and automatically activate fleet mode:
+**Phase 2 splits into two phases:**
+
+#### Phase 2a: Harness Detection (Ready Now — #190)
+
+Implement runtime harness detection at session startup. See `references/HARNESS_DETECTION_IMPLEMENTATION.md` for full specification.
+
+**Scope:**
+- ✅ Copilot CLI detection (verified, ready now)
+- ✅ Browser detection (verified, ready now)
+- ⚠️ Azure DevOps detection (partially verified, detection API candidates in #194)
+- ❓ Kiro/OpenCode/Pi detection (blocked on #194 vendor research follow-ups)
+
+**Implementation effort:**
+- Phase 2a (Verified + Partial): ~1–2 hours
+  - CLI detection: 15 min
+  - Browser detection: 15 min
+  - Azure DevOps detection: 1–1.5 hrs
+  - Session state initialization: 15–30 min
+- Phase 2b (Unresolved harnesses): 1–2 hrs each (after vendor research)
+
+**Deliverable:** `HarnessDetector` module that returns detected harness + capability flags
+
+#### Phase 2b: Fleet Mode Activation (After #190 — #191)
+
+Implement automatic fleet mode activation based on detected harness.
 
 ```text
-AT SESSION START (pseudocode from HARNESS_FALLBACK.md):
-  harness = detect_harness()  [see pattern above]
+AT SESSION START:
+  harness = detect_harness()  [via HarnessDetector from #190]
   Store harness in session_state for reference
 
 WHEN SPAWNING SUBAGENT(S):
-  If harness == "copilot-cli":
+  activation_mode = selectActivationMode(harness, sessionState)
+  
+  If activation_mode == "fleet":
     Use task tool with mode="background" for automatic parallelization
-  Else if harness == "kiro" AND tools.includes("subagent"):
-    Use fleet spawning (orchestrator will parallelize)
-  Else if harness == "azure-devops" AND linked_repo_is_github:
-    Use fleet spawning
-  Else (browser, unknown, or fallback needed):
-    Use sequential dispatch: spawn each subagent one at a time
+  Else if activation_mode == "sequential":
+    Spawn each subagent one at a time, each with isolated context
+  Else (inline):
+    Run work directly in parent session, no subagent spawning
 
 ALWAYS (before completion):
   Invoke jl-adversarial-review skill (works in all harnesses)
   If skill unavailable: continue without review (graceful degradation)
 ```
 
-**Implementation effort:** ~4–5 hours (harness detection APIs for Kiro/Azure, graceful degradation, testing across CLI/Kiro/Azure)
+**Implementation effort:** ~2–3 hours (state machine, fallback chain, logging)
 
 ## Phase 2.5 (Current: Vendor Research — #194)
 

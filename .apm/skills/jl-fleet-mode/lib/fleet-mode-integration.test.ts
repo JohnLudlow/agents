@@ -23,6 +23,7 @@ import assert from 'node:assert/strict';
 import {
   detectHarness,
   Harness,
+  resetHarnessDetectionStateForTests,
   type HarnessCapabilities
 } from './harness-detection/index.ts';
 
@@ -31,8 +32,7 @@ import {
   initializeFleetModeSession,
   resolveSpawningMode,
   getActivationLog,
-  getLastSelectedMode,
-  type FleetModeSession
+  getLastSelectedMode
 } from './fleet-mode-activation/index.ts';
 
 describe('Fleet Mode End-to-End Integration', () => {
@@ -40,11 +40,15 @@ describe('Fleet Mode End-to-End Integration', () => {
   const originalWindow = (globalThis as any).window;
 
   beforeEach(() => {
-    // Clear known harness environment variables and globals
+    process.env = { ...originalEnv };
     delete process.env.COPILOT_CLI_MODE;
+    delete process.env.SYSTEM_TEAMFOUNDATIONCOLLECTIONURI;
+    delete process.env.BUILD_REPOSITORY_PROVIDER;
+    delete process.env.BUILD_REPOSITORY_URI;
     delete (globalThis as any).window;
     delete (globalThis as any).VSS;
     delete (globalThis as any).TFS;
+    resetHarnessDetectionStateForTests();
   });
 
   afterEach(() => {
@@ -56,6 +60,7 @@ describe('Fleet Mode End-to-End Integration', () => {
     }
     delete (globalThis as any).VSS;
     delete (globalThis as any).TFS;
+    resetHarnessDetectionStateForTests();
   });
 
   describe('Full Lifecycle: Copilot CLI', () => {
@@ -112,11 +117,14 @@ describe('Fleet Mode End-to-End Integration', () => {
   });
 
   describe('Full Lifecycle: Azure DevOps', () => {
-    it('detects Azure DevOps and initializes sequential fallback when repo type unknown', () => {
-      (globalThis as any).VSS = { require: () => {} };
+    it('detects Azure DevOps Azure Repos and initializes sequential fallback', () => {
+      process.env.SYSTEM_TEAMFOUNDATIONCOLLECTIONURI = 'https://dev.azure.com/example';
+      process.env.BUILD_REPOSITORY_PROVIDER = 'TfsGit';
+      process.env.BUILD_REPOSITORY_URI =
+        'https://dev.azure.com/example/project/_git/johnludlow-agents';
 
       const capabilities = detectHarness();
-      assert.equal(capabilities.harness, Harness.AZURE_DEVOPS);
+      assert.equal(capabilities.harness, Harness.AZURE_DEVOPS_AZURE_REPOS);
       assert.equal(capabilities.sequentialSpawningAvailable, true);
       assert.equal(capabilities.canDetectAtRuntime, true);
 
@@ -131,11 +139,19 @@ describe('Fleet Mode End-to-End Integration', () => {
 
     it('activates fleet mode for GitHub-linked Azure DevOps capabilities', () => {
       const gitHubLinkedCapabilities: HarnessCapabilities = {
-        harness: Harness.AZURE_DEVOPS,
+        harness: Harness.AZURE_DEVOPS_GITHUB,
         fleetModeAvailable: true,
+        subagentSpawningAvailable: true,
+        sequentialSpawningFallback: true,
+        capabilities: {
+          fleetModeAvailable: true,
+          subagentSpawningAvailable: true,
+          sequentialSpawningFallback: true
+        },
         sequentialSpawningAvailable: true,
         canDetectAtRuntime: true,
         azureRepoType: 'github',
+        attemptedHarnesses: [Harness.AZURE_DEVOPS],
         detectionReason: 'Azure DevOps with GitHub connection'
       };
 
@@ -152,8 +168,16 @@ describe('Fleet Mode End-to-End Integration', () => {
       const kiroCapabilities: HarnessCapabilities = {
         harness: Harness.KIRO,
         fleetModeAvailable: true,
+        subagentSpawningAvailable: true,
+        sequentialSpawningFallback: true,
+        capabilities: {
+          fleetModeAvailable: true,
+          subagentSpawningAvailable: true,
+          sequentialSpawningFallback: true
+        },
         sequentialSpawningAvailable: true,
         canDetectAtRuntime: false,
+        attemptedHarnesses: [Harness.KIRO],
         detectionReason: 'Kiro environment detected'
       };
 
@@ -166,8 +190,16 @@ describe('Fleet Mode End-to-End Integration', () => {
       const piCapabilities: HarnessCapabilities = {
         harness: Harness.PI,
         fleetModeAvailable: false,
+        subagentSpawningAvailable: false,
+        sequentialSpawningFallback: false,
+        capabilities: {
+          fleetModeAvailable: false,
+          subagentSpawningAvailable: false,
+          sequentialSpawningFallback: false
+        },
         sequentialSpawningAvailable: false,
         canDetectAtRuntime: false,
+        attemptedHarnesses: [Harness.PI],
         detectionReason: 'Pi environment detected'
       };
 
@@ -182,8 +214,16 @@ describe('Fleet Mode End-to-End Integration', () => {
       const openCodeCapabilities: HarnessCapabilities = {
         harness: Harness.OPENCODE,
         fleetModeAvailable: false,
+        subagentSpawningAvailable: false,
+        sequentialSpawningFallback: false,
+        capabilities: {
+          fleetModeAvailable: false,
+          subagentSpawningAvailable: false,
+          sequentialSpawningFallback: false
+        },
         sequentialSpawningAvailable: false,
         canDetectAtRuntime: false,
+        attemptedHarnesses: [Harness.OPENCODE],
         detectionReason: 'OpenCode environment detected'
       };
 

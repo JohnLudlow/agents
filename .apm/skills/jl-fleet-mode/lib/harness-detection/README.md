@@ -10,8 +10,8 @@ Reliable runtime detection of Copilot harness type and capability flags for flee
 
 At session start, agents call `detectHarness()` once and get back:
 
-- **Harness type** (Copilot CLI, Browser, Azure DevOps, Kiro, OpenCode, Pi, Unknown)
-- **Capability flags** (`fleetModeAvailable`, `sequentialSpawningAvailable`)
+- **Harness type** (Copilot CLI, Browser, Azure DevOps GitHub, Azure DevOps Azure Repos, Unknown)
+- **Capability flags** (`fleetModeAvailable`, `subagentSpawningAvailable`, `sequentialSpawningFallback`)
 - **Detection reason** (which mechanism fired; for logging)
 
 Agents use these capabilities to decide whether to spawn subagents in fleet mode, sequential dispatch, or inline.
@@ -21,13 +21,14 @@ Agents use these capabilities to decide whether to spawn subagents in fleet mode
 Call `detectHarness()` exactly once at session initialization, before any subagent spawning decisions:
 
 ```typescript
-import { detectHarness } from '@copilot/harness-detection';
+import { detectHarness, initializeHarnessSessionState } from '@copilot/harness-detection';
 
-const capabilities = detectHarness();
+const detection = detectHarness();
+const sessionState = initializeHarnessSessionState();
 
-if (capabilities.fleetModeAvailable) {
+if (detection.capabilities.fleetModeAvailable) {
   // Parallel subagent spawning is safe
-} else if (capabilities.sequentialSpawningAvailable) {
+} else if (detection.capabilities.sequentialSpawningFallback) {
   // Spawn one subagent at a time
 } else {
   // Run work inline (last resort)
@@ -43,10 +44,9 @@ Detection runs in this order; first match wins:
 1. **Copilot CLI**: Check `COPILOT_CLI_MODE` environment variable
 2. **Browser**: Check for JavaScript `window` object
 3. **Azure DevOps**: Check for VSS/TFS global objects; secondary detection for repo type
-4. **Kiro**: Reserved for Phase 2 vendor research (#205)
-5. **Pi**: Reserved for Phase 2 vendor research (#205)
-6. **OpenCode**: Reserved for Phase 2 vendor research (#205)
-7. **Unknown**: Conservative fallback (sequential spawning available)
+4. **Unknown**: Conservative fallback (sequential spawning available)
+
+Phase 2 harnesses (Kiro, Pi, OpenCode) remain blocked on follow-up research and are not detected in this module yet.
 
 ## Capability Matrix
 
@@ -54,8 +54,8 @@ Detection runs in this order; first match wins:
 |---------|:----------:|:----------:|------------------|
 | Copilot CLI | ✅ Yes | ✅ Yes | ✅ Implemented |
 | Browser | ❌ No | ❌ No | ✅ Implemented |
-| Azure DevOps + GitHub | ✅ Yes | ✅ Yes | ⚠️ Partial (repo type detection TODO) |
-| Azure DevOps + Azure Repos | ❌ No | ✅ Yes | ⚠️ Partial (repo type detection TODO) |
+| Azure DevOps + GitHub | ✅ Yes | ✅ Yes | ✅ Implemented |
+| Azure DevOps + Azure Repos | ❌ No | ✅ Yes | ✅ Implemented |
 | Kiro | ✅ Yes (assumed) | ✅ Yes | 🔴 Phase 2 blocker (#205) |
 | Pi | ❓ Unknown | ❓ Unknown | 🔴 Phase 2 blocker (#205) |
 | OpenCode | ❓ Unknown | ❓ Unknown | 🔴 Phase 2 blocker (#205) |
@@ -68,9 +68,11 @@ For Azure DevOps harnesses, the module runs a secondary detection step to determ
 - **GitHub-linked** → fleet mode is available
 - **Azure Repos** → fleet mode is unavailable (no subagent spawning API)
 
-**Current Status**: Placeholder implementation. Phase 2 vendor research (#205) must document the runtime API for distinguishing repo types.
+**Current Status**: Phase 1 implementation uses verified runtime candidates:
 
-**TODO**: Replace placeholder `detectAzureRepoType()` with real detection once API is documented.
+- Azure DevOps env vars (`SYSTEM_TEAMFOUNDATIONCOLLECTIONURI`, `BUILD_REPOSITORY_URI`, `BUILD_REPOSITORY_PROVIDER`)
+- Azure DevOps globals (`VSS`, `TFS`)
+- Repository URL/provider heuristics (`github.com` vs `dev.azure.com` / `visualstudio.com`)
 
 ## Phase 2 Blockers (Vendor Research)
 
@@ -98,8 +100,8 @@ This means detection failures are graceful: agents fall back to sequential dispa
 Store and log the `detectionReason` field for debugging:
 
 ```typescript
-const capabilities = detectHarness();
-console.log(`Harness: ${capabilities.harness} (${capabilities.detectionReason})`);
+const sessionState = initializeHarnessSessionState();
+console.log(`Harness: ${sessionState.harness} (${sessionState.detectionReason})`);
 ```
 
 The reason explains which detection mechanism fired, which is useful when:
