@@ -734,12 +734,22 @@ task("jl-quiz", { prompt: "..." })  // No spawning, just invoke
 
 ### Known Fog Items (Phase 2 Work)
 
-These detection mechanisms are documented in reference materials (#185 research findings, ROADMAP.md) but not yet implemented:
+Vendor research findings are documented in `references/VENDOR_RESEARCH_HARNESS_DETECTION.md` (#194). Current status:
 
-- [ ] **Kiro detection API** — What environment variable or runtime API should agents check to detect Kiro at session start?
-- [ ] **Azure DevOps detection API** — What API should agents check to detect Azure DevOps and distinguish GitHub vs. Azure Repos repos?
-- [ ] **Pi capabilities** — Does Pi support subagent spawning? Needs vendor confirmation.
-- [ ] **OpenCode capabilities** — Does OpenCode support subagent spawning? Needs vendor confirmation.
+**Verified detections (ready for Phase 2 implementation):**
+- ✅ Copilot CLI: `COPILOT_CLI_MODE` environment variable
+- ✅ Browser: `window` object existence test
+
+**Partial detection (partially verified, still missing implementation details):**
+- ⚠️ Azure DevOps: API exists but detection mechanism unknown; need to distinguish GitHub-linked vs. Azure Repos
+
+**Unresolved detections (vendor research pending):**
+- ❓ **Kiro detection API** — What environment variable or runtime API should agents check to detect Kiro at session start? See vendor research doc for candidates.
+- ❓ **Azure DevOps detection API** — What API should agents check to detect Azure DevOps context and distinguish GitHub vs. Azure Repos repos? See vendor research doc for candidates.
+- ❓ **Pi capabilities** — Does Pi support subagent spawning? Needs vendor confirmation. See vendor research doc.
+- ❓ **OpenCode capabilities** — Does OpenCode support subagent spawning? Needs vendor confirmation. See vendor research doc.
+
+**Design-level fog items (beyond detection):**
 - [ ] **Result coordination API** — How should agents coordinate results from parallel subagents? (Automatic or manual?)
 - [ ] **Sequential fallback refinement** — Should sequential fallback prefer herdr if available, or other mechanism?
 
@@ -749,6 +759,8 @@ For now, agents should:
 2. Detect Browser reliably (window object)
 3. Gracefully degrade to sequential/inline for unknown harnesses
 4. Log fallback paths for debugging
+
+See `references/VENDOR_RESEARCH_HARNESS_DETECTION.md` for detailed research findings, implementation candidates, and follow-up tickets for each unresolved harness.
 
 ### Relationship to DelegateToSubagent
 
