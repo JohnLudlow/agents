@@ -27,9 +27,40 @@ jobs:
 
       - uses: ./.github/actions/validate
 
+  test:
+    name: Integration Tests
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Pester
+        run: |
+          Install-Module -Name Pester -Force -Scope CurrentUser -SkipPublisherCheck
+        shell: pwsh
+
+      - name: Run Pester Test Suite
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $testPaths = @(
+            ".apm/skills/jl-recon/tests/pester/mode2-checks.tests.ps1",
+            ".apm/skills/jl-recon/tests/pester/mode2-workflow.tests.ps1",
+            ".apm/skills/jl-recon/tests/pester/mode3-checks.tests.ps1",
+            ".apm/skills/jl-recon/tests/pester/mode3-workflow.tests.ps1"
+          )
+
+          foreach ($testPath in $testPaths) {
+            Write-Host "Running tests from: $testPath"
+            $result = Invoke-Pester -Path $testPath -Output Detailed -PassThru
+            if ($result.Result -ne 'Passed') {
+              throw "Pester tests failed in $testPath"
+            }
+          }
+        shell: pwsh
+        continue-on-error: false
+
   build:
     name: Build
-    needs: [setup, validate]
+    needs: [setup, validate, test]
     runs-on: ubuntu-latest
     permissions:
       contents: read

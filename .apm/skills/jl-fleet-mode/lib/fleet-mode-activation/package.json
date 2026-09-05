@@ -1,0 +1,18 @@
+{
+  "name": "@copilot/fleet-mode-activation",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Automatic spawning mode selection with graceful fallback for fleet mode coordination",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "keywords": [
+    "copilot",
+    "fleet-mode",
+    "activation-strategy",
+    "ac5.1"
+  ],
+  "author": "Copilot",
+  "license": "MIT"
+}

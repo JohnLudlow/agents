@@ -245,7 +245,8 @@ Each skill and agent defines its own configuration options. Configuration is doc
 - **[jl-quiz Configuration](.apm/skills/jl-quiz/SKILL.md#configuration)** — Interview mode (live chat vs. questionnaire),
   output destination (GitHub Issues, markdown, or Azure DevOps), file storage location
 - **[jl-recon Configuration](.apm/skills/jl-recon/SKILL.md#configuration)** — Decision gates (destination confirmation,
-  inciting issue confirmation, research AFK sign-off), uncertainty tracking pattern
+  inciting issue confirmation, research AFK sign-off), uncertainty tracking pattern, and
+  model-selection overrides for delegated work and quality checks
 - **[jl-issue-management Configuration](.apm/skills/jl-issue-management/SKILL.md#configuration)** — Issue destination, file storage location, decision gates
 - **[jl-config Reference](.apm/skills/jl-config/SKILL.md)** — Configuration resolution mechanism and portable config pattern (used by all skills)
 - **[jl-subagent-spawning Configuration](.apm/skills/jl-subagent-spawning/SKILL.md#approval-gates-jl_approval_gates)** —
@@ -283,7 +284,7 @@ For downstream repositories installing this APM package:
 
    ```yaml
    jl_quiz:
-     interview_mode: b    # Override: use questionnaires instead of live chat
+     quiz_mode: b    # Override: use questionnaires instead of live chat
    ```
 
 3. Run `npm run validate` (if your repository uses this package's validation) to check syntax and schema

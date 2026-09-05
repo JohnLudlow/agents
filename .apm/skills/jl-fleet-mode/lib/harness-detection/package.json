@@ -1,0 +1,18 @@
+{
+  "name": "@copilot/harness-detection",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Reliable runtime detection of Copilot harness type and capability flags for fleet mode coordination",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "keywords": [
+    "copilot",
+    "fleet-mode",
+    "harness-detection",
+    "ac5.1"
+  ],
+  "author": "Copilot",
+  "license": "MIT"
+}

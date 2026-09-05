@@ -135,7 +135,7 @@ DelegationRequest {
 
 - `targetAgent` — the bounded child agent to invoke
 - `delegationType` — canonical delegation category such as `research`,
-  `implementation`, `test-generation`, or `documentation`
+  `implementation`, `test_generation`, or `documentation`
 - `taskKey` — optional stable task identifier used for
   `jl_subagent_models.overrides.<taskKey>`
 - `prompt` — the child task instruction payload
@@ -169,6 +169,32 @@ DelegationResult {
 - `modelResolutionSource` — which level provided the final winning model
 - `warnings` — includes any model substitution warning caused by harness
   constraints or invalid configuration
+
+### Copilot CLI Prototype Usage Example (#195)
+
+The AC5.1 Phase 4 prototype is implemented in:
+
+- `.apm/skills/jl-subagent-spawning/lib/delegate-to-subagent-prototype/index.ts`
+- `.apm/skills/jl-subagent-spawning/references/DELEGATE_TO_SUBAGENT_QUICKSTART.md`
+
+Example (prototype call shape):
+
+```ts
+const result = await delegateToSubagentPrototype(
+  {
+    targetAgent: 'project-planning:planner',
+    delegationType: 'research',
+    taskKey: 'api-spike',
+    prompt: 'Compare API options and recommend one with tradeoffs.'
+  },
+  runtimeContext,
+  async (payload) => task(payload)
+);
+```
+
+The prototype resolves model + mode, emits a decision log, and dispatches
+through Copilot CLI semantics (`background` for fleet, `sync` for sequential).
+Non-CLI harnesses are intentionally handled as inline fallback in this stage.
 
 When a parent session runs more than one delegation — typically an approved
 AFK Research ticket running in parallel with a live Quiz — individual
@@ -355,22 +381,12 @@ Recommended wording:
 > failed — see warning above). Changes were either committed to
 > `{branch}` or, if uncommitted, exported to `{diff-patch-path}`.
 
-## DelegateToSubagent API Status: Pseudocode vs. Callable Implementation
+## DelegateToSubagent API Status: Reference Contract and #195 Prototype
 
-**IMPORTANT CLARIFICATION**: The `DelegationRequest` and `DelegationResult` types
-shown above represent a **reference specification**, not a callable interface
-available today.
+The `DelegationRequest` and `DelegationResult` types above remain the
+authoritative cross-harness contract for agent behavior.
 
-**Note on terminology**: The "Delegation Maturity Stages" below describe how
-harness-specific delegation *mechanics* have evolved and may evolve. They are
-a separate axis from [#110](https://github.com/JohnLudlow/agents/issues/110)'s
-Phase 1–4 **documentation/implementation roadmap** (Phase 1 = this written
-contract, Phase 2 = runtime harness detection and dispatch, Phase 3 =
-user-facing docs, Phase 4 = a possible unified callable API). Do not conflate
-the two: today's work is entirely within #110's Phase 1, regardless of which
-maturity stage is described below.
-
-### Current Reality (Delegation Maturity Stages 1–3, as of August 2026)
+### Current Runtime Reality (Delegation Maturity Stages 1–3)
 
 Agents currently delegate using harness-specific mechanisms:
 
@@ -380,33 +396,36 @@ Agents currently delegate using harness-specific mechanisms:
   skills inline
 
 Each harness has different capabilities and constraints. There is no unified
-`DelegateToSubagent` function yet.
+`DelegateToSubagent` function for every harness.
 
-### Delegation Maturity Stage 4 (Speculative, Not Committed)
+### #195 Deliverable: Copilot CLI Prototype (Stage 4 Experiment)
 
-If the harness ecosystem eventually provides a stable capability to support
-it, a unified `DelegateToSubagent` API could:
+Issue [#195](https://github.com/JohnLudlow/agents/issues/195) adds a concrete
+prototype implementation for **Copilot CLI only**:
 
-- accept a `DelegationRequest` with bounded agent, model preference, and task
-  prompt
-- abstract harness differences (CLI task tool vs. browser skills vs. provider
-  delegation)
-- return a `DelegationResult` with model resolution details
-- handle approval gates, model fallbacks, and worktree/branch lifecycle
+- `delegateToSubagentPrototype(...)` in
+  `.apm/skills/jl-subagent-spawning/lib/delegate-to-subagent-prototype/index.ts`
+- unit tests in the same folder (`index.test.ts`)
 
-This is aspirational design guidance, not a GitHub Copilot product commitment
-or announced roadmap item — it corresponds to #110's Phase 4, which is
-explicitly conditional ("if the harness ecosystem provides a stable
-capability to support it").
+Prototype behavior:
 
-Until (and unless) such an API ships:
+1. validate a bounded `DelegationRequest`
+2. detect runtime harness from passed context
+3. resolve model through the documented six-level hierarchy
+4. select spawning mode via fallback chain (`fleet -> sequential -> inline`)
+5. dispatch using Copilot CLI task semantics for fleet/sequential
+6. return a `DelegationResult`-aligned payload with structured decision logs
 
-- Model selection (jl_subagent_models hierarchy) is documented here for
-  future-proofing agents
-- Agents should still resolve model preferences and record them in delegation
-  results, even though today's Stage 1–3 harnesses don't support
-  per-delegation model selection natively
-- This allows graceful adoption if a unified API becomes available later
+### Scope Boundaries (Still Not a Product Commitment)
+
+This prototype is intentionally narrow:
+
+- no claim of cross-harness callable parity
+- no claim that vendor APIs are stable across all harnesses
+- no GitHub Copilot product/roadmap commitment
+
+It is a reference implementation to prove API shape and behavior in one
+harness while preserving the existing conservative policy elsewhere.
 
 ## Canonical Delegation Types
 
@@ -557,6 +576,239 @@ Model selection resolves with this precedence:
 
 If a candidate model is unavailable in the current harness, continue falling
 through the hierarchy until an available model is found.
+
+## Fleet Mode Utilization and Harness Detection (AC5.1)
+
+**Decision [#186]**: Agents automatically use fleet mode when available, with
+graceful fallback. No user opt-in required.
+
+**Rationale**: Each subagent spawns with clean, isolated context containing
+only task-relevant information. Automatic fleet mode activation maximizes
+parallelization and prevents context depletion that occurs when everything
+happens in the same session.
+
+### What Fleet Mode Is
+
+Fleet mode is a top-level coordination mechanism (Copilot CLI: `/fleet`
+command) that launches multiple subagents in parallel, each with its own clean
+session context. It is distinct from sequential delegation (one subagent at a
+time) and from skills invoked inline (no spawning).
+
+**Fleet mode is appropriate when:**
+
+- the work has multiple independent or weakly-dependent subtasks
+- each subtask benefits from its own fresh context (parallelization outweighs
+  context-splitting overhead)
+- results can be easily reassembled after all tasks complete
+- the task set is known upfront (not data-dependent discovery)
+
+**Fleet mode is NOT appropriate when:**
+
+- subtasks are tightly sequential or dependent
+- you need immediate synchronous results
+- the task involves discovering what to do next (single decision tree)
+- the current harness doesn't support it
+
+### Harness Capability Matrix (updated by #194 research)
+
+| Harness | Fleet Mode Support | Detection Mechanism | Current activation policy |
+|---------|:------------------:|---------------------|---------------------------|
+| **Copilot CLI** | ✅ Full | `COPILOT_CLI_MODE` env var | Fleet first, then sequential fallback |
+| **Azure DevOps + GitHub** | ✅ Full | Azure DevOps env/globals + GitHub-linked repo detection | Fleet first, then sequential fallback |
+| **Azure DevOps + Azure Repos** | ❌ No | Azure DevOps env/globals + Azure Repos detection | Sequential fallback |
+| **Browser / Copilot Chat** | ❌ No | `window` object exists | Inline only (no spawning) |
+| **Kiro IDE/CLI** | ⚠️ Documented support, policy-gated | `KIRO_CLI_MODE` or `KIRO_IDE_SESSION` env var | Conservative sequential fallback until this integration path is confirmed |
+| **OpenCode** | ⚠️ Pending vendor confirmation | `OPENCODE_MODE` env var | Conservative sequential fallback |
+| **Pi** | ⚠️ Pending vendor confirmation | `PI_MODE` env var | Conservative sequential fallback |
+| **Unknown** | ❌ No | No marker matched | Conservative sequential fallback |
+
+### Activation Strategy: Automatic with Fallback
+
+**Agents never need to ask the user; detection and fallback are silent.**
+
+1. **At session start**, detect the current harness (see Harness Detection Pseudocode below).
+2. **When spawning subagents**, choose mode from capabilities:
+   - If `fleetModeAvailable`: use fleet mode (`task` with `mode="background"` for parallel dispatch)
+   - Else if `sequentialSpawningAvailable`: use sequential dispatch (one subagent at a time)
+   - Else: use inline execution
+3. **Fallback if fleet unavailable**: Use sequential subagent dispatch (one at a time, each with isolated context).
+4. **Fallback if sequential unavailable**: Use inline work.
+5. **Always log** when fleet mode falls back, for debugging.
+
+### Harness Detection Pseudocode
+
+```text
+AT SESSION START:
+  harness = detect_harness()
+
+    if env var COPILOT_CLI_MODE exists:
+      return "copilot-cli"
+
+    else if JavaScript window object exists:
+      return "browser"
+
+    else if Azure DevOps context exists (env vars or VSS/TFS globals):
+      if linked repository host is GitHub:
+        return "azure-devops-github"
+      else if linked repository host is Azure Repos:
+        return "azure-devops-azure-repos"
+
+    else if env var KIRO_CLI_MODE or KIRO_IDE_SESSION exists:
+      return "kiro"
+
+    else if env var OPENCODE_MODE exists:
+      return "opencode"
+
+    else if env var PI_MODE exists:
+      return "pi"
+
+    else:
+      return "unknown"
+
+  Derive capability flags from harness:
+    fleetModeAvailable, sequentialSpawningAvailable
+
+  Store harness + capabilities in session_state for reference
+```
+
+### When to Recommend `/fleet` to the User
+
+**A delegating agent should recommend `/fleet` to the user ONLY for genuinely parallelizable work:**
+
+- Work with 2+ independent subtasks
+- Subtasks benefit from isolated context (> ~5 minutes each)
+- Results can be reassembled after all complete
+
+**Recommended wording when recommending fleet mode:**
+
+> Multiple independent subtasks detected. Running `/fleet /agent1 /agent2 ...`
+> would parallelize this work across isolated sessions, keeping each focused
+> and preventing context depletion.
+
+**Do NOT recommend `/fleet` for:**
+
+- Sequential or tightly dependent work
+- Single-threaded decision trees
+- Immediate synchronous results needed
+- Tasks under ~5 minutes (overhead outweighs benefit)
+
+### Fallback Behavior: Graceful Degradation
+
+When fleet mode is unavailable or the user declines it:
+
+1. **Dispatch sequentially**: Spawn each subagent one at a time, each with its own isolated context.
+2. **If sequential spawning unavailable**: Continue work inline in the parent session, with a note in the completion report.
+3. **If inline is the only option**: Suggest Herdr if the human wants to parallelize across harnesses (expert-only workaround).
+4. **Always log**: Record which fallback path was used and why, so the human and future agents understand the constraint.
+
+**Example logging (silent by default):**
+
+> Fleet mode unavailable in this harness. Falling back to sequential dispatch. ([why]: Browser harness)
+
+### Per-Harness Examples
+
+#### Copilot CLI: Native fleet mode (Recommended)
+
+```javascript
+// Agent detects:
+harness = "copilot-cli" (from COPILOT_CLI_MODE env var)
+
+// User input: "Plan and review my feature"
+// Agent recommends to user:
+"Multiple independent subtasks. Try: /fleet /planner /reviewer"
+
+// User runs: /fleet /planner /reviewer
+// Copilot CLI coordinates both agents in parallel
+```
+
+#### Kiro/OpenCode/Pi: Conservative sequential fallback
+
+```javascript
+// Agent detects:
+harness = "kiro"  // or "opencode" / "pi"
+
+// Vendor capability confirmation is pending for this integration path,
+// so fleet stays disabled by policy for now.
+fleet_mode_available = false
+sequential_spawning_available = true
+
+// Agent falls back to sequential dispatch:
+// run subtasks one at a time, preserving isolated context.
+```
+
+#### Azure DevOps with GitHub link: Conditional fleet mode
+
+```javascript
+// Agent detects:
+harness = "azure-devops-github"
+linked_repo_is_github = true
+
+// If GitHub-linked:
+// Agent can use fleet mode
+// If Azure Repos:
+// Agent falls back to sequential dispatch
+```
+
+#### Browser: No fleet mode, skills inline only
+
+```javascript
+// Agent detects:
+harness = "browser"
+fleet_mode_available = false
+
+// Agent works inline, invoking skills directly:
+task("jl-quiz", { prompt: "..." })  // No spawning, just invoke
+
+// Agent mentions to user:
+"This session doesn't support subagent spawning; running inline."
+```
+
+### Known Fog Items (Post-#194)
+
+Vendor research findings are documented in `references/VENDOR_RESEARCH_HARNESS_DETECTION.md` (#194). Current status:
+
+**Implemented detection signals:**
+
+- ✅ Copilot CLI: `COPILOT_CLI_MODE`
+- ✅ Browser: `window` object
+- ✅ Azure DevOps: context detection plus GitHub vs Azure Repos host distinction
+- ✅ Kiro: `KIRO_CLI_MODE` or `KIRO_IDE_SESSION`
+- ✅ OpenCode: `OPENCODE_MODE`
+- ✅ Pi: `PI_MODE`
+
+**Remaining uncertainty:**
+
+- ⚠️ **Kiro/OpenCode/Pi marker confirmation** — Environment variable names are
+  implemented from vendor research conventions; final vendor confirmation is
+  still pending.
+- ⚠️ **Kiro/OpenCode/Pi capability upgrades** — Fleet mode is intentionally
+  disabled by policy until confirmation of supported spawning semantics in this
+  integration path.
+- ⚠️ **Cross-harness parity** — If vendor docs confirm stronger guarantees, upgrade capability flags and tests in lockstep.
+
+**Design-level fog items (beyond detection):**
+
+- [ ] **Result coordination API** — How should agents coordinate results from parallel subagents? (Automatic or manual?)
+- [ ] **Sequential fallback refinement** — Should sequential fallback prefer herdr if available, or other mechanism?
+
+For now, agents should:
+
+1. Run the implemented detection sequence once per session.
+2. Use fleet only when `fleetModeAvailable` is true.
+3. Fall back silently: fleet -> sequential -> inline.
+4. Log fallback paths for debugging and auditability.
+
+See `references/VENDOR_RESEARCH_HARNESS_DETECTION.md` for detailed findings, implemented marker signals, and capability-upgrade follow-up policy.
+
+### Relationship to DelegateToSubagent
+
+This section documents fleet mode *usage and activation patterns*. The
+`DelegateToSubagent` API (documented earlier in this skill) handles individual
+delegations once fleet mode is active or after fallback to sequential/inline.
+The two are complementary:
+
+- **Fleet Mode Utilization**: "Should I parallelize this work across harnesses?"
+- **DelegateToSubagent**: "Given a single bounded subtask, which model should run it?"
 
 ## Model Resolution Pseudocode
 
@@ -715,6 +967,10 @@ See `references/DEPENDENCIES.md` for relationships to `jl-planner`,
 full "When NOT to delegate" anti-pattern list and overhead threshold. See
 `references/HARNESS_FALLBACK.md` for the full model-fallback algorithm,
 capability matrix, and decision table. See
+`references/DELEGATE_TO_SUBAGENT_QUICKSTART.md` for the #195 prototype call
+flow and
+`references/UNIFIED_DELEGATION_API_RESEARCH.md` for external design inputs.
+See
 `references/RESULT_AGGREGATION.md` for per-ticket-type output shapes,
 multi-delegation result aggregation, partial-failure handling, and
 token/timing usage rollup. See `references/PLUGIN_CAPABILITY_REGISTRY.md`

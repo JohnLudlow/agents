@@ -29,7 +29,7 @@ node scripts/validate-config.js
 
 ```yaml
 jl_quiz:
-  interview_mode: a
+  quiz_mode: a
   plan_destination: github_issue
   file_storage_location: docs/plans/
 ```
@@ -84,7 +84,7 @@ jl_recon:
 
 ```yaml
 jl_quiz:
-  interview_mode: a
+  quiz_mode: a
   file_storage_location: docs/plans/
   # Missing: plan_destination (required)
 ```
@@ -103,7 +103,7 @@ jl_quiz:
 ```yaml
 jl_quiz:
   plan_destination: slack_thread
-  interview_mode: a
+  quiz_mode: a
 ```
 
 **Output:**
@@ -116,18 +116,18 @@ Allowed: github_issue, azure_devops_work_item, local_file, inline_message
 
 ### Error: Type Mismatch (Boolean Instead of String)
 
-**Input (interview_mode as number instead of string):**
+**Input (quiz_mode as number instead of string):**
 
 ```yaml
 jl_quiz:
   plan_destination: github_issue
-  interview_mode: 1
+  quiz_mode: 1
 ```
 
 **Output:**
 
 ```text
-✗ CONTRIBUTING.md: [WARN] jl_quiz.interview_mode: must be string, got number
+✗ CONTRIBUTING.md: [WARN] jl_quiz.quiz_mode: must be string, got number
   Fix: Check value types and allowed values. See .apm/skills/jl-config/validation-rules.md Layer 3
 ```
 
@@ -171,7 +171,7 @@ jl_quiz:
 
 ```yaml
 jl_quiz:
-  - interview_mode: a
+  - quiz_mode: a
   - plan_destination: github_issue
 ```
 
@@ -299,11 +299,11 @@ jl_quiz:
 ```yaml
 # Before (invalid)
 jl_quiz:
-  interview_mode: 1
+  quiz_mode: 1
 
 # After (valid)
 jl_quiz:
-  interview_mode: a
+  quiz_mode: a
 ```
 
 ### "must be boolean, got string"

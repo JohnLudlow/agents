@@ -84,14 +84,14 @@ validation.
 
 | Setting | Type | Allowed values | Default | Sensitivity |
 | --- | --- | --- | --- | --- |
-| `interview_mode` | string | `a`, `b` | `a` | recommended |
+| `quiz_mode` | string | `in_chat`, `questionnaire` | `in_chat` | recommended |
 | `plan_destination` | string | `github_issue`, `azure_devops_work_item`, `local_file`, `inline_message` | none | required |
 | `file_storage_location` | string | repository-relative path | `docs/plans/` | recommended |
 
 ### Validation and defaults
 
 - validate that `jl_quiz`, if present, is an object
-- validate `interview_mode` against the `a` / `b` enum
+- validate `quiz_mode` against the `in_chat` / `questionnaire` enum
 - validate `plan_destination` against the documented destination enum
 - validate `file_storage_location` as a repository-relative string when present
 - use defaults for recommended settings when absent
@@ -104,7 +104,7 @@ In `CONTRIBUTING.md`:
 
 ```yaml
 jl_quiz:
-  interview_mode: a
+  quiz_mode: in_chat
   plan_destination: github_issue
   file_storage_location: docs/plans/
 ```
@@ -113,7 +113,7 @@ In `AGENTS.md`:
 
 ```yaml
 jl_quiz:
-  interview_mode: b
+  quiz_mode: questionnaire
 ```
 
 ## When This Skill is Invoked
@@ -127,9 +127,9 @@ preferences through `jl-config`.
 
 **Settings this skill consumes from `jl_quiz`:**
 
-- `interview_mode`
-  - `a` = in-chat interview
-  - `b` = questionnaire/document-first workflow
+- `quiz_mode`
+  - `in_chat` = in-chat interview
+  - `questionnaire` = questionnaire/document-first workflow
 - `plan_destination`
   - `github_issue`
   - `azure_devops_work_item`
@@ -147,10 +147,10 @@ preferences through `jl-config`.
    - merge `CONTRIBUTING.md`
    - merge `AGENTS.md`
 4. Validate the resolved `jl_quiz` object against jl-quiz's own schema:
-   - `interview_mode` must be `a` or `b`
+   - `quiz_mode` must be `in_chat` or `questionnaire`
    - `plan_destination` must be one of the documented destination values
    - `file_storage_location`, if present, must be a repository-relative path
-5. Use the resolved values for `interview_mode`, `plan_destination`, and
+5. Use the resolved values for `quiz_mode`, `plan_destination`, and
    `file_storage_location`.
 6. If a required value still cannot be used safely in the current session,
    ask the user with explicit options and continue with their session answer.
@@ -171,7 +171,7 @@ preferences through `jl-config`.
   config value as the repository default rather than the live instruction.
 
 **Completion criterion:** The skill has resolved usable values for
-`interview_mode`, `plan_destination`, and `file_storage_location` from
+`quiz_mode`, `plan_destination`, and `file_storage_location` from
 resolved `jl_quiz` config, or has asked the user only for the still-missing
 choice needed to proceed safely.
 
@@ -180,20 +180,12 @@ choice needed to proceed safely.
 jl-quiz validates its configuration at startup and emits warnings (in the
 format defined by jl-config) for:
 
-#### Type Mismatch
+#### Enum Violation — quiz_mode
 
 ```text
-[WARN] jl-quiz: 'interview_mode' must be a string ("a" or "b"), not a boolean
-  File: CONTRIBUTING.md [line 5]
-  Fix: Change the value to a string: interview_mode: a
-```
-
-#### Enum Violation — interview_mode
-
-```text
-[WARN] jl-quiz: 'interview_mode' has invalid value "c" (must be "a" or "b")
+[WARN] jl-quiz: 'quiz_mode' has invalid value "c" (must be "in_chat" or "questionnaire")
   File: AGENTS.md [line 8]
-  Fix: Change to one of: a, b
+  Fix: Change to one of: in_chat, questionnaire
 ```
 
 #### Enum Violation — plan_destination
@@ -222,6 +214,14 @@ format defined by jl-config) for:
   (no leading /)
   File: AGENTS.md [line 10]
   Fix: Change "/docs/plans" to "docs/plans"
+```
+
+#### Type Mismatch — quiz_mode
+
+```text
+[WARN] jl-quiz: 'quiz_mode' must be a string ("a" or "b"), not a boolean
+  File: CONTRIBUTING.md [line 5]
+  Fix: Change the value to a string: quiz_mode: a
 ```
 
 #### Invalid File Path — parent directory
@@ -254,7 +254,7 @@ format defined by jl-config) for:
    - If a prior decision has been made in this session about what mode to
      operate in, continue in that mode until instructed otherwise, continue
      to step 4
-   - If `jl_quiz.interview_mode` resolves to a mode, continue
+   - If `jl_quiz.quiz_mode` resolves to a mode, continue
      in that mode until instructed otherwise, continue to step 4
    - If the ***Scope*** is ***small***, AND the ***Complexity*** is
      ***simple***, AND the ***shared understanding*** is ***deep*** AND
@@ -360,6 +360,65 @@ The agent MUST NOT:
 - Proceed before the user has confirmed shared understanding.
 - Continue asking questions in chat while a questionnaire document is
   outstanding, unless the user asks to switch back.
+
+## Ticket Template Validation
+
+When jl-quiz creates a quiz ticket to be stored in an issue tracker (GitHub,
+Azure DevOps, etc.), it MUST validate the ticket structure before creation.
+
+### Validation Workflow
+
+Before committing a quiz ticket:
+
+1. **Load the quiz template** from `jl-ticket-templates/assets/quiz-ticket-template.md`
+2. **Validate the ticket content** against the shared base schema and quiz-specific contract
+3. **Report validation results**:
+   - If valid: proceed to ticket creation
+   - If invalid: report errors with remediation guidance and offer user override
+
+### Validation Contract
+
+A quiz ticket is **valid** when:
+
+- **Frontmatter**: all required fields from the shared base schema are present
+  and non-empty (`title`, `description`, `type: "quiz"`, `status`, `author`, `date`,
+  `related_links`, `parent`)
+- **Date format**: ISO 8601 (YYYY-MM-DD)
+- **Type field**: must be exactly `"quiz"`
+- **Required sections**: Decision Statement, at least 2 Options (each with Pros
+  and Cons), Reasoning, and Acceptance Criteria
+- **Decision statement**: non-empty and phrased neutrally as a question
+- **Options**: minimum 2, each with non-empty Pros and Cons
+- **Reasoning**: non-empty and references the chosen option and trade-offs
+- **Acceptance Criteria**: checklist with at least 3 specific, measurable criteria
+
+### Error Handling
+
+When validation fails:
+
+- Report **one error at a time** with clear guidance
+- Include remediation steps and a correct format example
+- Offer the user two choices: fix the ticket or override validation
+- If override is approved, add a comment to the created ticket recording
+  the override
+
+### Integration
+
+jl-quiz MUST import and call the validator from `jl-ticket-templates`:
+
+```text
+load module: jl-ticket-templates/validator
+result = validator.validateQuizTicket(ticketContent, targetProvider)
+
+if result.valid:
+  proceed to creation
+else:
+  report errors
+  ask user: "Fix or override?"
+```
+
+For detailed validation rules, error messages, and test cases, see:
+**`jl-ticket-templates/references/QUIZ_VALIDATION_GUIDE.md`**
 
 ## Relationship to Other Skills and Commands
 

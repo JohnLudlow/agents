@@ -1,59 +1,69 @@
 # Implementation Roadmap
 
-## Phase 1 (Complete)
+This roadmap tracks AC5.1 delivery status for fleet-mode utilization and harness detection.
 
-- ✅ Convert jl-feature-reviewer agent → jl-adversarial-review
-  skill
-- ✅ Document cross-harness behavior (this reference)
+## Phase 1: Foundations (Complete)
 
-## Phase 2 (Future)
+- ✅ Convert reviewer-agent pattern to reusable skill guidance.
+- ✅ Document cross-harness delegation behavior.
+- ✅ Define fleet-mode activation strategy and fallback policy.
 
-Implement harness detection in both planner agents.
+## Phase 2: Runtime Implementation (Complete)
 
-Both planner agents should detect their harness at startup:
+Implemented and validated in:
 
-```text
-AT SESSION START:
-  harness = detect_harness()
-    - If env var COPILOT_CLI_MODE exists: return "cli"
-    - Else if window object exists (JavaScript): return "browser"
-    - Else if Azure DevOps APIs available: return "azure-devops"
-    - Else: return "unknown"
+- #190 — Harness detection module
+- #191 — Fleet-mode activation strategy
+- #192 — End-to-end validation across harnesses
 
-  Store harness in session_state for reference
+Delivered runtime behavior:
 
-WHEN SPAWNING SUBAGENT:
-  If harness == "cli":
-    Use task tool (native subagent spawning)
-  Else if harness == "browser":
-    Use skill invocation inline (no spawning)
-    Optionally: offer jl-feature-reviewer agent as fallback
-  Else if harness == "azure-devops":
-    Check for task tool availability
-    Fall back to skills or agent fallback if unavailable
+1. Detect harness once at session start.
+2. Derive capability flags from harness identity.
+3. Select mode automatically: `fleet -> sequential -> inline`.
+4. Log fallback decisions for debugging and auditability.
 
-ALWAYS (before completion):
-  Invoke jl-adversarial-review skill (works in all harnesses)
-  If skill unavailable: offer jl-feature-reviewer agent as fallback
-```
+## Phase 2.5: Vendor Research Baseline (Complete via #194)
 
-**Implementation effort:** ~3–4 hours (harness detection, graceful degradation,
-testing)
+Research outcomes are documented in `VENDOR_RESEARCH_HARNESS_DETECTION.md`.
 
-## Phase 3 (Future)
+### Detection status
 
-Create user documentation:
+- ✅ Copilot CLI: verified (`COPILOT_CLI_MODE`)
+- ✅ Browser: verified (`window` object)
+- ✅ Azure DevOps: implemented context + repository-host split
+- ✅ Kiro: marker-based detection implemented (`KIRO_CLI_MODE` / `KIRO_IDE_SESSION`)
+- ✅ OpenCode: marker-based detection implemented (`OPENCODE_MODE`)
+- ✅ Pi: marker-based detection implemented (`PI_MODE`)
 
-- Add "Subagent Spawning" section to docs/README.md
-- Link to troubleshooting guide
-- Document how to detect your harness (Copilot CLI vs. browser vs. Azure DevOps)
+### Capability status
 
-**Implementation effort:** ~1 hour
+- Fleet enabled: Copilot CLI, Azure DevOps + GitHub
+- Sequential fallback: Azure DevOps + Azure Repos, Kiro, OpenCode, Pi, Unknown
+- Inline only: Browser (no spawning path)
 
-## Open Questions
+### Guardrail
 
-- [ ] Does Azure DevOps expose the task tool? (Critical for Phase 2)
-- [ ] Does fleet mode ever support skills in future Copilot releases? (Design
-      question)
-- [ ] Should jl-feature-reviewer agent be deprecated after Phase 2, or
-      kept indefinitely as fallback?
+For Kiro/OpenCode/Pi, marker detection is implemented but fleet capability remains conservative until vendor confirmation arrives for this integration path.
+
+## Phase 3: User Documentation (Complete)
+
+- ✅ #193 — User-facing fleet-mode documentation published and aligned with runtime fallback behavior.
+
+## Phase 4: Unified Delegation API
+
+- ✅ #195 prototype completed for Copilot CLI:
+  - unified `delegateToSubagentPrototype(...)` call shape
+  - deterministic mode fallback (`fleet -> sequential -> inline`)
+  - model-resolution hierarchy and structured decision logging
+- ⏳ Cross-harness production abstraction remains open (future architecture work).
+
+## Remaining Open Questions
+
+1. **Vendor confirmation hardening**
+   - Confirm Kiro/OpenCode/Pi marker names and runtime stability.
+   - Confirm whether any of these harnesses should be upgraded from sequential to fleet in AC5.1 policy.
+2. **Result coordination depth**
+   - Decide whether fleet result aggregation requires additional contract structure for large DAG-style fan-out.
+3. **Sequential fallback refinement**
+   - Confirm when manual cross-harness tools (for example Herdr) should be suggested vs. staying in-harness.

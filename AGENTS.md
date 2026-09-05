@@ -10,7 +10,7 @@ Configuration is in a YAML code fence for markdown readability; the linter autom
 
 ```yaml
 jl_quiz:
-  interview_mode: a
+  quiz_mode: in_chat
   plan_destination: github_issue
   file_storage_location: docs/plans/
 
@@ -47,25 +47,25 @@ or `AGENTS.md` are **repo-local only** and cannot be reliably referenced by agen
 
 ### Roles and Contexts
 
-| Role | Acting in | Sees what |
-|------|-----------|-----------|
+| Role                 | Acting in              | Sees what                                                                                                                    |
+| -------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | **Agent maintainer** | JohnLudlow/agents repo | All local files (`CONTRIBUTING.md`, `AGENTS.md`, `/docs/`, `/scripts/`) + all shipped files (`.apm/agents/`, `.apm/skills/`) |
-| **Agent user** | Any other repository | Only shipped files (agents, skills, references) |
+| **Agent user**       | Any other repository   | Only shipped files (agents, skills, references)                                                                              |
 
 This repository is NOT the only repository. Remember this.
 
 ### Document Types: Where They Go
 
-| Document Type | Purpose | Shipped? | Correct Location | Examples of Wrong Places |
-|---|---|---|---|---|
-| **Agent or skill definition** | Source code for an agent or skill | Yes | `.apm/agents/*.md` or `.apm/skills/*/SKILL.md` | N/A (these are in the right place) |
-| **Configuration schema or reference** | Documentation of what config settings a skill accepts | Yes | `<skill>/SKILL.md` (Configuration section) or `<skill>/references/CONFIG_SCHEMA.md` | ❌ CONTRIBUTING.md, ❌ /docs/, ❌ AGENTS.md |
-| **Skill examples or templates** | Example usage, template files, sample input/output | Yes | `<skill>/references/*.md` or `<skill>/assets/*` | ❌ /docs/, ❌ CONTRIBUTING.md |
-| **Skill guide or walkthrough** | Detailed guide on how to use a skill | Yes | `<skill>/SKILL.md` or `<skill>/references/GUIDE.md` | ❌ /docs/, ❌ CONTRIBUTING.md |
-| **Repository contribution guidelines** | Rules for contributing to JohnLudlow/agents (human-facing) | No | `CONTRIBUTING.md` | N/A (repo-local only) |
-| **Agent configuration for this repo** | Settings for how agents work *in this repository* | No | `AGENTS.md` | ❌ /docs/, ❌ CONTRIBUTING.md, ❌ in a skill SKILL.md |
-| **General documentation** | Setup, installation, usage guides for humans | No | `/docs/` or `README.md` | Can reference shipped files, but should not contain them |
-| **CI/CD scripts** | Scripts run by GitHub Actions or other CI | No | `/scripts/` | N/A (repo-local only) |
+| Document Type                          | Purpose                                                    | Shipped? | Correct Location                                                                    | Examples of Wrong Places                                 |
+| -------------------------------------- | ---------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| **Agent or skill definition**          | Source code for an agent or skill                          | Yes      | `.apm/agents/*.md` or `.apm/skills/*/SKILL.md`                                      | N/A (these are in the right place)                       |
+| **Configuration schema or reference**  | Documentation of what config settings a skill accepts      | Yes      | `<skill>/SKILL.md` (Configuration section) or `<skill>/references/CONFIG_SCHEMA.md` | ❌ CONTRIBUTING.md, ❌ /docs/, ❌ AGENTS.md              |
+| **Skill examples or templates**        | Example usage, template files, sample input/output         | Yes      | `<skill>/references/*.md` or `<skill>/assets/*`                                     | ❌ /docs/, ❌ CONTRIBUTING.md                            |
+| **Skill guide or walkthrough**         | Detailed guide on how to use a skill                       | Yes      | `<skill>/SKILL.md` or `<skill>/references/GUIDE.md`                                 | ❌ /docs/, ❌ CONTRIBUTING.md                            |
+| **Repository contribution guidelines** | Rules for contributing to JohnLudlow/agents (human-facing) | No       | `CONTRIBUTING.md`                                                                   | N/A (repo-local only)                                    |
+| **Agent configuration for this repo**  | Settings for how agents work *in this repository*          | No       | `AGENTS.md`                                                                         | ❌ /docs/, ❌ CONTRIBUTING.md, ❌ in a skill SKILL.md    |
+| **General documentation**              | Setup, installation, usage guides for humans               | No       | `/docs/` or `README.md`                                                             | Can reference shipped files, but should not contain them |
+| **CI/CD scripts**                      | Scripts run by GitHub Actions or other CI                  | No       | `/scripts/`                                                                         | N/A (repo-local only)                                    |
 
 ### Decision Rules (Use These)
 
@@ -76,7 +76,7 @@ This repository is NOT the only repository. Remember this.
 
 **Rule 2**: If a file is **configuration for how agents work in this specific repo**, it goes in `AGENTS.md`.
 
-- ✅ "jl-quiz should use interview_mode: b in this repo" → AGENTS.md
+- ✅ "jl-quiz should use quiz_mode: b in this repo" → AGENTS.md
 - ❌ "Here's how to configure jl-quiz" → That goes in jl-quiz/SKILL.md (shipped)
 
 **Rule 3**: If you're adding content that a **skill needs to function**, add it to the skill's directory.
@@ -113,7 +113,7 @@ Agent users in other repos can access this because it's shipped.
 
 jl-quiz accepts the following settings:
 
-- interview_mode: a or b
+- quiz_mode: a or b
 - ...
 
 ❌ This won't be available in other repos. If an agent in a downstream
@@ -145,6 +145,20 @@ This is only used in JohnLudlow/agents, so it stays local.
 
 ---
 
+#### ❌ WRONG: Updating deployed agents and skills
+
+```text
+~/.agents/skills/jl-recon
+└── SKILL.md                    ❌ Not within the repo, and therefore won't be built and would be overriden by the next 
+                                   deployment
+```
+
+If you need to update an agent, update the relevant file in [.apm/agents].
+
+If you need to update a skill, update the relevant file in [.apm/skills].
+
+---
+
 ### When You're Unsure
 
 Ask yourself:
@@ -158,6 +172,11 @@ Ask yourself:
 If you answer "yes" to #4, use a shipped location. If you answer "yes" to #2 or #5, use a repo-local location.
 
 ---
+
+## What Agents MUST NOT do
+
+- Commit or push changes without explicit user permission
+- Create or complete pull requests (PRs) without explicit user permission
 
 ## References
 

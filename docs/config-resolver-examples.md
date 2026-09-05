@@ -39,13 +39,13 @@ See also:
 
 ## Example 1: Quiz Agent Resolves a Single Setting
 
-Intent: `jl-quiz` needs `interview_mode` early to decide whether to run an
+Intent: `jl-quiz` needs `quiz_mode` early to decide whether to run an
 in-chat interview or a questionnaire-first flow.
 
 ```text
 procedure startQuizAgent(debugMode)
   defaults :=
-    interview_mode: "a"
+    quiz_mode: "a"
     plan_destination: undefined
     file_storage_location: "docs/plans/"
 
@@ -53,32 +53,32 @@ procedure startQuizAgent(debugMode)
     result := resolveConfig({
       configKey: "jl_quiz",
       defaults: defaults,
-      settingKeys: ["interview_mode"],
+      settingKeys: ["quiz_mode"],
       includeSource: debugMode
     })
 
-    interviewMode := result.value
+    quizMode := result.value
 
-    if interviewMode is not "a" and interviewMode is not "b"
-      raise invalid_value("jl_quiz.interview_mode")
+    if quizMode is not "a" and quizMode is not "b"
+      raise invalid_value("jl_quiz.quiz_mode")
 
     if debugMode
-      log("Resolved interview_mode", interviewMode, "from", result.source)
+      log("Resolved quiz_mode", quizMode, "from", result.source)
       log("Checked files", result.checkedFiles)
 
-    if interviewMode = "a"
+    if quizMode = "a"
       runLiveInterview()
     else
       runQuestionnaireFirstFlow()
 
   catch error where error.kind = "invalid_value"
-    warn("Quiz startup failed: interview_mode override is invalid")
+    warn("Quiz startup failed: quiz_mode override is invalid")
     stopSkillUntilConfigIsFixed()
 
   catch error where error.kind = "required_missing"
-    # This call asked only for interview_mode, which has a default.
+    # This call asked only for quiz_mode, which has a default.
     # If implementations still surface required_missing here, treat it as fatal.
-    warn("Quiz startup failed: resolver contract violated for interview_mode")
+    warn("Quiz startup failed: resolver contract violated for quiz_mode")
     stopSkillUntilResolved()
 end procedure
 ```
@@ -114,6 +114,10 @@ procedure startReconPass(debugMode)
       research_afk: false
     uncertainty_tracking:
       pattern: "## Not Yet Specified (Fog of War)"
+    model_selection:
+      default: "inherit"
+      ticket_resolution_checks: "inherit"
+      status_report_checks: "inherit"
 
   try
     result := resolveConfig({
@@ -123,7 +127,10 @@ procedure startReconPass(debugMode)
         "decision_gates.destination_confirmation",
         "decision_gates.inciting_issue_confirmation",
         "decision_gates.research_afk",
-        "uncertainty_tracking.pattern"
+        "uncertainty_tracking.pattern",
+        "model_selection.default",
+        "model_selection.ticket_resolution_checks",
+        "model_selection.status_report_checks"
       ],
       includeSource: debugMode
     })
@@ -134,6 +141,9 @@ procedure startReconPass(debugMode)
     validateBoolean(reconConfig.decision_gates.inciting_issue_confirmation)
     validateBoolean(reconConfig.decision_gates.research_afk)
     validateMarkdownHeading(reconConfig.uncertainty_tracking.pattern)
+    validateModelOrInherit(reconConfig.model_selection.default)
+    validateModelOrInherit(reconConfig.model_selection.ticket_resolution_checks)
+    validateModelOrInherit(reconConfig.model_selection.status_report_checks)
 
     if debugMode
       log("Resolved jl_recon config from", result.source)
@@ -175,7 +185,7 @@ for the current harness.
 ```text
 procedure choosePlanDestination(debugMode)
   defaults :=
-    interview_mode: "a"
+    quiz_mode: "a"
     plan_destination: undefined
     file_storage_location: "docs/plans/"
 
@@ -240,7 +250,7 @@ procedure invokeSharedSkill(agentContext, debugMode)
     return invocationCache[cacheKey]
 
   defaults :=
-    interview_mode: "a"
+    quiz_mode: "a"
     plan_destination: undefined
     file_storage_location: "docs/plans/"
 

@@ -318,20 +318,20 @@ function validateLayer3(config, agentKey) {
       };
     }
 
-    // Recommended: interview_mode
-    if ("interview_mode" in cfg) {
-      const im = cfg.interview_mode;
+    // Recommended: quiz_mode
+    if ("quiz_mode" in cfg) {
+      const im = cfg.quiz_mode;
       if (typeof im !== "string") {
         return {
           valid: false,
-          error: `jl_quiz.interview_mode: must be string, got ${typeof im}`,
+          error: `jl_quiz.quiz_mode: must be string, got ${typeof im}`,
         };
       }
 
       if (!["a", "b"].includes(im)) {
         return {
           valid: false,
-          error: `jl_quiz.interview_mode: must be 'a' or 'b', got '${im}'`,
+          error: `jl_quiz.quiz_mode: must be 'a' or 'b', got '${im}'`,
         };
       }
     }
@@ -425,6 +425,60 @@ function validateLayer3(config, agentKey) {
           return {
             valid: false,
             error: `jl_recon.uncertainty_tracking.pattern: must start with '#' (markdown heading), got '${pattern}'`,
+          };
+        }
+      }
+    }
+
+    if ("model_selection" in cfg) {
+      const modelSelection = cfg.model_selection;
+      if (typeof modelSelection !== "object" || modelSelection === null || Array.isArray(modelSelection)) {
+        return {
+          valid: false,
+          error: `jl_recon.model_selection: must be object, got ${
+            Array.isArray(modelSelection) ? "array" : typeof modelSelection
+          }`,
+        };
+      }
+
+      const validModelSelectionKeys = new Set([
+        "default",
+        "quiz",
+        "research",
+        "prototype",
+        "task",
+        "ticket_resolution_checks",
+        "status_report_checks",
+        "mode2_checks",
+        "mode3_checks",
+      ]);
+
+      for (const [key, value] of Object.entries(modelSelection)) {
+        if (!validModelSelectionKeys.has(key)) {
+          return {
+            valid: false,
+            error: `jl_recon.model_selection.${key}: invalid key. Allowed: ${Array.from(validModelSelectionKeys).join(", ")}`,
+          };
+        }
+
+        if (typeof value !== "string") {
+          return {
+            valid: false,
+            error: `jl_recon.model_selection.${key}: must be string, got ${typeof value}`,
+          };
+        }
+
+        if (value.trim() === "") {
+          return {
+            valid: false,
+            error: `jl_recon.model_selection.${key}: cannot be empty string`,
+          };
+        }
+
+        if (value !== "inherit" && !isRecognizedModelName(value)) {
+          return {
+            valid: false,
+            error: `jl_recon.model_selection.${key}: unknown model name '${value}' (use a recognized model or 'inherit')`,
           };
         }
       }

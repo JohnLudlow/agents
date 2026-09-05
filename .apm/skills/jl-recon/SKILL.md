@@ -38,17 +38,74 @@ mechanism; jl-recon owns this schema, its defaults, and its validation.
 | `decision_gates.inciting_issue_confirmation` | boolean | `true`, `false` | `false` | required by recon |
 | `decision_gates.research_afk` | boolean | `true`, `false` | `false` | required by recon |
 | `uncertainty_tracking.pattern` | string | any markdown heading string | `## Not Yet Specified (Fog of War)` | optional |
+| `model_selection.default` | string | `inherit` or recognized model name | `inherit` | optional |
+| `model_selection.quiz` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
+| `model_selection.research` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
+| `model_selection.prototype` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
+| `model_selection.task` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
+| `model_selection.ticket_resolution_checks` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
+| `model_selection.status_report_checks` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
+| `labels.default` | array of strings | any label names | `["recon:map"]` | optional |
+| `labels.map` | array of strings | any label names | defaults to `labels.default` | optional |
+| `labels.quiz` | array of strings | any label names | defaults to `labels.default` | optional |
+| `labels.research` | array of strings | any label names | defaults to `labels.default` | optional |
+| `labels.prototype` | array of strings | any label names | defaults to `labels.default` | optional |
+| `labels.task` | array of strings | any label names | defaults to `labels.default` | optional |
+| `checks.on_ticket_resolution_enabled` | boolean | `true`, `false` | `true` | optional |
+| `checks.on_status_report_enabled` | boolean | `true`, `false` | `true` | optional |
+| `checks.timeout_seconds` | integer | any positive integer | `30` | optional |
+
+### Legacy aliases (compatibility)
+
+For backward compatibility, jl-recon also accepts:
+
+- `model_selection.mode2_checks` (alias of `model_selection.ticket_resolution_checks`)
+- `model_selection.mode3_checks` (alias of `model_selection.status_report_checks`)
+
+If both a canonical key and its legacy alias are present, the canonical key
+wins.
+
+Canonical keys follow AC2.0 and ADS-STE100's human-readable naming guidance:
+`ticket_resolution_checks` and `status_report_checks`.
 
 ### Validation and defaults
 
 - validate that `jl_recon`, if present, is an object
 - validate `decision_gates`, if present, as an object of booleans
 - validate `uncertainty_tracking`, if present, as an object
+- validate `model_selection`, if present, as an object with keys limited to:
+  `default`, `quiz`, `research`, `prototype`, `task`, `ticket_resolution_checks`,
+  `status_report_checks` (legacy aliases `mode2_checks`, `mode3_checks`
+  also accepted)
+- validate each `model_selection.*` value as a non-empty string
+- validate each configured model value as either `inherit` or a recognized model name
+- validate `labels`, if present, as an object with keys limited to: `default`,
+  `map`, `quiz`, `research`, `prototype`, `task`
+- validate each `labels.*` value as an array of non-empty strings
+- validate that no `labels.*` array is empty
+- validate `checks`, if present, as an object with keys limited to:
+  `on_ticket_resolution_enabled` (boolean), `on_status_report_enabled` (boolean),
+  `timeout_seconds` (positive integer)
+- validate `checks.timeout_seconds` is a positive integer if present; values ≤ 0
+  are treated as invalid and default to 30
 - default each missing decision gate to `false`
 - default missing `uncertainty_tracking.pattern` to
   `## Not Yet Specified (Fog of War)`
+- default `model_selection.default` to `inherit`
+- default each of `model_selection.quiz`, `model_selection.research`,
+  `model_selection.prototype`, `model_selection.task`,
+  `model_selection.ticket_resolution_checks`, `model_selection.status_report_checks` to inherit
+  from `model_selection.default`
+- default `labels.default` to `["recon:map"]`
+- default each of `labels.map`, `labels.quiz`, `labels.research`,
+  `labels.prototype`, `labels.task` to inherit from `labels.default`
+- default `checks.on_ticket_resolution_enabled` to `true`
+- default `checks.on_status_report_enabled` to `true`
+- apply resolved label values when creating maps and tickets, per the resolved behavior below
 - apply resolved gate values at their workflow decision points rather than
   relying on separate hardcoded gate rules
+- apply resolved checks configuration when Mode 2 (ticket resolution) or Mode 3 (status report) runs
+- apply resolved model-selection values when delegating ticket work and checks
 
 ### Example configuration
 
@@ -62,6 +119,28 @@ jl_recon:
     research_afk: false
   uncertainty_tracking:
     pattern: "## Not Yet Specified (Fog of War)"
+  model_selection:
+    default: "inherit"
+    research: "claude-sonnet-5"
+    ticket_resolution_checks: "gpt-5.4-mini"
+    status_report_checks: "claude-sonnet-5"
+  checks:
+    on_ticket_resolution_enabled: true
+    on_status_report_enabled: true
+  labels:
+    default:
+      - "recon:map"
+    map:
+      - "recon:map"
+      - "planning"
+    quiz:
+      - "recon:quiz"
+    research:
+      - "recon:research"
+    prototype:
+      - "recon:prototype"
+    task:
+      - "recon:task"
 ```
 
 In `AGENTS.md`:
@@ -70,6 +149,17 @@ In `AGENTS.md`:
 jl_recon:
   decision_gates:
     destination_confirmation: true
+  model_selection:
+    default: "claude-sonnet-5"
+    ticket_resolution_checks: "gpt-5.4-mini"
+  checks:
+    on_ticket_resolution_enabled: true
+    on_status_report_enabled: true
+  labels:
+    map:
+      - "recon:map"
+      - "planning"
+      - "urgent"
 ```
 
 ## Configuration via `jl-config`
@@ -84,6 +174,21 @@ This skill consumes:
 - `jl_recon.decision_gates.inciting_issue_confirmation`
 - `jl_recon.decision_gates.research_afk`
 - `jl_recon.uncertainty_tracking.pattern`
+- `jl_recon.model_selection.default`
+- `jl_recon.model_selection.quiz`
+- `jl_recon.model_selection.research`
+- `jl_recon.model_selection.prototype`
+- `jl_recon.model_selection.task`
+- `jl_recon.model_selection.ticket_resolution_checks`
+- `jl_recon.model_selection.status_report_checks`
+- `jl_recon.labels.default`
+- `jl_recon.labels.map`
+- `jl_recon.labels.quiz`
+- `jl_recon.labels.research`
+- `jl_recon.labels.prototype`
+- `jl_recon.labels.task`
+- `jl_recon.checks.on_ticket_resolution_enabled`
+- `jl_recon.checks.on_status_report_enabled`
 
 Resolved behaviour:
 
@@ -106,6 +211,46 @@ Resolved behaviour:
     in any textual artifact that mirrors the map structure
   - if not configured, default to `## Not Yet Specified (Fog of War)` through
     jl-recon's own defaults
+- `model_selection.default`, `model_selection.quiz`, `model_selection.research`,
+  `model_selection.prototype`, `model_selection.task`, `model_selection.ticket_resolution_checks`,
+  `model_selection.status_report_checks`
+  - legacy aliases are accepted: `mode2_checks` → `ticket_resolution_checks`,
+    `mode3_checks` → `status_report_checks`
+  - `inherit` means "do not force a model at this level; continue to the next fallback layer"
+  - when a delegated action runs, resolve model in this order:
+    1. explicit per-action user override (`request.model`)
+    2. `jl_recon.model_selection.<action>`
+    3. `jl_recon.model_selection.default`
+    4. `jl_subagent_models` hierarchy (`overrides.<taskKey>` → per-type → per-agent → global → hard fallback)
+  - Mode 2 checks use action key `ticket_resolution_checks`
+  - Mode 3 checks use action key `status_report_checks`
+  - invalid model names are warned and skipped to the next precedence layer
+- `checks.on_ticket_resolution_enabled`
+  - `true` (default): run quality checks before recording ticket resolutions in Mode 2 (Work through the map)
+  - `false`: skip quality checks in Mode 2; proceed directly to resolution
+- `checks.timeout_seconds`
+  - positive integer, default `30`
+  - applies to each Mode 2 quality check attempt before the workflow degrades gracefully
+- `checks.on_status_report_enabled`
+  - `true` (default): run quality checks on generated status reports in Mode 3 (Report on implementation status)
+  - `false`: skip quality checks in Mode 3; proceed directly to report output
+- `labels.default`
+  - applied to all maps and tickets unless overridden by type-specific config
+  - always inherited and combined with `recon:<type>` label (additive, not replacement)
+  - defaults to `["recon:map"]` if not configured
+- `labels.map`
+  - applied to map artifacts at creation time
+  - if not configured, inherits from `labels.default`
+  - combined with any inherited labels from parent (if any) and does not duplicate
+  - on GitHub/Azure DevOps: applied as issue labels or work item tags
+  - on Markdown: stored in frontmatter `labels:` field
+- `labels.quiz`, `labels.research`, `labels.prototype`, `labels.task`
+  - applied to each respective ticket type at creation time
+  - if not configured for a type, inherits from `labels.default`
+  - combined with map labels (if part of a map) plus the ticket's `recon:<type>` label
+  - inheritance is additive: ticket receives its own type-specific labels + map labels + `recon:<type>`
+  - if the session user provides a label override during ticket creation (user session preference),
+    it replaces the configured labels entirely (not additive to them)
 
 Graceful fallback:
 
@@ -114,8 +259,13 @@ Graceful fallback:
 - Do not keep separate hardcoded gate logic in this skill; apply the resolved
   `jl_recon` values at the destination, inciting-issue, research-AFK, and fog
   recording decision points.
+- If `model_selection` has invalid model names, warn clearly and continue by
+  falling through to the next model-precedence layer.
 - If a gate's practical effect is still ambiguous in the current session, ask
   the human rather than inventing a stricter or looser rule.
+- If quality checks are unavailable or fail (harness not installed, timeout, network error),
+  gracefully degrade: skip the unavailable check, run available checks, and allow user
+  to override if all checks fail. Never block Mode 2 or Mode 3 workflow.
 
 ### Configuration Warnings
 
@@ -172,6 +322,95 @@ format defined by jl-config) for:
   boolean (true/false), not a string "yes"
   File: CONTRIBUTING.md [line 7]
   Fix: Use boolean values (true or false, not quoted strings)
+```
+
+#### Type Mismatch — labels (object required)
+
+```text
+[WARN] jl-recon: 'labels' must be an object, not a string
+  File: AGENTS.md [line 12]
+  Fix: Change to YAML object syntax: labels: { default: ["recon:map"] }
+```
+
+#### Invalid labels type key
+
+```text
+[WARN] jl-recon: 'labels.category' is not a valid labels key
+  File: CONTRIBUTING.md [line 14]
+  Fix: Use only: default, map, quiz, research, prototype, or task
+```
+
+#### Non-array labels value
+
+```text
+[WARN] jl-recon: 'labels.map' must be an array, not a string
+  File: AGENTS.md [line 16]
+  Fix: Change to array syntax: map: ["recon:map", "planning"]
+```
+
+#### Non-string value in labels array
+
+```text
+[WARN] jl-recon: 'labels.quiz' contains a non-string value: 123
+  File: CONTRIBUTING.md [line 18]
+  Fix: All label values must be strings: quiz: ["recon:quiz", "active"]
+```
+
+#### Empty labels array
+
+```text
+[WARN] jl-recon: 'labels.research' cannot be an empty array
+  File: AGENTS.md [line 20]
+  Fix: Provide at least one label: research: ["recon:research"]
+```
+
+#### Type Mismatch — checks config (object required)
+
+```text
+[WARN] jl-recon: 'checks' must be an object, not a string
+  File: AGENTS.md [line 22]
+  Fix: Change to YAML object syntax: checks: { on_ticket_resolution_enabled: true }
+```
+
+#### Invalid checks config key
+
+```text
+[WARN] jl-recon: 'checks.on_prototype_validation' is not a valid checks key
+  File: CONTRIBUTING.md [line 24]
+  Fix: Use only: on_ticket_resolution_enabled or on_status_report_enabled
+```
+
+#### Type Mismatch — checks gate (boolean required)
+
+```text
+[WARN] jl-recon: 'checks.on_ticket_resolution_enabled' must be a
+  boolean (true/false), not a string
+  File: AGENTS.md [line 23]
+  Fix: Change the value to a boolean: on_ticket_resolution_enabled: true
+```
+
+#### Type Mismatch — model_selection (object required)
+
+```text
+[WARN] jl-recon: 'model_selection' must be an object, not a string
+  File: AGENTS.md [line 22]
+  Fix: Change to YAML object syntax: model_selection: { default: "inherit" }
+```
+
+#### Invalid model_selection key
+
+```text
+[WARN] jl-recon: 'model_selection.mode2' is not a valid model-selection key
+  File: CONTRIBUTING.md [line 24]
+  Fix: Use only: default, quiz, research, prototype, task, ticket_resolution_checks, status_report_checks (legacy aliases: mode2_checks, mode3_checks)
+```
+
+#### Invalid model_selection value
+
+```text
+[WARN] jl-recon: 'model_selection.ticket_resolution_checks' must be 'inherit' or a recognized model name, not "fast-model"
+  File: AGENTS.md [line 25]
+  Fix: Use 'inherit' or a model like claude-sonnet-5 / gpt-5.4-mini
 ```
 
 ## Core Model
@@ -244,8 +483,10 @@ ends on its own completion criterion.
 
 Starting a map from a loose idea.
 
-1. Name the destination — run `jl-quiz`, in whichever mode (A or B)
-   the scope calls for.
+1. Name the destination — run `jl-quiz`, using the resolved `quiz_mode`
+   from configuration (in-chat interview or questionnaire document). User
+   preference always overrides config — if the user requests a different mode
+   during this step, switch immediately.
    If resolved `decision_gates.destination_confirmation` is `true`, confirm the
    destination explicitly before creating the map artifact.
 2. Map the frontier — run `jl-quiz` again, breadth-first, to surface
@@ -283,6 +524,36 @@ populated (even if Decisions-so-far is still empty), it is linked to its
 inciting issue if one exists, and every ticket specifiable today has been
 created.
 
+#### Handoff to Implementation
+
+When a map reaches a state where all urgent decisions are resolved and
+remaining fog is clearly understood, the map transitions from active planning
+to reference mode. At this point, guide the user to create implementation
+tickets that will be siblings of the map under the inciting issue.
+
+**Signals that a map is ready for implementation:**
+
+- Destination is clear and confirmed
+- Major decisions are recorded in Decisions-so-far
+- Remaining fog (if any) is explicitly listed and scoped
+- All out-of-scope decisions are recorded
+
+**What to communicate to the user:**
+
+- "The map is ready for implementation. The next step is to create
+  implementation tickets as siblings of this map under the inciting issue
+  [issue name]."
+- Point to [PROVIDERS.md](references/PROVIDERS.md) → "Ticket Hierarchy and
+  Structure" for the structural details
+- Clarify: implementation tickets are **not** children of the map; they are
+  separate work items at the same level as the map, both under the inciting
+  issue
+- If using GitHub: implementation tickets use a label like `implementation:`
+  or `area:<name>` to distinguish them from recon planning work
+- Do not create implementation tickets as part of this skill; they are out of
+  scope for recon. Only map the work that needs to be done, not the doing of
+  it.
+
 ### 2. Work through the map
 
 Resolving one ticket on an existing map.
@@ -309,20 +580,119 @@ Resolving one ticket on an existing map.
 6. If the ticket was delegated, emit a clear completion notification when
    the delegated work returns — see "Delegation Handoff Messaging" below —
    before recording the resolution.
-7. Record the resolution: close the ticket, then append exactly one line to
+7. If resolved `checks.on_ticket_resolution_enabled` is true, run quality checks
+   on the resolved ticket before recording the resolution. See "Quality Checks
+   in Mode 2" below for the full workflow: invoke jl-adversarial-reviewer,
+   display findings, collect user review/override. If checks are unavailable
+   or disabled, skip this step and proceed directly to step 8.
+8. Record the resolution: close the ticket, then append exactly one line to
    the map's Decisions-so-far list. One line, one place — if the map already
    shows this natively (GitHub's own sub-issue list), the manual line still
    goes in because some decisions resolve with no child ticket at all; it
    never gets restated a second time as a summary or a status table.
-8. Create any newly-surfaced tickets and graduate any fog the resolution
+9. Create any newly-surfaced tickets and graduate any fog the resolution
    burned off. Log any newly-surfaced uncertainty to the map's fog in the
    same pass, before the pass ends. If the resolution reveals scope the
    destination doesn't cover, close it into Out-of-scope instead of
    recording it as a decision.
 
 **Completion criterion:** the ticket is closed, the Decisions-so-far list
-carries its one new line, and every new uncertainty the pass surfaced is
-recorded as fog on the map, in-session, before the pass ends.
+carries its one new line, every new uncertainty the pass surfaced is
+recorded as fog on the map, in-session, before the pass ends, and any quality
+checks (if enabled) were presented for user review before the resolution was
+recorded.
+
+#### Quality Checks in Mode 2
+
+When a ticket is resolved and `checks.on_ticket_resolution_enabled` is true,
+run quality checks using jl-adversarial-reviewer before recording the
+resolution. This workflow is always human-in-the-loop: the user reviews
+findings and explicitly confirms the resolution.
+
+**Workflow:**
+
+1. **Invoke checks** — Call jl-adversarial-reviewer using `jl-subagent-spawning`'s
+   fallback hierarchy: try subagent → try Herdr → read into session. Pass the
+   resolved ticket's content (resolution text, findings, context from the map).
+   Resolve the requested model using `model_selection.ticket_resolution_checks` (or
+   `model_selection.default`) before invoking fallback; if either is `inherit`
+   or invalid, continue into the `jl_subagent_models` hierarchy.
+   Apply a per-check timeout of `checks.timeout_seconds` (default: `30`). On
+   harness unavailability, timeout, network error, or malformed findings, do
+   not block Mode 2: warn the user, keep any successful findings, and continue
+   to an explicit user decision.
+
+2. **Collect findings** — jl-adversarial-reviewer returns a structured report with
+   findings (each with severity: critical/major/minor/nit, description, and
+   recommendation). If some checks succeed and others fail, keep only the
+   successful findings table and warn about the failed checks. If a check
+   returns malformed findings, treat that check as failed and degrade
+   gracefully. If no findings are returned (all-pass or no report), inform the
+   user and proceed to confirmation.
+
+3. **Display findings** — Format findings as a markdown table:
+
+   ```markdown
+   | Severity | Check | Finding | Recommendation |
+   | --- | --- | --- | --- |
+   | critical | ... | ... | ... |
+   | major | ... | ... | ... |
+   ```
+
+   Sort by severity, highest first (critical → major → minor → nit).
+   Include file/location context in the Finding column if available.
+
+4. **User review and decision** — Present the findings table to the user and ask
+   one of these prompts, depending on check availability:
+
+   When checks are unavailable or all fail:
+
+   ```text
+   ⚠️ Quality checks unavailable: [reason]
+
+   Would you like to:
+   1. Proceed without checks and record the resolution
+   2. Cancel and revise the ticket
+   3. Override and record anyway
+
+   (User can always override and proceed)
+   ```
+
+   When some checks succeed and some fail:
+
+   ```text
+   ⚠️ Some quality checks failed: [failed-checks]
+
+   Available findings:
+   [findings table - only successful checks]
+
+   Would you like to:
+   1. Approve and record resolution
+   2. Override and record anyway
+   3. Cancel and revise
+
+   (Proceed with available findings)
+   ```
+
+   When checks complete normally:
+   - "Approve and record resolution" (findings acknowledged, ready to record)
+   - "Override and record anyway" (user disagrees with findings, force record)
+   - "Cancel resolution" (pause and revise the ticket before recording)
+
+5. **Graceful degradation** — If any checks fail (harness unavailable, network
+   error, timeout, malformed findings):
+   - Skip unavailable checks and keep running the remaining checks
+   - If some checks succeed: show the successful findings and warn about failed checks
+   - If all checks fail: warn the user and allow either "Proceed without checks"
+     or "Override and record anyway"
+   - Record the degraded check outcome and the user's decision in the audit trail
+   - Never block Mode 2 workflow — user can always override and record
+
+**Post-decision:**
+
+- If user approves or overrides, proceed to step 8 (Record the resolution)
+- If user cancels, return to step 5 (resolve ticket) without recording
+- Log the user's decision (approve/override) alongside the resolution for audit trail
 
 #### Delegation Handoff Messaging
 
@@ -365,6 +735,195 @@ presents.
 **Completion criterion:** the human has the full status list and nothing on
 the map has been altered.
 
+#### Quality Checks in Mode 3
+
+When a status report is generated and `checks.on_status_report_enabled` is true,
+run quality checks using doublecheck before presenting the report to the user.
+This workflow is always human-in-the-loop: the user reviews findings and
+explicitly confirms publication.
+
+**Workflow:**
+
+1. **Invoke checks** — Call doublecheck using jl-subagent-spawning's fallback
+   hierarchy (attempt subagent → fallback to Herdr when subagent unavailable
+   → read into session when multi-harness is unavailable). Pass the generated
+   status report text. Doublecheck will analyze each claim in the report and
+   return per-claim verification results (VERIFIED/PLAUSIBLE/UNVERIFIED/
+   DISPUTED/FABRICATION_RISK with confidence levels and source links). Resolve
+   the requested model using `model_selection.status_report_checks` (or
+   `model_selection.default`) before invoking fallback; if either is `inherit`
+   or invalid, continue into the `jl_subagent_models` hierarchy. Apply a
+   per-check timeout of `checks.timeout_seconds` (default: `30`). On harness
+   unavailability, timeout, network error, or malformed findings, do not block
+   Mode 3: warn the user, keep any successful findings, and continue to an
+   explicit user decision.
+
+2. **Collect findings** — Doublecheck returns a structured report with per-claim
+   verification results (each with status: VERIFIED/PLAUSIBLE/UNVERIFIED/
+   DISPUTED/FABRICATION_RISK, confidence level 0-100, description, source links,
+   and recommendation). Display all claims in the findings table with their
+   per-claim verification status. If some claims are verified and others disputed,
+   show all claims in the table and warn the user about any disputed or failed
+   claims. If doublecheck returns malformed findings, treat that check as failed and
+   degrade gracefully. If all claims verify or no findings are needed, inform
+   the user and proceed to confirmation.
+
+3. **Display findings** — Format findings as a markdown table:
+
+   ```markdown
+   | Claim | Status | Confidence | Sources |
+   | --- | --- | --- | --- |
+   | "Status report text..." | VERIFIED | 95% | link1, link2 |
+   | "Another claim..." | DISPUTED | 40% | link |
+   ```
+
+   Sort by status, highest risk first (FABRICATION_RISK → DISPUTED →
+   UNVERIFIED → PLAUSIBLE → VERIFIED). Include source links and confidence
+   percentages in the Sources column.
+
+4. **User review and decision** — Present findings to the user and collect
+   explicit decision (approve/override/cancel). The prompt depends on check availability:
+
+   **Decision tree:** If doublecheck is unavailable or all checks fail (timeout,
+   network error, malformed findings), show the unavailable prompt. If doublecheck
+   succeeds (fully or partially), always show the findings table and ask for user
+   decision. User can always choose "override and publish anyway" — checks never
+   block Mode 3 publication.
+
+   **When checks are unavailable or all checks fail:**
+
+   ```text
+   ⚠️ Quality checks unavailable: [reason]
+
+   Would you like to:
+   1. Publish the report without verification
+   2. Cancel and revise the status report
+   3. Override and publish anyway
+
+   (You can always publish)
+   ```
+
+   **When checks succeed (fully or partially) and findings are available:**
+
+   ```text
+   ✓ Verification complete
+
+   [Findings table with all claims and per-claim status]
+
+   Would you like to:
+   1. Approve and publish report
+   2. Override and publish anyway
+   3. Cancel and revise
+   ```
+
+5. **Graceful degradation** — If any checks fail (harness unavailable, network
+   error, timeout, malformed findings):
+   - Skip unavailable checks and keep running the remaining checks
+   - If some claims verify: show the verification results and warn about failed checks
+   - If all checks fail: warn the user and allow either "Publish without checks"
+     or "Override and publish anyway"
+   - Record the degraded check outcome and the user's decision in an audit log
+   - Never block Mode 3 workflow — user can always override and publish
+
+**Post-decision:**
+
+- If user approves or overrides, proceed to publish the status report
+- If user cancels, return to report generation for revision
+- Log the user's decision (approve/override) alongside the report publication for audit trail
+
+When a status report is generated and `checks.on_status_report_enabled` is true,
+run quality checks using doublecheck before presenting the report to the user.
+This workflow is always human-in-the-loop: the user reviews findings and
+explicitly confirms publication.
+
+**Workflow:**
+
+1. **Invoke checks** — Call doublecheck using `jl-subagent-spawning`'s fallback
+   hierarchy: try subagent → try Herdr → read into session. Pass the generated
+   status report text. Doublecheck will analyze each claim in the report and
+   return per-claim verification results (VERIFIED/PLAUSIBLE/UNVERIFIED/
+   DISPUTED/FABRICATION_RISK with confidence levels and source links). Resolve
+   the requested model using `model_selection.status_report_checks` (or
+   `model_selection.default`) before invoking fallback; if either is `inherit`
+   or invalid, continue into the `jl_subagent_models` hierarchy. Apply a
+   per-check timeout of `checks.timeout_seconds` (default: `30`). On harness
+   unavailability, timeout, network error, or malformed findings, do not block
+   Mode 3: warn the user, keep any successful findings, and continue to an
+   explicit user decision.
+
+2. **Collect findings** — Doublecheck returns a structured report with per-claim
+   verification results (each with status: VERIFIED/PLAUSIBLE/UNVERIFIED/
+   DISPUTED/FABRICATION_RISK, confidence level 0-100, description, source links,
+   and recommendation). Display all claims in the findings table with their
+   per-claim verification status. If some claims are verified and others disputed,
+   show all claims in the table and warn the user about any disputed or failed
+   claims. If doublecheck returns malformed findings, treat that check as failed and
+   degrade gracefully. If all claims verify or no findings are needed, inform
+   the user and proceed to confirmation.
+
+3. **Display findings** — Format findings as a markdown table:
+
+   ```markdown
+   | Claim | Status | Confidence | Sources |
+   | --- | --- | --- | --- |
+   | "Status report text..." | VERIFIED | 95% | link1, link2 |
+   | "Another claim..." | DISPUTED | 40% | link |
+   ```
+
+   Sort by status, highest risk first (FABRICATION_RISK → DISPUTED →
+   UNVERIFIED → PLAUSIBLE → VERIFIED). Include source links and confidence
+   percentages in the Sources column.
+
+4. **User review and decision** — Present findings to the user and collect
+   explicit decision (approve/override/cancel). The prompt depends on check availability:
+
+   **Decision tree:** If doublecheck is unavailable or all checks fail (timeout,
+   network error, malformed findings), show the unavailable prompt. If doublecheck
+   succeeds (fully or partially), always show the findings table and ask for user
+   decision. User can always choose "override and publish anyway" — checks never
+   block Mode 3 publication.
+
+   **When checks are unavailable or all checks fail:**
+
+   ```text
+   ⚠️ Quality checks unavailable: [reason]
+
+   Would you like to:
+   1. Publish the report without verification
+   2. Cancel and revise the status report
+   3. Override and publish anyway
+
+   (You can always publish)
+   ```
+
+   **When checks succeed (fully or partially) and findings are available:**
+
+   ```text
+   ✓ Verification complete
+
+   [Findings table with all claims and per-claim status]
+
+   Would you like to:
+   1. Approve and publish report
+   2. Override and publish anyway
+   3. Cancel and revise
+   ```
+
+5. **Graceful degradation** — If any checks fail (harness unavailable, network
+   error, timeout, malformed findings):
+   - Skip unavailable checks and keep running the remaining checks
+   - If some claims verify: show the verification results and warn about failed checks
+   - If all checks fail: warn the user and allow either "Publish without checks"
+     or "Override and publish anyway"
+   - Record the degraded check outcome and the user's decision in an audit log
+   - Never block Mode 3 workflow — user can always override and publish
+
+**Post-decision:**
+
+- If user approves or overrides, proceed to publish the status report
+- If user cancels, return to report generation for revision
+- Log the user's decision (approve/override) alongside the report publication for audit trail
+
 ### 4. Resolve or archive stale items
 
 Clearing out tickets or fog that have stopped being useful.
@@ -380,6 +939,360 @@ answer.
 answer recorded against it (resolved, archived, kept open, or the
 destination itself was redrawn).
 
+## User Guide: Understanding Quality Checks
+
+Quality checks are optional guardrails that review your work before it's recorded.
+They run in Mode 2 (ticket resolution) and Mode 3 (status reports) when enabled
+by configuration.
+
+### What Are Quality Checks?
+
+#### Mode 2 — Ticket Resolution Checks (jl-adversarial-reviewer)
+
+When you resolve a ticket, jl-adversarial-reviewer performs an adversarial review
+of your resolution, looking for logical flaws, incomplete reasoning, or assumptions
+that need validation. It surfaces findings organized by severity (critical, major,
+minor, nit) so you can address high-impact issues before recording the decision.
+
+#### Mode 3 — Status Report Checks (doublecheck)
+
+When you publish a status report, doublecheck analyzes each claim in the report
+and verifies it against sources (documentation, code, pull requests, issue history).
+For each claim, it returns a verification status (VERIFIED, PLAUSIBLE, UNVERIFIED,
+DISPUTED, or FABRICATION_RISK) with confidence levels and source links.
+
+### How to Interpret Findings
+
+#### Mode 2 Findings Table
+
+```markdown
+| Severity | Check | Finding | Recommendation |
+| --- | --- | --- | --- |
+| critical | logic | Assumption lacks evidence; needs validation | Confirm with stakeholder |
+| major | scope | Resolution incomplete; doesn't cover edge case | Expand scope or document |
+| minor | clarity | Wording could be clearer | Revise for readability |
+```
+
+**Severity levels:**
+
+- **critical** — blocks recording; address before approving
+- **major** — significant issue but recordable with override; consider fixing
+- **minor** — polish; nice to fix but not blocking
+- **nit** — style or preference; lowest priority
+
+#### Mode 3 Findings Table
+
+```markdown
+| Claim | Status | Confidence | Sources |
+| --- | --- | --- | --- |
+| "Completed 42% of tasks" | VERIFIED | 95% | PR #123, issue comment |
+| "All tests passing" | DISPUTED | 40% | CI log shows 3 failures |
+| "Performance improved by 50%" | UNVERIFIED | 30% | No benchmark data found |
+```
+
+**Status levels (by risk, highest first):**
+
+- **FABRICATION_RISK** — claim unsupported by any evidence; likely false
+- **DISPUTED** — evidence contradicts claim; confidence in the dispute
+- **UNVERIFIED** — claim not contradicted, but no supporting evidence found
+- **PLAUSIBLE** — sounds reasonable; some supporting context but not definitive
+- **VERIFIED** — direct evidence supports the claim; high confidence
+
+**Confidence** ranges from 0–100% and reflects how certain the check is.
+A 40% DISPUTED finding means the evidence against it is weak; a 95% VERIFIED
+finding is very strong.
+
+### When and Why Checks Are Skipped
+
+Checks **skip gracefully** when:
+
+1. **Disabled by configuration** — `checks.on_ticket_resolution_enabled: false`
+   or `checks.on_status_report_enabled: false` — checks are intentionally off
+2. **Harness unavailable** — the environment doesn't support running subagents
+   (e.g., running in a limited CLI harness). jl-recon falls back to reading
+   checks into the current session if available
+3. **Timeout** — checks take longer than `checks.timeout_seconds` (default 30s).
+   Slow network or compute constraints can trigger this
+4. **Network error** — checks can't reach required services. Retry or override
+5. **Malformed findings** — checks return invalid results. Treated as failed
+   and skipped for that check
+
+**Graceful degradation means:**
+
+- If some checks fail, successful checks still run and show findings
+- If all checks fail, you get a warning and can choose to proceed anyway
+- Checks **never block** your work — you can always override and proceed
+
+### How to Override Findings
+
+After reviewing findings, you have three choices:
+
+**Mode 2 (Ticket Resolution):**
+
+1. **Approve and record** — findings acknowledged, proceed as-is
+2. **Override and record anyway** — you disagree with findings; record anyway
+3. **Cancel resolution** — return to the ticket and revise before recording
+
+**Mode 3 (Status Report):**
+
+1. **Approve and publish** — findings reviewed, publish the report as-is
+2. **Override and publish anyway** — you disagree with verification results; publish anyway
+3. **Cancel and revise** — return to report generation to revise claims
+
+**Override strategy:**
+
+- Use "Override" when you have context the check doesn't (e.g., "I verified
+  this manually outside the automated sources")
+- Use "Cancel" when the check found a real problem worth fixing
+- Override decisions are logged in the audit trail for accountability
+
+### Configuration Knobs and Defaults
+
+| Setting | Type | Default | Effect |
+| --- | --- | --- | --- |
+| `checks.on_ticket_resolution_enabled` | boolean | `true` | Enable/disable Mode 2 checks |
+| `checks.on_status_report_enabled` | boolean | `true` | Enable/disable Mode 3 checks |
+| `checks.timeout_seconds` | integer | `30` | Wait time per check before timeout |
+
+**Configuration example** (in `CONTRIBUTING.md` or `AGENTS.md`):
+
+```yaml
+jl_recon:
+  checks:
+    on_ticket_resolution_enabled: true
+    on_status_report_enabled: true
+    timeout_seconds: 45
+```
+
+To disable Mode 2 checks:
+
+```yaml
+jl_recon:
+  checks:
+    on_ticket_resolution_enabled: false
+```
+
+To disable Mode 3 checks:
+
+```yaml
+jl_recon:
+  checks:
+    on_status_report_enabled: false
+```
+
+## Troubleshooting Quality Checks
+
+### Problem: Checks Time Out
+
+**Symptom:** Warning message says "Quality checks timed out after 30 seconds"
+
+**Why it happens:**
+
+- Network latency to the check service
+- Check service is under load
+- Your `checks.timeout_seconds` value is too short
+
+**Solutions:**
+
+1. **Increase the timeout:**
+
+   ```yaml
+   jl_recon:
+     checks:
+       timeout_seconds: 60
+   ```
+
+2. **Retry the check** — run the same resolution again; transient network issues often clear
+3. **Skip this check** — proceed with "Override and record anyway" if you trust your work
+
+### Problem: Checks Fail Repeatedly
+
+**Symptom:** "Quality checks unavailable" or "All checks failed"
+
+**Why it happens:**
+
+- Harness doesn't support subagent delegation (limited CLI environment)
+- Check service is offline or unreachable
+- Configuration issue prevents check invocation
+
+**Solutions:**
+
+1. **Check the harness capabilities:**
+   - Verify you're running in a harness that supports subagents (GitHub Copilot chat, Azure DevOps, or Herdr)
+   - If in a limited harness, checks will degrade gracefully
+2. **Verify network connectivity** — check service requires internet access
+3. **Disable checks temporarily:**
+
+   ```yaml
+   jl_recon:
+     checks:
+       on_ticket_resolution_enabled: false
+       on_status_report_enabled: false
+   ```
+
+   Then re-enable after the service recovers
+
+### Problem: Malformed or Unexpected Findings
+
+**Symptom:** Findings table looks wrong or contains errors
+
+**Why it happens:**
+
+- Check service returned invalid format (API change, bug)
+- Integration issue between jl-recon and the check service
+- Partial network failure corrupted the response
+
+**Solutions:**
+
+1. **Document the malformation** — include the findings output in your report
+2. **Override and proceed** — malformed findings are treated as failed checks
+3. **Contact support** — report with the actual findings output for investigation
+
+### Problem: Mode 2 Check Findings Are Too Strict
+
+**Symptom:** Critical findings block resolution, but you believe they're overly cautious
+
+**Why it happens:**
+
+- jl-adversarial-reviewer is intentionally aggressive (that's its job)
+- Your context (recent decisions, broader scope) isn't visible to the check
+- Legitimate exceptions to the rule that the check doesn't know about
+
+**Solutions:**
+
+1. **Review and revise** if the finding points to a real gap:
+   - Add evidence or stakeholder sign-off
+   - Document the assumption explicitly
+   - Cancel resolution, fix the issue, and try again
+2. **Override if you have context** the check doesn't:
+   - Choose "Override and record anyway"
+   - Document your reasoning in the ticket or map notes
+   - Your override decision is logged for audit trail
+
+### Problem: Mode 3 Verification Claims DISPUTED or FABRICATION_RISK
+
+**Symptom:** Status report claims are marked DISPUTED or FABRICATION_RISK
+
+**Why it happens:**
+
+- Evidence contradicts the claim (CI shows failures, but claim says "all tests pass")
+- Claim contains unsupported numbers or metrics
+- Source is out of date or missing
+
+**Solutions:**
+
+1. **If the claim is wrong:**
+   - Cancel and revise the status report
+   - Correct the claim to match actual evidence
+   - Re-run checks to verify
+2. **If the claim is right but evidence is missing:**
+   - Update the source (add test results to PR, link issue comments, etc.)
+   - Re-run checks with updated evidence
+3. **If doublecheck is looking in the wrong place:**
+   - Override and publish if you're confident
+   - Document why the check's evidence source was incomplete
+   - Your override decision is logged
+
+### Problem: Checks Never Finish (Stuck)
+
+**Symptom:** Checks appear to hang indefinitely
+
+**Why it happens:**
+
+- Subagent never starts (harness issue)
+- Network connection is broken
+- Check service crashed mid-operation
+
+**Solutions:**
+
+1. **Wait for timeout** — jl-recon will timeout after `checks.timeout_seconds` and gracefully degrade
+2. **Manually cancel** — if UI supports it, cancel the check invocation
+3. **Skip checks** — proceed with "Proceed without checks" or disable them in config
+
+## Quality Checks Architecture
+
+### Subagent Spawning Fallback Hierarchy
+
+Quality checks are invoked using `jl-subagent-spawning`'s multi-harness fallback
+mechanism. This ensures checks work in any environment (GitHub Copilot chat,
+Azure DevOps, limited CLI, Herdr multiplexer) without blocking the workflow.
+
+**Fallback order:**
+
+1. **Try subagent** (primary) — Delegate to a new subagent running
+   jl-adversarial-reviewer (Mode 2) or doublecheck (Mode 3) in the current
+   harness. This is preferred when the harness supports subagent delegation.
+
+2. **Try Herdr** (fallback) — If the current harness doesn't support
+   subagents (e.g., limited CLI), attempt to route the check request to a
+   sibling session running in Herdr (a terminal multiplexer). Herdr can
+   spawn subagents even when the parent harness cannot.
+
+3. **Read into session** (final fallback) — If neither subagent nor Herdr
+   is available, attempt to run the check inline in the current session
+   by reading the check skill's logic directly. This is slower but works
+   in any environment (no network required, no multiplexer needed).
+
+**Decision tree:**
+
+```text
+Is subagent delegation available in this harness?
+├─ Yes → Try subagent
+│        ├─ Succeeds? → Use findings, proceed
+│        ├─ Timeout? → Degrade (warning, partial findings if any)
+│        ├─ Network error? → Degrade gracefully
+│        └─ Harness dies? → Fall through to Herdr
+└─ No → Is Herdr active (HERDR_ENV=1)?
+         ├─ Yes → Try Herdr delegation
+         │        ├─ Succeeds? → Use findings, proceed
+         │        ├─ Timeout? → Degrade (warning, partial findings if any)
+         │        └─ Network error? → Degrade gracefully
+         └─ No → Read into session (inline check execution)
+                 ├─ Succeeds? → Use findings, proceed
+                 └─ Fails? → Warn, allow override
+```
+
+### Timeout and Graceful Degradation
+
+Each check invocation has a per-operation timeout (`checks.timeout_seconds`,
+default: 30s). If the check doesn't complete within the timeout:
+
+1. **Warn the user** — "Quality check timed out; proceeding with available findings"
+2. **Keep partial findings** — If the check returned any results before timing out,
+   display them
+3. **Degrade gracefully** — Never block Mode 2 or Mode 3. User can always proceed
+   or override
+
+Example: Mode 2 times out but returns 3 of 5 severity-scored findings.
+jl-recon displays the 3 findings and warns about the 2 that timed out.
+
+### Check Service Integration
+
+**Mode 2 — jl-adversarial-reviewer:**
+
+- Invoked with: resolved ticket content (title, body, context from map)
+- Returns: structured findings with severity (critical/major/minor/nit),
+  description, and recommendation
+- Used for: adversarial review of ticket resolution logic and completeness
+
+**Mode 3 — doublecheck:**
+
+- Invoked with: generated status report text
+- Returns: per-claim verification results (status, confidence 0–100,
+  sources with links)
+- Used for: claim verification against documentation, code, PRs, and
+  issue history
+
+### Audit Trail
+
+Every check invocation and user decision is logged:
+
+- Mode 2: check results + user decision (approve/override/cancel) + timestamp
+- Mode 3: verification results + user decision (approve/override/cancel) + timestamp
+
+This audit trail is stored in the ticket or report body and provides
+accountability for why overrides were made.
+
 ## Requirements
 
 The agent MUST:
@@ -388,14 +1301,46 @@ The agent MUST:
   creating the map (Chart mode) — never invent scope on the agent's own
   read of a loose request.
 - Resolve `jl-config` before acting, validate the resolved `jl_recon`
-  settings against jl-recon's schema, and apply its decision gates and
-  uncertainty-tracking pattern at the workflow points they govern.
+  settings against jl-recon's schema, and apply its decision gates,
+  uncertainty-tracking pattern, label configuration, and checks configuration at the workflow points they govern.
+- Apply resolved `model_selection` values at delegated execution points
+  (ticket delegation and Mode 2/Mode 3 checks), using deterministic precedence:
+  explicit override → `model_selection.<action>` → `model_selection.default`
+  → `jl_subagent_models` hierarchy.
 - Ask whether an inciting issue exists before creating the map, and if one
   does, link the map to it using the provider's native mechanism before
   creating any tickets.
-- Copy the map's labels or tags onto every ticket created on GitHub or
-  Azure DevOps, in addition to the ticket's own `recon:<type>`
-  classification — never in place of it.
+- Apply resolved label configuration when creating the map: use
+  `labels.map` (or `labels.default` if not configured) as the map's labels.
+- Apply resolved label configuration when creating each ticket: combine the
+  ticket type's configured labels (e.g., `labels.quiz`) + inherited map labels
+  (if the ticket is a child of a map) + the ticket's `recon:<type>` label.
+  Labels are additive, not replacement — a ticket receives all three sets.
+- Allow user session preference to override configured labels entirely (user
+  session preference replaces config, not additive to it).
+- Apply resolved checks configuration when running Mode 2 (Work through the map):
+  if `checks.on_ticket_resolution_enabled` is true, run quality checks before
+  recording ticket resolutions; otherwise skip checks and proceed directly.
+- When running Mode 2 checks, use jl-subagent-spawning's fallback hierarchy (try
+  subagent → try Herdr → read into session); handle unavailable checks gracefully
+  by warning the user, keeping partial findings when available, and allowing
+  proceed or override.
+- Display Mode 2 check findings as a markdown table sorted by severity (critical → major → minor → nit),
+  with columns: Severity | Check | Finding | Recommendation.
+- Collect explicit user confirmation (approve/override/cancel) for each ticket resolution after
+  quality checks are presented; never record a resolution without user decision.
+- Apply resolved checks configuration when running Mode 3 (Report on implementation status):
+  if `checks.on_status_report_enabled` is true, run quality checks on generated
+  status reports; otherwise skip checks and proceed directly to report output.
+- When running Mode 3 checks, use jl-subagent-spawning's fallback hierarchy (try
+  subagent → try Herdr → read into session); handle unavailable checks gracefully
+  by warning the user, keeping partial verification results when available, and allowing
+  proceed or override.
+- Display Mode 3 check findings as a markdown table sorted by verification risk
+  (FABRICATION_RISK → DISPUTED → UNVERIFIED → PLAUSIBLE → VERIFIED),
+  with columns: Claim | Status | Confidence | Sources.
+- Collect explicit user confirmation (approve/override/cancel) for each status report
+  publication after quality checks are presented; never publish a report without user decision.
 - Record every new question or uncertainty to the map's fog the moment it
   surfaces — during charting, walking the map, or any ticket work — never
   deferring it until the human asks.
@@ -413,6 +1358,7 @@ The agent MUST:
 - Ask the human, per candidate, before resolving or archiving a stale item —
   never batch without individual confirmation.
 - Refer to every ticket by its linked name, never a bare id or number.
+- Notify the user when the current task is completed, and ask what to do next.
 
 The agent MUST NOT:
 
@@ -420,8 +1366,8 @@ The agent MUST NOT:
   fine; launching it is not.
 - Create a map without asking whether an inciting issue exists, or leave a
   confirmed inciting issue unlinked once the map is created.
-- Create a GitHub or Azure DevOps ticket without the map's labels or tags
-  carried over.
+- Create a GitHub or Azure DevOps ticket without applying the resolved label
+  configuration (map labels + ticket type labels + `recon:<type>`).
 - Let a ticket's type change because a quiz or other detour occurred inside
   it — spin off a child ticket instead. A Quiz ticket that internally runs
   quiz-as-mechanism does not retype the ticket.
@@ -431,6 +1377,182 @@ The agent MUST NOT:
   except an approved AFK Research ticket.
 - Archive or close a stale item without that specific item's human
   confirmation.
+- "Commit changes during any map work (charting, exploring, or working through the map).
+  Map work is planning and exploration; implementation happens separately under child
+  implementation tickets."
+
+## Ticket Template Validation
+
+Research tickets are validated before creation to ensure investigation scope
+and methodology are clear. When `jl-recon` creates a new research ticket, it
+validates the ticket structure against the research template schema before
+committing to the target provider (GitHub Issues, Azure DevOps, etc.).
+
+### Validation workflow
+
+1. **Load the research content** from the user-filled template or created content
+2. **Parse and validate** the frontmatter against required fields (type, status, author, date, etc.)
+3. **Extract and validate** body sections (Investigation Goal, Research Scope, Findings, Recommendation, Acceptance Criteria)
+4. **Report validation result**:
+   - If valid: proceed to ticket creation
+   - If invalid: report errors with remediation guidance; offer user override option
+
+### Validation contract
+
+A research ticket is **valid** when:
+
+- Frontmatter contains all required fields with correct types and values
+- Investigation Goal is stated as a neutral research question (not advocacy)
+- Research Scope explicitly lists in-scope and out-of-scope boundaries
+- Findings contain specific evidence or observations (not generalizations)
+- Recommendation cites specific findings and acknowledges trade-offs
+- Acceptance Criteria contains at least 3 checkable items
+
+See `references/RESEARCH_VALIDATION_GUIDE.md` for:
+
+- Complete validation contract and error messages
+- User override workflow and audit trail
+- Integration points and test cases
+
+### Integration points
+
+When `jl-recon` creates a research ticket:
+
+1. Call the research validator with the filled template
+2. If validation fails, report errors and ask user to fix or approve override
+3. If override approved, record the approval in a ticket comment for audit trail
+4. Create the ticket only after validation passes or override is approved
+
+## Prototype Ticket Validation
+
+Prototype tickets are validated before creation to ensure research question
+and throwaway scope are explicit. When `jl-recon` creates a new prototype ticket,
+it validates the ticket structure against the prototype template schema before
+committing to the target provider (GitHub Issues, Azure DevOps, etc.).
+
+### Validation workflow
+
+1. **Load the prototype content** from the user-filled template or created content
+2. **Parse and validate** the frontmatter against required fields (type, status, author, date, etc.)
+3. **Extract and validate** body sections (Research Question, Implementation Approach, Verification, Throwaway Plan,
+   Findings, Acceptance Criteria)
+4. **Report validation result**:
+   - If valid: proceed to ticket creation
+   - If invalid: report errors with remediation guidance; offer user override option
+
+### Validation contract
+
+A prototype ticket is **valid** when:
+
+- Frontmatter contains all required fields with correct types and values
+- Research Question is stated as a single, clear exploration question (not too broad)
+- Implementation Approach explicitly lists what will and will not be built
+- Verification contains at least 3 specific, measurable success criteria
+- Throwaway Plan explicitly states what code will be discarded and what findings carry forward
+- Findings contain specific observations or data (not generalizations)
+- Acceptance Criteria contains at least 3 checkable items
+
+See `references/PROTOTYPE_VALIDATION_GUIDE.md` for:
+
+- Complete validation contract and error messages
+- User override workflow and audit trail
+- Integration points and test cases
+
+### Integration points
+
+When `jl-recon` creates a prototype ticket:
+
+1. Call the prototype validator with the filled template
+2. If validation fails, report errors and ask user to fix or approve override
+3. If override approved, record the approval in a ticket comment for audit trail
+4. Create the ticket only after validation passes or override is approved
+
+## Task Ticket Validation
+
+Task tickets are validated before creation to ensure work scope and acceptance
+criteria are explicit. When `jl-recon` creates a new task ticket, it validates
+the ticket structure against the task template schema before committing to the
+target provider (GitHub Issues, Azure DevOps, etc.).
+
+### Validation workflow
+
+1. **Load the task content** from the user-filled template or created content
+2. **Parse and validate** the frontmatter against required fields (type, status, author, date, etc.)
+3. **Extract and validate** body sections (Work Scope, Acceptance Criteria)
+4. **Report validation result**:
+   - If valid: proceed to ticket creation
+   - If invalid: report errors with remediation guidance; offer user override option
+
+### Validation contract
+
+A task ticket is **valid** when:
+
+- Frontmatter contains all required fields with correct types and values
+- Type is set to "task"
+- Work Scope explicitly lists "What will be done" and "What will NOT be done"
+- Acceptance Criteria contains at least 3 items, each specific/measurable/checkable (SMC pattern)
+- Each acceptance criterion includes or implies a way to verify (test command, build, code review)
+
+See `references/TASK_VALIDATION_GUIDE.md` for:
+
+- Complete validation contract and error messages (SMC pattern details)
+- User override workflow and audit trail
+- Integration points and test cases
+
+### Integration points
+
+When `jl-recon` creates a task ticket:
+
+1. Call the task validator with the filled template
+2. If validation fails, report errors and ask user to fix or approve override
+3. If override approved, record the approval in a ticket comment for audit trail
+4. Create the ticket only after validation passes or override is approved
+
+## Map Ticket Validation
+
+Map tickets are validated before creation to ensure decision tracking and blocking
+edges are explicit. When `jl-recon` creates a new map ticket, it validates the
+ticket structure against the map template schema before committing to the target
+provider (GitHub Issues, Azure DevOps, etc.).
+
+### Validation workflow
+
+1. **Load the map content** from the user-filled template or created content
+2. **Parse and validate** the frontmatter against required fields (type, status, author, date, etc.)
+3. **Extract and validate** body sections (Destination, Acceptance Criteria, Decisions, Fog of War, Frontier, Blocked)
+4. **Report validation result**:
+   - If valid: proceed to ticket creation
+   - If invalid: report errors with remediation guidance; offer user override option
+
+### Validation contract
+
+A map ticket is **valid** when:
+
+- Frontmatter contains all required fields with correct types and values
+- Type is set to "map"
+- Status is one of: Charting, Walked, Completed, Stale
+- Destination is clear and specific (specific deliverable or shipped feature, not vague goal)
+- Acceptance Criteria contains at least 5 items covering decisions, fog, scope, frontier, and completion
+- Decisions section either lists decisions with links or includes note explaining why empty
+- Fog of War items each tagged with kind: **what** (goal fuzzy) or **how** (means fuzzy)
+- Open Tickets (Frontier) table shows unblocked work with Status column
+- Blocked Tickets table shows blocking edges with Reason column
+
+See `references/MAP_VALIDATION_GUIDE.md` for:
+
+- Complete validation contract and error messages
+- Fog of War tagging rules (what vs. how)
+- User override workflow and audit trail
+- Integration points and test cases
+
+### Integration points
+
+When `jl-recon` creates a map ticket:
+
+1. Call the map validator with the filled template
+2. If validation fails, report errors and ask user to fix or approve override
+3. If override approved, record the approval in a ticket comment for audit trail
+4. Create the ticket only after validation passes or override is approved
 
 ## Relationship to Other Skills
 
@@ -459,8 +1581,27 @@ The agent MUST NOT:
   issue links, label/tag inheritance, blocking, and assignee tracking are
   represented on GitHub, Azure DevOps, and markdown-only, including the
   current no-dedicated-field stance for Azure DevOps ticket typing.
+- [LABEL-APPLICATION-HELPERS.md](references/LABEL-APPLICATION-HELPERS.md) —
+  concrete implementation scripts for applying deterministic labels and tags
+  to maps and tickets across providers. Agents use these scripts to implement
+  the label resolution logic documented in PROVIDERS.md.
 
 ## Assets
 
 - `assets/recon-map-template.md` — markdown map template, extending
   `jl-plan-template`'s template, for markdown-provider maps.
+
+## Scripts
+
+- `scripts/apply-ticket-labels.ps1` — PowerShell script to apply deterministic
+  labels to GitHub issues (implements label resolution for all platforms)
+- `scripts/apply-ticket-labels.sh` — POSIX shell equivalent of
+  `apply-ticket-labels.ps1` for Bash/sh environments
+- `scripts/apply-ado-map-tags.ps1` — PowerShell script to apply deterministic
+  tags to Azure DevOps map work items
+- `scripts/apply-ado-ticket-tags.ps1` — PowerShell script to apply deterministic
+  tags to Azure DevOps ticket work items (children of maps)
+- `scripts/record-markdown-map-labels.ps1` — PowerShell script to record
+  deterministic labels in markdown map YAML frontmatter
+- `scripts/record-markdown-ticket-labels.ps1` — PowerShell script to record
+  deterministic labels in markdown ticket YAML frontmatter
