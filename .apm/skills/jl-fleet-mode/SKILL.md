@@ -83,11 +83,27 @@ if (mode === SpawningMode.FLEET) {
 
 **Key behavior:**
 
-- Automatic mode selection; never prompts the user
+- Automatic mode selection; this module never prompts the user
 - Silent fallback with logging for debugging
 - Respects requested mode if available; silently falls back otherwise
+- If fallback resolves to inline because delegation is unavailable, caller
+  policy may offer Herdr routing (AC5.3)
 
 See `lib/fleet-mode-activation/README.md` for full usage guide.
+
+### AC5.3 — Delegation unavailable while Herdr is active
+
+When `resolveSpawningMode()` resolves to `SpawningMode.INLINE` because the
+current harness cannot spawn subagents, keep work in the current harness by
+default. If `HERDR_ENV=1` is present, the calling skill should offer an
+explicit choice:
+
+- Continue inline in the current session
+- Use Herdr to route delegation to a sibling session that can spawn
+  subagents
+
+Do not route across harnesses silently. Herdr routing is opt-in and occurs
+only on explicit user request.
 
 ## Design Principles
 

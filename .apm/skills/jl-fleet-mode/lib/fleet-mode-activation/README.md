@@ -76,7 +76,22 @@ selectSpawningMode(capabilities):
     return INLINE
 ```
 
-**Key principle**: Never block the agent or prompt the user. Fall back silently and log the decision.
+**Key principle**: This module never blocks and never prompts. It resolves the
+best in-harness mode, then logs the decision.
+
+## AC5.3 Fallback Policy (Caller Layer)
+
+If `resolveSpawningMode()` returns `SpawningMode.INLINE` because subagent
+delegation is unavailable in the current harness:
+
+1. Stay in the current harness by default.
+2. If `HERDR_ENV=1` is present, the calling skill should offer an explicit
+   choice: continue inline, or route via Herdr to a sibling session that can
+   delegate.
+3. Route via Herdr only when the user explicitly requests it.
+
+The Herdr offer belongs to caller policy, not this module's mode-selection
+logic.
 
 ## Per-Harness Activation Behavior
 
@@ -110,7 +125,8 @@ Use this log for debugging why agents chose certain spawning modes or fell back.
 
 **Single source of truth**: Implementation follows SKILL.md § Activation Strategy exactly. No duplication.
 
-**No user prompting**: Decision is automatic and silent. Fallback is transparent (logged but doesn't interrupt).
+**No in-module user prompting**: Decision is automatic and silent. Any Herdr
+offer on inline fallback is handled by caller policy.
 
 **Conservative defaults**: Unknown capabilities default to sequential dispatch, not parallel.
 
