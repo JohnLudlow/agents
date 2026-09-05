@@ -35,6 +35,17 @@ import {
   getLastSelectedMode
 } from './fleet-mode-activation/index.ts';
 
+interface DispatchTask {
+  name: string;
+  delayMs: number;
+}
+
+interface DispatchSimulationResult {
+  startedOrder: string[];
+  completedOrder: string[];
+  maxConcurrent: number;
+}
+
 describe('Fleet Mode End-to-End Integration', () => {
   const originalEnv = { ...process.env };
   const originalWindow = (globalThis as any).window;
@@ -313,4 +324,105 @@ describe('Fleet Mode End-to-End Integration', () => {
       assert.equal(session.activationLog[1].event, 'fallback_attempted');
     });
   });
+
+  describe('Dispatch Behavior by Activation Mode', () => {
+    const simulatedTasks: DispatchTask[] = [
+      { name: 'task-a', delayMs: 40 },
+      { name: 'task-b', delayMs: 25 },
+      { name: 'task-c', delayMs: 10 }
+    ];
+
+    it('executes fleet mode tasks in parallel for Copilot CLI', async () => {
+      process.env.COPILOT_CLI_MODE = '1';
+
+      const capabilities = detectHarness();
+      const session = initializeFleetModeSession(capabilities);
+      const { mode } = resolveSpawningMode(session);
+
+      assert.equal(mode, SpawningMode.FLEET);
+
+      const result = await simulateDispatch(mode, simulatedTasks);
+
+      assert.equal(result.startedOrder.length, 3);
+      assert.equal(result.completedOrder.length, 3);
+      assert.ok(result.maxConcurrent > 1);
+      assert.notDeepEqual(result.completedOrder, result.startedOrder);
+    });
+
+    it('executes sequential fallback one-at-a-time for Azure DevOps Azure Repos', async () => {
+      process.env.SYSTEM_TEAMFOUNDATIONCOLLECTIONURI = 'https://dev.azure.com/example';
+      process.env.BUILD_REPOSITORY_PROVIDER = 'TfsGit';
+      process.env.BUILD_REPOSITORY_URI =
+        'https://dev.azure.com/example/project/_git/johnludlow-agents';
+
+      const capabilities = detectHarness();
+      const session = initializeFleetModeSession(capabilities);
+      const { mode } = resolveSpawningMode(session, SpawningMode.FLEET);
+
+      assert.equal(mode, SpawningMode.SEQUENTIAL);
+
+      const result = await simulateDispatch(mode, simulatedTasks);
+
+      assert.equal(result.maxConcurrent, 1);
+      assert.deepEqual(result.startedOrder, ['task-a', 'task-b', 'task-c']);
+      assert.deepEqual(result.completedOrder, ['task-a', 'task-b', 'task-c']);
+    });
+
+    it('executes inline mode without parallel spawning in Browser', async () => {
+      (globalThis as any).window = { document: {} };
+
+      const capabilities = detectHarness();
+      const session = initializeFleetModeSession(capabilities);
+      const { mode } = resolveSpawningMode(session, SpawningMode.FLEET);
+
+      assert.equal(mode, SpawningMode.INLINE);
+
+      const result = await simulateDispatch(mode, simulatedTasks);
+
+      assert.equal(result.maxConcurrent, 1);
+      assert.deepEqual(result.startedOrder, ['task-a', 'task-b', 'task-c']);
+      assert.deepEqual(result.completedOrder, ['task-a', 'task-b', 'task-c']);
+    });
+  });
 });
+
+async function simulateDispatch(
+  mode: SpawningMode,
+  tasks: DispatchTask[]
+): Promise<DispatchSimulationResult> {
+  let activeTasks = 0;
+  let maxConcurrent = 0;
+  const startedOrder: string[] = [];
+  const completedOrder: string[] = [];
+
+  const runTask = async (task: DispatchTask): Promise<void> => {
+    activeTasks += 1;
+    maxConcurrent = Math.max(maxConcurrent, activeTasks);
+    startedOrder.push(task.name);
+
+    await wait(task.delayMs);
+
+    completedOrder.push(task.name);
+    activeTasks -= 1;
+  };
+
+  if (mode === SpawningMode.FLEET) {
+    await Promise.all(tasks.map((task) => runTask(task)));
+  } else {
+    for (const task of tasks) {
+      await runTask(task);
+    }
+  }
+
+  return {
+    startedOrder,
+    completedOrder,
+    maxConcurrent
+  };
+}
+
+function wait(delayMs: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, delayMs);
+  });
+}

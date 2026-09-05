@@ -13,11 +13,11 @@ The test suite is structured into three layers executed with Node.js native test
 ├── lib/
 │   ├── harness-detection/
 │   │   ├── index.ts                 # Runtime harness detection logic
-│   │   └── index.test.ts            # Unit tests for harness detection (17 tests)
+│   │   └── index.test.ts            # Unit tests for harness detection
 │   ├── fleet-mode-activation/
 │   │   ├── index.ts                 # Activation and fallback state machine
-│   │   └── index.test.ts            # Unit tests for activation strategy (23 tests)
-│   └── fleet-mode-integration.test.ts # End-to-end integration lifecycle tests (10 tests)
+│   │   └── index.test.ts            # Unit tests for activation strategy
+│   └── fleet-mode-integration.test.ts # End-to-end integration lifecycle tests
 ```
 
 ## Harness Validation Matrix
@@ -29,8 +29,8 @@ The test suite is structured into three layers executed with Node.js native test
 | **Azure DevOps (GitHub)** | `VSS`/`TFS` + GitHub link | `fleet` | Parallel via GitHub API | Unit + E2E Simulation |
 | **Azure DevOps (Repos)** | `VSS`/`TFS` + Azure Repos | `sequential` | Sequential dispatch | Unit + Fallback E2E |
 | **Kiro** | Phase 2 detection hook | `fleet` | Parallel subagents | Capability Unit + E2E |
-| **Pi** | Phase 2 detection hook | `inline` | External Herdr / inline | Capability Unit + E2E |
-| **OpenCode** | Phase 2 detection hook | `inline` | Single agent / inline | Capability Unit + E2E |
+| **Pi** | Phase 2 detection hook | `sequential` | Conservative sequential fallback | Capability Unit + E2E |
+| **OpenCode** | Phase 2 detection hook | `sequential` | Conservative sequential fallback | Capability Unit + E2E |
 | **Unknown** | No triggers matched | `sequential` | Conservative sequential | Unit + Fallback E2E |
 
 ## Test Scenarios & Cases
@@ -44,8 +44,8 @@ The test suite is structured into three layers executed with Node.js native test
   - `window` and `window.document` presence flags `browser` harness with inline execution only.
   - `window` without `document` safely rejects browser detection.
 - **Azure DevOps Detection**:
-  - `VSS` or `TFS` global objects flag `azure-devops` harness.
-  - Repo type defaults to `UNKNOWN` until Phase 2 research completes.
+  - `VSS`/`TFS` globals and Azure env vars detect Azure DevOps context.
+  - Secondary detection resolves GitHub-linked repositories vs Azure Repos.
 - **Specificity & Precedence**:
   - Detection order: CLI > Browser > Azure DevOps > Phase 2 > Unknown fallback.
   - CLI env var overrides ambient browser objects.
@@ -78,6 +78,9 @@ The test suite is structured into three layers executed with Node.js native test
 - **Multi-Task Execution Workflows**:
   - Simulates 5-task sequence in CLI maintaining fleet mode throughout.
   - Simulates multi-task sequence in Browser maintaining inline fallback throughout.
+- **Dispatch Semantics Validation**:
+  - Verifies fleet mode dispatch executes tasks in parallel (`maxConcurrent > 1`).
+  - Verifies sequential and inline modes execute one task at a time (`maxConcurrent = 1`).
 
 ## Running Tests
 
