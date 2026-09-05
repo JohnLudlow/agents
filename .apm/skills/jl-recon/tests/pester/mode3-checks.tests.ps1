@@ -550,7 +550,7 @@ Describe 'Mode 3 user decisions' {
 
         $decision.Choice | Should -Be 'approve'
         $decision.Timestamp | Should -Match '^\d{4}-\d{2}-\d{2}T'
-        $decision.UserId | Should -Be $env:USERNAME
+        $decision.UserId | Should -Be (Get-JlReconMode3CurrentUserId)
     }
 
     It 'accepts override text when checks are unavailable' {
@@ -1207,7 +1207,7 @@ Describe 'Mode 3 remaining branch coverage' {
 
         $withChoice.Choice | Should -Be 'override'
         $withChoice.Timestamp | Should -Match '^\d{4}-\d{2}-\d{2}T'
-        $withChoice.UserId | Should -Be $env:USERNAME
+        $withChoice.UserId | Should -Be (Get-JlReconMode3CurrentUserId)
         $fromText.Choice | Should -Be 'cancel'
         (New-JlReconMode3DecisionResult -Decision ([pscustomobject]@{ Choice = '' }) -ChecksAvailable $true) | Should -Be $null
         (New-JlReconMode3DecisionResult -Decision 'nonsense' -ChecksAvailable $true) | Should -Be $null
