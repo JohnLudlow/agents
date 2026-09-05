@@ -135,7 +135,7 @@ DelegationRequest {
 
 - `targetAgent` — the bounded child agent to invoke
 - `delegationType` — canonical delegation category such as `research`,
-  `implementation`, `test-generation`, or `documentation`
+  `implementation`, `test_generation`, or `documentation`
 - `taskKey` — optional stable task identifier used for
   `jl_subagent_models.overrides.<taskKey>`
 - `prompt` — the child task instruction payload
@@ -169,6 +169,32 @@ DelegationResult {
 - `modelResolutionSource` — which level provided the final winning model
 - `warnings` — includes any model substitution warning caused by harness
   constraints or invalid configuration
+
+### Copilot CLI Prototype Usage Example (#195)
+
+The AC5.1 Phase 4 prototype is implemented in:
+
+- `.apm/skills/jl-subagent-spawning/lib/delegate-to-subagent-prototype/index.ts`
+- `.apm/skills/jl-subagent-spawning/references/DELEGATE_TO_SUBAGENT_QUICKSTART.md`
+
+Example (prototype call shape):
+
+```ts
+const result = await delegateToSubagentPrototype(
+  {
+    targetAgent: 'project-planning:planner',
+    delegationType: 'research',
+    taskKey: 'api-spike',
+    prompt: 'Compare API options and recommend one with tradeoffs.'
+  },
+  runtimeContext,
+  async (payload) => task(payload)
+);
+```
+
+The prototype resolves model + mode, emits a decision log, and dispatches
+through Copilot CLI semantics (`background` for fleet, `sync` for sequential).
+Non-CLI harnesses are intentionally handled as inline fallback in this stage.
 
 When a parent session runs more than one delegation — typically an approved
 AFK Research ticket running in parallel with a live Quiz — individual
@@ -355,22 +381,12 @@ Recommended wording:
 > failed — see warning above). Changes were either committed to
 > `{branch}` or, if uncommitted, exported to `{diff-patch-path}`.
 
-## DelegateToSubagent API Status: Pseudocode vs. Callable Implementation
+## DelegateToSubagent API Status: Reference Contract and #195 Prototype
 
-**IMPORTANT CLARIFICATION**: The `DelegationRequest` and `DelegationResult` types
-shown above represent a **reference specification**, not a callable interface
-available today.
+The `DelegationRequest` and `DelegationResult` types above remain the
+authoritative cross-harness contract for agent behavior.
 
-**Note on terminology**: The "Delegation Maturity Stages" below describe how
-harness-specific delegation *mechanics* have evolved and may evolve. They are
-a separate axis from [#110](https://github.com/JohnLudlow/agents/issues/110)'s
-Phase 1–4 **documentation/implementation roadmap** (Phase 1 = this written
-contract, Phase 2 = runtime harness detection and dispatch, Phase 3 =
-user-facing docs, Phase 4 = a possible unified callable API). Do not conflate
-the two: today's work is entirely within #110's Phase 1, regardless of which
-maturity stage is described below.
-
-### Current Reality (Delegation Maturity Stages 1–3, as of August 2026)
+### Current Runtime Reality (Delegation Maturity Stages 1–3)
 
 Agents currently delegate using harness-specific mechanisms:
 
@@ -380,33 +396,36 @@ Agents currently delegate using harness-specific mechanisms:
   skills inline
 
 Each harness has different capabilities and constraints. There is no unified
-`DelegateToSubagent` function yet.
+`DelegateToSubagent` function for every harness.
 
-### Delegation Maturity Stage 4 (Speculative, Not Committed)
+### #195 Deliverable: Copilot CLI Prototype (Stage 4 Experiment)
 
-If the harness ecosystem eventually provides a stable capability to support
-it, a unified `DelegateToSubagent` API could:
+Issue [#195](https://github.com/JohnLudlow/agents/issues/195) adds a concrete
+prototype implementation for **Copilot CLI only**:
 
-- accept a `DelegationRequest` with bounded agent, model preference, and task
-  prompt
-- abstract harness differences (CLI task tool vs. browser skills vs. provider
-  delegation)
-- return a `DelegationResult` with model resolution details
-- handle approval gates, model fallbacks, and worktree/branch lifecycle
+- `delegateToSubagentPrototype(...)` in
+  `.apm/skills/jl-subagent-spawning/lib/delegate-to-subagent-prototype/index.ts`
+- unit tests in the same folder (`index.test.ts`)
 
-This is aspirational design guidance, not a GitHub Copilot product commitment
-or announced roadmap item — it corresponds to #110's Phase 4, which is
-explicitly conditional ("if the harness ecosystem provides a stable
-capability to support it").
+Prototype behavior:
 
-Until (and unless) such an API ships:
+1. validate a bounded `DelegationRequest`
+2. detect runtime harness from passed context
+3. resolve model through the documented six-level hierarchy
+4. select spawning mode via fallback chain (`fleet -> sequential -> inline`)
+5. dispatch using Copilot CLI task semantics for fleet/sequential
+6. return a `DelegationResult`-aligned payload with structured decision logs
 
-- Model selection (jl_subagent_models hierarchy) is documented here for
-  future-proofing agents
-- Agents should still resolve model preferences and record them in delegation
-  results, even though today's Stage 1–3 harnesses don't support
-  per-delegation model selection natively
-- This allows graceful adoption if a unified API becomes available later
+### Scope Boundaries (Still Not a Product Commitment)
+
+This prototype is intentionally narrow:
+
+- no claim of cross-harness callable parity
+- no claim that vendor APIs are stable across all harnesses
+- no GitHub Copilot product/roadmap commitment
+
+It is a reference implementation to prove API shape and behavior in one
+harness while preserving the existing conservative policy elsewhere.
 
 ## Canonical Delegation Types
 
@@ -941,6 +960,10 @@ See `references/DEPENDENCIES.md` for relationships to `jl-planner`,
 full "When NOT to delegate" anti-pattern list and overhead threshold. See
 `references/HARNESS_FALLBACK.md` for the full model-fallback algorithm,
 capability matrix, and decision table. See
+`references/DELEGATE_TO_SUBAGENT_QUICKSTART.md` for the #195 prototype call
+flow and
+`references/UNIFIED_DELEGATION_API_RESEARCH.md` for external design inputs.
+See
 `references/RESULT_AGGREGATION.md` for per-ticket-type output shapes,
 multi-delegation result aggregation, partial-failure handling, and
 token/timing usage rollup. See `references/PLUGIN_CAPABILITY_REGISTRY.md`

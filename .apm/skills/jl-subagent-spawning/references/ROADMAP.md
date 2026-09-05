@@ -50,9 +50,13 @@ For Kiro/OpenCode/Pi, marker detection is implemented but fleet capability remai
 
 - ✅ #193 — User-facing fleet-mode documentation published and aligned with runtime fallback behavior.
 
-## Phase 4: Future Work (Open)
+## Phase 4: Unified Delegation API
 
-- #195 — Unified `DelegateToSubagent` API abstraction (future architecture work).
+- ✅ #195 prototype completed for Copilot CLI:
+  - unified `delegateToSubagentPrototype(...)` call shape
+  - deterministic mode fallback (`fleet -> sequential -> inline`)
+  - model-resolution hierarchy and structured decision logging
+- ⏳ Cross-harness production abstraction remains open (future architecture work).
 
 ## Remaining Open Questions
 
