@@ -55,17 +55,17 @@ Different platforms have different capabilities. This matrix shows what your har
 |----------|:----------:|:----------:|:------:|-------|
 | **Copilot CLI** | ✅ Yes | ✅ Yes | ✅ Yes | Full support; fleet mode is native and recommended |
 | **Copilot in Browser** | ❌ No | ❌ No | ✅ Yes | Browser sessions run agents inline only |
-| **OpenCode** | ❌ No | ⚠️ Yes | ✅ Yes | Limited to sequential or inline (detection APIs pending) |
-| **Azure DevOps + GitHub repos** | ⚠️ Yes | ✅ Yes | ✅ Yes | Fleet mode available for GitHub-linked repos only |
+| **Azure DevOps + GitHub repos** | ✅ Yes | ✅ Yes | ✅ Yes | Fleet mode available for GitHub-linked repos only |
 | **Azure DevOps + Azure Repos** | ❌ No | ✅ Yes | ✅ Yes | Azure Repos don't support fleet; falls back to sequential |
-| **Kiro IDE/CLI** | ⚠️ Yes | ✅ Yes | ✅ Yes | Fleet mode available if configured; detection pending |
-| **Pi, OpenCode (other)** | ❓ Unknown | ⚠️ Unknown | ✅ Yes | Capabilities undocumented; will default to inline or sequential |
+| **Kiro IDE/CLI** | ⚠️ Pending | ✅ Yes | ✅ Yes | Detected at runtime; fleet capability is treated conservatively pending vendor confirmation |
+| **OpenCode** | ⚠️ Pending | ✅ Yes | ✅ Yes | Detected at runtime; defaults to sequential fallback |
+| **Pi** | ⚠️ Pending | ✅ Yes | ✅ Yes | Detected at runtime; defaults to sequential fallback |
+| **Unknown harness** | ❌ No | ✅ Yes | ✅ Yes | Conservative fallback when detection cannot classify the harness |
 
 **Legend:**
 - ✅ **Yes** — fully supported
-- ⚠️ **Conditional** — supported under certain conditions (e.g., GitHub-linked repos)
+- ⚠️ **Conditional/Pending** — supported conditionally or awaiting vendor confirmation
 - ❌ **No** — not available
-- ❓ **Unknown** — capabilities not yet confirmed
 
 ## Automatic Fallback: What Happens When Fleet Mode Is Unavailable
 
@@ -79,15 +79,14 @@ Fleet Mode (parallel, isolated context)
 Sequential Mode (one agent at a time, isolated context)
     ↓ [unavailable, fall back to]
 Inline Mode (within parent session context)
-    ↓ [unavailable, suggest]
-Herdr (manual multi-harness routing — expert only)
 ```
 
 **At each step:**
 1. **Fleet mode**: Agents run in parallel; each has pristine context
 2. **Sequential mode**: Agents run one after another; each still gets isolated context before their turn
 3. **Inline mode**: Agents run inside the parent's existing session, sharing context (smaller focus, lower latency)
-4. **Herdr**: If you're power-user and have multiple harnesses open, Herdr lets you manually route work to a more capable harness
+
+If inline mode is active and you need parallelism anyway, you can manually route work to another harness with tools like Herdr.
 
 Agents log which mode they're using so you know what's happening. You'll see messages like:
 > "Fleet mode unavailable in this harness. Falling back to sequential dispatch."
@@ -101,7 +100,7 @@ Agents follow this sequence at session start:
 3. **Try the highest-power mode available** — fleet first, then sequential, then inline
 4. **Log the choice** — record which mode is active (visible in debugging if needed)
 
-If harness detection can't determine your platform, agents conservatively default to **inline mode** to ensure they keep working.
+If harness detection can't determine your platform, agents conservatively default to **sequential mode** to ensure they keep working with isolated per-task context.
 
 ## Examples
 
@@ -121,13 +120,13 @@ You're on Copilot CLI and want to plan a feature AND review the design at the sa
 
 **Why this is faster:** Planner and reviewer don't interfere with each other's context.
 
-### Example 2: Sequential Implementation + Testing (Browser — Automatic Fallback)
+### Example 2: Sequential Implementation + Testing (Azure DevOps + Azure Repos)
 
-You're in Copilot Chat (browser) and delegating implementation + testing.
+You're in Azure DevOps backed by Azure Repos and delegating implementation + testing.
 
 ```
 [You invoke implementation agent]
-Agent detects: Browser harness → fleet mode unavailable → fallback to sequential
+Agent detects: Azure DevOps + Azure Repos → fleet mode unavailable → fallback to sequential
   → Spawn implementer (finishes)
   → Spawn tester (runs with isolated context)
   → Collect results
@@ -194,7 +193,7 @@ A: Each subagent gets a fresh isolated context, which is powerful for focus but 
 
 **Q: What if my harness is unknown or detection fails?**
 
-A: Agents conservatively default to inline mode to keep working. This is slower than fleet or sequential but ensures work continues. If you know your harness supports spawning, you can file an issue to improve detection for your platform.
+A: Agents conservatively default to sequential mode to keep working. If sequential spawning is unavailable, they fall back to inline mode. If you know your harness supports fleet mode, you can file an issue to improve detection for your platform.
 
 ## See Also
 
