@@ -85,7 +85,7 @@ See:
 
 ## Relationship to #194
 
-#194 provides the marker research baseline and policy guardrails:
+Issue #194 provides the marker research baseline and policy guardrails:
 
 - marker-based detection for Kiro/OpenCode/Pi is implemented,
 - fleet capability remains conservative pending stronger vendor confirmation for this integration path.

@@ -49,7 +49,9 @@ Detection runs in this order; first match wins:
 6. **Pi** (Phase 2): Check `PI_MODE` environment variable
 7. **Unknown**: Conservative fallback (sequential spawning available)
 
-**Phase 2 Status**: ✅ Detection patterns implemented (#194 vendor research complete). Patterns are based on recommended environment variable conventions from vendor research; final confirmation pending vendor documentation updates.
+**Phase 2 Status**: ✅ Detection patterns implemented (#194 vendor research
+complete). Patterns are based on recommended environment variable conventions
+from vendor research; final confirmation pending vendor documentation updates.
 
 ## Capability Matrix
 
@@ -64,7 +66,10 @@ Detection runs in this order; first match wins:
 | OpenCode | ❌ No | ✅ Yes | ✅ Phase 2 (#194) |
 | Unknown | ❌ No | ✅ Yes | ✅ Fallback |
 
-**Note**: Phase 2 harnesses are detected based on environment variable patterns identified in #194 vendor research. Capabilities are conservatively set to sequential spawning only (fleet mode unavailable) pending vendor confirmation of actual subagent support.
+**Note**: Phase 2 harnesses are detected based on environment variable patterns
+identified in #194 vendor research. Capabilities are conservatively set to
+sequential spawning only (fleet mode unavailable) pending vendor confirmation
+of actual subagent support.
 
 ## Azure DevOps Secondary Detection
 
@@ -89,7 +94,10 @@ Phase 2 harness detection is now implemented with the following patterns based o
 | OpenCode | `OPENCODE_MODE` | `hasOpenCodeMarker()` | ✅ Implemented |
 | Pi | `PI_MODE` | `hasPiMarker()` | ✅ Implemented |
 
-**Note on Vendor Confirmation**: These detection patterns follow the conventions established by Copilot CLI and align with recommendations from #194 vendor research. However, final confirmation is still pending from vendors to validate:
+**Note on Vendor Confirmation**: These detection patterns follow the
+conventions established by Copilot CLI and align with recommendations from
+issue #194 vendor research. However, final confirmation is still pending from vendors
+to validate:
 
 - Correctness of environment variable names
 - Whether alternative detection mechanisms are preferred (e.g., file-based markers, APIs, globals)
@@ -97,7 +105,10 @@ Phase 2 harness detection is now implemented with the following patterns based o
 
 Adjust detection patterns as needed if vendor documentation specifies different environment variables or APIs.
 
-**Fallback Behavior**: Until vendor confirmation arrives, Phase 2 harnesses are detected but default to sequential spawning availability (fleet mode unavailable). This is the safest approach — agents can run but won't attempt parallel dispatch until capabilities are confirmed.
+**Fallback Behavior**: Until vendor confirmation arrives, Phase 2 harnesses are
+detected but default to sequential spawning availability (fleet mode
+unavailable). This is the safest approach — agents can run but won't attempt
+parallel dispatch until capabilities are confirmed.
 
 ## Error Handling
 

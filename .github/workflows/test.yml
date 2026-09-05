@@ -30,61 +30,25 @@ jobs:
           Install-Module -Name Pester -Force -Scope CurrentUser -SkipPublisherCheck
         shell: pwsh
 
-      - name: Run Markdown Label Tests
+      - name: Run Pester Test Suite
         run: |
-          $testPath = ".apm/skills/jl-recon/tests/pester/markdown-labels.tests.ps1"
-          Write-Host "Running tests from: $testPath"
-          Invoke-Pester -Path $testPath -Verbose -OutputFile pester-markdown.xml -OutputFormat NUnitXml
+          $ErrorActionPreference = 'Stop'
+          $testPaths = @(
+            ".apm/skills/jl-recon/tests/pester/mode2-checks.tests.ps1",
+            ".apm/skills/jl-recon/tests/pester/mode2-workflow.tests.ps1",
+            ".apm/skills/jl-recon/tests/pester/mode3-checks.tests.ps1",
+            ".apm/skills/jl-recon/tests/pester/mode3-workflow.tests.ps1"
+          )
+
+          foreach ($testPath in $testPaths) {
+            Write-Host "Running tests from: $testPath"
+            $result = Invoke-Pester -Path $testPath -Output Detailed -PassThru
+            if ($result.Result -ne 'Passed') {
+              throw "Pester tests failed in $testPath"
+            }
+          }
         shell: pwsh
         continue-on-error: false
-
-      - name: Run GitHub Label Tests
-        run: |
-          $testPath = ".apm/skills/jl-recon/tests/pester/github-labels.tests.ps1"
-          Write-Host "Running tests from: $testPath"
-          Invoke-Pester -Path $testPath -Verbose -OutputFile pester-github.xml -OutputFormat NUnitXml
-        shell: pwsh
-        continue-on-error: false
-
-      - name: Run Azure DevOps Tag Tests
-        run: |
-          $testPath = ".apm/skills/jl-recon/tests/pester/azure-devops-tags.tests.ps1"
-          Write-Host "Running tests from: $testPath"
-          Invoke-Pester -Path $testPath -Verbose -OutputFile pester-ado.xml -OutputFormat NUnitXml
-        shell: pwsh
-        continue-on-error: false
-
-      - name: Run Mode 2 Check Logic Tests
-        run: |
-          $testPath = ".apm/skills/jl-recon/tests/pester/mode2-checks.tests.ps1"
-          Write-Host "Running tests from: $testPath"
-          Invoke-Pester -Path $testPath -Verbose -OutputFile pester-mode2-unit.xml -OutputFormat NUnitXml
-        shell: pwsh
-        continue-on-error: false
-
-      - name: Run Mode 2 Workflow Integration Tests
-        run: |
-          $testPath = ".apm/skills/jl-recon/tests/pester/mode2-workflow.tests.ps1"
-          Write-Host "Running tests from: $testPath"
-          Invoke-Pester -Path $testPath -Verbose -OutputFile pester-mode2-integration.xml -OutputFormat NUnitXml
-        shell: pwsh
-        continue-on-error: false
-
-      - name: Upload Pester Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pester-results
-          path: pester-*.xml
-          retention-days: 30
-
-      - name: Publish Test Results
-        if: always()
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          files: pester-*.xml
-          check_name: Pester Test Results
-          comment_mode: always
 
   bats-tests:
     name: Bats Tests (Edge Cases & Resolution)
@@ -99,14 +63,16 @@ jobs:
 
       - name: Install Bats
         run: |
-          npm install -g bats
+          sudo apt-get update
+          sudo apt-get install -y bats
           bats --version
 
       - name: Run Label Resolution Tests
         run: |
           testPath=".apm/skills/jl-recon/tests/bats/label-resolution.bats"
           echo "Running tests from: $testPath"
-          bats "$testPath" --formatter tap > bats-results.tap || true
+          set -o pipefail
+          bats "$testPath" --formatter tap | tee bats-results.tap
           cat bats-results.tap
 
       - name: Upload Bats Results
@@ -143,19 +109,16 @@ jobs:
           echo "## Integration Test Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Test Suites" >> $GITHUB_STEP_SUMMARY
-          echo "- **Mode 2 Pester Tests:** Quality-check gating, fallback hierarchy, findings review, resolution decisions" >> $GITHUB_STEP_SUMMARY
-          echo "- **Pester Tests:** Label application across GitHub, Azure DevOps, Markdown" >> $GITHUB_STEP_SUMMARY
+          echo "- **Mode 2 Pester Tests:** Check logic + resolution workflow" >> $GITHUB_STEP_SUMMARY
+          echo "- **Mode 3 Pester Tests:** Verification checks + publication workflow" >> $GITHUB_STEP_SUMMARY
           echo "- **Bats Tests:** Configuration resolution, inheritance, determinism, edge cases" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Coverage" >> $GITHUB_STEP_SUMMARY
           echo "✓ Mode 2 check configuration enable/disable/default behavior" >> $GITHUB_STEP_SUMMARY
           echo "✓ Mode 2 subagent → Herdr → session fallback hierarchy" >> $GITHUB_STEP_SUMMARY
           echo "✓ Mode 2 findings parsing, markdown display, audit decisions, graceful degradation" >> $GITHUB_STEP_SUMMARY
-          echo "✓ GitHub map and ticket labels (all 4 ticket types)" >> $GITHUB_STEP_SUMMARY
-          echo "✓ Azure DevOps map and ticket tags (all 4 types)" >> $GITHUB_STEP_SUMMARY
-          echo "✓ Markdown frontmatter label recording" >> $GITHUB_STEP_SUMMARY
-          echo "✓ Label inheritance (additive, not replacement)" >> $GITHUB_STEP_SUMMARY
-          echo "✓ Configuration override (user session preference)" >> $GITHUB_STEP_SUMMARY
+          echo "✓ Mode 3 checks configuration, parsing, decision prompts, and audit logging" >> $GITHUB_STEP_SUMMARY
+          echo "✓ Mode 3 report publication workflow across approve/override/cancel paths" >> $GITHUB_STEP_SUMMARY
           echo "✓ Edge cases (special characters, long lists, duplicates)" >> $GITHUB_STEP_SUMMARY
           echo "✓ Determinism (alphabetical sorting)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

@@ -47,7 +47,9 @@ Detect Azure DevOps context from runtime signals (environment variables and/or g
 
 - Detect via `KIRO_CLI_MODE` or `KIRO_IDE_SESSION`.
 - Marker pattern is implemented.
-- Kiro documentation indicates subagent support in IDE/CLI contexts, but this repository's AC5.1 policy keeps fleet disabled until this specific runtime path is confirmed end to end.
+- Kiro documentation indicates subagent support in IDE/CLI contexts, but this
+  repository's AC5.1 policy keeps fleet disabled until this specific runtime
+  path is confirmed end to end.
 - Capability policy is conservative in AC5.1 runtime selection: sequential fallback unless explicitly confirmed for this integration path.
 
 ### 5. OpenCode (candidate marker implemented)

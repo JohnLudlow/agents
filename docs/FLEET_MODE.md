@@ -1,17 +1,21 @@
 # Subagent Spawning and Fleet Mode
 
-Fleet mode coordinates multiple independent agents in parallel, each with its own isolated session context. Use this guide to understand when fleet mode helps, which harnesses support it, and what happens when it's unavailable.
+Fleet mode coordinates multiple independent agents in parallel, each with its
+own isolated session context. Use this guide to understand when fleet mode
+helps, which harnesses support it, and what happens when it's unavailable.
 
 ## When to Use Fleet Mode
 
 Fleet mode shines when your work has **multiple independent tasks** — for example, "Plan this feature AND review the design in parallel."
 
 **Fleet mode is worth using when:**
+
 - You have 2 or more independent subtasks (planning + review, implementation + testing, etc.)
 - Each subtask needs focused context to do its best work (~5 minutes or more)
 - Results can be assembled after both finish
 
 **Fleet mode is NOT worth using for:**
+
 - Sequential work (step 1 feeds into step 2)
 - Single decision trees ("discover what to do, then do it")
 - Quick tasks under ~5 minutes (overhead costs more than parallelism saves)
@@ -32,9 +36,11 @@ Run multiple agents in parallel:
 Each agent runs in its own clean session, then their results are collected and reassembled.
 
 **Example:**
+
 ```bash
 /fleet /planner /reviewer
 ```
+
 This runs the planner and reviewer agents in parallel, both focused on their own task.
 
 ### Automatic Activation
@@ -63,6 +69,7 @@ Different platforms have different capabilities. This matrix shows what your har
 | **Unknown harness** | ❌ No | ✅ Yes | ✅ Yes | Conservative fallback when detection cannot classify the harness |
 
 **Legend:**
+
 - ✅ **Yes** — fully supported
 - ⚠️ **Conditional/Pending** — supported conditionally or awaiting vendor confirmation
 - ❌ **No** — not available
@@ -73,7 +80,7 @@ When your harness doesn't support fleet mode, agents gracefully step down:
 
 ### The Fallback Chain
 
-```
+```text
 Fleet Mode (parallel, isolated context)
     ↓ [unavailable, fall back to]
 Sequential Mode (one agent at a time, isolated context)
@@ -82,6 +89,7 @@ Inline Mode (within parent session context)
 ```
 
 **At each step:**
+
 1. **Fleet mode**: Agents run in parallel; each has pristine context
 2. **Sequential mode**: Agents run one after another; each still gets isolated context before their turn
 3. **Inline mode**: Agents run inside the parent's existing session, sharing context (smaller focus, lower latency)
@@ -113,6 +121,7 @@ You're on Copilot CLI and want to plan a feature AND review the design at the sa
 ```
 
 **What happens:**
+
 1. Copilot CLI detects fleet mode support (`COPILOT_CLI_MODE` env var present)
 2. `/planner` runs in session A with clean context
 3. `/reviewer` runs in session B with clean context (in parallel)
@@ -124,7 +133,7 @@ You're on Copilot CLI and want to plan a feature AND review the design at the sa
 
 You're in Azure DevOps backed by Azure Repos and delegating implementation + testing.
 
-```
+```text
 [You invoke implementation agent]
 Agent detects: Azure DevOps + Azure Repos → fleet mode unavailable → fallback to sequential
   → Spawn implementer (finishes)
@@ -141,7 +150,7 @@ Message to you:
 
 Some browser sessions don't support spawning at all. The agent continues inline:
 
-```
+```text
 [You invoke implementation agent]
 Agent detects: Browser harness → no spawning available → use inline skills
   → Call implementation skills directly
@@ -157,9 +166,11 @@ Message to you:
 
 Agents proactively suggest fleet mode when they detect suitable work:
 
-> "Multiple independent subtasks detected. Try running `/fleet /agent1 /agent2` to parallelize this work across isolated sessions."
+> "Multiple independent subtasks detected. Try running `/fleet /agent1
+> /agent2` to parallelize this work across isolated sessions."
 
 **Agents recommend fleet only for:**
+
 - 2+ independent subtasks (not sequential chains)
 - Subtasks benefiting from focused context (> ~5 minutes of work each)
 - Results that can be reassembled after both complete
@@ -168,9 +179,13 @@ Agents do NOT recommend fleet for quick, sequential, or tightly-coupled work.
 
 ## Technical Details and Implementation
 
-For implementation-level details about fleet mode, model selection, harness detection, and subagent coordination, see `.apm/skills/jl-subagent-spawning/SKILL.md` → **Fleet Mode Utilization and Harness Detection (AC5.1)**.
+For implementation-level details about fleet mode, model selection, harness
+detection, and subagent coordination, see
+`.apm/skills/jl-subagent-spawning/SKILL.md` → **Fleet Mode Utilization and
+Harness Detection (AC5.1)**.
 
 That reference covers:
+
 - Harness detection pseudocode
 - Model resolution hierarchy
 - Approval gates and delegation permissions
@@ -181,19 +196,31 @@ That reference covers:
 
 **Q: I ran `/fleet` but only one agent ran. What happened?**
 
-A: Your harness may not support true parallel fleet mode. The agent fell back to sequential mode. You'll see a message noting which fallback was used. Check the harness support matrix above — if your platform doesn't have ✅ for Fleet Mode, sequential is expected behavior.
+A: Your harness may not support true parallel fleet mode. The agent fell back
+to sequential mode. You'll see a message noting which fallback was used. Check
+the harness support matrix above — if your platform doesn't have ✅ for Fleet
+Mode, sequential is expected behavior.
 
 **Q: Can I force fleet mode on my platform?**
 
-A: No. Fleet mode is only available on platforms that support it natively. If your harness doesn't support it, agents automatically fall back to sequential or inline. You can use Herdr to multiplex to a different harness if you have multiple sessions available (advanced use case).
+A: No. Fleet mode is only available on platforms that support it natively. If
+your harness doesn't support it, agents automatically fall back to sequential
+or inline. You can use Herdr to multiplex to a different harness if you have
+multiple sessions available (advanced use case).
 
 **Q: Why does sequential mode take longer than I expect?**
 
-A: Each subagent gets a fresh isolated context, which is powerful for focus but costs some setup time. If your subtasks are very quick (< ~5 minutes total), sequential overhead may outweigh the benefit — in that case, inline mode is faster. Agents consider this when recommending fleet.
+A: Each subagent gets a fresh isolated context, which is powerful for focus but
+costs some setup time. If your subtasks are very quick (< ~5 minutes total),
+sequential overhead may outweigh the benefit — in that case, inline mode is
+faster. Agents consider this when recommending fleet.
 
 **Q: What if my harness is unknown or detection fails?**
 
-A: Agents conservatively default to sequential mode to keep working. If sequential spawning is unavailable, they fall back to inline mode. If you know your harness supports fleet mode, you can file an issue to improve detection for your platform.
+A: Agents conservatively default to sequential mode to keep working. If
+sequential spawning is unavailable, they fall back to inline mode. If you know
+your harness supports fleet mode, you can file an issue to improve detection
+for your platform.
 
 ## See Also
 

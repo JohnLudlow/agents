@@ -768,6 +768,7 @@ task("jl-quiz", { prompt: "..." })  // No spawning, just invoke
 Vendor research findings are documented in `references/VENDOR_RESEARCH_HARNESS_DETECTION.md` (#194). Current status:
 
 **Implemented detection signals:**
+
 - ✅ Copilot CLI: `COPILOT_CLI_MODE`
 - ✅ Browser: `window` object
 - ✅ Azure DevOps: context detection plus GitHub vs Azure Repos host distinction
@@ -776,11 +777,17 @@ Vendor research findings are documented in `references/VENDOR_RESEARCH_HARNESS_D
 - ✅ Pi: `PI_MODE`
 
 **Remaining uncertainty:**
-- ⚠️ **Kiro/OpenCode/Pi marker confirmation** — Environment variable names are implemented from vendor research conventions; final vendor confirmation is still pending.
-- ⚠️ **Kiro/OpenCode/Pi capability upgrades** — Fleet mode is intentionally disabled by policy until confirmation of supported spawning semantics in this integration path.
+
+- ⚠️ **Kiro/OpenCode/Pi marker confirmation** — Environment variable names are
+  implemented from vendor research conventions; final vendor confirmation is
+  still pending.
+- ⚠️ **Kiro/OpenCode/Pi capability upgrades** — Fleet mode is intentionally
+  disabled by policy until confirmation of supported spawning semantics in this
+  integration path.
 - ⚠️ **Cross-harness parity** — If vendor docs confirm stronger guarantees, upgrade capability flags and tests in lockstep.
 
 **Design-level fog items (beyond detection):**
+
 - [ ] **Result coordination API** — How should agents coordinate results from parallel subagents? (Automatic or manual?)
 - [ ] **Sequential fallback refinement** — Should sequential fallback prefer herdr if available, or other mechanism?
 

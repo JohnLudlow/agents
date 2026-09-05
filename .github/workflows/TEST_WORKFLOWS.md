@@ -18,15 +18,14 @@ Runs on pull requests and pushes that touch the `jl-recon` skill or test files.
 
 1. **pester-tests** (Windows)
    - Installs Pester module
-   - Runs 3 test suites:
-     - `markdown-labels.tests.ps1` — File I/O, YAML frontmatter recording
-     - `github-labels.tests.ps1` — GitHub API mocks, label inheritance
-     - `azure-devops-tags.tests.ps1` — Azure DevOps API mocks, semicolon format
-   - Uploads NUnit XML results for parsing
-   - Publishes results to PR/commit via `EnricoMi/publish-unit-test-result-action`
+   - Runs 4 test suites:
+     - `mode2-checks.tests.ps1` — Mode 2 check logic, fallback hierarchy, findings handling
+     - `mode2-workflow.tests.ps1` — Mode 2 resolution workflow
+     - `mode3-checks.tests.ps1` — Mode 3 verification logic and parsing
+     - `mode3-workflow.tests.ps1` — Mode 3 publication workflow
 
 2. **bats-tests** (Ubuntu)
-   - Installs Bats test framework via npm
+   - Installs Bats from apt
    - Runs:
      - `label-resolution.bats` — Config resolution, inheritance, determinism
    - Captures TAP output
@@ -51,7 +50,7 @@ setup → validate → test ↘
 **Test Job:**
 
 - Runs on Windows (for PowerShell/Pester)
-- Executes 3 Pester test suites
+- Executes 4 Pester test suites (Mode 2 + Mode 3)
 - Blocks build if any test fails
 - Runs after validate, before build
 
@@ -61,10 +60,10 @@ setup → validate → test ↘
 
 ```bash
 # Run all Pester tests
-Invoke-Pester -Path ".apm/skills/jl-recon/tests/pester" -Verbose
+Invoke-Pester -Path ".apm/skills/jl-recon/tests/pester" -Output Detailed
 
 # Run specific test file
-Invoke-Pester -Path ".apm/skills/jl-recon/tests/pester/markdown-labels.tests.ps1" -Verbose
+Invoke-Pester -Path ".apm/skills/jl-recon/tests/pester/mode2-checks.tests.ps1" -Output Detailed
 
 # Run all Bats tests
 bats ".apm/skills/jl-recon/tests/bats/*.bats"
@@ -91,11 +90,8 @@ bats ".apm/skills/jl-recon/tests/bats/label-resolution.bats" --filter "config re
 
 **Pester:**
 
-- NUnit XML files uploaded as artifacts
-- Parsed and displayed in PR with:
-  - Pass/fail counts
-  - Failed test names and errors
-  - Execution time
+- Detailed test output is shown directly in workflow logs
+- Job fails immediately when any suite does not pass
 
 **Bats:**
 
@@ -107,26 +103,17 @@ bats ".apm/skills/jl-recon/tests/bats/label-resolution.bats" --filter "config re
 
 The automated tests verify:
 
-✅ **GitHub Labels**
+✅ **Mode 2 Checks and Workflow**
 
-- Map creation with labels
-- Ticket labels (quiz, research, prototype, task)
-- Label inheritance (additive, not replacement)
-- User override (replaces entire set)
+- Check invocation and fallback (subagent → Herdr → session)
+- Findings parsing, display formatting, and severity ordering
+- Decision prompts and audit logging in resolution workflow
 
-✅ **Azure DevOps Tags**
+✅ **Mode 3 Checks and Workflow**
 
-- Map work item tag application
-- Ticket tag application (all 4 types)
-- Semicolon-delimited format
-- Same inheritance logic as GitHub
-
-✅ **Markdown Frontmatter**
-
-- YAML list formatting
-- File I/O and updates
-- Ticket body notes
-- Parent link references
+- Verification parsing and risk ordering
+- Decision prompts and publication audit logging
+- Approve/override/cancel publication paths
 
 ✅ **Edge Cases**
 
@@ -184,7 +171,7 @@ Add verbose output to test runs:
 # In main.yml test job
 - name: Run with Verbose Output
   run: |
-    Invoke-Pester -Path <testpath> -Verbose -Debug
+    Invoke-Pester -Path <testpath> -Output Detailed -Debug
   shell: pwsh
 ```
 
