@@ -154,12 +154,19 @@ function Resolve-JlReconMode2CheckModel {
     }
 
     $modelSelection = Get-JlReconModelSelectionConfig -Config $Config
-    $mode2ConfiguredModel = Get-JlReconObjectValue -InputObject $modelSelection -Name 'mode2_checks'
+    $mode2ConfiguredModel = Get-JlReconObjectValue -InputObject $modelSelection -Name 'ticket_resolution_checks'
+    $mode2ConfiguredModelPath = 'jl_recon.model_selection.ticket_resolution_checks'
+    if ($null -eq $mode2ConfiguredModel) {
+        $mode2ConfiguredModel = Get-JlReconObjectValue -InputObject $modelSelection -Name 'mode2_checks'
+        if ($null -ne $mode2ConfiguredModel) {
+            $mode2ConfiguredModelPath = 'jl_recon.model_selection.mode2_checks'
+        }
+    }
     $defaultConfiguredModel = Get-JlReconObjectValue -InputObject $modelSelection -Name 'default'
 
     $candidates = @(
         [pscustomobject]@{ Source = 'explicit'; ConfigPath = 'request.model'; Value = $explicitModel },
-        [pscustomobject]@{ Source = 'mode2-checks'; ConfigPath = 'jl_recon.model_selection.mode2_checks'; Value = $mode2ConfiguredModel },
+        [pscustomobject]@{ Source = 'ticket-resolution-checks'; ConfigPath = $mode2ConfiguredModelPath; Value = $mode2ConfiguredModel },
         [pscustomobject]@{ Source = 'default'; ConfigPath = 'jl_recon.model_selection.default'; Value = $defaultConfiguredModel }
     )
 

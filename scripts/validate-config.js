@@ -447,6 +447,8 @@ function validateLayer3(config, agentKey) {
         "research",
         "prototype",
         "task",
+        "ticket_resolution_checks",
+        "status_report_checks",
         "mode2_checks",
         "mode3_checks",
       ]);

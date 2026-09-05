@@ -110,8 +110,8 @@ jl_recon:
     research: claude-sonnet-5
     prototype: gpt-5.4-mini
     task: inherit
-    mode2_checks: gpt-5.4-mini
-    mode3_checks: claude-sonnet-5
+    ticket_resolution_checks: gpt-5.4-mini
+    status_report_checks: claude-sonnet-5
 ```
 
 When present, recon resolves in this order:

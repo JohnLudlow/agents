@@ -116,8 +116,8 @@ procedure startReconPass(debugMode)
       pattern: "## Not Yet Specified (Fog of War)"
     model_selection:
       default: "inherit"
-      mode2_checks: "inherit"
-      mode3_checks: "inherit"
+      ticket_resolution_checks: "inherit"
+      status_report_checks: "inherit"
 
   try
     result := resolveConfig({
@@ -129,8 +129,8 @@ procedure startReconPass(debugMode)
         "decision_gates.research_afk",
         "uncertainty_tracking.pattern",
         "model_selection.default",
-        "model_selection.mode2_checks",
-        "model_selection.mode3_checks"
+        "model_selection.ticket_resolution_checks",
+        "model_selection.status_report_checks"
       ],
       includeSource: debugMode
     })
@@ -142,8 +142,8 @@ procedure startReconPass(debugMode)
     validateBoolean(reconConfig.decision_gates.research_afk)
     validateMarkdownHeading(reconConfig.uncertainty_tracking.pattern)
     validateModelOrInherit(reconConfig.model_selection.default)
-    validateModelOrInherit(reconConfig.model_selection.mode2_checks)
-    validateModelOrInherit(reconConfig.model_selection.mode3_checks)
+    validateModelOrInherit(reconConfig.model_selection.ticket_resolution_checks)
+    validateModelOrInherit(reconConfig.model_selection.status_report_checks)
 
     if debugMode
       log("Resolved jl_recon config from", result.source)

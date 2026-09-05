@@ -25,7 +25,7 @@ tests/
 
 #### `mode2-checks.tests.ps1`
 
-- **Configuration gating:** enabled, disabled, missing config defaults, timeout override, model selection (`mode2_checks`, `default`, `inherit`)
+- **Configuration gating:** enabled, disabled, missing config defaults, timeout override, model selection (`ticket_resolution_checks`, `default`, `inherit`)
 - **Fallback invocation:** subagent → Herdr → session, all-failed, timeout, parse error, partial availability
 - **Findings parsing:** structured objects, malformed JSON degradation, empty findings, missing optional fields
 - **Findings display:** markdown table columns, severity sorting, file/line context, escaping
@@ -44,7 +44,7 @@ tests/
 
 #### `mode3-checks.tests.ps1`
 
-- **Configuration gating:** enabled, disabled, missing config defaults, timeout override, model selection (`mode3_checks`, `default`, `inherit`)
+- **Configuration gating:** enabled, disabled, missing config defaults, timeout override, model selection (`status_report_checks`, `default`, `inherit`)
 - **Fallback invocation:** subagent → Herdr → session, all-failed, timeout, parse error, partial availability
 - **Findings parsing/display:** claim normalization, risk ordering, confidence formatting, source links, edge cases
 - **User decisions:** approve, publish-without-verification, override, cancel, invalid-input retry

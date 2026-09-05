@@ -61,7 +61,7 @@ jl_recon:
     research_afk: true
   model_selection:
     default: inherit
-    mode2_checks: gpt-5.4-mini
+    ticket_resolution_checks: gpt-5.4-mini
 ```
 
 Agents may read settings from either file, from both, or from neither. The

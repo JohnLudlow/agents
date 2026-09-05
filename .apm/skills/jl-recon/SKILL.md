@@ -43,8 +43,8 @@ mechanism; jl-recon owns this schema, its defaults, and its validation.
 | `model_selection.research` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
 | `model_selection.prototype` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
 | `model_selection.task` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
-| `model_selection.mode2_checks` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
-| `model_selection.mode3_checks` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
+| `model_selection.ticket_resolution_checks` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
+| `model_selection.status_report_checks` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
 | `labels.default` | array of strings | any label names | `["recon:map"]` | optional |
 | `labels.map` | array of strings | any label names | defaults to `labels.default` | optional |
 | `labels.quiz` | array of strings | any label names | defaults to `labels.default` | optional |
@@ -55,13 +55,28 @@ mechanism; jl-recon owns this schema, its defaults, and its validation.
 | `checks.on_status_report_enabled` | boolean | `true`, `false` | `true` | optional |
 | `checks.timeout_seconds` | integer | any positive integer | `30` | optional |
 
+### Legacy aliases (compatibility)
+
+For backward compatibility, jl-recon also accepts:
+
+- `model_selection.mode2_checks` (alias of `model_selection.ticket_resolution_checks`)
+- `model_selection.mode3_checks` (alias of `model_selection.status_report_checks`)
+
+If both a canonical key and its legacy alias are present, the canonical key
+wins.
+
+Canonical keys follow AC2.0 and ADS-STE100's human-readable naming guidance:
+`ticket_resolution_checks` and `status_report_checks`.
+
 ### Validation and defaults
 
 - validate that `jl_recon`, if present, is an object
 - validate `decision_gates`, if present, as an object of booleans
 - validate `uncertainty_tracking`, if present, as an object
 - validate `model_selection`, if present, as an object with keys limited to:
-  `default`, `quiz`, `research`, `prototype`, `task`, `mode2_checks`, `mode3_checks`
+  `default`, `quiz`, `research`, `prototype`, `task`, `ticket_resolution_checks`,
+  `status_report_checks` (legacy aliases `mode2_checks`, `mode3_checks`
+  also accepted)
 - validate each `model_selection.*` value as a non-empty string
 - validate each configured model value as either `inherit` or a recognized model name
 - validate `labels`, if present, as an object with keys limited to: `default`,
@@ -79,7 +94,7 @@ mechanism; jl-recon owns this schema, its defaults, and its validation.
 - default `model_selection.default` to `inherit`
 - default each of `model_selection.quiz`, `model_selection.research`,
   `model_selection.prototype`, `model_selection.task`,
-  `model_selection.mode2_checks`, `model_selection.mode3_checks` to inherit
+  `model_selection.ticket_resolution_checks`, `model_selection.status_report_checks` to inherit
   from `model_selection.default`
 - default `labels.default` to `["recon:map"]`
 - default each of `labels.map`, `labels.quiz`, `labels.research`,
@@ -107,8 +122,8 @@ jl_recon:
   model_selection:
     default: "inherit"
     research: "claude-sonnet-5"
-    mode2_checks: "gpt-5.4-mini"
-    mode3_checks: "claude-sonnet-5"
+    ticket_resolution_checks: "gpt-5.4-mini"
+    status_report_checks: "claude-sonnet-5"
   checks:
     on_ticket_resolution_enabled: true
     on_status_report_enabled: true
@@ -136,7 +151,7 @@ jl_recon:
     destination_confirmation: true
   model_selection:
     default: "claude-sonnet-5"
-    mode2_checks: "gpt-5.4-mini"
+    ticket_resolution_checks: "gpt-5.4-mini"
   checks:
     on_ticket_resolution_enabled: true
     on_status_report_enabled: true
@@ -164,8 +179,8 @@ This skill consumes:
 - `jl_recon.model_selection.research`
 - `jl_recon.model_selection.prototype`
 - `jl_recon.model_selection.task`
-- `jl_recon.model_selection.mode2_checks`
-- `jl_recon.model_selection.mode3_checks`
+- `jl_recon.model_selection.ticket_resolution_checks`
+- `jl_recon.model_selection.status_report_checks`
 - `jl_recon.labels.default`
 - `jl_recon.labels.map`
 - `jl_recon.labels.quiz`
@@ -197,16 +212,18 @@ Resolved behaviour:
   - if not configured, default to `## Not Yet Specified (Fog of War)` through
     jl-recon's own defaults
 - `model_selection.default`, `model_selection.quiz`, `model_selection.research`,
-  `model_selection.prototype`, `model_selection.task`, `model_selection.mode2_checks`,
-  `model_selection.mode3_checks`
+  `model_selection.prototype`, `model_selection.task`, `model_selection.ticket_resolution_checks`,
+  `model_selection.status_report_checks`
+  - legacy aliases are accepted: `mode2_checks` → `ticket_resolution_checks`,
+    `mode3_checks` → `status_report_checks`
   - `inherit` means "do not force a model at this level; continue to the next fallback layer"
   - when a delegated action runs, resolve model in this order:
     1. explicit per-action user override (`request.model`)
     2. `jl_recon.model_selection.<action>`
     3. `jl_recon.model_selection.default`
     4. `jl_subagent_models` hierarchy (`overrides.<taskKey>` → per-type → per-agent → global → hard fallback)
-  - Mode 2 checks use action key `mode2_checks`
-  - Mode 3 checks use action key `mode3_checks`
+  - Mode 2 checks use action key `ticket_resolution_checks`
+  - Mode 3 checks use action key `status_report_checks`
   - invalid model names are warned and skipped to the next precedence layer
 - `checks.on_ticket_resolution_enabled`
   - `true` (default): run quality checks before recording ticket resolutions in Mode 2 (Work through the map)
@@ -385,13 +402,13 @@ format defined by jl-config) for:
 ```text
 [WARN] jl-recon: 'model_selection.mode2' is not a valid model-selection key
   File: CONTRIBUTING.md [line 24]
-  Fix: Use only: default, quiz, research, prototype, task, mode2_checks, mode3_checks
+  Fix: Use only: default, quiz, research, prototype, task, ticket_resolution_checks, status_report_checks (legacy aliases: mode2_checks, mode3_checks)
 ```
 
 #### Invalid model_selection value
 
 ```text
-[WARN] jl-recon: 'model_selection.mode2_checks' must be 'inherit' or a recognized model name, not "fast-model"
+[WARN] jl-recon: 'model_selection.ticket_resolution_checks' must be 'inherit' or a recognized model name, not "fast-model"
   File: AGENTS.md [line 25]
   Fix: Use 'inherit' or a model like claude-sonnet-5 / gpt-5.4-mini
 ```
@@ -597,7 +614,7 @@ findings and explicitly confirms the resolution.
 1. **Invoke checks** — Call jl-adversarial-reviewer using `jl-subagent-spawning`'s
    fallback hierarchy: try subagent → try Herdr → read into session. Pass the
    resolved ticket's content (resolution text, findings, context from the map).
-   Resolve the requested model using `model_selection.mode2_checks` (or
+   Resolve the requested model using `model_selection.ticket_resolution_checks` (or
    `model_selection.default`) before invoking fallback; if either is `inherit`
    or invalid, continue into the `jl_subagent_models` hierarchy.
    Apply a per-check timeout of `checks.timeout_seconds` (default: `30`). On
@@ -733,7 +750,7 @@ explicitly confirms publication.
    status report text. Doublecheck will analyze each claim in the report and
    return per-claim verification results (VERIFIED/PLAUSIBLE/UNVERIFIED/
    DISPUTED/FABRICATION_RISK with confidence levels and source links). Resolve
-   the requested model using `model_selection.mode3_checks` (or
+   the requested model using `model_selection.status_report_checks` (or
    `model_selection.default`) before invoking fallback; if either is `inherit`
    or invalid, continue into the `jl_subagent_models` hierarchy. Apply a
    per-check timeout of `checks.timeout_seconds` (default: `30`). On harness
@@ -826,7 +843,7 @@ explicitly confirms publication.
    status report text. Doublecheck will analyze each claim in the report and
    return per-claim verification results (VERIFIED/PLAUSIBLE/UNVERIFIED/
    DISPUTED/FABRICATION_RISK with confidence levels and source links). Resolve
-   the requested model using `model_selection.mode3_checks` (or
+   the requested model using `model_selection.status_report_checks` (or
    `model_selection.default`) before invoking fallback; if either is `inherit`
    or invalid, continue into the `jl_subagent_models` hierarchy. Apply a
    per-check timeout of `checks.timeout_seconds` (default: `30`). On harness

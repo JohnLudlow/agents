@@ -592,7 +592,7 @@ Describe "Mode 2 model selection" {
         . $local:path
     }
 
-    It "applies jl_recon.model_selection.mode2_checks to delegated checks" {
+    It "applies jl_recon.model_selection.ticket_resolution_checks to delegated checks" {
         $script:capturedModel = $null
 
         $result = Invoke-JlReconMode2Checks `
@@ -604,14 +604,14 @@ Describe "Mode 2 model selection" {
                     return @{ findings = @() }
                 }
             } `
-            -Config @{ model_selection = @{ mode2_checks = "gpt-5.4-mini" } }
+            -Config @{ model_selection = @{ ticket_resolution_checks = "gpt-5.4-mini" } }
 
         $script:capturedModel | Should -Be "gpt-5.4-mini"
         $result.SuccessfulChecks[0].ModelResolved | Should -Be "gpt-5.4-mini"
-        $result.SuccessfulChecks[0].ModelResolutionSource | Should -Be "mode2-checks"
+        $result.SuccessfulChecks[0].ModelResolutionSource | Should -Be "ticket-resolution-checks"
     }
 
-    It "falls back to model_selection.default when mode2_checks is invalid" {
+    It "falls back to model_selection.default when ticket_resolution_checks is invalid" {
         $script:capturedModel = $null
 
         $result = Invoke-JlReconMode2Checks `
@@ -623,11 +623,11 @@ Describe "Mode 2 model selection" {
                     return @{ findings = @() }
                 }
             } `
-            -Config @{ model_selection = @{ mode2_checks = "fast-model"; default = "claude-sonnet-5" } } `
+            -Config @{ model_selection = @{ ticket_resolution_checks = "fast-model"; default = "claude-sonnet-5" } } `
             -WarningAction SilentlyContinue
 
         $script:capturedModel | Should -Be "claude-sonnet-5"
-        $result.WarningMessages | Should -Contain "Invalid model 'fast-model' from jl_recon.model_selection.mode2_checks; falling back to next precedence level."
+        $result.WarningMessages | Should -Contain "Invalid model 'fast-model' from jl_recon.model_selection.ticket_resolution_checks; falling back to next precedence level."
         $result.SuccessfulChecks[0].ModelResolutionSource | Should -Be "default"
     }
 
@@ -643,10 +643,29 @@ Describe "Mode 2 model selection" {
                     return @{ findings = @() }
                 }
             } `
-            -Config @{ model_selection = @{ mode2_checks = "inherit" } }
+            -Config @{ model_selection = @{ ticket_resolution_checks = "inherit" } }
 
         $script:capturedModel | Should -Be $null
         $result.SuccessfulChecks[0].ModelResolved | Should -Be $null
-        $result.SuccessfulChecks[0].ModelResolutionSource | Should -Be "mode2-checks-inherit"
+        $result.SuccessfulChecks[0].ModelResolutionSource | Should -Be "ticket-resolution-checks-inherit"
+    }
+
+    It "supports legacy mode2_checks as an alias for ticket_resolution_checks" {
+        $script:capturedModel = $null
+
+        $result = Invoke-JlReconMode2Checks `
+            -CheckRequests @("jl-adversarial-reviewer") `
+            -StrategyHandlers @{
+                subagent = {
+                    param($checkName, $ticket, $timeoutSeconds, $model)
+                    $script:capturedModel = $model
+                    return @{ findings = @() }
+                }
+            } `
+            -Config @{ model_selection = @{ mode2_checks = "gpt-5.4-mini" } }
+
+        $script:capturedModel | Should -Be "gpt-5.4-mini"
+        $result.SuccessfulChecks[0].ModelResolved | Should -Be "gpt-5.4-mini"
+        $result.SuccessfulChecks[0].ModelResolutionSource | Should -Be "ticket-resolution-checks"
     }
 }

@@ -155,12 +155,19 @@ function Resolve-JlReconMode3CheckModel {
     }
 
     $modelSelection = Get-JlReconModelSelectionConfig -Config $Config
-    $mode3ConfiguredModel = Get-JlReconObjectValue -InputObject $modelSelection -Name 'mode3_checks'
+    $mode3ConfiguredModel = Get-JlReconObjectValue -InputObject $modelSelection -Name 'status_report_checks'
+    $mode3ConfiguredModelPath = 'jl_recon.model_selection.status_report_checks'
+    if ($null -eq $mode3ConfiguredModel) {
+        $mode3ConfiguredModel = Get-JlReconObjectValue -InputObject $modelSelection -Name 'mode3_checks'
+        if ($null -ne $mode3ConfiguredModel) {
+            $mode3ConfiguredModelPath = 'jl_recon.model_selection.mode3_checks'
+        }
+    }
     $defaultConfiguredModel = Get-JlReconObjectValue -InputObject $modelSelection -Name 'default'
 
     $candidates = @(
         [pscustomobject]@{ Source = 'explicit'; ConfigPath = 'request.model'; Value = $explicitModel },
-        [pscustomobject]@{ Source = 'mode3-checks'; ConfigPath = 'jl_recon.model_selection.mode3_checks'; Value = $mode3ConfiguredModel },
+        [pscustomobject]@{ Source = 'status-report-checks'; ConfigPath = $mode3ConfiguredModelPath; Value = $mode3ConfiguredModel },
         [pscustomobject]@{ Source = 'default'; ConfigPath = 'jl_recon.model_selection.default'; Value = $defaultConfiguredModel }
     )
 
