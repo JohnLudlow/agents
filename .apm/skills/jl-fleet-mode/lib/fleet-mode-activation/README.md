@@ -60,8 +60,8 @@ Agents can request a mode, but the request is advisory:
 ```typescript
 const { mode, log } = resolveSpawningMode(session, SpawningMode.FLEET);
 
-// If fleet is unavailable, silently falls back to sequential
-// Log shows: "Agent requested fleet, but only sequential available"
+// If fleet is unavailable, silently falls through to sequential or inline
+// Log shows the selected fallback mode for debugging
 ```
 
 ## Decision Logic (Fallback Chain)
@@ -101,7 +101,7 @@ console.log(log);
 
 // Output:
 // [2026-09-03T23:17:19.000Z] mode_selected: fleet (Copilot CLI supports fleet mode)
-// [2026-09-03T23:17:25.000Z] fallback_attempted: sequential (Agent requested fleet but unavailable in Browser)
+// [2026-09-03T23:17:25.000Z] fallback_attempted: inline (Agent requested fleet, unavailable in browser; falling back to inline)
 ```
 
 Use this log for debugging why agents chose certain spawning modes or fell back.
@@ -161,8 +161,8 @@ Agents can request a specific mode if they have strong constraints:
 const { mode, log } = resolveSpawningMode(session, SpawningMode.FLEET);
 
 if (log.event === 'fallback_attempted') {
-  // Fleet not available; silently using sequential
-  // Agent can log this for context: "Fleet mode unavailable; using sequential"
+  // Fleet not available; silently using the next available mode
+  // Agent can log this for context: "Fleet mode unavailable; using fallback"
 }
 ```
 

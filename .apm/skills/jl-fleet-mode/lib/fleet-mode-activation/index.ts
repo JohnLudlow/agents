@@ -25,6 +25,12 @@ export const SpawningMode = {
 } as const;
 export type SpawningMode = typeof SpawningMode[keyof typeof SpawningMode];
 
+const FALLBACK_CHAIN_BY_MODE: Record<SpawningMode, SpawningMode[]> = {
+  [SpawningMode.FLEET]: [SpawningMode.FLEET, SpawningMode.SEQUENTIAL, SpawningMode.INLINE],
+  [SpawningMode.SEQUENTIAL]: [SpawningMode.SEQUENTIAL, SpawningMode.INLINE],
+  [SpawningMode.INLINE]: [SpawningMode.INLINE]
+};
+
 /**
  * Session state for fleet mode coordination.
  * Initialize once at session start; reuse throughout session.
@@ -79,19 +85,8 @@ export function initializeFleetModeSession(
 export function selectSpawningMode(
   capabilities: HarnessCapabilities
 ): SpawningMode {
-  // Try fleet mode first (maximizes parallelization)
-  if (capabilities.fleetModeAvailable) {
-    return SpawningMode.FLEET;
-  }
-
-  // Fall back to sequential dispatch (one subagent at a time, isolated context)
-  if (capabilities.sequentialSpawningAvailable) {
-    return SpawningMode.SEQUENTIAL;
-  }
-
-  // Last resort: inline (no spawning, run work in current session)
-  // Note: All harnesses support inline; this should rarely be reached
-  return SpawningMode.INLINE;
+  const { mode } = resolveModeWithFallback(capabilities, SpawningMode.FLEET);
+  return mode;
 }
 
 /**
@@ -134,39 +129,48 @@ export function resolveSpawningMode(
   session: FleetModeSession,
   requestedMode?: SpawningMode
 ): { mode: SpawningMode; log: ActivationLogEntry } {
-  let selectedMode = session.selectedMode;
+  const timestamp = new Date().toISOString();
+  const preferredMode = requestedMode ?? SpawningMode.FLEET;
+  const previousMode = session.selectedMode;
+
+  const { mode: selectedMode, fellBackFrom } = resolveModeWithFallback(
+    session.harnessCapabilities,
+    preferredMode
+  );
+
+  session.selectedMode = selectedMode;
+
   let logEntry: ActivationLogEntry;
 
-  if (requestedMode && requestedMode !== session.selectedMode) {
-    // Agent requested a specific mode; check if it's available
-    const availableMode = selectSpawningMode(session.harnessCapabilities);
-
-    if (requestedMode === availableMode) {
-      // Requested mode is available; use it
-      selectedMode = requestedMode;
+  if (requestedMode) {
+    if (fellBackFrom) {
       logEntry = {
-        timestamp: new Date().toISOString(),
+        timestamp,
+        event: 'fallback_attempted',
+        mode: selectedMode,
+        reason: `Agent requested ${requestedMode}, unavailable in ${session.harnessCapabilities.harness}; falling back to ${selectedMode}`
+      };
+    } else {
+      logEntry = {
+        timestamp,
         event: 'mode_selected',
         mode: selectedMode,
         reason: `Agent requested ${requestedMode}; available in ${session.harnessCapabilities.harness}`
       };
-    } else {
-      // Requested mode is not available; log attempt and use fallback
-      logEntry = {
-        timestamp: new Date().toISOString(),
-        event: 'fallback_attempted',
-        mode: availableMode,
-        reason: `Agent requested ${requestedMode}, but only ${availableMode} available in ${session.harnessCapabilities.harness}`
-      };
-      selectedMode = availableMode;
     }
-  } else {
-    // Use session default
+  } else if (previousMode !== selectedMode) {
     logEntry = {
-      timestamp: new Date().toISOString(),
+      timestamp,
+      event: 'mode_unavailable',
+      mode: selectedMode,
+      reason: `Session mode re-evaluated from ${previousMode} to ${selectedMode} in ${session.harnessCapabilities.harness}`
+    };
+  } else {
+    logEntry = {
+      timestamp,
       event: 'mode_selected',
       mode: selectedMode,
-      reason: `Using session default: ${selectedMode}`
+      reason: `Using re-evaluated session mode: ${selectedMode}`
     };
   }
 
@@ -198,6 +202,39 @@ export function getLastSelectedMode(session: FleetModeSession): SpawningMode {
 
   const lastEntry = session.activationLog[session.activationLog.length - 1];
   return lastEntry.mode;
+}
+
+function resolveModeWithFallback(
+  capabilities: HarnessCapabilities,
+  preferredMode: SpawningMode
+): { mode: SpawningMode; fellBackFrom?: SpawningMode } {
+  const fallbackChain = FALLBACK_CHAIN_BY_MODE[preferredMode];
+
+  for (const candidateMode of fallbackChain) {
+    if (isModeAvailable(capabilities, candidateMode)) {
+      if (candidateMode === preferredMode) {
+        return { mode: candidateMode };
+      }
+
+      return { mode: candidateMode, fellBackFrom: preferredMode };
+    }
+  }
+
+  return { mode: SpawningMode.INLINE, fellBackFrom: preferredMode };
+}
+
+function isModeAvailable(
+  capabilities: HarnessCapabilities,
+  mode: SpawningMode
+): boolean {
+  switch (mode) {
+    case SpawningMode.FLEET:
+      return capabilities.fleetModeAvailable;
+    case SpawningMode.SEQUENTIAL:
+      return capabilities.sequentialSpawningAvailable;
+    case SpawningMode.INLINE:
+      return true;
+  }
 }
 
 /**

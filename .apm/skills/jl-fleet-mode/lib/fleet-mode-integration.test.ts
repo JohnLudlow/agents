@@ -12,8 +12,8 @@
  * - Browser (inline execution fallback)
  * - Azure DevOps (GitHub-backed fleet vs Azure Repos sequential)
  * - Kiro (fleet subagents)
- * - Pi (inline fallback with Herdr external coordination)
- * - OpenCode (inline fallback)
+ * - Pi (sequential fallback pending vendor confirmation)
+ * - OpenCode (sequential fallback pending vendor confirmation)
  * - Unknown environment (conservative sequential fallback)
  */
 
@@ -186,49 +186,49 @@ describe('Fleet Mode End-to-End Integration', () => {
       assert.equal(mode, SpawningMode.FLEET);
     });
 
-    it('handles Pi capabilities with inline fallback and Herdr awareness', () => {
+    it('handles Pi capabilities with conservative sequential fallback', () => {
       const piCapabilities: HarnessCapabilities = {
         harness: Harness.PI,
         fleetModeAvailable: false,
         subagentSpawningAvailable: false,
-        sequentialSpawningFallback: false,
+        sequentialSpawningFallback: true,
         capabilities: {
           fleetModeAvailable: false,
           subagentSpawningAvailable: false,
-          sequentialSpawningFallback: false
+          sequentialSpawningFallback: true
         },
-        sequentialSpawningAvailable: false,
+        sequentialSpawningAvailable: true,
         canDetectAtRuntime: false,
         attemptedHarnesses: [Harness.PI],
         detectionReason: 'Pi environment detected'
       };
 
       const session = initializeFleetModeSession(piCapabilities);
-      assert.equal(session.selectedMode, SpawningMode.INLINE);
+      assert.equal(session.selectedMode, SpawningMode.SEQUENTIAL);
 
       const { mode } = resolveSpawningMode(session, SpawningMode.FLEET);
-      assert.equal(mode, SpawningMode.INLINE);
+      assert.equal(mode, SpawningMode.SEQUENTIAL);
     });
 
-    it('handles OpenCode capabilities with inline execution', () => {
+    it('handles OpenCode capabilities with conservative sequential fallback', () => {
       const openCodeCapabilities: HarnessCapabilities = {
         harness: Harness.OPENCODE,
         fleetModeAvailable: false,
         subagentSpawningAvailable: false,
-        sequentialSpawningFallback: false,
+        sequentialSpawningFallback: true,
         capabilities: {
           fleetModeAvailable: false,
           subagentSpawningAvailable: false,
-          sequentialSpawningFallback: false
+          sequentialSpawningFallback: true
         },
-        sequentialSpawningAvailable: false,
+        sequentialSpawningAvailable: true,
         canDetectAtRuntime: false,
         attemptedHarnesses: [Harness.OPENCODE],
         detectionReason: 'OpenCode environment detected'
       };
 
       const session = initializeFleetModeSession(openCodeCapabilities);
-      assert.equal(session.selectedMode, SpawningMode.INLINE);
+      assert.equal(session.selectedMode, SpawningMode.SEQUENTIAL);
     });
   });
 

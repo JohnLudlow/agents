@@ -44,7 +44,7 @@ describe('Fleet Mode Activation Strategy', () => {
       assert.equal(mode, SpawningMode.FLEET);
     });
 
-    it('falls back to sequential when fleet unavailable', () => {
+    it('falls back to inline when fleet and sequential are unavailable', () => {
       const capabilities: HarnessCapabilities = {
         harness: Harness.BROWSER,
         fleetModeAvailable: false,
@@ -157,6 +157,23 @@ describe('Fleet Mode Activation Strategy', () => {
       assert.notEqual(log.event, 'fallback_attempted');
     });
 
+    it('accepts requested sequential mode when sequential is available', () => {
+      const capabilities: HarnessCapabilities = {
+        harness: Harness.COPILOT_CLI,
+        fleetModeAvailable: true,
+        sequentialSpawningAvailable: true,
+        canDetectAtRuntime: true,
+        detectionReason: 'Test'
+      };
+
+      const session = initializeFleetModeSession(capabilities);
+      const { mode, log } = resolveSpawningMode(session, SpawningMode.SEQUENTIAL);
+
+      assert.equal(mode, SpawningMode.SEQUENTIAL);
+      assert.equal(log.event, 'mode_selected');
+      assert.match(log.reason, /requested sequential/i);
+    });
+
     it('silently falls back when requested mode unavailable', () => {
       const capabilities: HarnessCapabilities = {
         harness: Harness.BROWSER,
@@ -264,7 +281,9 @@ describe('Fleet Mode Activation Strategy', () => {
       // Simulate harness capability change
       session.harnessCapabilities.fleetModeAvailable = false;
       session.harnessCapabilities.sequentialSpawningAvailable = true;
-      const { mode: mode2 } = resolveSpawningMode(session);
+      const { mode: mode2, log } = resolveSpawningMode(session);
+      assert.equal(mode2, SpawningMode.SEQUENTIAL);
+      assert.equal(log.event, 'mode_unavailable');
       assert.equal(getLastSelectedMode(session), mode2);
     });
   });
@@ -334,14 +353,14 @@ describe('Fleet Mode Activation Strategy', () => {
       {
         harness: Harness.PI,
         fleetAvailable: false,
-        sequentialAvailable: false,
-        expectedMode: SpawningMode.INLINE
+        sequentialAvailable: true,
+        expectedMode: SpawningMode.SEQUENTIAL
       },
       {
         harness: Harness.OPENCODE,
         fleetAvailable: false,
-        sequentialAvailable: false,
-        expectedMode: SpawningMode.INLINE
+        sequentialAvailable: true,
+        expectedMode: SpawningMode.SEQUENTIAL
       },
       {
         harness: Harness.UNKNOWN,
