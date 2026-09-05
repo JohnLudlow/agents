@@ -590,29 +590,30 @@ time) and from skills invoked inline (no spawning).
 - the task involves discovering what to do next (single decision tree)
 - the current harness doesn't support it
 
-### Harness Capability Matrix (from #185 Research)
+### Harness Capability Matrix (updated by #194 research)
 
-| Harness | Fleet Mode Support | Detection Mechanism | Notes |
-|---------|:------------------:|---------------------|----|
-| **Copilot CLI** | ✅ Full | `COPILOT_CLI_MODE` env var | Most capable; fleet mode is native |
-| **Kiro IDE/CLI** | ✅ Full | Unknown (fog) | Requires `subagent` in tools array; detection API not yet documented |
-| **Azure DevOps** | ⚠️ Conditional | Unknown (fog) | Available **only for GitHub-linked repos**; unavailable for Azure Repos; detection API not yet documented |
-| **Browser / Copilot Chat** | ❌ No | `window` object exists | Limited to inline skills; no subagent spawning |
-| **Pi** | ❓ Unknown | Unknown (fog) | Capabilities undocumented; needs vendor confirmation |
-| **OpenCode** | ❓ Unknown | Unknown (fog) | Capabilities undocumented; needs vendor confirmation |
+| Harness | Fleet Mode Support | Detection Mechanism | Current activation policy |
+|---------|:------------------:|---------------------|---------------------------|
+| **Copilot CLI** | ✅ Full | `COPILOT_CLI_MODE` env var | Fleet first, then sequential fallback |
+| **Azure DevOps + GitHub** | ✅ Full | Azure DevOps env/globals + GitHub-linked repo detection | Fleet first, then sequential fallback |
+| **Azure DevOps + Azure Repos** | ❌ No | Azure DevOps env/globals + Azure Repos detection | Sequential fallback |
+| **Browser / Copilot Chat** | ❌ No | `window` object exists | Inline only (no spawning) |
+| **Kiro IDE/CLI** | ⚠️ Documented support, policy-gated | `KIRO_CLI_MODE` or `KIRO_IDE_SESSION` env var | Conservative sequential fallback until this integration path is confirmed |
+| **OpenCode** | ⚠️ Pending vendor confirmation | `OPENCODE_MODE` env var | Conservative sequential fallback |
+| **Pi** | ⚠️ Pending vendor confirmation | `PI_MODE` env var | Conservative sequential fallback |
+| **Unknown** | ❌ No | No marker matched | Conservative sequential fallback |
 
 ### Activation Strategy: Automatic with Fallback
 
 **Agents never need to ask the user; detection and fallback are silent.**
 
 1. **At session start**, detect the current harness (see Harness Detection Pseudocode below).
-2. **When spawning subagents**, automatically use fleet mode if the harness supports it:
-   - **Copilot CLI**: Use `task` tool with `mode="background"` and automatic result coordination
-   - **Kiro**: Use fleet spawning if `subagent` is in tools array
-   - **Azure DevOps + GitHub**: Use fleet spawning (detection needed)
-   - **All others**: Fall through to next option
+2. **When spawning subagents**, choose mode from capabilities:
+   - If `fleetModeAvailable`: use fleet mode (`task` with `mode="background"` for parallel dispatch)
+   - Else if `sequentialSpawningAvailable`: use sequential dispatch (one subagent at a time)
+   - Else: use inline execution
 3. **Fallback if fleet unavailable**: Use sequential subagent dispatch (one at a time, each with isolated context).
-4. **Fallback if sequential unavailable**: Use inline work, then optionally suggest Herdr for multi-harness routing.
+4. **Fallback if sequential unavailable**: Use inline work.
 5. **Always log** when fleet mode falls back, for debugging.
 
 ### Harness Detection Pseudocode
@@ -627,19 +628,28 @@ AT SESSION START:
     else if JavaScript window object exists:
       return "browser"
 
-    else if Azure DevOps API objects available:
-      return "azure-devops"
-      // TODO: Still need to detect linked repo type (GitHub vs. Azure Repos)
-      // and set flags: azure_devops.linked_repo_is_github, azure_devops.linked_repo_is_azure_repos
+    else if Azure DevOps context exists (env vars or VSS/TFS globals):
+      if linked repository host is GitHub:
+        return "azure-devops-github"
+      else if linked repository host is Azure Repos:
+        return "azure-devops-azure-repos"
 
-    else if Kiro orchestrator context available:
+    else if env var KIRO_CLI_MODE or KIRO_IDE_SESSION exists:
       return "kiro"
-      // TODO: How to detect Kiro at runtime? Check for specific env var or API?
+
+    else if env var OPENCODE_MODE exists:
+      return "opencode"
+
+    else if env var PI_MODE exists:
+      return "pi"
 
     else:
       return "unknown"
 
-  Store harness in session_state for reference
+  Derive capability flags from harness:
+    fleetModeAvailable, sequentialSpawningAvailable
+
+  Store harness + capabilities in session_state for reference
 ```
 
 ### When to Recommend `/fleet` to the User
@@ -692,30 +702,32 @@ harness = "copilot-cli" (from COPILOT_CLI_MODE env var)
 // Copilot CLI coordinates both agents in parallel
 ```
 
-#### Kiro IDE/CLI: Fleet spawning with tools array requirement
+#### Kiro/OpenCode/Pi: Conservative sequential fallback
 
 ```javascript
 // Agent detects:
-harness = "kiro" (detection mechanism TBD in Phase 2 work)
-capabilities.subagent = tools.includes("subagent")
+harness = "kiro"  // or "opencode" / "pi"
 
-// If subagent is in tools array:
-// Agent can spawn parallel subagents automatically (fallback: sequential)
-// If subagent is NOT in tools array:
-// Agent cannot spawn and must work inline
+// Vendor capability confirmation is pending for this integration path,
+// so fleet stays disabled by policy for now.
+fleet_mode_available = false
+sequential_spawning_available = true
+
+// Agent falls back to sequential dispatch:
+// run subtasks one at a time, preserving isolated context.
 ```
 
 #### Azure DevOps with GitHub link: Conditional fleet mode
 
 ```javascript
 // Agent detects:
-harness = "azure-devops"
-linked_repo_is_github = true  (detection mechanism TBD)
+harness = "azure-devops-github"
+linked_repo_is_github = true
 
 // If GitHub-linked:
-// Agent can spawn subagents (fallback: sequential)
+// Agent can use fleet mode
 // If Azure Repos:
-// Agent cannot spawn; must work inline, suggest Herdr if needed
+// Agent falls back to sequential dispatch
 ```
 
 #### Browser: No fleet mode, skills inline only
@@ -732,22 +744,22 @@ task("jl-quiz", { prompt: "..." })  // No spawning, just invoke
 "This session doesn't support subagent spawning; running inline."
 ```
 
-### Known Fog Items (Phase 2 Work)
+### Known Fog Items (Post-#194)
 
 Vendor research findings are documented in `references/VENDOR_RESEARCH_HARNESS_DETECTION.md` (#194). Current status:
 
-**Verified detections (ready for Phase 2 implementation):**
-- ✅ Copilot CLI: `COPILOT_CLI_MODE` environment variable
-- ✅ Browser: `window` object existence test
+**Implemented detection signals:**
+- ✅ Copilot CLI: `COPILOT_CLI_MODE`
+- ✅ Browser: `window` object
+- ✅ Azure DevOps: context detection plus GitHub vs Azure Repos host distinction
+- ✅ Kiro: `KIRO_CLI_MODE` or `KIRO_IDE_SESSION`
+- ✅ OpenCode: `OPENCODE_MODE`
+- ✅ Pi: `PI_MODE`
 
-**Partial detection (partially verified, still missing implementation details):**
-- ⚠️ Azure DevOps: API exists but detection mechanism unknown; need to distinguish GitHub-linked vs. Azure Repos
-
-**Unresolved detections (vendor research pending):**
-- ❓ **Kiro detection API** — What environment variable or runtime API should agents check to detect Kiro at session start? See vendor research doc for candidates.
-- ❓ **Azure DevOps detection API** — What API should agents check to detect Azure DevOps context and distinguish GitHub vs. Azure Repos repos? See vendor research doc for candidates.
-- ❓ **Pi capabilities** — Does Pi support subagent spawning? Needs vendor confirmation. See vendor research doc.
-- ❓ **OpenCode capabilities** — Does OpenCode support subagent spawning? Needs vendor confirmation. See vendor research doc.
+**Remaining uncertainty:**
+- ⚠️ **Kiro/OpenCode/Pi marker confirmation** — Environment variable names are implemented from vendor research conventions; final vendor confirmation is still pending.
+- ⚠️ **Kiro/OpenCode/Pi capability upgrades** — Fleet mode is intentionally disabled by policy until confirmation of supported spawning semantics in this integration path.
+- ⚠️ **Cross-harness parity** — If vendor docs confirm stronger guarantees, upgrade capability flags and tests in lockstep.
 
 **Design-level fog items (beyond detection):**
 - [ ] **Result coordination API** — How should agents coordinate results from parallel subagents? (Automatic or manual?)
@@ -755,12 +767,12 @@ Vendor research findings are documented in `references/VENDOR_RESEARCH_HARNESS_D
 
 For now, agents should:
 
-1. Detect Copilot CLI reliably (COPILOT_CLI_MODE env var)
-2. Detect Browser reliably (window object)
-3. Gracefully degrade to sequential/inline for unknown harnesses
-4. Log fallback paths for debugging
+1. Run the implemented detection sequence once per session.
+2. Use fleet only when `fleetModeAvailable` is true.
+3. Fall back silently: fleet -> sequential -> inline.
+4. Log fallback paths for debugging and auditability.
 
-See `references/VENDOR_RESEARCH_HARNESS_DETECTION.md` for detailed research findings, implementation candidates, and follow-up tickets for each unresolved harness.
+See `references/VENDOR_RESEARCH_HARNESS_DETECTION.md` for detailed findings, implemented marker signals, and capability-upgrade follow-up policy.
 
 ### Relationship to DelegateToSubagent
 

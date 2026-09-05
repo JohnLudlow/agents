@@ -1,148 +1,65 @@
 # Implementation Roadmap
 
-## Phase 1 (Complete)
+This roadmap tracks AC5.1 delivery status for fleet-mode utilization and harness detection.
 
-- ✅ Convert jl-feature-reviewer agent → jl-adversarial-review skill
-- ✅ Document cross-harness behavior (this reference)
-- ✅ Document fleet mode patterns and harness detection (AC5.1, #185/#186)
+## Phase 1: Foundations (Complete)
 
-## Phase 2 (Future: Harness Detection and Automatic Activation)
+- ✅ Convert reviewer-agent pattern to reusable skill guidance.
+- ✅ Document cross-harness delegation behavior.
+- ✅ Define fleet-mode activation strategy and fallback policy.
 
-Implement harness detection in both planner agents and automatically activate fleet mode when available.
+## Phase 2: Runtime Implementation (Complete)
 
-### Key Decisions from AC5.1 (#185, #186)
+Implemented and validated in:
 
-**Harness Detection Pattern (from #185 Research):**
+- #190 — Harness detection module
+- #191 — Fleet-mode activation strategy
+- #192 — End-to-end validation across harnesses
 
-```text
-AT SESSION START:
-  harness = detect_harness()
-    - If env var COPILOT_CLI_MODE exists: return "copilot-cli" ✅ VERIFIED
-    - Else if window object exists (JavaScript): return "browser" ✅ VERIFIED
-    - Else if Azure DevOps APIs available: return "azure-devops" ⚠️ Detection API unknown
-    - Else if Kiro orchestrator context: return "kiro" ❓ Detection API unknown
-    - Else: return "unknown"
-```
+Delivered runtime behavior:
 
-**Verified Capabilities:**
+1. Detect harness once at session start.
+2. Derive capability flags from harness identity.
+3. Select mode automatically: `fleet -> sequential -> inline`.
+4. Log fallback decisions for debugging and auditability.
 
-- ✅ Copilot CLI: Full fleet mode support via `task` tool (native, use mode="background")
-- ✅ Kiro IDE/CLI: Full subagent spawning (requires `subagent` in tools array, but detection API not yet documented)
-- ⚠️ Azure DevOps: Subagent spawning ONLY for GitHub-linked repos (NOT Azure Repos); detection API not yet documented
-- ❌ Browser: No subagent spawning, skills inline only
-- ❓ Pi: Capabilities completely unknown; vendor confirmation needed
-- ❓ OpenCode: Capabilities completely unknown; vendor confirmation needed
+## Phase 2.5: Vendor Research Baseline (Complete via #194)
 
-**Activation Strategy (from #186 Quiz):**
+Research outcomes are documented in `VENDOR_RESEARCH_HARNESS_DETECTION.md`.
 
-- Automatic: Agents always use fleet mode when available (no user opt-in required)
-- Fallback chain: Fleet mode → sequential subagent dispatch → herdr (expert workaround) → inline
-- Rationale: Clean per-subagent context prevents context depletion; silent fallback with logging
+### Detection status
 
-### Implementation Tasks
+- ✅ Copilot CLI: verified (`COPILOT_CLI_MODE`)
+- ✅ Browser: verified (`window` object)
+- ✅ Azure DevOps: implemented context + repository-host split
+- ✅ Kiro: marker-based detection implemented (`KIRO_CLI_MODE` / `KIRO_IDE_SESSION`)
+- ✅ OpenCode: marker-based detection implemented (`OPENCODE_MODE`)
+- ✅ Pi: marker-based detection implemented (`PI_MODE`)
 
-**Phase 2 splits into two phases:**
+### Capability status
 
-#### Phase 2a: Harness Detection (Ready Now — #190)
+- Fleet enabled: Copilot CLI, Azure DevOps + GitHub
+- Sequential fallback: Azure DevOps + Azure Repos, Kiro, OpenCode, Pi, Unknown
+- Inline only: Browser (no spawning path)
 
-Implement runtime harness detection at session startup. See `references/HARNESS_DETECTION_IMPLEMENTATION.md` for full specification.
+### Guardrail
 
-**Scope:**
-- ✅ Copilot CLI detection (verified, ready now)
-- ✅ Browser detection (verified, ready now)
-- ⚠️ Azure DevOps detection (partially verified, detection API candidates in #194)
-- ❓ Kiro/OpenCode/Pi detection (blocked on #194 vendor research follow-ups)
+For Kiro/OpenCode/Pi, marker detection is implemented but fleet capability remains conservative until vendor confirmation arrives for this integration path.
 
-**Implementation effort:**
-- Phase 2a (Verified + Partial): ~1–2 hours
-  - CLI detection: 15 min
-  - Browser detection: 15 min
-  - Azure DevOps detection: 1–1.5 hrs
-  - Session state initialization: 15–30 min
-- Phase 2b (Unresolved harnesses): 1–2 hrs each (after vendor research)
+## Phase 3: User Documentation (Complete)
 
-**Deliverable:** `HarnessDetector` module that returns detected harness + capability flags
+- ✅ #193 — User-facing fleet-mode documentation published and aligned with runtime fallback behavior.
 
-#### Phase 2b: Fleet Mode Activation (After #190 — #191)
+## Phase 4: Future Work (Open)
 
-Implement automatic fleet mode activation based on detected harness.
+- #195 — Unified `DelegateToSubagent` API abstraction (future architecture work).
 
-```text
-AT SESSION START:
-  harness = detect_harness()  [via HarnessDetector from #190]
-  Store harness in session_state for reference
+## Remaining Open Questions
 
-WHEN SPAWNING SUBAGENT(S):
-  activation_mode = selectActivationMode(harness, sessionState)
-  
-  If activation_mode == "fleet":
-    Use task tool with mode="background" for automatic parallelization
-  Else if activation_mode == "sequential":
-    Spawn each subagent one at a time, each with isolated context
-  Else (inline):
-    Run work directly in parent session, no subagent spawning
-
-ALWAYS (before completion):
-  Invoke jl-adversarial-review skill (works in all harnesses)
-  If skill unavailable: continue without review (graceful degradation)
-```
-
-**Implementation effort:** ~2–3 hours (state machine, fallback chain, logging)
-
-## Phase 2.5 (Current: Vendor Research — #194)
-
-Research and document harness detection APIs for unresolved harnesses. See `references/VENDOR_RESEARCH_HARNESS_DETECTION.md` for detailed findings.
-
-**Status:**
-- ✅ Copilot CLI: Detection verified (`COPILOT_CLI_MODE` env var)
-- ✅ Browser: Detection verified (`window` object)
-- ⚠️ Azure DevOps: Partial verification (detection API still unknown; GitHub vs. Azure Repos distinction not yet documented)
-- ❓ Kiro: Unresolved (no detection API documented; vendor confirmation pending)
-- ❓ OpenCode: Unresolved (capabilities unknown; vendor confirmation pending)
-- ❓ Pi: Unresolved (capabilities unknown; vendor confirmation pending)
-
-**Blockers (awaiting vendor research outcomes):**
-- [ ] Azure DevOps detection API (detection mechanism for Azure DevOps context + repo type distinction)
-- [ ] Kiro detection API or environment variable
-- [ ] OpenCode capabilities and detection API
-- [ ] Pi capabilities and detection API
-
-**Research document:** `references/VENDOR_RESEARCH_HARNESS_DETECTION.md` — findings, candidates, follow-up tickets for each unresolved harness.
-
-**Implementation effort:** 0 hours (research only; implementation blocked on vendor confirmations)
-
----
-
-## Phase 3 (Future: User-Facing Documentation)
-
-Create user documentation:
-
-- ✅ Add "Subagent Spawning and Fleet Mode" section to docs/README.md (completed in #193)
-- Link to fleet mode troubleshooting guide
-- Document how to detect your harness (Copilot CLI vs. browser vs. Azure DevOps vs. others)
-- Examples: when to use `/fleet`, how fallback chain works
-
-**Implementation effort:** ~2 hours (copy vendor research findings into user-facing format)
-
----
-
-## Phase 4 (Speculative: Unified DelegateToSubagent API)
-
-If harness ecosystem provides stable capability, implement a unified `DelegateToSubagent` API that abstracts harness differences. See SKILL.md
-"DelegateToSubagent API Status" section for details.
-
-**Implementation effort:** TBD (depends on harness API availability)
-
----
-
-## Remaining Open Questions (Phase 2–4 Blockers)
-
-**Phase 2 blockers (vendor research):**
-- [ ] **Kiro detection API** — What environment variable, file, or API should agents check at session start? Candidates in vendor research doc.
-- [ ] **Azure DevOps detection API** — How to detect (a) Azure DevOps context, and (b) distinguish GitHub-linked vs. Azure Repos? Candidates in vendor research doc.
-- [ ] **Pi capabilities** — Does Pi support subagent spawning? Vendor confirmation needed.
-- [ ] **OpenCode capabilities** — Does OpenCode support subagent spawning? Vendor confirmation needed.
-
-**Phase 3–4 blockers (design/implementation):**
-- [ ] **Result coordination** — How should agents coordinate results from parallel subagents? Automatic or manual? API shape?
-- [ ] **Sequential fallback refinement** — When sequential dispatch is used, should agents prefer herdr if available, or use a different mechanism?
+1. **Vendor confirmation hardening**
+   - Confirm Kiro/OpenCode/Pi marker names and runtime stability.
+   - Confirm whether any of these harnesses should be upgraded from sequential to fleet in AC5.1 policy.
+2. **Result coordination depth**
+   - Decide whether fleet result aggregation requires additional contract structure for large DAG-style fan-out.
+3. **Sequential fallback refinement**
+   - Confirm when manual cross-harness tools (for example Herdr) should be suggested vs. staying in-harness.
