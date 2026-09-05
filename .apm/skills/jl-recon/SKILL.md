@@ -38,6 +38,13 @@ mechanism; jl-recon owns this schema, its defaults, and its validation.
 | `decision_gates.inciting_issue_confirmation` | boolean | `true`, `false` | `false` | required by recon |
 | `decision_gates.research_afk` | boolean | `true`, `false` | `false` | required by recon |
 | `uncertainty_tracking.pattern` | string | any markdown heading string | `## Not Yet Specified (Fog of War)` | optional |
+| `model_selection.default` | string | `inherit` or recognized model name | `inherit` | optional |
+| `model_selection.quiz` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
+| `model_selection.research` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
+| `model_selection.prototype` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
+| `model_selection.task` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
+| `model_selection.mode2_checks` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
+| `model_selection.mode3_checks` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
 | `labels.default` | array of strings | any label names | `["recon:map"]` | optional |
 | `labels.map` | array of strings | any label names | defaults to `labels.default` | optional |
 | `labels.quiz` | array of strings | any label names | defaults to `labels.default` | optional |
@@ -53,6 +60,10 @@ mechanism; jl-recon owns this schema, its defaults, and its validation.
 - validate that `jl_recon`, if present, is an object
 - validate `decision_gates`, if present, as an object of booleans
 - validate `uncertainty_tracking`, if present, as an object
+- validate `model_selection`, if present, as an object with keys limited to:
+  `default`, `quiz`, `research`, `prototype`, `task`, `mode2_checks`, `mode3_checks`
+- validate each `model_selection.*` value as a non-empty string
+- validate each configured model value as either `inherit` or a recognized model name
 - validate `labels`, if present, as an object with keys limited to: `default`,
   `map`, `quiz`, `research`, `prototype`, `task`
 - validate each `labels.*` value as an array of non-empty strings
@@ -65,6 +76,11 @@ mechanism; jl-recon owns this schema, its defaults, and its validation.
 - default each missing decision gate to `false`
 - default missing `uncertainty_tracking.pattern` to
   `## Not Yet Specified (Fog of War)`
+- default `model_selection.default` to `inherit`
+- default each of `model_selection.quiz`, `model_selection.research`,
+  `model_selection.prototype`, `model_selection.task`,
+  `model_selection.mode2_checks`, `model_selection.mode3_checks` to inherit
+  from `model_selection.default`
 - default `labels.default` to `["recon:map"]`
 - default each of `labels.map`, `labels.quiz`, `labels.research`,
   `labels.prototype`, `labels.task` to inherit from `labels.default`
@@ -74,6 +90,7 @@ mechanism; jl-recon owns this schema, its defaults, and its validation.
 - apply resolved gate values at their workflow decision points rather than
   relying on separate hardcoded gate rules
 - apply resolved checks configuration when Mode 2 (ticket resolution) or Mode 3 (status report) runs
+- apply resolved model-selection values when delegating ticket work and checks
 
 ### Example configuration
 
@@ -87,6 +104,11 @@ jl_recon:
     research_afk: false
   uncertainty_tracking:
     pattern: "## Not Yet Specified (Fog of War)"
+  model_selection:
+    default: "inherit"
+    research: "claude-sonnet-5"
+    mode2_checks: "gpt-5.4-mini"
+    mode3_checks: "claude-sonnet-5"
   checks:
     on_ticket_resolution_enabled: true
     on_status_report_enabled: true
@@ -112,6 +134,9 @@ In `AGENTS.md`:
 jl_recon:
   decision_gates:
     destination_confirmation: true
+  model_selection:
+    default: "claude-sonnet-5"
+    mode2_checks: "gpt-5.4-mini"
   checks:
     on_ticket_resolution_enabled: true
     on_status_report_enabled: true
@@ -134,6 +159,13 @@ This skill consumes:
 - `jl_recon.decision_gates.inciting_issue_confirmation`
 - `jl_recon.decision_gates.research_afk`
 - `jl_recon.uncertainty_tracking.pattern`
+- `jl_recon.model_selection.default`
+- `jl_recon.model_selection.quiz`
+- `jl_recon.model_selection.research`
+- `jl_recon.model_selection.prototype`
+- `jl_recon.model_selection.task`
+- `jl_recon.model_selection.mode2_checks`
+- `jl_recon.model_selection.mode3_checks`
 - `jl_recon.labels.default`
 - `jl_recon.labels.map`
 - `jl_recon.labels.quiz`
@@ -164,6 +196,18 @@ Resolved behaviour:
     in any textual artifact that mirrors the map structure
   - if not configured, default to `## Not Yet Specified (Fog of War)` through
     jl-recon's own defaults
+- `model_selection.default`, `model_selection.quiz`, `model_selection.research`,
+  `model_selection.prototype`, `model_selection.task`, `model_selection.mode2_checks`,
+  `model_selection.mode3_checks`
+  - `inherit` means "do not force a model at this level; continue to the next fallback layer"
+  - when a delegated action runs, resolve model in this order:
+    1. explicit per-action user override (`request.model`)
+    2. `jl_recon.model_selection.<action>`
+    3. `jl_recon.model_selection.default`
+    4. `jl_subagent_models` hierarchy (`overrides.<taskKey>` → per-type → per-agent → global → hard fallback)
+  - Mode 2 checks use action key `mode2_checks`
+  - Mode 3 checks use action key `mode3_checks`
+  - invalid model names are warned and skipped to the next precedence layer
 - `checks.on_ticket_resolution_enabled`
   - `true` (default): run quality checks before recording ticket resolutions in Mode 2 (Work through the map)
   - `false`: skip quality checks in Mode 2; proceed directly to resolution
@@ -198,6 +242,8 @@ Graceful fallback:
 - Do not keep separate hardcoded gate logic in this skill; apply the resolved
   `jl_recon` values at the destination, inciting-issue, research-AFK, and fog
   recording decision points.
+- If `model_selection` has invalid model names, warn clearly and continue by
+  falling through to the next model-precedence layer.
 - If a gate's practical effect is still ambiguous in the current session, ask
   the human rather than inventing a stricter or looser rule.
 - If quality checks are unavailable or fail (harness not installed, timeout, network error),
@@ -324,6 +370,30 @@ format defined by jl-config) for:
   boolean (true/false), not a string
   File: AGENTS.md [line 23]
   Fix: Change the value to a boolean: on_ticket_resolution_enabled: true
+```
+
+#### Type Mismatch — model_selection (object required)
+
+```text
+[WARN] jl-recon: 'model_selection' must be an object, not a string
+  File: AGENTS.md [line 22]
+  Fix: Change to YAML object syntax: model_selection: { default: "inherit" }
+```
+
+#### Invalid model_selection key
+
+```text
+[WARN] jl-recon: 'model_selection.mode2' is not a valid model-selection key
+  File: CONTRIBUTING.md [line 24]
+  Fix: Use only: default, quiz, research, prototype, task, mode2_checks, mode3_checks
+```
+
+#### Invalid model_selection value
+
+```text
+[WARN] jl-recon: 'model_selection.mode2_checks' must be 'inherit' or a recognized model name, not "fast-model"
+  File: AGENTS.md [line 25]
+  Fix: Use 'inherit' or a model like claude-sonnet-5 / gpt-5.4-mini
 ```
 
 ## Core Model
@@ -527,6 +597,9 @@ findings and explicitly confirms the resolution.
 1. **Invoke checks** — Call jl-adversarial-reviewer using `jl-subagent-spawning`'s
    fallback hierarchy: try subagent → try Herdr → read into session. Pass the
    resolved ticket's content (resolution text, findings, context from the map).
+   Resolve the requested model using `model_selection.mode2_checks` (or
+   `model_selection.default`) before invoking fallback; if either is `inherit`
+   or invalid, continue into the `jl_subagent_models` hierarchy.
    Apply a per-check timeout of `checks.timeout_seconds` (default: `30`). On
    harness unavailability, timeout, network error, or malformed findings, do
    not block Mode 2: warn the user, keep any successful findings, and continue
@@ -659,7 +732,10 @@ explicitly confirms publication.
    → read into session when multi-harness is unavailable). Pass the generated
    status report text. Doublecheck will analyze each claim in the report and
    return per-claim verification results (VERIFIED/PLAUSIBLE/UNVERIFIED/
-   DISPUTED/FABRICATION_RISK with confidence levels and source links). Apply a
+   DISPUTED/FABRICATION_RISK with confidence levels and source links). Resolve
+   the requested model using `model_selection.mode3_checks` (or
+   `model_selection.default`) before invoking fallback; if either is `inherit`
+   or invalid, continue into the `jl_subagent_models` hierarchy. Apply a
    per-check timeout of `checks.timeout_seconds` (default: `30`). On harness
    unavailability, timeout, network error, or malformed findings, do not block
    Mode 3: warn the user, keep any successful findings, and continue to an
@@ -749,7 +825,10 @@ explicitly confirms publication.
    hierarchy: try subagent → try Herdr → read into session. Pass the generated
    status report text. Doublecheck will analyze each claim in the report and
    return per-claim verification results (VERIFIED/PLAUSIBLE/UNVERIFIED/
-   DISPUTED/FABRICATION_RISK with confidence levels and source links). Apply a
+   DISPUTED/FABRICATION_RISK with confidence levels and source links). Resolve
+   the requested model using `model_selection.mode3_checks` (or
+   `model_selection.default`) before invoking fallback; if either is `inherit`
+   or invalid, continue into the `jl_subagent_models` hierarchy. Apply a
    per-check timeout of `checks.timeout_seconds` (default: `30`). On harness
    unavailability, timeout, network error, or malformed findings, do not block
    Mode 3: warn the user, keep any successful findings, and continue to an
@@ -1207,6 +1286,10 @@ The agent MUST:
 - Resolve `jl-config` before acting, validate the resolved `jl_recon`
   settings against jl-recon's schema, and apply its decision gates,
   uncertainty-tracking pattern, label configuration, and checks configuration at the workflow points they govern.
+- Apply resolved `model_selection` values at delegated execution points
+  (ticket delegation and Mode 2/Mode 3 checks), using deterministic precedence:
+  explicit override → `model_selection.<action>` → `model_selection.default`
+  → `jl_subagent_models` hierarchy.
 - Ask whether an inciting issue exists before creating the map, and if one
   does, link the map to it using the provider's native mechanism before
   creating any tickets.

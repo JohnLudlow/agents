@@ -585,3 +585,68 @@ Describe "Mode 2 user decisions" {
         $script:auditTrail.Count | Should -Be 1
     }
 }
+
+Describe "Mode 2 model selection" {
+    BeforeEach {
+        $local:path = Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) "scripts" "mode2-quality-checks.ps1"
+        . $local:path
+    }
+
+    It "applies jl_recon.model_selection.mode2_checks to delegated checks" {
+        $script:capturedModel = $null
+
+        $result = Invoke-JlReconMode2Checks `
+            -CheckRequests @("jl-adversarial-reviewer") `
+            -StrategyHandlers @{
+                subagent = {
+                    param($checkName, $ticket, $timeoutSeconds, $model)
+                    $script:capturedModel = $model
+                    return @{ findings = @() }
+                }
+            } `
+            -Config @{ model_selection = @{ mode2_checks = "gpt-5.4-mini" } }
+
+        $script:capturedModel | Should -Be "gpt-5.4-mini"
+        $result.SuccessfulChecks[0].ModelResolved | Should -Be "gpt-5.4-mini"
+        $result.SuccessfulChecks[0].ModelResolutionSource | Should -Be "mode2-checks"
+    }
+
+    It "falls back to model_selection.default when mode2_checks is invalid" {
+        $script:capturedModel = $null
+
+        $result = Invoke-JlReconMode2Checks `
+            -CheckRequests @("jl-adversarial-reviewer") `
+            -StrategyHandlers @{
+                subagent = {
+                    param($checkName, $ticket, $timeoutSeconds, $model)
+                    $script:capturedModel = $model
+                    return @{ findings = @() }
+                }
+            } `
+            -Config @{ model_selection = @{ mode2_checks = "fast-model"; default = "claude-sonnet-5" } } `
+            -WarningAction SilentlyContinue
+
+        $script:capturedModel | Should -Be "claude-sonnet-5"
+        $result.WarningMessages | Should -Contain "Invalid model 'fast-model' from jl_recon.model_selection.mode2_checks; falling back to next precedence level."
+        $result.SuccessfulChecks[0].ModelResolutionSource | Should -Be "default"
+    }
+
+    It "treats inherit as delegating model resolution to jl_subagent_models hierarchy" {
+        $script:capturedModel = "unset"
+
+        $result = Invoke-JlReconMode2Checks `
+            -CheckRequests @("jl-adversarial-reviewer") `
+            -StrategyHandlers @{
+                subagent = {
+                    param($checkName, $ticket, $timeoutSeconds, $model)
+                    $script:capturedModel = $model
+                    return @{ findings = @() }
+                }
+            } `
+            -Config @{ model_selection = @{ mode2_checks = "inherit" } }
+
+        $script:capturedModel | Should -Be $null
+        $result.SuccessfulChecks[0].ModelResolved | Should -Be $null
+        $result.SuccessfulChecks[0].ModelResolutionSource | Should -Be "mode2-checks-inherit"
+    }
+}

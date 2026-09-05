@@ -59,6 +59,9 @@ jl_recon:
   decision_gates:
     destination_confirmation: true
     research_afk: true
+  model_selection:
+    default: inherit
+    mode2_checks: gpt-5.4-mini
 ```
 
 Agents may read settings from either file, from both, or from neither. The

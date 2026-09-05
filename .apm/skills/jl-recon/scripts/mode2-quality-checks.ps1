@@ -86,6 +86,122 @@ function Get-JlReconMode2ChecksTimeoutSeconds {
     return $DefaultTimeoutSeconds
 }
 
+function Test-JlReconRecognizedModelName {
+    [CmdletBinding()]
+    param(
+        [Parameter()]
+        [AllowNull()]
+        [string]$ModelName
+    )
+
+    if ([string]::IsNullOrWhiteSpace($ModelName)) {
+        return $false
+    }
+
+    $normalizedModelName = $ModelName.Trim()
+    if ($normalizedModelName -ieq 'inherit') {
+        return $true
+    }
+
+    return (
+        $normalizedModelName -match '^claude-[a-z0-9.-]+$' -or
+        $normalizedModelName -match '^gpt-[a-z0-9.-]+$' -or
+        $normalizedModelName -match '^gemini-[a-z0-9.-]+$' -or
+        $normalizedModelName -match '^grok-[a-z0-9.-]+$' -or
+        $normalizedModelName -match '^kimi-[a-z0-9.-]+$' -or
+        $normalizedModelName -match '^mai-[a-z0-9.-]+$'
+    )
+}
+
+function Get-JlReconModelSelectionConfig {
+    [CmdletBinding()]
+    param(
+        [Parameter()]
+        [AllowNull()]
+        [object]$Config
+    )
+
+    if ($null -eq $Config) {
+        return $null
+    }
+
+    if ($Config -is [System.Collections.IDictionary] -and $Config.Contains('model_selection')) {
+        return $Config['model_selection']
+    }
+
+    if ($Config.PSObject.Properties.Name -contains 'model_selection') {
+        return $Config.model_selection
+    }
+
+    return $null
+}
+
+function Resolve-JlReconMode2CheckModel {
+    [CmdletBinding()]
+    param(
+        [Parameter()]
+        [AllowNull()]
+        [object]$Config,
+
+        [Parameter(Mandatory)]
+        [object]$Request
+    )
+
+    $warnings = [System.Collections.Generic.List[string]]::new()
+    $explicitModel = Get-JlReconObjectValue -InputObject $Request -Name 'Model'
+    if ($null -eq $explicitModel) {
+        $explicitModel = Get-JlReconObjectValue -InputObject $Request -Name 'model'
+    }
+
+    $modelSelection = Get-JlReconModelSelectionConfig -Config $Config
+    $mode2ConfiguredModel = Get-JlReconObjectValue -InputObject $modelSelection -Name 'mode2_checks'
+    $defaultConfiguredModel = Get-JlReconObjectValue -InputObject $modelSelection -Name 'default'
+
+    $candidates = @(
+        [pscustomobject]@{ Source = 'explicit'; ConfigPath = 'request.model'; Value = $explicitModel },
+        [pscustomobject]@{ Source = 'mode2-checks'; ConfigPath = 'jl_recon.model_selection.mode2_checks'; Value = $mode2ConfiguredModel },
+        [pscustomobject]@{ Source = 'default'; ConfigPath = 'jl_recon.model_selection.default'; Value = $defaultConfiguredModel }
+    )
+
+    foreach ($candidate in $candidates) {
+        if ($null -eq $candidate.Value) {
+            continue
+        }
+
+        $candidateValue = $candidate.Value.ToString().Trim()
+        if ([string]::IsNullOrWhiteSpace($candidateValue)) {
+            continue
+        }
+
+        if ($candidateValue -ieq 'inherit') {
+            return [pscustomobject]@{
+                RequestedModel = $candidateValue
+                ResolvedModel = $null
+                ModelResolutionSource = "$($candidate.Source)-inherit"
+                WarningMessages = @($warnings)
+            }
+        }
+
+        if (Test-JlReconRecognizedModelName -ModelName $candidateValue) {
+            return [pscustomobject]@{
+                RequestedModel = $candidateValue
+                ResolvedModel = $candidateValue
+                ModelResolutionSource = $candidate.Source
+                WarningMessages = @($warnings)
+            }
+        }
+
+        $warnings.Add("Invalid model '$candidateValue' from $($candidate.ConfigPath); falling back to next precedence level.")
+    }
+
+    return [pscustomobject]@{
+        RequestedModel = $null
+        ResolvedModel = $null
+        ModelResolutionSource = 'delegation-default'
+        WarningMessages = @($warnings)
+    }
+}
+
 function Get-JlReconMode2ChecksStatus {
     [CmdletBinding()]
     param(
@@ -233,6 +349,7 @@ function ConvertTo-JlReconCheckRequest {
             Name = $Request
             StrategyOrder = @('subagent', 'herdr', 'session')
             TimeoutSeconds = $DefaultTimeoutSeconds
+            Model = $null
         }
     }
 
@@ -255,6 +372,7 @@ function ConvertTo-JlReconCheckRequest {
         Name = $Request.Name
         StrategyOrder = $strategyOrder
         TimeoutSeconds = $timeoutSeconds
+        Model = Get-JlReconObjectValue -InputObject $Request -Name 'Model'
     }
 }
 
@@ -355,7 +473,11 @@ function Invoke-JlReconStrategyHandler {
         [object]$Ticket,
 
         [Parameter()]
-        [int]$TimeoutSeconds = 30
+        [int]$TimeoutSeconds = 30,
+
+        [Parameter()]
+        [AllowNull()]
+        [object]$Model
     )
 
     $handlerDefinition = if ($Handler -is [scriptblock]) {
@@ -382,7 +504,7 @@ function Invoke-JlReconStrategyHandler {
     }
 
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-    $response = & $handlerDefinition.Invoke $CheckName $Ticket $TimeoutSeconds
+    $response = & $handlerDefinition.Invoke $CheckName $Ticket $TimeoutSeconds $Model
     $stopwatch.Stop()
 
     if (-not $handlerDefinition.IgnoreElapsedTimeout -and $stopwatch.Elapsed.TotalSeconds -gt $TimeoutSeconds) {
@@ -582,7 +704,11 @@ function Invoke-JlReconCheckWithFallback {
         [string[]]$StrategyOrder = @('subagent', 'herdr', 'session'),
 
         [Parameter()]
-        [int]$TimeoutSeconds = 30
+        [int]$TimeoutSeconds = 30,
+
+        [Parameter()]
+        [AllowNull()]
+        [object]$Model
     )
 
     $attempts = [System.Collections.Generic.List[object]]::new()
@@ -600,7 +726,7 @@ function Invoke-JlReconCheckWithFallback {
         }
         else {
             try {
-                $invocation = Invoke-JlReconStrategyHandler -Handler $StrategyHandlers[$strategy] -CheckName $CheckName -Ticket $Ticket -TimeoutSeconds $TimeoutSeconds
+                $invocation = Invoke-JlReconStrategyHandler -Handler $StrategyHandlers[$strategy] -CheckName $CheckName -Ticket $Ticket -TimeoutSeconds $TimeoutSeconds -Model $Model
                 $attempts.Add([pscustomobject]@{
                         Strategy = $strategy
                         Status = 'success'
@@ -860,13 +986,25 @@ function Invoke-JlReconMode2CheckRequest {
         [object]$Ticket,
 
         [Parameter()]
+        [AllowNull()]
+        [object]$Config,
+
+        [Parameter()]
         [int]$DefaultTimeoutSeconds = 30
     )
 
     $resolvedRequest = ConvertTo-JlReconCheckRequest -Request $Request -DefaultTimeoutSeconds $DefaultTimeoutSeconds
+    $modelResolution = Resolve-JlReconMode2CheckModel -Config $Config -Request $resolvedRequest
+    $modelWarnings = @($modelResolution.WarningMessages)
+
+    foreach ($modelWarning in $modelWarnings) {
+        if (-not [string]::IsNullOrWhiteSpace($modelWarning)) {
+            Write-Warning $modelWarning
+        }
+    }
 
     try {
-        $result = Invoke-JlReconCheckWithFallback -CheckName $resolvedRequest.Name -StrategyHandlers $StrategyHandlers -Ticket $Ticket -StrategyOrder $resolvedRequest.StrategyOrder -TimeoutSeconds $resolvedRequest.TimeoutSeconds
+        $result = Invoke-JlReconCheckWithFallback -CheckName $resolvedRequest.Name -StrategyHandlers $StrategyHandlers -Ticket $Ticket -StrategyOrder $resolvedRequest.StrategyOrder -TimeoutSeconds $resolvedRequest.TimeoutSeconds -Model $modelResolution.ResolvedModel
 
         if ($result.Status -ne 'success') {
             $warningDetail = @(
@@ -882,7 +1020,7 @@ function Invoke-JlReconMode2CheckRequest {
             $warning = New-JlReconCheckWarning -CheckName $resolvedRequest.Name -FailureCategory $result.FailureCategory -TimeoutSeconds $resolvedRequest.TimeoutSeconds -Detail $warningDetail
             Write-Warning $warning
 
-            return New-JlReconFailedCheckResult `
+            $failedResult = New-JlReconFailedCheckResult `
                 -CheckName $resolvedRequest.Name `
                 -Strategy $result.Strategy `
                 -Response $result.Response `
@@ -891,6 +1029,11 @@ function Invoke-JlReconMode2CheckRequest {
                 -FailureCategory $result.FailureCategory `
                 -Warning $warning `
                 -TimeoutSeconds $resolvedRequest.TimeoutSeconds
+            $failedResult | Add-Member -NotePropertyName ModelRequested -NotePropertyValue $modelResolution.RequestedModel -Force
+            $failedResult | Add-Member -NotePropertyName ModelResolved -NotePropertyValue $modelResolution.ResolvedModel -Force
+            $failedResult | Add-Member -NotePropertyName ModelResolutionSource -NotePropertyValue $modelResolution.ModelResolutionSource -Force
+            $failedResult | Add-Member -NotePropertyName ModelWarningMessages -NotePropertyValue $modelWarnings -Force
+            return $failedResult
         }
 
         $parseResult = ConvertFrom-JlReconCheckResponseResult -CheckName $result.CheckName -Response $result.Response
@@ -898,7 +1041,7 @@ function Invoke-JlReconMode2CheckRequest {
             $warning = New-JlReconCheckWarning -CheckName $result.CheckName -FailureCategory $parseResult.FailureCategory -TimeoutSeconds $resolvedRequest.TimeoutSeconds -Detail $parseResult.Error
             Write-Warning $warning
 
-            return New-JlReconFailedCheckResult `
+            $failedResult = New-JlReconFailedCheckResult `
                 -CheckName $result.CheckName `
                 -Strategy $result.Strategy `
                 -Response $result.Response `
@@ -907,56 +1050,85 @@ function Invoke-JlReconMode2CheckRequest {
                 -FailureCategory $parseResult.FailureCategory `
                 -Warning $warning `
                 -TimeoutSeconds $resolvedRequest.TimeoutSeconds
+            $failedResult | Add-Member -NotePropertyName ModelRequested -NotePropertyValue $modelResolution.RequestedModel -Force
+            $failedResult | Add-Member -NotePropertyName ModelResolved -NotePropertyValue $modelResolution.ResolvedModel -Force
+            $failedResult | Add-Member -NotePropertyName ModelResolutionSource -NotePropertyValue $modelResolution.ModelResolutionSource -Force
+            $failedResult | Add-Member -NotePropertyName ModelWarningMessages -NotePropertyValue $modelWarnings -Force
+            return $failedResult
         }
 
         $result | Add-Member -NotePropertyName ParsedFindings -NotePropertyValue @($parseResult.Findings) -Force
         $result | Add-Member -NotePropertyName Warning -NotePropertyValue $null -Force
         $result | Add-Member -NotePropertyName Failed -NotePropertyValue $false -Force
+        $result | Add-Member -NotePropertyName ModelRequested -NotePropertyValue $modelResolution.RequestedModel -Force
+        $result | Add-Member -NotePropertyName ModelResolved -NotePropertyValue $modelResolution.ResolvedModel -Force
+        $result | Add-Member -NotePropertyName ModelResolutionSource -NotePropertyValue $modelResolution.ModelResolutionSource -Force
+        $result | Add-Member -NotePropertyName ModelWarningMessages -NotePropertyValue $modelWarnings -Force
         return $result
     }
     catch [System.TimeoutException] {
         $warning = New-JlReconCheckWarning -CheckName $resolvedRequest.Name -FailureCategory 'timeout' -TimeoutSeconds $resolvedRequest.TimeoutSeconds -Detail $_.Exception.Message
         Write-Warning $warning
 
-        return New-JlReconFailedCheckResult `
+        $failedResult = New-JlReconFailedCheckResult `
             -CheckName $resolvedRequest.Name `
             -Error $_.Exception.Message `
             -FailureCategory 'timeout' `
             -Warning $warning `
             -TimeoutSeconds $resolvedRequest.TimeoutSeconds
+        $failedResult | Add-Member -NotePropertyName ModelRequested -NotePropertyValue $modelResolution.RequestedModel -Force
+        $failedResult | Add-Member -NotePropertyName ModelResolved -NotePropertyValue $modelResolution.ResolvedModel -Force
+        $failedResult | Add-Member -NotePropertyName ModelResolutionSource -NotePropertyValue $modelResolution.ModelResolutionSource -Force
+        $failedResult | Add-Member -NotePropertyName ModelWarningMessages -NotePropertyValue $modelWarnings -Force
+        return $failedResult
     }
     catch [System.Net.WebException] {
         $warning = New-JlReconCheckWarning -CheckName $resolvedRequest.Name -FailureCategory 'network' -TimeoutSeconds $resolvedRequest.TimeoutSeconds -Detail $_.Exception.Message
         Write-Warning $warning
 
-        return New-JlReconFailedCheckResult `
+        $failedResult = New-JlReconFailedCheckResult `
             -CheckName $resolvedRequest.Name `
             -Error $_.Exception.Message `
             -FailureCategory 'network' `
             -Warning $warning `
             -TimeoutSeconds $resolvedRequest.TimeoutSeconds
+        $failedResult | Add-Member -NotePropertyName ModelRequested -NotePropertyValue $modelResolution.RequestedModel -Force
+        $failedResult | Add-Member -NotePropertyName ModelResolved -NotePropertyValue $modelResolution.ResolvedModel -Force
+        $failedResult | Add-Member -NotePropertyName ModelResolutionSource -NotePropertyValue $modelResolution.ModelResolutionSource -Force
+        $failedResult | Add-Member -NotePropertyName ModelWarningMessages -NotePropertyValue $modelWarnings -Force
+        return $failedResult
     }
     catch [System.Net.Http.HttpRequestException] {
         $warning = New-JlReconCheckWarning -CheckName $resolvedRequest.Name -FailureCategory 'network' -TimeoutSeconds $resolvedRequest.TimeoutSeconds -Detail $_.Exception.Message
         Write-Warning $warning
 
-        return New-JlReconFailedCheckResult `
+        $failedResult = New-JlReconFailedCheckResult `
             -CheckName $resolvedRequest.Name `
             -Error $_.Exception.Message `
             -FailureCategory 'network' `
             -Warning $warning `
             -TimeoutSeconds $resolvedRequest.TimeoutSeconds
+        $failedResult | Add-Member -NotePropertyName ModelRequested -NotePropertyValue $modelResolution.RequestedModel -Force
+        $failedResult | Add-Member -NotePropertyName ModelResolved -NotePropertyValue $modelResolution.ResolvedModel -Force
+        $failedResult | Add-Member -NotePropertyName ModelResolutionSource -NotePropertyValue $modelResolution.ModelResolutionSource -Force
+        $failedResult | Add-Member -NotePropertyName ModelWarningMessages -NotePropertyValue $modelWarnings -Force
+        return $failedResult
     }
     catch {
         $warning = New-JlReconCheckWarning -CheckName $resolvedRequest.Name -FailureCategory 'error' -TimeoutSeconds $resolvedRequest.TimeoutSeconds -Detail $_.Exception.Message
         Write-Warning $warning
 
-        return New-JlReconFailedCheckResult `
+        $failedResult = New-JlReconFailedCheckResult `
             -CheckName $resolvedRequest.Name `
             -Error $_.Exception.Message `
             -FailureCategory 'error' `
             -Warning $warning `
             -TimeoutSeconds $resolvedRequest.TimeoutSeconds
+        $failedResult | Add-Member -NotePropertyName ModelRequested -NotePropertyValue $modelResolution.RequestedModel -Force
+        $failedResult | Add-Member -NotePropertyName ModelResolved -NotePropertyValue $modelResolution.ResolvedModel -Force
+        $failedResult | Add-Member -NotePropertyName ModelResolutionSource -NotePropertyValue $modelResolution.ModelResolutionSource -Force
+        $failedResult | Add-Member -NotePropertyName ModelWarningMessages -NotePropertyValue $modelWarnings -Force
+        return $failedResult
     }
 }
 
@@ -974,6 +1146,10 @@ function Invoke-JlReconMode2Checks {
         [object]$Ticket,
 
         [Parameter()]
+        [AllowNull()]
+        [object]$Config,
+
+        [Parameter()]
         [int]$TimeoutSeconds = 30
     )
 
@@ -986,7 +1162,7 @@ function Invoke-JlReconMode2Checks {
     $warnings = [System.Collections.Generic.List[string]]::new()
 
     foreach ($request in $CheckRequests) {
-        $result = Invoke-JlReconMode2CheckRequest -Request $request -StrategyHandlers $StrategyHandlers -Ticket $Ticket -DefaultTimeoutSeconds $TimeoutSeconds
+        $result = Invoke-JlReconMode2CheckRequest -Request $request -StrategyHandlers $StrategyHandlers -Ticket $Ticket -Config $Config -DefaultTimeoutSeconds $TimeoutSeconds
 
         if ($result.Status -eq 'success') {
             $successfulChecks.Add($result)
@@ -1002,6 +1178,14 @@ function Invoke-JlReconMode2Checks {
 
             if (-not [string]::IsNullOrWhiteSpace($result.Warning)) {
                 $warnings.Add($result.Warning)
+            }
+        }
+
+        if (Test-JlReconObjectHasProperty -InputObject $result -Name 'ModelWarningMessages') {
+            foreach ($modelWarning in @($result.ModelWarningMessages)) {
+                if (-not [string]::IsNullOrWhiteSpace($modelWarning)) {
+                    $warnings.Add($modelWarning)
+                }
             }
         }
     }
@@ -1027,7 +1211,7 @@ function Invoke-JlReconMode2Checks {
         FailureSummary = Get-JlReconFailedChecksSummary -FailedChecks @($failedChecks)
         ChecksStatus = $checksStatus
         TimeoutSeconds = $TimeoutSeconds
-        WarningMessages = @($warnings)
+        WarningMessages = @($warnings | Select-Object -Unique)
     }
 }
 
@@ -1348,7 +1532,7 @@ function Invoke-JlReconMode2ResolutionWorkflow {
         }
     }
 
-    $checkRun = Invoke-JlReconMode2Checks -CheckRequests $CheckRequests -StrategyHandlers $StrategyHandlers -Ticket $Ticket -TimeoutSeconds $timeoutSeconds
+    $checkRun = Invoke-JlReconMode2Checks -CheckRequests $CheckRequests -StrategyHandlers $StrategyHandlers -Ticket $Ticket -Config $Config -TimeoutSeconds $timeoutSeconds
     $checksStatus = Get-JlReconMode2ChecksStatus -CheckRun $checkRun
     $findings = @($checkRun.Findings)
     $findingsTable = if ($findings.Count -gt 0) {

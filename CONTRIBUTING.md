@@ -98,6 +98,32 @@ If a requested model is unavailable in the current harness, the delegating
 agent must fall back down the hierarchy until it finds an available model. The
 delegation result should record both the requested model and the resolved model.
 
+#### jl-recon model-selection overlays
+
+`jl-recon` can provide recon-specific model preferences in its own namespace:
+
+```yaml
+jl_recon:
+  model_selection:
+    default: inherit
+    quiz: inherit
+    research: claude-sonnet-5
+    prototype: gpt-5.4-mini
+    task: inherit
+    mode2_checks: gpt-5.4-mini
+    mode3_checks: claude-sonnet-5
+```
+
+When present, recon resolves in this order:
+
+1. explicit per-action override (`request.model`)
+2. `jl_recon.model_selection.<action>`
+3. `jl_recon.model_selection.default`
+4. `jl_subagent_models` hierarchy above
+
+Use `inherit` to skip a recon-level override and continue to `jl_subagent_models`.
+Invalid model names must warn and fall through to the next precedence level.
+
 #### Supported delegation-type keys
 
 Use these canonical keys in repository configuration:

@@ -1294,3 +1294,68 @@ Describe 'Mode 3 remaining branch coverage' {
         (Invoke-JlReconMode3Checks -StatusReportText 'status report').WarningMessages | Should -Contain 'Doublecheck failed; proceeding without verification (fallback error)'
     }
 }
+
+Describe 'Mode 3 model selection' {
+    BeforeEach {
+        $path = Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) 'scripts' 'mode3-quality-checks.ps1'
+        . $path
+    }
+
+    It 'applies jl_recon.model_selection.mode3_checks to verification checks' {
+        $script:capturedModel = $null
+
+        $result = Invoke-JlReconMode3Checks `
+            -StatusReportText 'status report' `
+            -Config @{ model_selection = @{ mode3_checks = 'claude-sonnet-5' } } `
+            -SubagentSpawningHandlers @{
+                subagent = {
+                    param($checkName, $payload, $timeoutSeconds, $model)
+                    $script:capturedModel = $model
+                    return @{ claims = @() }
+                }
+            }
+
+        $script:capturedModel | Should -Be 'claude-sonnet-5'
+        $result.SuccessfulChecks[0].ModelResolved | Should -Be 'claude-sonnet-5'
+        $result.SuccessfulChecks[0].ModelResolutionSource | Should -Be 'mode3-checks'
+    }
+
+    It 'falls back to model_selection.default when mode3_checks is invalid' {
+        $script:capturedModel = $null
+
+        $result = Invoke-JlReconMode3Checks `
+            -StatusReportText 'status report' `
+            -Config @{ model_selection = @{ mode3_checks = 'fast-model'; default = 'gpt-5.4-mini' } } `
+            -SubagentSpawningHandlers @{
+                subagent = {
+                    param($checkName, $payload, $timeoutSeconds, $model)
+                    $script:capturedModel = $model
+                    return @{ claims = @() }
+                }
+            } `
+            -WarningAction SilentlyContinue
+
+        $script:capturedModel | Should -Be 'gpt-5.4-mini'
+        $result.WarningMessages | Should -Contain "Invalid model 'fast-model' from jl_recon.model_selection.mode3_checks; falling back to next precedence level."
+        $result.SuccessfulChecks[0].ModelResolutionSource | Should -Be 'default'
+    }
+
+    It 'treats inherit as delegating model resolution to jl_subagent_models hierarchy' {
+        $script:capturedModel = 'unset'
+
+        $result = Invoke-JlReconMode3Checks `
+            -StatusReportText 'status report' `
+            -Config @{ model_selection = @{ mode3_checks = 'inherit' } } `
+            -SubagentSpawningHandlers @{
+                subagent = {
+                    param($checkName, $payload, $timeoutSeconds, $model)
+                    $script:capturedModel = $model
+                    return @{ claims = @() }
+                }
+            }
+
+        $script:capturedModel | Should -Be $null
+        $result.SuccessfulChecks[0].ModelResolved | Should -Be $null
+        $result.SuccessfulChecks[0].ModelResolutionSource | Should -Be 'mode3-checks-inherit'
+    }
+}
