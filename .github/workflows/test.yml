@@ -5,11 +5,15 @@ on:
     branches: [main, develop]
     paths:
       - '.apm/skills/jl-recon/**'
+      - '.apm/skills/jl-ticket-templates/**'
+      - 'package.json'
       - '.github/workflows/test.yml'
   pull_request:
     branches: [main, develop]
     paths:
       - '.apm/skills/jl-recon/**'
+      - '.apm/skills/jl-ticket-templates/**'
+      - 'package.json'
       - '.github/workflows/test.yml'
 
 jobs:
@@ -91,10 +95,24 @@ jobs:
             cat bats-results.tap >> $GITHUB_STEP_SUMMARY
           fi
 
+  ticket-template-tests:
+    name: Ticket Template Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run Ticket Template Tests
+        run: npm run test:ticket-templates
+
   test-summary:
     name: Test Summary
     runs-on: ubuntu-latest
-    needs: [pester-tests, bats-tests]
+    needs: [pester-tests, bats-tests, ticket-template-tests]
     if: always()
     steps:
       - uses: actions/checkout@v4
@@ -127,13 +145,17 @@ jobs:
 
       - name: Check Test Status
         run: |
-          # This step fails if either pester-tests or bats-tests failed
+          # This step fails if any test job failed
           if [ "${{ needs.pester-tests.result }}" != "success" ]; then
             echo "❌ Pester tests failed"
             exit 1
           fi
           if [ "${{ needs.bats-tests.result }}" != "success" ]; then
             echo "❌ Bats tests failed"
+            exit 1
+          fi
+          if [ "${{ needs.ticket-template-tests.result }}" != "success" ]; then
+            echo "❌ Ticket template tests failed"
             exit 1
           fi
           echo "✓ All tests passed"

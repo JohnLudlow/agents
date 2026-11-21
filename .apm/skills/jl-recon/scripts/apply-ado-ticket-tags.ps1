@@ -18,7 +18,7 @@ Azure DevOps project name.
 Ticket work item ID to update.
 
 .PARAMETER Type
-Ticket type. Valid values: quiz, research, prototype, task.
+Ticket type. Valid values: research, prototype, quiz-requirements, quiz-understanding, learn, prerequisite.
 
 .PARAMETER ConfiguredTags
 Comma-separated configured tags for the ticket type.
@@ -36,7 +36,7 @@ Prints diagnostic output.
 Shows what would be applied without changing the work item.
 
 .EXAMPLE
-.\scripts\apply-ado-ticket-tags.ps1 -Organization https://dev.azure.com/contoso -Project Agents -WorkItemId 456 -Type task -ConfiguredTags "task,triage" -InheritedTags "map,recon" -DryRun
+.\scripts\apply-ado-ticket-tags.ps1 -Organization https://dev.azure.com/contoso -Project Agents -WorkItemId 456 -Type prerequisite -ConfiguredTags "prerequisite,triage" -InheritedTags "map,recon" -DryRun
 
 .NOTES
 Requires Azure CLI with the Azure DevOps extension (az boards) available.
@@ -143,9 +143,9 @@ function Test-AzBoardsExtensionAvailable {
 function Test-TicketType {
     param([string]$TicketType)
 
-    $validTypes = @('quiz', 'research', 'prototype', 'task')
+    $validTypes = @('research', 'prototype', 'quiz-requirements', 'quiz-understanding', 'learn', 'prerequisite')
     if ($validTypes -notcontains $TicketType) {
-        Write-ErrorMessage "Invalid --type '$TicketType'. Expected one of: quiz, research, prototype, task."
+        Write-ErrorMessage "Invalid --type '$TicketType'. Expected one of: research, prototype, quiz-requirements, quiz-understanding, learn, prerequisite."
         return $false
     }
 

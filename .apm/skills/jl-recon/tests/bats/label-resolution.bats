@@ -88,7 +88,7 @@ EOF
     # Arrange
     local type_labels="type:question,needs-answer"
     local map_labels="planning,recon:map"
-    local required_label="recon:quiz"
+    local required_label="recon:quiz-requirements"
     
     # Act - combine all three sources
     IFS=',' read -ra type_arr <<< "$type_labels"
@@ -99,7 +99,7 @@ EOF
     # Assert - all three sources present
     [[ " ${all_labels[@]} " =~ "type:question" ]]
     [[ " ${all_labels[@]} " =~ "planning" ]]
-    [[ " ${all_labels[@]} " =~ "recon:quiz" ]]
+    [[ " ${all_labels[@]} " =~ "recon:quiz-requirements" ]]
 }
 
 @test "label inheritance: deduplication removes duplicates" {
@@ -119,9 +119,9 @@ EOF
     [[ ${#unique[@]} -eq 3 ]]
 }
 
-@test "label inheritance: works for all 4 ticket types" {
+@test "label inheritance: works for all 6 ticket types" {
     # Arrange
-    local types=("quiz" "research" "prototype" "task")
+    local types=("research" "prototype" "quiz-requirements" "quiz-understanding" "learn" "prerequisite")
     
     # Act - verify each type gets its required recon label
     for type in "${types[@]}"; do
@@ -131,7 +131,32 @@ EOF
     done
     
     # Assert - all types handled
-    [[ ${#types[@]} -eq 4 ]]
+    [[ ${#types[@]} -eq 6 ]]
+}
+
+@test "ticket label helper accepts all new ticket types" {
+    local mock_bin="$TEST_TEMP_DIR/bin"
+    mkdir -p "$mock_bin"
+    printf '#!/usr/bin/env bash\nexit 0\n' > "$mock_bin/gh"
+    chmod +x "$mock_bin/gh"
+
+    local script="$BATS_TEST_DIRNAME/../../scripts/apply-ticket-labels.sh"
+    local types=("research" "prototype" "quiz-requirements" "quiz-understanding" "learn" "prerequisite")
+    for type in "${types[@]}"; do
+        run env PATH="$mock_bin:$PATH" bash "$script" \
+            --repo owner/repo --ticket-number 42 --type "$type" --dry-run
+        [ "$status" -eq 0 ]
+        [[ "$output" == *"recon:$type"* ]]
+    done
+}
+
+@test "ticket label helper rejects legacy Quiz and Task types for new tickets" {
+    local script="$BATS_TEST_DIRNAME/../../scripts/apply-ticket-labels.sh"
+    for type in quiz task; do
+        run bash "$script" --repo owner/repo --ticket-number 42 --type "$type" --dry-run
+        [ "$status" -ne 0 ]
+        [[ "$output" == *"Invalid --type '$type'"* ]]
+    done
 }
 
 @test "cross-provider consistency: same labels apply across GitHub, Azure DevOps, Markdown" {
@@ -165,12 +190,12 @@ EOF
     # Simulate ticket creation with inherited labels
     IFS=',' read -ra type_arr <<< "$type_labels"
     IFS=',' read -ra map_arr <<< "$map_labels"
-    local ticket_labels=("${type_arr[@]}" "${map_arr[@]}" "recon:quiz")
+    local ticket_labels=("${type_arr[@]}" "${map_arr[@]}" "recon:quiz-requirements")
     
     # Assert
     [[ " ${ticket_labels[@]} " =~ "planning" ]]         # inherited from map
     [[ " ${ticket_labels[@]} " =~ "type:question" ]]    # type-specific
-    [[ " ${ticket_labels[@]} " =~ "recon:quiz" ]]       # required type label
+    [[ " ${ticket_labels[@]} " =~ "recon:quiz-requirements" ]] # required type label
 }
 
 @test "edge case: empty label list creates empty array" {
@@ -260,9 +285,9 @@ EOF
     [[ ! "$result" =~ "label1" ]]
 }
 
-@test "all 4 ticket types receive their respective recon label" {
+@test "all 6 ticket types receive their respective recon label" {
     # Arrange - ticket types
-    local types=("quiz" "research" "prototype" "task")
+    local types=("research" "prototype" "quiz-requirements" "quiz-understanding" "learn" "prerequisite")
     
     # Act - verify each gets the right label
     for type in "${types[@]}"; do
@@ -271,5 +296,5 @@ EOF
     done
     
     # Assert
-    [[ ${#types[@]} -eq 4 ]]
+    [[ ${#types[@]} -eq 6 ]]
 }

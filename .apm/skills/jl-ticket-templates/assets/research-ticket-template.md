@@ -96,11 +96,15 @@ Example:
 
 ## Acceptance Criteria
 
-- [ ] Investigation goal clearly stated as a research question
-- [ ] Scope explicitly lists what is in and out of bounds
-- [ ] Findings are documented with specific evidence or references
-- [ ] Recommendation is supported by the findings
-- [ ] Next steps or dependent decisions are identified (if any)
+- [ ] AC001: The investigation goal is a neutral research question.
+
+- [ ] AC002: The scope lists what is in scope and out of scope.
+
+- [ ] AC003: Findings include specific evidence or references.
+
+- [ ] AC004: The recommendation is supported by the findings and states trade-offs.
+
+- [ ] AC005: The ticket links any next steps or dependent decisions.
 
 ## Notes or Revision History
 

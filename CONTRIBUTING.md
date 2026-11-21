@@ -106,10 +106,13 @@ delegation result should record both the requested model and the resolved model.
 jl_recon:
   model_selection:
     default: inherit
-    quiz: inherit
+    map: inherit
     research: claude-sonnet-5
     prototype: gpt-5.4-mini
-    task: inherit
+    quiz_requirements: inherit
+    quiz_understanding: inherit
+    learn: inherit
+    prerequisite: inherit
     ticket_resolution_checks: gpt-5.4-mini
     status_report_checks: claude-sonnet-5
 ```
