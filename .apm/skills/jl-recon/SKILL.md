@@ -39,18 +39,24 @@ mechanism; jl-recon owns this schema, its defaults, and its validation.
 | `decision_gates.research_afk` | boolean | `true`, `false` | `false` | required by recon |
 | `uncertainty_tracking.pattern` | string | any markdown heading string | `## Not Yet Specified (Fog of War)` | optional |
 | `model_selection.default` | string | `inherit` or recognized model name | `inherit` | optional |
-| `model_selection.quiz` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
+| `model_selection.map` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
 | `model_selection.research` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
 | `model_selection.prototype` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
-| `model_selection.task` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
+| `model_selection.quiz_requirements` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
+| `model_selection.quiz_understanding` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
+| `model_selection.learn` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
+| `model_selection.prerequisite` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
 | `model_selection.ticket_resolution_checks` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
 | `model_selection.status_report_checks` | string | `inherit` or recognized model name | inherits `model_selection.default` | optional |
 | `labels.default` | array of strings | any label names | `["recon:map"]` | optional |
 | `labels.map` | array of strings | any label names | defaults to `labels.default` | optional |
-| `labels.quiz` | array of strings | any label names | defaults to `labels.default` | optional |
 | `labels.research` | array of strings | any label names | defaults to `labels.default` | optional |
 | `labels.prototype` | array of strings | any label names | defaults to `labels.default` | optional |
-| `labels.task` | array of strings | any label names | defaults to `labels.default` | optional |
+| `labels.quiz_requirements` | array of strings | any label names | defaults to `labels.default` | optional |
+| `labels.quiz_understanding` | array of strings | any label names | defaults to `labels.default` | optional |
+| `labels.learn` | array of strings | any label names | defaults to `labels.default` | optional |
+| `labels.prerequisite` | array of strings | any label names | defaults to `labels.default` | optional |
+| `title_format.<ticket-type>` | string | non-empty title template | type-specific pattern | optional |
 | `checks.on_ticket_resolution_enabled` | boolean | `true`, `false` | `true` | optional |
 | `checks.on_status_report_enabled` | boolean | `true`, `false` | `true` | optional |
 | `checks.timeout_seconds` | integer | any positive integer | `30` | optional |
@@ -74,15 +80,19 @@ Canonical keys follow AC2.0 and ADS-STE100's human-readable naming guidance:
 - validate `decision_gates`, if present, as an object of booleans
 - validate `uncertainty_tracking`, if present, as an object
 - validate `model_selection`, if present, as an object with keys limited to:
-  `default`, `quiz`, `research`, `prototype`, `task`, `ticket_resolution_checks`,
-  `status_report_checks` (legacy aliases `mode2_checks`, `mode3_checks`
-  also accepted)
+  `default`, `map`, `research`, `prototype`, `quiz_requirements`,
+  `quiz_understanding`, `learn`, `prerequisite`, `ticket_resolution_checks`,
+  `status_report_checks` (legacy aliases `mode2_checks`, `mode3_checks` also accepted)
 - validate each `model_selection.*` value as a non-empty string
 - validate each configured model value as either `inherit` or a recognized model name
 - validate `labels`, if present, as an object with keys limited to: `default`,
-  `map`, `quiz`, `research`, `prototype`, `task`
+  `map`, `research`, `prototype`, `quiz_requirements`, `quiz_understanding`,
+  `learn`, `prerequisite`
 - validate each `labels.*` value as an array of non-empty strings
 - validate that no `labels.*` array is empty
+- validate `title_format`, if present, as an object with keys limited to:
+  `map`, `research`, `prototype`, `quiz_requirements`, `quiz_understanding`,
+  `learn`, `prerequisite`; each value must be a non-empty string
 - validate `checks`, if present, as an object with keys limited to:
   `on_ticket_resolution_enabled` (boolean), `on_status_report_enabled` (boolean),
   `timeout_seconds` (positive integer)
@@ -92,13 +102,11 @@ Canonical keys follow AC2.0 and ADS-STE100's human-readable naming guidance:
 - default missing `uncertainty_tracking.pattern` to
   `## Not Yet Specified (Fog of War)`
 - default `model_selection.default` to `inherit`
-- default each of `model_selection.quiz`, `model_selection.research`,
-  `model_selection.prototype`, `model_selection.task`,
-  `model_selection.ticket_resolution_checks`, `model_selection.status_report_checks` to inherit
-  from `model_selection.default`
+- default each type-specific `model_selection` key and both check keys to
+  inherit from `model_selection.default`
 - default `labels.default` to `["recon:map"]`
-- default each of `labels.map`, `labels.quiz`, `labels.research`,
-  `labels.prototype`, `labels.task` to inherit from `labels.default`
+- default each type-specific `labels` key to inherit from `labels.default`
+- default `title_format` to the built-in pattern for each ticket type
 - default `checks.on_ticket_resolution_enabled` to `true`
 - default `checks.on_status_report_enabled` to `true`
 - apply resolved label values when creating maps and tickets, per the resolved behavior below
@@ -121,7 +129,12 @@ jl_recon:
     pattern: "## Not Yet Specified (Fog of War)"
   model_selection:
     default: "inherit"
+    map: "inherit"
     research: "claude-sonnet-5"
+    quiz_requirements: "inherit"
+    quiz_understanding: "inherit"
+    learn: "inherit"
+    prerequisite: "inherit"
     ticket_resolution_checks: "gpt-5.4-mini"
     status_report_checks: "claude-sonnet-5"
   checks:
@@ -133,14 +146,26 @@ jl_recon:
     map:
       - "recon:map"
       - "planning"
-    quiz:
-      - "recon:quiz"
     research:
       - "recon:research"
     prototype:
       - "recon:prototype"
-    task:
-      - "recon:task"
+    quiz_requirements:
+      - "recon:quiz-requirements"
+    quiz_understanding:
+      - "recon:quiz-understanding"
+    learn:
+      - "recon:learn"
+    prerequisite:
+      - "recon:prerequisite"
+  title_format:
+    map: "Map: {destination}"
+    research: "Research: {topic}"
+    prototype: "Prototype: {concept}"
+    quiz_requirements: "Quiz (Requirements): {question}"
+    quiz_understanding: "Quiz (Understanding): {question}"
+    learn: "Learn: {topic}"
+    prerequisite: "Prerequisite: {work}"
 ```
 
 In `AGENTS.md`:
@@ -175,18 +200,24 @@ This skill consumes:
 - `jl_recon.decision_gates.research_afk`
 - `jl_recon.uncertainty_tracking.pattern`
 - `jl_recon.model_selection.default`
-- `jl_recon.model_selection.quiz`
+- `jl_recon.model_selection.map`
 - `jl_recon.model_selection.research`
 - `jl_recon.model_selection.prototype`
-- `jl_recon.model_selection.task`
+- `jl_recon.model_selection.quiz_requirements`
+- `jl_recon.model_selection.quiz_understanding`
+- `jl_recon.model_selection.learn`
+- `jl_recon.model_selection.prerequisite`
 - `jl_recon.model_selection.ticket_resolution_checks`
 - `jl_recon.model_selection.status_report_checks`
 - `jl_recon.labels.default`
 - `jl_recon.labels.map`
-- `jl_recon.labels.quiz`
 - `jl_recon.labels.research`
 - `jl_recon.labels.prototype`
-- `jl_recon.labels.task`
+- `jl_recon.labels.quiz_requirements`
+- `jl_recon.labels.quiz_understanding`
+- `jl_recon.labels.learn`
+- `jl_recon.labels.prerequisite`
+- `jl_recon.title_format`
 - `jl_recon.checks.on_ticket_resolution_enabled`
 - `jl_recon.checks.on_status_report_enabled`
 
@@ -211,9 +242,7 @@ Resolved behaviour:
     in any textual artifact that mirrors the map structure
   - if not configured, default to `## Not Yet Specified (Fog of War)` through
     jl-recon's own defaults
-- `model_selection.default`, `model_selection.quiz`, `model_selection.research`,
-  `model_selection.prototype`, `model_selection.task`, `model_selection.ticket_resolution_checks`,
-  `model_selection.status_report_checks`
+- `model_selection.default` and each type-specific or quality-check model key
   - legacy aliases are accepted: `mode2_checks` → `ticket_resolution_checks`,
     `mode3_checks` → `status_report_checks`
   - `inherit` means "do not force a model at this level; continue to the next fallback layer"
@@ -244,7 +273,8 @@ Resolved behaviour:
   - combined with any inherited labels from parent (if any) and does not duplicate
   - on GitHub/Azure DevOps: applied as issue labels or work item tags
   - on Markdown: stored in frontmatter `labels:` field
-- `labels.quiz`, `labels.research`, `labels.prototype`, `labels.task`
+- each type-specific `labels` key (`research`, `prototype`,
+  `quiz_requirements`, `quiz_understanding`, `learn`, `prerequisite`)
   - applied to each respective ticket type at creation time
   - if not configured for a type, inherits from `labels.default`
   - combined with map labels (if part of a map) plus the ticket's `recon:<type>` label
@@ -337,7 +367,8 @@ format defined by jl-config) for:
 ```text
 [WARN] jl-recon: 'labels.category' is not a valid labels key
   File: CONTRIBUTING.md [line 14]
-  Fix: Use only: default, map, quiz, research, prototype, or task
+  Fix: Use only: default, map, research, prototype, quiz_requirements,
+       quiz_understanding, learn, or prerequisite
 ```
 
 #### Non-array labels value
@@ -351,9 +382,9 @@ format defined by jl-config) for:
 #### Non-string value in labels array
 
 ```text
-[WARN] jl-recon: 'labels.quiz' contains a non-string value: 123
+[WARN] jl-recon: 'labels.quiz_requirements' contains a non-string value: 123
   File: CONTRIBUTING.md [line 18]
-  Fix: All label values must be strings: quiz: ["recon:quiz", "active"]
+  Fix: All label values must be strings: quiz_requirements: ["recon:quiz-requirements", "active"]
 ```
 
 #### Empty labels array
@@ -402,7 +433,9 @@ format defined by jl-config) for:
 ```text
 [WARN] jl-recon: 'model_selection.mode2' is not a valid model-selection key
   File: CONTRIBUTING.md [line 24]
-  Fix: Use only: default, quiz, research, prototype, task, ticket_resolution_checks, status_report_checks (legacy aliases: mode2_checks, mode3_checks)
+  Fix: Use only: default, research, prototype, quiz_requirements,
+       quiz_understanding, learn, prerequisite, ticket_resolution_checks,
+       status_report_checks (legacy aliases: mode2_checks, mode3_checks)
 ```
 
 #### Invalid model_selection value
@@ -585,12 +618,25 @@ Resolving one ticket on an existing map.
    in Mode 2" below for the full workflow: invoke jl-adversarial-reviewer,
    display findings, collect user review/override. If checks are unavailable
    or disabled, skip this step and proceed directly to step 8.
-8. Record the resolution: close the ticket, then append exactly one line to
-   the map's Decisions-so-far list. One line, one place — if the map already
-   shows this natively (GitHub's own sub-issue list), the manual line still
-   goes in because some decisions resolve with no child ticket at all; it
-   never gets restated a second time as a summary or a status table.
-9. Create any newly-surfaced tickets and graduate any fog the resolution
+8. Review acceptance criteria before closure using
+   `jl-ticket-templates`' shared review contract. Show one unchecked
+   criterion at a time with its evidence and linked owner, and invite the
+   user to identify missing requirements. Only after explicit user
+   confirmation, record the decision and source in a separate issue comment,
+   then check that criterion. A follow-up ticket alone is not evidence that
+   its criterion is met. If any criterion is unmet, keep the ticket open
+   unless the user approves and records a re-scope. Use
+   `getNextAcceptanceCriterion` and `validateClosureReadiness` to enforce the
+   sequence and closure evidence.
+9. After closure readiness passes, call `validateStatusTransition` with the
+   reviewed criteria and per-criterion re-scopes. Set the status to `Done`
+   only if the transition passes, then close the provider issue if applicable.
+   Append exactly one line to the map's
+   Decisions-so-far list. One line, one place — if the map already shows this
+   natively (GitHub's own sub-issue list), the manual line still goes in
+   because some decisions resolve with no child ticket at all; it never gets
+   restated a second time as a summary or a status table.
+10. Create any newly-surfaced tickets and graduate any fog the resolution
    burned off. Log any newly-surfaced uncertainty to the map's fog in the
    same pass, before the pass ends. If the resolution reveals scope the
    destination doesn't cover, close it into Out-of-scope instead of
@@ -600,7 +646,9 @@ Resolving one ticket on an existing map.
 carries its one new line, every new uncertainty the pass surfaced is
 recorded as fog on the map, in-session, before the pass ends, and any quality
 checks (if enabled) were presented for user review before the resolution was
-recorded.
+recorded. Every acceptance criterion was reviewed individually, confirmed by
+the user, source-commented before being checked, or explicitly re-scoped by
+the user before closure.
 
 #### Quality Checks in Mode 2
 
@@ -1313,7 +1361,7 @@ The agent MUST:
 - Apply resolved label configuration when creating the map: use
   `labels.map` (or `labels.default` if not configured) as the map's labels.
 - Apply resolved label configuration when creating each ticket: combine the
-  ticket type's configured labels (e.g., `labels.quiz`) + inherited map labels
+  ticket type's configured labels (e.g., `labels.quiz_requirements`) + inherited map labels
   (if the ticket is a child of a map) + the ticket's `recon:<type>` label.
   Labels are additive, not replacement — a ticket receives all three sets.
 - Allow user session preference to override configured labels entirely (user
@@ -1510,49 +1558,31 @@ When `jl-recon` creates a task ticket:
 
 ## Map Ticket Validation
 
-Map tickets are validated before creation to ensure decision tracking and blocking
-edges are explicit. When `jl-recon` creates a new map ticket, it validates the
-ticket structure against the map template schema before committing to the target
-provider (GitHub Issues, Azure DevOps, etc.).
+Validate new Maps with `jl-ticket-templates/validator.js` and the shipped
+`jl-ticket-templates/references/MAP_VALIDATION_GUIDE.md`. New Maps use
+`Draft`, `Ready`, `In Progress`, `Done`, or `Blocked`; read historical Maps
+with `Charting`, `Walked`, `Completed`, or `Stale` without rewriting them.
+New Maps list Research, Prototype, Requirements Quiz, Understanding Quiz,
+Learn, and Prerequisite children; Map is the seventh new type. Historical
+Quiz and Task tickets remain readable but are not new ticket types.
 
-### Validation workflow
+1. Load a filled Map template. For GitHub, use native issue metadata and a
+   readable Details list; for local Markdown, parse YAML frontmatter.
+2. Call `validateTicket(ticket, { provider, stage: "creation" })` before
+   creating the Map. Report actionable errors with their locations.
+3. If validation fails, correct the content. For a GitHub Map with **only**
+   Map-content errors, the user may explicitly approve a limited override.
+   Use `validateCreationOverride` for authorization; then create the issue,
+   post the separate decision/reason comment, and verify its audit record.
+   If the comment fails, keep the issue open and mark the audit pending.
+   Structural, identity, status, and acceptance-criteria errors must be fixed.
+4. At resolution, call `validateTicket(ticket, { provider, stage: "resolution" })`
+   and complete the shared AC-before-close review before marking the Map Done.
 
-1. **Load the map content** from the user-filled template or created content
-2. **Parse and validate** the frontmatter against required fields (type, status, author, date, etc.)
-3. **Extract and validate** body sections (Destination, Acceptance Criteria, Decisions, Fog of War, Frontier, Blocked)
-4. **Report validation result**:
-   - If valid: proceed to ticket creation
-   - If invalid: report errors with remediation guidance; offer user override option
-
-### Validation contract
-
-A map ticket is **valid** when:
-
-- Frontmatter contains all required fields with correct types and values
-- Type is set to "map"
-- Status is one of: Charting, Walked, Completed, Stale
-- Destination is clear and specific (specific deliverable or shipped feature, not vague goal)
-- Acceptance Criteria contains at least 5 items covering decisions, fog, scope, frontier, and completion
-- Decisions section either lists decisions with links or includes note explaining why empty
-- Fog of War items each tagged with kind: **what** (goal fuzzy) or **how** (means fuzzy)
-- Open Tickets (Frontier) table shows unblocked work with Status column
-- Blocked Tickets table shows blocking edges with Reason column
-
-See `references/MAP_VALIDATION_GUIDE.md` for:
-
-- Complete validation contract and error messages
-- Fog of War tagging rules (what vs. how)
-- User override workflow and audit trail
-- Integration points and test cases
-
-### Integration points
-
-When `jl-recon` creates a map ticket:
-
-1. Call the map validator with the filled template
-2. If validation fails, report errors and ask user to fix or approve override
-3. If override approved, record the approval in a ticket comment for audit trail
-4. Create the ticket only after validation passes or override is approved
+The Map guide defines the exact columns, empty-section rules, error codes,
+limited override sequence, and test cases. The Blocked Tickets table uses
+`Ticket`, `Type`, `Blocked by`, and `Reason` columns; it does not require
+`Status`.
 
 ## Relationship to Other Skills
 

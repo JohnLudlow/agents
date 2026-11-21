@@ -102,12 +102,17 @@ Example:
 
 ## Acceptance Criteria
 
-- [ ] Research question clearly stated
-- [ ] Implementation approach documents what will and will not be built
-- [ ] Verification criteria are specific and measurable
-- [ ] Throwaway plan explicitly states what will be discarded
-- [ ] Findings are documented with specific observations or data
-- [ ] Next steps or dependent decisions identified (if any)
+- [ ] AC001: The ticket states one research question.
+
+- [ ] AC002: The approach lists what the prototype will and will not build.
+
+- [ ] AC003: Verification checks have specific, observable results.
+
+- [ ] AC004: The throwaway plan states what will be discarded and retained.
+
+- [ ] AC005: Findings record observations from the verification checks.
+
+- [ ] AC006: The ticket links any next steps or dependent decisions.
 
 ## Notes or Revision History
 

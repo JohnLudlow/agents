@@ -1,0 +1,28 @@
+{
+  "platform": "github",
+  "name": "Recon ticket",
+  "kind": "{type}",
+  "title": "{title}",
+  "body": "## Overview\n\n{description}\n\n## Details\n\n- **Status:** {status}\n\n- **Description:** {description}\n",
+  "labels": ["recon:{type}"],
+  "placeholders": {
+    "type": "One of the new Recon ticket types",
+    "title": "Ticket title",
+    "description": "One-line ticket summary",
+    "status": "Draft, Ready, In Progress, Done, or Blocked"
+  },
+  "fields": {
+    "title": { "source": "native issue title" },
+    "author": { "source": "native issue creator" },
+    "date": { "source": "native issue creation date" },
+    "parent": { "source": "native sub-issue relationship" },
+    "related_links": { "source": "native issue links" },
+    "status": { "source": "Details list" },
+    "description": { "source": "Overview and Details list" },
+    "type": { "source": "recon:<type> label" }
+  },
+  "metadata": {
+    "version": 1,
+    "note": "Do not add YAML frontmatter to GitHub issue bodies."
+  }
+}

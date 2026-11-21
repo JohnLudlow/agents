@@ -1,298 +1,150 @@
-# Shared Ticket Base Schema
+# Shared Ticket Contract
 
-## Overview
+This contract defines the shared fields, lifecycle, provider mapping, and acceptance-criteria rules for new Recon tickets.
 
-This document defines the **canonical structure** for all ticket types in this
-repository: quiz, research, prototype, task, and map. Every ticket inherits
-this base frontmatter and acceptance-criteria contract, then extends it with
-type-specific sections.
+The contract applies to new tickets. Historical GitHub issues and Markdown tickets remain readable without migration or relabeling.
 
-Type-specific templates (for example, `quiz-template.md`, `research-template.md`)
-should reference this base explicitly and document only what they add.
+## Ticket Types
 
-## Frontmatter Structure
+New Recon tickets use one of these types:
 
-Every ticket MUST carry YAML frontmatter with these fields:
+- `map`
+- `research`
+- `prototype`
+- `quiz-requirements`
+- `quiz-understanding`
+- `learn`
+- `prerequisite`
 
-```yaml
----
-title: "[Ticket title]"
-description: "[One-line summary]"
-type: "[quiz | research | prototype | task | map]"
-status: "[Draft | Ready | In Progress | Done | Blocked]"
-author: "[Author or agent name]"
-date: "[YYYY-MM-DD creation date]"
-related_links: "[Comma-separated links or empty]"
-parent: "[Parent issue URL or empty]"
----
-```
+The old `quiz` and `task` types are read-only legacy types. Do not use them when creating new tickets.
 
-### Frontmatter Field Contract
+## Shared Logical Fields
 
-| Field | Type | Required | Notes |
-|:------|:-----|:---------|:------|
-| `title` | string | Yes | Human-readable ticket title; should clearly state what the ticket is about |
-| `description` | string | Yes | One-line summary; used by listing and discovery |
-| `type` | enum | Yes | One of: `quiz`, `research`, `prototype`, `task`, `map`; determines which type-specific sections apply |
-| `status` | enum | Yes | One of: `Draft`, `Ready`, `In Progress`, `Done`, `Blocked`; tracks lifecycle |
-| `author` | string | Yes | Agent name or human name; identifies who created or is driving this ticket |
-| `date` | string (ISO 8601) | Yes | Creation date; enables sorting and archival |
-| `related_links` | string | No | Comma-separated URLs to related tickets, decisions, or external resources; empty string if none |
-| `parent` | string (URL) | No | URL of parent issue if this ticket is a child work item; empty if top-level |
+Each new ticket has these logical fields:
 
-### Frontmatter Examples
+| Field | Type | Required | Meaning |
+| --- | --- | --- | --- |
+| `title` | string | Yes | Short, descriptive ticket title |
+| `description` | string | Yes | One-line summary of the work |
+| `type` | enum | Yes | One of the new ticket types above |
+| `status` | enum | Yes | `Draft`, `Ready`, `In Progress`, `Done`, or `Blocked` |
+| `author` | string | Yes | Ticket creator or owner |
+| `date` | string | Yes | Creation date in `YYYY-MM-DD` format |
+| `related_links` | string | Yes | Comma-separated links, or an empty string |
+| `parent` | string | Yes | Parent link, or an empty string |
 
-**Minimal frontmatter** (no related links or parent):
+## Provider Representation
 
-```yaml
----
-title: "Evaluate database migration approach"
-description: "Research whether to migrate to PostgreSQL or stay with SQLite"
-type: "research"
-status: "Ready"
-author: "jl-recon"
-date: "2026-08-30"
-related_links: ""
-parent: ""
----
-```
+Use the provider's representation for each field. Do not put YAML frontmatter in every provider body.
 
-**Frontmatter with parent and related links**:
+### GitHub Issues
 
-```yaml
----
-title: "Prototype real-time collaboration UI"
-description: "Build throwaway prototype to test websocket-based state sync"
-type: "prototype"
-status: "In Progress"
-author: "jl-implementer"
-date: "2026-08-29"
-related_links: "https://github.com/JohnLudlow/agents/issues/152, https://github.com/JohnLudlow/agents/issues/155"
-parent: "https://github.com/JohnLudlow/agents/issues/143"
----
-```
+- Use the native issue title, creator, and creation date.
+- Use GitHub's parent sub-issue relationship and issue links.
+- Apply the configured labels and the required `recon:<type>` label.
+- Put non-native planning fields, including `description` and `status`, in a readable `## Details` list.
+- Keep the issue body in Markdown and do not put a raw YAML block at its start.
+
+### Local Markdown
+
+Use YAML frontmatter with the shared logical fields. Use an ISO date and an empty string when `related_links` or `parent` has no value.
+
+### Azure DevOps
+
+Use the existing Azure DevOps fields required by `validateTemplate`.
+Map shared fields before validation. Do not put Markdown frontmatter in descriptions.
+
+## Status Lifecycle
+
+New tickets use `Draft`, `Ready`, `In Progress`, `Done`, or `Blocked`.
+
+Allowed transitions are:
+
+| From | To | Condition |
+| --- | --- | --- |
+| `Draft` | `Ready` | Creation checks pass |
+| `Ready` | `In Progress` | Work starts |
+| `Ready` or `In Progress` | `Blocked` | Record a named blocker and reason |
+| `Blocked` | `Ready` | Confirm that the blocker is clear |
+| `In Progress` | `Done` | Resolution checks pass and the user approves |
+
+A deferred check stays open in `Ready` or `In Progress`. Record a user-chosen skip with its reason. Close GitHub issues only after status becomes `Done`.
+
+For `In Progress` to `Done`, pass reviewed `criteria` and individually approved `rescope` entries to `validateStatusTransition`.
+
+It calls `validateClosureReadiness`. A boolean flag cannot replace review evidence.
+
+Historical Maps with `Charting`, `Walked`, `Completed`, or `Stale` remain unchanged and readable.
+
+## Validation Stages
+
+### Creation
+
+Check provider identity, parent, question or destination, scope, and criteria.
+Require at least three criteria, or five for Maps. Do not require findings or
+outcomes before work starts.
+
+### Resolution
+
+Check type-specific findings, decisions, evidence, and outcomes. Require user
+acceptance where the type requires it. For an approved skip, validate the
+choice and reason instead of requiring nonexistent results. A deferred check
+remains open.
+
+### Historical Read
+
+Read legacy `quiz` and `task` tickets and historical Map statuses without
+rewriting them. Reject legacy types at creation and resolution.
 
 ## Acceptance-Criteria Format
 
-Every ticket MUST define acceptance criteria — the checkable conditions that
-determine when the work is done. Acceptance criteria follow a canonical format:
-
-### Section Structure
-
-Include an **Acceptance Criteria** section (or **Acceptance Criteria** subsection
-under the type-specific section) containing a checklist:
+Each acceptance criterion describes one checkable outcome. Put each on its own
+checklist line. Use unique, sequential, zero-padded IDs starting at `AC001:`.
 
 ```markdown
 ## Acceptance Criteria
 
-- [ ] Criterion 1: [Specific, measurable, checkable outcome]
-- [ ] Criterion 2: [Specific, measurable, checkable outcome]
-- [ ] Criterion 3: [Specific, measurable, checkable outcome]
+- [ ] AC001: The shared schema lists all required logical fields.
+
+- [ ] AC002: The validator accepts valid Markdown frontmatter.
+
+- [ ] AC003: The validator rejects duplicate criterion IDs.
 ```
 
-Each criterion should be:
+The validator checks the checklist shape, ID sequence, and unique IDs. Authors must also check that each item describes only one outcome.
 
-- **Specific** — state exactly what must be true
-- **Measurable** — avoid vague language like "understand" or "investigate";
-  use "write", "verify", "document", "test", "validate"
-- **Checkable** — the agent should be able to verify it's done by running a
-  command, reading output, or reviewing an artifact
+## Review Before Closure
 
-### Good Acceptance Criteria
+Review criteria one at a time, in ticket order. Show evidence and the linked
+owner for each. Invite the user to identify missing requirements before asking
+for a decision.
 
-```markdown
-## Acceptance Criteria
+After user confirmation, add an issue comment that records the decision and
+source. Check the criterion only after the comment exists. A follow-up ticket
+alone does not satisfy its criterion.
 
-- [ ] Validator module exports `validateTemplate(template, platform)` function
-- [ ] All 4 smoke tests pass (valid GitHub, invalid field, valid Azure DevOps, enum violation)
-- [ ] Module loads without errors: `require('./validator.js')` succeeds
-```
+Keep the ticket open while any criterion is unmet. A re-scope identifies
+each affected AC by ID, records its individual user approval, reason, and
+issue comment, and leaves all other criteria subject to normal checks.
+Close only when all criteria are checked or individually re-scoped.
 
-### Poor Acceptance Criteria
+Callers use `getNextAcceptanceCriterion(criteria, rescope)` and `validateClosureReadiness` to
+implement this process. A criterion needs an invitation, explicit
+confirmation, evidence, linked owner, and source-comment URL in order. The
+caller owns the conversation and provider write.
+Call `validateClosureReadiness(criteria, rescope)` with an array of
+`{ id, userConfirmed, reason, userConfirmedAt, sourceCommentUrl, sourceCommentAt }`
+entries for re-scoped criteria; no approval exempts an unrelated criterion.
 
-```markdown
-## Acceptance Criteria
+## Validator API
 
-- [ ] Understand how templates work ❌ Not measurable; "understand" is vague
-- [ ] Improve code quality ❌ Not specific; improvement is subjective
-- [ ] Create a good validator ❌ "good" is subjective; what makes it good?
-```
+`validator.js` keeps `validateTemplate(template, platform)` for provider payloads. It also exports:
 
-## Common Sections
+- `validateTicket(ticket, { provider, stage })` for new-ticket creation, resolution, and historical reads.
+- `validateAcceptanceCriteria(markdown)` for checklist shape and sequential IDs.
+- `validateStatusTransition(from, to, details)` for lifecycle checks.
+- `validateCreationOverride(validation, decision, audit?)` for a limited, auditable GitHub Map creation exception; see `MAP_VALIDATION_GUIDE.md`.
+- `getNextAcceptanceCriterion(criteria)` to select one unchecked item at a time.
+- `validateClosureReadiness(criteria, rescope)` to require confirmation, evidence, ownership, and source-comment ordering.
 
-All tickets, regardless of type, should include these sections in addition to
-their type-specific sections:
-
-### 1. Overview or Executive Summary
-
-**Purpose**: State what the ticket is about in 1–2 paragraphs.
-
-**When to include**: Always. This is the first thing a reader sees after the
-title and frontmatter.
-
-**Example**:
-
-```markdown
-## Overview
-
-This research ticket evaluates whether to adopt TypeScript strict mode
-for the agents codebase. We need to decide between improved type safety
-and the overhead of retrofitting existing code.
-```
-
-### 2. Context or Motivation (optional)
-
-**Purpose**: Explain why this ticket exists — what problem it solves, what
-decision it informs, or what dependency it resolves.
-
-**When to include**: When the "why" is not obvious from the title and overview.
-
-**Example**:
-
-```markdown
-## Context
-
-Issue #143 (AC3.7) requires all issues to follow a consistent template
-structure. This research informs whether we should add more platform types
-(Jira, Linear) to the ticket validator.
-```
-
-### 3. Acceptance Criteria
-
-**Purpose**: Define the checkable conditions for done.
-
-**When to include**: Always. This is the completion gate.
-
-**Format**: Use the canonical checklist format from [Acceptance-Criteria Format](#acceptance-criteria-format).
-
-### 4. Related Issues or Blocked By (optional)
-
-**Purpose**: List GitHub issue numbers or URLs for parent, child, or blocking
-relationships.
-
-**When to include**: When the ticket is linked to other work.
-
-**Example**:
-
-```markdown
-## Related Issues
-
-- Blocks: #158 (jl-recon integration)
-- Blocked by: #162 (jl-ticket-templates skill)
-- Parent: #143 (AC3.7)
-```
-
-### 5. Notes or Revision History (optional)
-
-**Purpose**: Record decisions, updates, or iteration history.
-
-**When to include**: When the ticket has been revised or there are unresolved
-open questions.
-
-**Example**:
-
-```markdown
-## Notes
-
-- Investigated Python vs. JavaScript for validator; chose JavaScript for portability.
-- Deferred Jira support to follow-up ticket.
-```
-
-## Template Inheritance Model
-
-Type-specific templates **extend** this base schema by adding type-specific
-sections.
-
-### Inheritance Pattern
-
-1. **Start with frontmatter** — use the frontmatter structure above, setting
-   `type` to the ticket type.
-2. **Include common sections** — include Overview, Acceptance Criteria, and
-   any of the optional common sections that apply.
-3. **Add type-specific sections** — append sections unique to the ticket type.
-   (See type-specific template documents for details.)
-4. **Remove inapplicable sections** — if the type-specific template or
-   guidance says a section doesn't apply, omit it rather than leaving a
-   placeholder.
-
-### Example: How a Quiz Ticket Inherits
-
-A quiz ticket starts with the base frontmatter and common sections, then adds
-quiz-specific sections like "Clarification Strategy" or "Question Categories":
-
-```markdown
----
-title: "[Title]"
-description: "[Summary]"
-type: "quiz"
-status: "Draft"
-author: "[Author]"
-date: "[Date]"
-related_links: ""
-parent: ""
----
-
-## Overview
-
-[...]
-
-## Acceptance Criteria
-
-- [ ] [Criterion 1]
-- [ ] [Criterion 2]
-
-## Clarification Strategy
-
-[Quiz-specific section]
-
-## Question Categories
-
-[Quiz-specific section]
-```
-
-### Extending for New Ticket Types
-
-To add a new ticket type (for example, `decision`):
-
-1. Update the `type` enum in the frontmatter contract to include the new type.
-2. Create a type-specific template document in `references/`, such as
-   `DECISION_TEMPLATE.md`, that references this base.
-3. Document what type-specific sections the new type requires.
-4. Update the validator if you need to enforce type-specific field constraints.
-
-## Contract Compliance
-
-For a ticket to comply with this schema:
-
-- **Frontmatter** — includes all required fields; `type` matches one of the
-  enumerated types
-- **Acceptance Criteria** — present and checkable
-- **Common sections** — includes Overview and Acceptance Criteria at minimum
-- **Type-specific sections** — includes all sections required by the ticket's
-  type-specific template
-
-Consuming skills (such as `jl-recon` and `jl-issue-management`) should validate
-against this contract before creating or updating tickets.
-
-## Related Documents
-
-- **Type-specific templates**: (To be created or in progress)
-  - `QUIZ_TEMPLATE.md` — for quiz tickets (decisions with options and reasoning); stored as asset `quiz-ticket-template.md`
-  - `RESEARCH_TEMPLATE.md` — for research tickets (investigations with evidence and findings); stored as asset `research-ticket-template.md`
-  - `PROTOTYPE_TEMPLATE.md` — for prototype tickets (time-boxed explorations with verification); stored as asset `prototype-ticket-template.md`
-  - `TASK_TEMPLATE.md` — for task tickets (bounded implementation work); stored as asset `task-ticket-template.md`
-  - `MAP_TEMPLATE.md` — for map tickets (complex efforts with decisions and blocking edges); stored as asset `map-ticket-template.md`
-- **Validator API**: See `SKILL.md` for the contract that validates tickets
-  against this schema
-- **Platform templates**: `assets/` folder contains platform-specific
-  payload templates (GitHub Issues, Azure DevOps)
-- **Quiz validation guide**: `references/QUIZ_VALIDATION_GUIDE.md` — how
-  jl-quiz integrates validation before creating quiz tickets
-- **Research validation guide**: `references/RESEARCH_VALIDATION_GUIDE.md` — how
-  jl-recon integrates validation before creating research tickets
-- **Prototype validation guide**: `references/PROTOTYPE_VALIDATION_GUIDE.md` — how
-  jl-recon integrates validation before creating prototype tickets
-- **Task validation guide**: `references/TASK_VALIDATION_GUIDE.md` — how
-  jl-recon integrates validation before creating task tickets
-- **Map validation guide**: `references/MAP_VALIDATION_GUIDE.md` — how
-  jl-recon integrates validation before creating map tickets
+Validation results contain `valid`, structured `errors`, and `warnings`. Callers must stop when `valid` is false.

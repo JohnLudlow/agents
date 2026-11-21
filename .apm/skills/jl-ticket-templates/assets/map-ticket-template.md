@@ -2,7 +2,7 @@
 title: "[Map title]"
 description: "[One-line destination this map is finding its way to]"
 type: "map"
-status: "Charting"
+status: "Draft"
 author: "[jl-recon or human charter]"
 date: "[YYYY-MM-DD]"
 related_links: "[Inciting issue link, related maps, documentation]"
@@ -29,80 +29,43 @@ replace every placeholder value before use.
 
 ## Destination
 
-**What reaching the end of this map looks like.** A spec, a decision, or a
-shipped change. Clear and achievable; named through jl-quiz before this
-document is created.
+[State the specific outcome this Map will deliver.]
 
-Example:
-> Shipped customer-profile service with documented API, passing integration
-> tests, and deployment runbook in /docs/runbooks.
+## Notes
+
+[Record the context and constraints for this Map.]
 
 ## Decisions So Far
 
-One line per resolved decision, in resolution order. Link every decision ticket
-by name.
-
-- [Decision name] — resolved via [Ticket name](link) — [one-line summary of the answer]
-
-Example:
-- Authentication strategy — resolved via [Quiz: JWT vs session storage](../plans/auth-strategy) — JWT with refresh tokens
+No decisions yet; this Map is in Draft.
 
 ## Not Yet Specified (Fog of War)
 
-Known to be in scope, not yet sharp enough to ticket. Note which kind of
-unclear it is — the **what** (goal fuzzy, means straightforward) or the **how**
-(goal fixed, means fuzzy).
-
-Items are added as they surface during charting, walking, or prototyping — not
-only at chart time.
-
-- [Fog item] — [what | how]
-
-Example:
-- Database schema for user profile — **what** (shape of data unclear)
-- Performance targets for API — **how** (need benchmarking)
+No fog yet; charting is in progress.
 
 ## Out of Scope
 
-Work consciously ruled outside the destination. Does not return unless the
-destination itself is redrawn.
-
-- [Excluded item] — [why it's excluded]
-
-Example:
-- Mobile app client — out of scope; web UI only for this map
-- Legacy data migration — out of scope; clean slate
+No exclusions yet; charting is in progress.
 
 ## Acceptance Criteria
 
-A map is complete when:
+- [ ] AC001: Every known decision has a linked ticket and a recorded outcome.
 
-1. **All Decisions Resolved** — Every known decision has a ticket and a recorded outcome
-2. **Blocking Edges Clear** — All ticket dependencies are explicit in the Blocked Tickets table
-3. **Frontier Identified** — The Open Tickets table shows what is unblocked and ready to start now
-4. **Fog Minimized** — Fog of War items are minimal and each labels its kind of unclear (what | how)
-5. **Destination Met** — The described destination has been reached or shipping plan is explicit
+- [ ] AC002: Every ticket dependency appears in the Blocked Tickets table.
+
+- [ ] AC003: The Open Tickets table lists all unblocked work that is ready to start.
+
+- [ ] AC004: Each Fog of War item has a **what** or **how** tag.
+
+- [ ] AC005: The destination is met or the remaining delivery plan is explicit.
 
 ## Open Tickets (Frontier)
 
-Tickets that are open, unblocked, and ready to claim now.
-
-| Ticket | Type | Assignee | Status |
-|:-------|:-----|:---------|:-------|
-| [Ticket name](link) | Research / Quiz / Prototype / Task | [who, if anyone] | [Draft / Ready / In Progress] |
-
-Example:
-| Database schema design | Research | @alice | Ready |
-| API contract | Quiz | @bob | In Progress |
+No open tickets yet; charting is in progress.
 
 ## Blocked Tickets
 
-| Ticket | Type | Blocked by | Reason |
-|:-------|:-----|:-----------|:-------|
-| [Ticket name](link) | Research / Quiz / Prototype / Task | [Blocking ticket name](link) | BLOCKED: [short reason] |
-
-Example:
-| Performance testing | Task | [API contract](../link) | BLOCKED: cannot benchmark until contract is stable |
+No blocked tickets yet; charting is in progress.
 
 ## Revision History
 

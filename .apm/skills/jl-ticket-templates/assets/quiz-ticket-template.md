@@ -11,8 +11,7 @@ parent: ""
 
 # Decision: {decision_name}
 
-This template is for **quiz tickets** — decisions that need structured
-reasoning and multiple options considered before a conclusion is reached.
+This file is retained for reading historical `quiz` tickets. Do not use it to create new Recon tickets. New work uses the Requirements Quiz or Understanding Quiz template.
 
 Use this template when:
 
@@ -21,9 +20,7 @@ Use this template when:
 - reasoning should be recorded alongside the final choice
 - other agents or future maintainers should understand why this decision was made
 
-This template **inherits** from the shared ticket base schema documented in
-`jl-ticket-templates/references/SHARED_BASE_SCHEMA.md`. See that document
-for frontmatter fields, acceptance-criteria format, and common sections.
+Historical tickets may use older fields and acceptance-criteria formats. New ticket contracts are in `SHARED_BASE_SCHEMA.md`.
 
 ## Overview
 

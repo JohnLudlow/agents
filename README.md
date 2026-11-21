@@ -283,8 +283,11 @@ For downstream repositories installing this APM package:
 2. Create or edit `AGENTS.md` in your repository root to override defaults:
 
    ```yaml
-   jl_quiz:
-     quiz_mode: b    # Override: use questionnaires instead of live chat
+   jl_quiz_requirements:
+     quiz_mode: questionnaire    # Override: use questionnaires instead of live chat
+
+   jl_quiz_understanding:
+     quiz_mode: questionnaire    # Override: use questionnaires instead of live chat
    ```
 
 3. Run `npm run validate` (if your repository uses this package's validation) to check syntax and schema
