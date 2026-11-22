@@ -302,12 +302,15 @@ uses a hybrid rule, checked in this order:
    `worktree: required` line, honor it and create the worktree before
    starting work. There is no `worktree: not-required` marker; omitting the
    marker always means "infer," never "definitely not required."
+
 2. **Inference** — if no marker is present, infer from the task description
    whether it involves direct source changes.
+
 3. **Default to inline when ambiguous** — if inference is genuinely
    ambiguous, default to starting the work inline (no worktree) rather than
    asking upfront. An unnecessary worktree for a mostly-procedural task
    costs more than a possible later switch.
+
 4. **Mid-task discovery** — if the agent discovers partway through inline
    work that source changes are needed after all, pause immediately and ask
    before continuing:

@@ -1103,6 +1103,7 @@ jl_recon:
    ```
 
 2. **Retry the check** — run the same resolution again; transient network issues often clear
+
 3. **Skip this check** — proceed with "Override and record anyway" if you trust your work
 
 ### Problem: Checks Fail Repeatedly
@@ -1120,7 +1121,9 @@ jl_recon:
 1. **Check the harness capabilities:**
    - Verify you're running in a harness that supports subagents (GitHub Copilot chat, Azure DevOps, or Herdr)
    - If in a limited harness, checks will degrade gracefully
+
 2. **Verify network connectivity** — check service requires internet access
+
 3. **Disable checks temporarily:**
 
    ```yaml

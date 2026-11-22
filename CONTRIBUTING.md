@@ -191,15 +191,20 @@ When creating or modifying agent definitions:
 
 1. Create `.apm/agents/jl-[agent-name].agent.md` with the new or updated agent
    definition.
+
 2. Follow the standard agent schema.
 
    **For the complete Agent Definitions schema** (naming convention, required sections
    frontmatter format), see <https://microsoft.github.io/apm/producer/author-primitives/instructions-and-agents/>
    — it documents the canonical structure for all agent definitions in this repository and is
    available to agents and tools in downstream repositories.
+
 3. Validate the package.
+
 4. Install locally.
+
 5. Test the agent.
+
 6. Update `README.md` if the new or changed agent should be documented there.
 
 ### Skill Definitions
@@ -208,14 +213,19 @@ When creating or modifying skills:
 
 1. Create `.apm/skills/jl-[skill-name]/SKILL.md` with the new or updated skill
    definition.
+
 2. Follow the standard skill schema.
 
    **For the complete Skill Definitions schema** (directory structure, naming
    convention, required sections), see
    <https://agentskills.io/home>.
+
 3. Validate the package.
+
 4. Install locally.
+
 5. Test the skill.
+
 6. Open a pull request with any related documentation updates.
 
 ### Templates
@@ -546,7 +556,9 @@ Preferred authoring location: `.apm/agents/` — create an APM agent primitive n
 that includes YAML frontmatter (description, temperature, mode, permissions) followed by the agent body.
 
 1. Create `.apm/agents/jl-[agent-name].agent.md` with YAML frontmatter and the agent markdown body.
+
 2. Follow the standard agent schema (include Description, Purpose, Inputs, Outputs, Requirements, Capabilities, Restrictions).
+
 3. Validate the package and compile locally:
 
    ```bash
@@ -561,6 +573,7 @@ that includes YAML frontmatter (description, temperature, mode, permissions) fol
    ```
 
 5. Test the agent in Copilot and/or OpenCode (see Installing and Testing Locally above).
+
 6. Update `README.md` with the new agent and open a PR.
 
 > Back-compat: If you prefer the legacy source format (separate `.md` + `.json` sidecar in `agents/`), include both
@@ -582,7 +595,9 @@ paths relative to the skill root.
    and the skill markdown body. Place any supporting templates or reference
    documents under `.apm/skills/jl-[skill-name]/assets/` or
    `references/` and link to them with a skill-root-relative path.
+
 2. Follow the standard skill structure (Overview, Key principles, Examples).
+
 3. Validate and compile:
 
    ```bash
@@ -597,6 +612,7 @@ paths relative to the skill root.
    ```
 
 5. Test the skill in Copilot and/or OpenCode (see Installing and Testing Locally above).
+
 6. Update `README.md` with the new skill and open a PR.
 
 > Back-compat: Legacy `skills/*.md` + `skills/*.json` sidecars are supported for reference, but new contributions should
