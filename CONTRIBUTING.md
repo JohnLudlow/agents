@@ -71,7 +71,7 @@ This block is separate from `jl_approval_gates`: approval decides whether a
 delegation may happen, while model selection decides which model should run the
 delegated task.
 
-#### Schema
+#### Schema {#subagent-model-selection-schema}
 
 ```yaml
 jl_subagent_models:
@@ -169,14 +169,14 @@ Circular delegation prevention (`parentAgentStack` tracking) uses a
 configurable nesting depth limit, separate from `jl_approval_gates` and
 `jl_subagent_models`.
 
-#### Schema
+#### Schema {#subagent-selection-depth-schema}
 
 ```yaml
 jl_subagent_delegation:
   max_nesting_depth: 3
 ```
 
-#### Behavior
+#### Behavior {#subagent-selection-depth-schema-behavior}
 
 - `max_nesting_depth` bounds how many delegation levels deep a chain of
   subagents may go (see `jl-subagent-spawning/SKILL.md` → Circular Delegation
@@ -194,15 +194,20 @@ When creating or modifying agent definitions:
 
 1. Create `.apm/agents/jl-[agent-name].agent.md` with the new or updated agent
    definition.
+
 2. Follow the standard agent schema.
 
    **For the complete Agent Definitions schema** (naming convention, required sections
    frontmatter format), see <https://microsoft.github.io/apm/producer/author-primitives/instructions-and-agents/>
    — it documents the canonical structure for all agent definitions in this repository and is
    available to agents and tools in downstream repositories.
+
 3. Validate the package.
+
 4. Install locally.
+
 5. Test the agent.
+
 6. Update `README.md` if the new or changed agent should be documented there.
 
 ### Skill Definitions
@@ -211,14 +216,19 @@ When creating or modifying skills:
 
 1. Create `.apm/skills/jl-[skill-name]/SKILL.md` with the new or updated skill
    definition.
+
 2. Follow the standard skill schema.
 
    **For the complete Skill Definitions schema** (directory structure, naming
    convention, required sections), see
    <https://agentskills.io/home>.
+
 3. Validate the package.
+
 4. Install locally.
+
 5. Test the skill.
+
 6. Open a pull request with any related documentation updates.
 
 ### Templates
@@ -484,7 +494,7 @@ Notes
 node scripts/validate-apm-package.js
 ```
 
-2) Compile / pack (optional, requires apm)
+1) Compile / pack (optional, requires apm)
 
 ```bash
 if command -v apm >/dev/null 2>&1; then
@@ -493,7 +503,7 @@ if command -v apm >/dev/null 2>&1; then
 fi
 ```
 
-3) Install locally into runtime targets
+1) Install locally into runtime targets
 
 ```bash
 apm install "C:\src\git\gh\JohnLudlow\agents"   # Windows example
@@ -506,15 +516,15 @@ After installation inspect the installed outputs (examples):
 - `.github/agents/` and `.github/skills/` — Copilot-ready files
 - `opencode/agents/` and `opencode/skills/` — OpenCode-ready files
 
-4) Test in GitHub Copilot
+1) Test in GitHub Copilot
 
 - Open Copilot Chat in VS Code (or GitHub.com) and select the agent from the picker.
 
-5) Test in OpenCode
+1) Test in OpenCode
 
 - Launch OpenCode and select the installed agent; verify permissions and behaviour.
 
-6) Cleanup / restore
+1) Cleanup / restore
 
 - If you need to remove installed artifacts created by `apm install`, delete the generated harness
   files (for example `.github/agents/` or `opencode/agents/`) or use your system's package uninstall
@@ -549,7 +559,9 @@ Preferred authoring location: `.apm/agents/` — create an APM agent primitive n
 that includes YAML frontmatter (description, temperature, mode, permissions) followed by the agent body.
 
 1. Create `.apm/agents/jl-[agent-name].agent.md` with YAML frontmatter and the agent markdown body.
+
 2. Follow the standard agent schema (include Description, Purpose, Inputs, Outputs, Requirements, Capabilities, Restrictions).
+
 3. Validate the package and compile locally:
 
    ```bash
@@ -564,6 +576,7 @@ that includes YAML frontmatter (description, temperature, mode, permissions) fol
    ```
 
 5. Test the agent in Copilot and/or OpenCode (see Installing and Testing Locally above).
+
 6. Update `README.md` with the new agent and open a PR.
 
 > Back-compat: If you prefer the legacy source format (separate `.md` + `.json` sidecar in `agents/`), include both
@@ -585,7 +598,9 @@ paths relative to the skill root.
    and the skill markdown body. Place any supporting templates or reference
    documents under `.apm/skills/jl-[skill-name]/assets/` or
    `references/` and link to them with a skill-root-relative path.
+
 2. Follow the standard skill structure (Overview, Key principles, Examples).
+
 3. Validate and compile:
 
    ```bash
@@ -600,6 +615,7 @@ paths relative to the skill root.
    ```
 
 5. Test the skill in Copilot and/or OpenCode (see Installing and Testing Locally above).
+
 6. Update `README.md` with the new skill and open a PR.
 
 > Back-compat: Legacy `skills/*.md` + `skills/*.json` sidecars are supported for reference, but new contributions should

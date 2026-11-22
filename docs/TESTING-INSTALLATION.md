@@ -20,7 +20,9 @@ platforms and installation methods.
 Create a clean test environment by:
 
 1. Using a fresh VM or container
+
 2. Using a temporary user account
+
 3. Removing previous installations:
 
    ```bash

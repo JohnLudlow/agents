@@ -280,6 +280,7 @@ for the full schema and discovery mechanism.
 For downstream repositories installing this APM package:
 
 1. Check the relevant skill's `SKILL.md` file for available settings
+
 2. Create or edit `AGENTS.md` in your repository root to override defaults:
 
    ```yaml

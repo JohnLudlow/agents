@@ -155,7 +155,7 @@ This is only used in JohnLudlow/agents, so it stays local.
 
 ```text
 ~/.agents/skills/jl-recon
-└── SKILL.md                    ❌ Not within the repo, and therefore won't be built and would be overriden by the next 
+└── SKILL.md                    ❌ Not within the repo, and therefore won't be built and would be overriden by the next
                                    deployment
 ```
 

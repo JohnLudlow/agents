@@ -5,8 +5,9 @@ Applies deterministic labels to a GitHub issue via gh CLI.
 .DESCRIPTION
 Combines configured labels, inherited labels, and a recon:<type> label into a
 sorted unique set. If UserOverride is provided, it replaces the entire computed
-label set. The script validates gh availability and issue existence before
-applying labels.
+label set, including labels already present on the issue. Without an override,
+labels are added to the existing set. The script validates gh availability and
+issue existence before applying labels.
 
 .PARAMETER Repo
 GitHub repository in owner/name format.
@@ -158,7 +159,32 @@ function Set-TicketLabels {
 
     $labelCsv = ($Labels -join ',')
     Write-VerboseMessage "Applying labels: $labelCsv"
-    & gh issue edit $TicketNumber --repo $Repo --add-label $labelCsv *> $null
+    $editArgs = @('issue', 'edit', $TicketNumber, '--repo', $Repo, '--add-label', $labelCsv)
+    if (-not [string]::IsNullOrWhiteSpace($UserOverride)) {
+        $existingJson = & gh issue view $TicketNumber --repo $Repo --json labels
+        if ($LASTEXITCODE -ne 0) {
+            Write-ErrorMessage "Unable to read current labels for issue #$TicketNumber in $Repo."
+            return $false
+        }
+
+        try {
+            $issue = ($existingJson | Out-String) | ConvertFrom-Json -ErrorAction Stop
+            if ($null -eq $issue -or $null -eq $issue.PSObject.Properties['labels']) {
+                throw 'Issue response did not contain labels.'
+            }
+            $removeLabels = @($issue.labels | ForEach-Object { $_.name } | Where-Object { $Labels -notcontains $_ } | Sort-Object -Unique)
+        }
+        catch {
+            Write-ErrorMessage "Unable to parse current labels for issue #$TicketNumber in ${Repo}: $($_.Exception.Message)"
+            return $false
+        }
+
+        if ($removeLabels.Count -gt 0) {
+            $editArgs += @('--remove-label', ($removeLabels -join ','))
+        }
+    }
+
+    & gh @editArgs *> $null
     if ($LASTEXITCODE -ne 0) {
         Write-ErrorMessage "Failed to apply labels to issue #$TicketNumber in $Repo. gh issue edit returned an error."
         return $false
