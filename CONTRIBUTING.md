@@ -71,7 +71,7 @@ This block is separate from `jl_approval_gates`: approval decides whether a
 delegation may happen, while model selection decides which model should run the
 delegated task.
 
-#### Schema
+#### Schema {#subagent-model-selection-schema}
 
 ```yaml
 jl_subagent_models:
@@ -166,14 +166,14 @@ Circular delegation prevention (`parentAgentStack` tracking) uses a
 configurable nesting depth limit, separate from `jl_approval_gates` and
 `jl_subagent_models`.
 
-#### Schema
+#### Schema {#subagent-selection-depth-schema}
 
 ```yaml
 jl_subagent_delegation:
   max_nesting_depth: 3
 ```
 
-#### Behavior
+#### Behavior {#subagent-selection-depth-schema-behavior}
 
 - `max_nesting_depth` bounds how many delegation levels deep a chain of
   subagents may go (see `jl-subagent-spawning/SKILL.md` → Circular Delegation
@@ -481,7 +481,7 @@ Notes
 node scripts/validate-apm-package.js
 ```
 
-2) Compile / pack (optional, requires apm)
+1) Compile / pack (optional, requires apm)
 
 ```bash
 if command -v apm >/dev/null 2>&1; then
@@ -490,7 +490,7 @@ if command -v apm >/dev/null 2>&1; then
 fi
 ```
 
-3) Install locally into runtime targets
+1) Install locally into runtime targets
 
 ```bash
 apm install "C:\src\git\gh\JohnLudlow\agents"   # Windows example
@@ -503,15 +503,15 @@ After installation inspect the installed outputs (examples):
 - `.github/agents/` and `.github/skills/` — Copilot-ready files
 - `opencode/agents/` and `opencode/skills/` — OpenCode-ready files
 
-4) Test in GitHub Copilot
+1) Test in GitHub Copilot
 
 - Open Copilot Chat in VS Code (or GitHub.com) and select the agent from the picker.
 
-5) Test in OpenCode
+1) Test in OpenCode
 
 - Launch OpenCode and select the installed agent; verify permissions and behaviour.
 
-6) Cleanup / restore
+1) Cleanup / restore
 
 - If you need to remove installed artifacts created by `apm install`, delete the generated harness
   files (for example `.github/agents/` or `opencode/agents/`) or use your system's package uninstall
