@@ -103,6 +103,7 @@ inciting issue, check it first.
   ```
 
 - Look for sub-issues with the `recon:map` label.
+
 - If found, confirm with the user whether to reuse it.
 
 **Step 2: Label + Title search** (if inciting issue not provided, or no map found under it)
@@ -798,12 +799,13 @@ the inciting work item.
 - Query work items linked as children to the inciting issue:
 
   ```bash
-  az boards query --wiql 'SELECT [System.Id], [System.Title] FROM WorkItems 
+  az boards query --wiql 'SELECT [System.Id], [System.Title] FROM WorkItems
     WHERE [System.Parent] = "<inciting_issue_id>"' \
     --org <org> --project <project>
   ```
 
 - Filter for work items with the `recon:map` tag.
+
 - If found, confirm with the user whether to reuse it.
 
 **Step 2: Title + tag search** (if inciting issue not provided, or no map found under it)
@@ -811,8 +813,8 @@ the inciting work item.
 - Query work items by title and tag:
 
   ```bash
-  az boards query --wiql 'SELECT [System.Id], [System.Title] FROM WorkItems 
-    WHERE [System.Title] Contains "<destination>" 
+  az boards query --wiql 'SELECT [System.Id], [System.Title] FROM WorkItems
+    WHERE [System.Title] Contains "<destination>"
     AND [System.Tags] Contains "recon:map"' \
     --org <org> --project <project>
   ```

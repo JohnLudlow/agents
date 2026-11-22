@@ -7,10 +7,12 @@ exclude = [".apm/skills/*/assets/*.md"]
 # MD013 - Line length should not be excessive
 [MD013]
 line_length = 160
-exclude = [
-    ".apm/skills/jl-subagent-spawning/references/HARNESS_FALLBACK.md",
-    "docs/jl-recon-title-format.md"
-]
+reflow = false  # Enable automatic text reflow/wrapping (default: false)
+reflow-mode = "normalize"  # "default", "normalize", "sentence-per-line", "sentence-pack", or "semantic-line-breaks"
+length-mode = "visual"  # How to count line length: "visual", "chars", or "bytes" (default: "visual")
+
+[MD024]
+allow-different-link-anchors = true
 
 # MD041 - First line in file should be a top level heading
 [MD041]
