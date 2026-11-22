@@ -6,7 +6,9 @@ Use this guide to validate new Prerequisite tickets. Shared fields and lifecycle
 
 Require a Work Scope with separate Will do and Will not do lists, the Decision Unblocked, and an Evidence Plan that a person can verify.
 
-Prerequisites cover external or manual work only. Source, documentation, and configuration edits belong in an Implementation issue.
+Prerequisites cover external or manual work only. Source, documentation, and
+configuration edits belong in an Implementation issue. A Work Scope that
+includes any such repository edit is invalid.
 
 Require at least three checkable criteria, each on a separate line with a sequential ID starting at `AC001:`.
 

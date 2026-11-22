@@ -16,17 +16,30 @@ Keep `recon:open-questions` while any question remains, even if the Quiz
 closes. Remove it only when none remain. Record an empty list when all are
 resolved.
 
+Log each unanswered question when it surfaces, not only at resolution. Add
+the same ticket-local ID and full text to the Map Fog of War as a **what** or
+**how** item with a link back to the originating Quiz. The Map is the canonical
+question log. Require the user to confirm both the captured requirements and
+the acknowledged open-question list before `Done`; acknowledged open
+questions do not prevent closure. When a question is answered, move the
+decision to the appropriate record or follow-up ticket and clear stale fog.
+A `Done` Quiz without confirmation of the open-question list is invalid.
+
 The resolution data uses `openQuestions: [{ id, text, mapFogUrl, acknowledged }]`.
 The ticket body repeats each ID, question, and link in the Open Questions
 section.
 
 ## Understanding Quiz
 
-Use type `quiz-understanding`. At creation, state the agent's Goal Model, offer two to five optional topic-related Questions, and explain why a check may help.
+Use type `quiz-understanding`. At creation, state the agent's Goal Model,
+offer two to five optional topic-related Questions, explain why a check may
+help, and provide at least three checkable criteria.
 
-At resolution, record the user's responses and any mismatch or clarification.
+When checked, record the user's responses and any mismatch or clarification.
 A skip needs the user's choice and reason. A defer needs the user's choice and
-reason and keeps the ticket open.
+reason and keeps the ticket open in `Ready` or `In Progress`. A skipped `Done`
+ticket without the user's choice recorded is invalid; do not invent answers
+for a skipped check.
 
 ## Criteria
 

@@ -10,7 +10,9 @@ Do not require Findings, a Recommendation, or a chosen option before work starts
 
 ## Resolution
 
-Require evidence-backed Findings and a Recommendation that links its reasoning to those findings and states trade-offs. The user reviews and accepts the result.
+Require evidence-backed Findings and a Recommendation that links its reasoning
+to cited findings and states trade-offs. The user reviews and accepts the
+result. A `Done` ticket with a recommendation but no cited finding is invalid.
 
 ## Criteria
 

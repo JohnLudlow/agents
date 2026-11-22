@@ -54,9 +54,14 @@ Historical Quiz and Task records remain readable. Compare the Blocked Tickets ta
 
 ## Resolution Contract
 
-Confirm decisions, fog, links, frontier, and blockers are current. Confirm that the destination is met or has a delivery plan.
+Record each decision once, identify remaining fog, and confirm the frontier and
+blocking edges are current. Confirm each acceptance criterion and that the
+destination is met or has a delivery plan.
 
 Require user acceptance and the shared AC-before-close review before setting status to `Done`.
+
+An untagged Fog of War item is invalid: give each unknown a **what** or
+**how** tag.
 
 ## Errors and Remediation
 
