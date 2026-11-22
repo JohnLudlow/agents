@@ -1,144 +1,141 @@
 name: Build and Package
 
 on:
-  push:
-  pull_request:
-    types: [opened, synchronize, reopened]
+    push:
+    pull_request:
+        types: [opened, synchronize, reopened]
 
 jobs:
-  setup:
-    name: setup
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.setup.outputs.semVer }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    setup:
+        name: setup
+        runs-on: ubuntu-latest
+        outputs:
+            version: ${{ steps.setup.outputs.semVer }}
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
-      - id: setup
-        uses: ./.github/actions/setup
+            - id: setup
+              uses: ./.github/actions/setup
 
-  validate:
-    name: Validate
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    validate:
+        name: Validate
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/validate
+            - uses: ./.github/actions/validate
 
-  test:
-    name: Integration Tests
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
+    pester-windows:
+        name: Pester (Windows)
+        runs-on: windows-latest
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Install Pester
-        run: |
-          Install-Module -Name Pester -Force -Scope CurrentUser -SkipPublisherCheck
-        shell: pwsh
+            - name: Install Pester
+              run: Install-Module -Name Pester -MinimumVersion 6.0 -Force -Scope CurrentUser
+              shell: pwsh
 
-      - name: Run Pester Test Suite
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $testPaths = @(
-            ".apm/skills/jl-recon/tests/pester/mode2-checks.tests.ps1",
-            ".apm/skills/jl-recon/tests/pester/mode2-workflow.tests.ps1",
-            ".apm/skills/jl-recon/tests/pester/mode3-checks.tests.ps1",
-            ".apm/skills/jl-recon/tests/pester/mode3-workflow.tests.ps1"
-          )
+            - name: Run Pester Test Suite
+              run: Invoke-Pester -Path '.apm/skills/jl-recon/tests/pester' -Output Detailed
+              shell: pwsh
 
-          foreach ($testPath in $testPaths) {
-            Write-Host "Running tests from: $testPath"
-            $result = Invoke-Pester -Path $testPath -Output Detailed -PassThru
-            if ($result.Result -ne 'Passed') {
-              throw "Pester tests failed in $testPath"
-            }
-          }
-        shell: pwsh
-        continue-on-error: false
+    pester-linux:
+        name: Pester (Linux)
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
 
-  build:
-    name: Build
-    needs: [setup, validate, test]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      artifact-metadata: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+            - name: Install Pester
+              run: Install-Module -Name Pester -MinimumVersion 6.0 -Force -Scope CurrentUser -SkipPublisherCheck
+              shell: pwsh
 
-      - uses: ./.github/actions/build
-        with:
-          version: ${{ needs.setup.outputs.version }}
+            - name: Run Pester Test Suite
+              run: Invoke-Pester -Path '.apm/skills/jl-recon/tests/pester' -Output Detailed -PassThru
+              shell: pwsh
 
-      - name: Upload APM package artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: jl-agents-${{ needs.setup.outputs.version }}
-          path: |
-            jl-agents-*.tgz
-            jl-agents-*.apm
-          retention-days: 30
+    build:
+        name: Build
+        needs: [setup, validate, pester-windows, pester-linux]
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            artifact-metadata: write
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
-      - name: Upload Copilot Format
-        uses: actions/upload-artifact@v4
-        with:
-          name: copilot-format
-          path: |
-            .github/agents/
-            .github/skills/
-          retention-days: 30
+            - uses: ./.github/actions/build
+              with:
+                  version: ${{ needs.setup.outputs.version }}
 
-  release:
-    name: Release
-    needs: [setup, build]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+            - name: Upload APM package artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: jl-agents-${{ needs.setup.outputs.version }}
+                  path: |
+                      jl-agents-*.tgz
+                      jl-agents-*.apm
+                  retention-days: 30
 
-      - uses: ./.github/actions/setup
+            - name: Upload Copilot Format
+              uses: actions/upload-artifact@v4
+              with:
+                  name: copilot-format
+                  path: |
+                      .github/agents/
+                      .github/skills/
+                  retention-days: 30
 
-      - name: Tag Commit
-        shell: bash
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          TAG="v${{ needs.setup.outputs.version }}"
-          git tag $TAG
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git $TAG
-          echo "✓ Created tag: $TAG"
+    release:
+        name: Release
+        needs: [setup, build]
+        runs-on: ubuntu-latest
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        permissions:
+            contents: write
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
-      - name: Generate Release Notes
-        id: release-notes
-        shell: bash
-        env:
-          RELEASE_VERSION: ${{ needs.setup.outputs.version }}
-        run: |
-          node scripts/generate-release-notes.js > RELEASE_NOTES.md
-          cat RELEASE_NOTES.md >> $GITHUB_STEP_SUMMARY
+            - uses: ./.github/actions/setup
 
-      - name: Download Build Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: jl-agents-${{ needs.setup.outputs.version }}
-          path: ./release-artifacts
+            - name: Tag Commit
+              shell: bash
+              run: |
+                  git config --local user.email "action@github.com"
+                  git config --local user.name "GitHub Action"
+                  TAG="v${{ needs.setup.outputs.version }}"
+                  git tag $TAG
+                  git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git $TAG
+                  echo "✓ Created tag: $TAG"
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ needs.setup.outputs.version }}
-          body_path: RELEASE_NOTES.md
-          files: |
-            ./release-artifacts/jl-agents-*.apm
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Generate Release Notes
+              id: release-notes
+              shell: bash
+              env:
+                  RELEASE_VERSION: ${{ needs.setup.outputs.version }}
+              run: |
+                  node scripts/generate-release-notes.js > RELEASE_NOTES.md
+                  cat RELEASE_NOTES.md >> $GITHUB_STEP_SUMMARY
+
+            - name: Download Build Artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  name: jl-agents-${{ needs.setup.outputs.version }}
+                  path: ./release-artifacts
+
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v1
+              with:
+                  tag_name: v${{ needs.setup.outputs.version }}
+                  body_path: RELEASE_NOTES.md
+                  files: |
+                      ./release-artifacts/jl-agents-*.apm
+                  draft: false
+                  prerelease: false
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

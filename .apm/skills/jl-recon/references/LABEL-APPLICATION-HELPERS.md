@@ -61,6 +61,10 @@ in downstream repositories.
 
 **Determinism**: Labels are sorted alphabetically before application to ensure consistent results.
 
+**Overrides**: The PowerShell helper reads existing labels and removes those outside the override set.
+
+Without an override, it adds labels without removing existing ones.
+
 ---
 
 ### GitHub: `apply-ticket-labels.sh`
@@ -73,7 +77,7 @@ in downstream repositories.
 
 **Parameters**: Same as PowerShell version (uses long-option format: `--repo`, `--ticket-number`, etc.)
 
-**Behavior**: Functionally identical to the PowerShell version but written for POSIX shells.
+**Behavior**: Computes the same label set, but uses `gh issue edit --add-label` even for overrides. Unlike the PowerShell helper, it does not remove existing labels.
 
 ---
 
@@ -214,11 +218,10 @@ its frontmatter, preserves other fields, and updates only the `labels:` field.
 
 - `--file-path` (required): Path to the markdown ticket file
 - `--type` (required): Ticket type (`quiz`, `research`, `prototype`, `task`)
-- `--configured-labels` (optional): Comma-separated configured labels for the ticket type
-- `--inherited-labels` (optional): Comma-separated labels inherited from the map
+- `-ConfiguredLabels` (optional): Comma-separated configured labels; an alias of the existing `-Labels` parameter
+- `-InheritedLabels` (optional): Comma-separated labels inherited from the map
 - `--user-override` (optional): Comma-separated labels to use instead of computed set
 - `--title` (optional): Markdown document title (set in frontmatter if not present)
-- `--description` (optional): Markdown document description (set in frontmatter if not present)
 - `--verbose`: Print diagnostic output
 - `--dry-run`: Print the resulting document without writing it
 - `--backup`: Create a `.bak` backup before writing (if file exists)

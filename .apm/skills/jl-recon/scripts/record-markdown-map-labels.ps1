@@ -71,7 +71,7 @@ function Parse-Frontmatter {
 
     $frontmatterText = $match.Groups[1].Value
     $result.Body = $match.Groups[2].Value
-    $lines = if ([string]::IsNullOrEmpty($frontmatterText)) { @() } else { @($frontmatterText -split "`n") }
+    $lines = @(if ([string]::IsNullOrEmpty($frontmatterText)) { @() } else { $frontmatterText -split "`n" })
 
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $line = $lines[$i]
@@ -130,7 +130,7 @@ try {
 
     $resolvedPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
     $labelsToUse = if (-not [string]::IsNullOrWhiteSpace($UserOverride)) { $UserOverride } else { $Labels }
-    $finalLabels = Split-LabelList -InputLabels $labelsToUse
+    $finalLabels = @(Split-LabelList -InputLabels $labelsToUse)
     Write-VerboseMessage "Final labels: $(if ($finalLabels.Count) { $finalLabels -join ', ' } else { '<none>' })"
 
     $exists = Test-Path -LiteralPath $resolvedPath
