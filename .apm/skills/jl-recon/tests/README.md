@@ -1,186 +1,48 @@
-# JL-Recon Integration Tests
+# JL-Recon Tests
 
-Comprehensive test suite for jl-recon label application and Mode 2 quality checks.
+The Pester suites exercise Mode 2/3 workflows and the real label and tag helpers. Run them from the repository root with PowerShell 7 and Pester 6 or later.
 
-## Test Structure
+## Suites
 
-```text
-tests/
-├── pester/
-│   ├── mode2-checks.tests.ps1         # Unit tests for Mode 2 check logic
-│   ├── mode2-workflow.tests.ps1       # Integration tests for Mode 2 resolution workflow
-│   ├── mode3-checks.tests.ps1         # Unit tests for Mode 3 check logic
-│   ├── mode3-workflow.tests.ps1       # Integration tests for Mode 3 publication workflow
-│   ├── markdown-labels.tests.ps1      # File I/O, YAML frontmatter recording
-│   ├── github-labels.tests.ps1        # GitHub API mocks, per-label tests
-│   └── azure-devops-tags.tests.ps1    # Azure DevOps API mocks, semicolon format
-└── bats/
-    ├── label-resolution.bats          # Config resolution, inheritance, determinism
-    └── README.md                      # This file
-```
+| File | Behavior covered |
+| --- | --- |
+| `pester/mode2-checks.tests.ps1` | Mode 2 check configuration, fallbacks, findings, and decisions |
+| `pester/mode2-workflow.tests.ps1` | Mode 2 resolution workflow |
+| `pester/mode3-checks.tests.ps1` | Mode 3 check configuration, findings, and decisions |
+| `pester/mode3-workflow.tests.ps1` | Mode 3 publication workflow |
+| `pester/github-labels.tests.ps1` | GitHub ticket label union, override, ordering, and failures |
+| `pester/azure-devops-tags.tests.ps1` | Azure DevOps map/ticket inheritance and `System.Tags` serialization |
+| `pester/markdown-labels.tests.ps1` | Markdown map/ticket frontmatter, inheritance, overrides, and file preservation |
 
-## Test Coverage
+`pester/label-helper-harness.ps1` supplies isolated `gh` and `az` command doubles; it is not a test suite.
 
-### Pester Tests (PowerShell)
-
-#### `mode2-checks.tests.ps1`
-
-- **Configuration gating:** enabled, disabled, missing config defaults, timeout override, model selection (`ticket_resolution_checks`, `default`, `inherit`)
-- **Fallback invocation:** subagent → Herdr → session, all-failed, timeout, parse error, partial availability
-- **Findings parsing:** structured objects, malformed JSON degradation, empty findings, missing optional fields
-- **Findings display:** markdown table columns, severity sorting, file/line context, escaping
-- **Prompt generation:** unavailable-check prompt, partial-availability prompt
-- **User decisions:** approve, proceed, override, cancel, audit logging, invalid-input retry
-
-#### `mode2-workflow.tests.ps1`
-
-- **Happy path:** checks pass, user approves, resolution recorded
-- **Findings path:** findings displayed before approval and recording
-- **Override path:** critical finding overridden and logged
-- **Cancel path:** returns to resolve step, no record until re-resolution
-- **Degradation path:** all checks unavailable, proceed without blocking
-- **Partial availability path:** available findings preserved while failed checks degrade gracefully
-- **Disabled checks path:** skips invocation entirely and logs skip status
-
-#### `mode3-checks.tests.ps1`
-
-- **Configuration gating:** enabled, disabled, missing config defaults, timeout override, model selection (`status_report_checks`, `default`, `inherit`)
-- **Fallback invocation:** subagent → Herdr → session, all-failed, timeout, parse error, partial availability
-- **Findings parsing/display:** claim normalization, risk ordering, confidence formatting, source links, edge cases
-- **User decisions:** approve, publish-without-verification, override, cancel, invalid-input retry
-- **Audit logging:** findings summary, degradation details, override tracking
-
-#### `mode3-workflow.tests.ps1`
-
-- **GitHub Issues flow:** approved publication after successful verification
-- **Azure DevOps flow:** override publication with disputed findings
-- **Degraded path:** unavailable checks still permit explicit publish
-- **Cancel path:** blocks publication and returns to report generation
-- **Disabled checks path:** skips invocation but still requires user approval
-
-#### `markdown-labels.tests.ps1`
-
-- **Map label recording:** Basic, empty labels, deduplication, user override
-- **Ticket label recording:** Per type (quiz, research, prototype, task), inheritance, body note
-- **Edge cases:** Special characters, long label lists, frontmatter updates
-- **Determinism:** Alphabetical sorting
-
-#### `github-labels.tests.ps1`
-
-- **Map labels:** Configuration application, defaults, override
-- **Ticket labels:** All 4 types, inheritance (additive), label union
-- **Inheritance model:** No duplication, all three sources present
-- **Override behavior:** Entire set replacement
-- **Edge cases:** Special characters, empty lists, single label, 20+ labels
-
-#### `azure-devops-tags.tests.ps1`
-
-- **Map tags:** Configuration, defaults, override
-- **Ticket tags:** All 4 types, inheritance, tag union
-- **Semicolon serialization:** Format validation, alphabetical sorting
-- **Inheritance model:** Same as GitHub (additive, not replacement)
-- **Edge cases:** Special characters, empty/minimal sets, long tag lists
-
-### Bats Tests (Bash)
-
-#### `label-resolution.bats`
-
-- **Config resolution:** Defaults → CONTRIBUTING.md → AGENTS.md precedence
-- **Label inheritance:** Type + inherited + required label formula
-- **Deduplication:** Removes duplicates from all sources
-- **Ticket types:** All 4 types get correct recon label
-- **Cross-provider consistency:** Same labels across GitHub, Azure DevOps, Markdown
-- **Integration scenarios:** Create map → create tickets with inheritance
-- **Edge cases:** Empty labels, special characters, 20+ labels
-- **Formatting:** Markdown YAML, semicolon-delimited for Azure DevOps
-- **Determinism:** Alphabetical sorting
+Provider tests do not contact GitHub or Azure DevOps. Markdown tests use temporary files that are removed after each case.
 
 ## Running Tests
 
-### Prerequisites
+Install Pester if it is not already available:
 
-- **Pester:** `Install-Module -Name Pester -Force`
-- **Bats:** `npm install -g bats` or `apt-get install bats` (Linux)
-
-### Run All Tests
-
-```bash
-# Pester tests
-Invoke-Pester -Path ./tests/pester -Verbose
-
-# Bats tests
-bats ./tests/bats/*.bats
+```powershell
+Install-Module -Name Pester -MinimumVersion 6.0 -Force -Scope CurrentUser -SkipPublisherCheck
 ```
 
-### Run Specific Test File
+Run every maintained suite and fail on any non-passing result:
 
-```bash
-# Markdown labels only
-Invoke-Pester -Path ./tests/pester/markdown-labels.tests.ps1
-
-# GitHub labels only
-Invoke-Pester -Path ./tests/pester/github-labels.tests.ps1
-
-# Label resolution only
-bats ./tests/bats/label-resolution.bats
+```powershell
+$result = Invoke-Pester -Path '.apm/skills/jl-recon/tests/pester' -Output Detailed -PassThru
+if ($result.Result -ne 'Passed') { throw "Pester tests failed: $($result.FailedCount) failed" }
 ```
 
-### Run Specific Test
+For a narrower run, pass a test file instead of the directory, such as `.apm/skills/jl-recon/tests/pester/github-labels.tests.ps1`.
 
-```bash
-# Pester: run single context or test
-Invoke-Pester -Path ./tests/pester/markdown-labels.tests.ps1 -TestName "Label deduplication"
+The negative-path cases print provider error messages while asserting that the helpers do not make an unsafe write.
 
-# Bats: run single test
-bats ./tests/bats/label-resolution.bats --filter "alphabetical sorting"
-```
+The overall Pester result determines success.
 
-## Test Design Notes
+## Scope
 
-### Mocking Strategy
+The label suites verify actual helper inputs and outputs, including `quiz`, `research`, `prototype`, and `task` labels.
 
-**Pester tests** use function mocking for external dependencies:
+They do **not** prove `AGENTS.md`/`CONTRIBUTING.md` precedence: these helpers receive already-resolved inputs.
 
-- GitHub API: Mock `Invoke-GhIssueCreate` and `Invoke-GhIssueEdit`
-- Azure DevOps API: Mock `Invoke-AzWorkItemCreate` and `Invoke-AzWorkItemUpdate`
-- File system: Use `[System.IO.Path]::GetTempFileName()` for isolated test files
-
-**Bats tests** focus on:
-
-- Configuration file parsing (YAML CONTRIBUTING.md, AGENTS.md)
-- Label combining and deduplication logic
-- Format conversion (CSV → semicolon, YAML list generation)
-- Cross-provider consistency checks
-
-### Key Test Principles
-
-1. **Per-type testing** — Each ticket type (quiz, research, prototype, task) tested individually
-2. **Inheritance verification** — All three label sources (configured, inherited, required) verified
-3. **Edge cases** — Empty lists, special characters, long lists, duplicates
-4. **Determinism** — Alphabetical sorting ensures reproducible output
-5. **Mocked APIs** — No live GitHub/Azure DevOps calls; all mocked for speed and repeatability
-
-## Acceptance Criteria Status
-
-- ✅ Mode 2 checks configuration gating tested
-- ✅ Mode 2 fallback hierarchy tested
-- ✅ Mode 2 findings parsing and markdown rendering tested
-- ✅ Mode 2 approve / override / cancel flows tested
-- ✅ Mode 2 proceed-without-checks flow tested
-- ✅ Mode 2 graceful degradation and disabled-check paths tested
-- ✅ Mode 3 checks configuration, parsing, prompts, and audit logging tested
-- ✅ Mode 3 publication workflow tested across approve / override / cancel / disabled paths
-- ✅ GitHub map label application tested
-- ✅ GitHub ticket label application (with inheritance) tested for all 4 types
-- ✅ Azure DevOps tag application tested
-- ✅ Markdown frontmatter label recording tested
-- ✅ Config override (user session preference) tested
-- ✅ Edge cases included (where sensible)
-- ✅ Broader scenarios (inheritance, determinism, config resolution)
-
-## Future Enhancements
-
-- Add integration tests with real GitHub/Azure DevOps sandboxes (optional, gated)
-- Add performance benchmarks for large label sets
-- Add regression tests for specific bugs reported
-- Expand edge cases based on real-world usage patterns
+There is no separate GitHub map-label helper; the ticket helper accepts inherited map labels from issue metadata.

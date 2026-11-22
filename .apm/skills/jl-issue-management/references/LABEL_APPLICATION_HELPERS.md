@@ -59,7 +59,9 @@ Apply GitHub labels to a single ticket issue. Located in `scripts/apply-ticket-l
 
 ### apply-ticket-labels.ps1 (PowerShell/Windows)
 
-Windows equivalent of the Bash script, with identical parameter names and behavior. Located in `scripts/apply-ticket-labels.ps1`.
+PowerShell equivalent of the Bash script's parameters. Unlike Bash, a PowerShell override removes stale labels already on the issue.
+
+Located in `scripts/apply-ticket-labels.ps1`.
 
 ```powershell
 .\scripts\apply-ticket-labels.ps1 `
@@ -150,20 +152,18 @@ Write labels to a markdown ticket file's YAML frontmatter. Used when markdown is
 .\scripts\record-markdown-ticket-labels.ps1 `
   -FilePath "docs/plans/tickets/ticket-1.md" `
   -Labels "task,triage" `
+  -InheritedLabels "recon:map" `
   -Type task `
   -Parent "docs/plans/map.md" `
   -BodyNote "Additional context" `
-  [-UserOverride "custom-label"] `
-  [-Title "Ticket Title"] `
-  [-VerboseOutput] `
-  [-DryRun] `
-  [-Backup]
+  -Title "Ticket Title"
 ```
 
 **Parameters:**
 
 - `-FilePath PATH` — Path to markdown file (required; created if missing)
-- `-Labels LABELS` — Comma-separated configured labels
+- `-Labels LABELS` — Comma-separated configured labels (also accepts `-ConfiguredLabels`)
+- `-InheritedLabels LABELS` — Comma-separated map labels inherited by the ticket
 - `-Type TYPE` — Ticket type: `quiz`, `research`, `prototype`, `task` (required)
 - `-Parent PATH` — Path to parent map file (stored in frontmatter)
 - `-BodyNote TEXT` — Note to insert in body under "**Labels:**" heading
@@ -179,9 +179,11 @@ Write labels to a markdown ticket file's YAML frontmatter. Used when markdown is
 ---
 title: "Ticket Title"
 labels:
-  - task
-  - triage
-type: task
+  - "recon:map"
+  - "recon:task"
+  - "task"
+  - "triage"
+type: "task"
 parent: "docs/plans/map.md"
 ---
 ```

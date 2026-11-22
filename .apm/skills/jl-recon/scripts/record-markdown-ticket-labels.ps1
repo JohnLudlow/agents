@@ -1,11 +1,17 @@
 <#
 .SYNOPSIS
 Records deterministic labels in markdown YAML frontmatter for ticket files.
+
+.DESCRIPTION
+Combines configured and inherited labels with recon:<type>, unless a user override
+replaces the full set. Labels remains supported as the configured-label input.
 #>
 [CmdletBinding(PositionalBinding = $false)]
 param(
     [string]$FilePath,
+    [Alias('ConfiguredLabels')]
     [string]$Labels,
+    [string]$InheritedLabels,
     [string]$Type,
     [string]$Parent,
     [string]$BodyNote,
@@ -38,7 +44,7 @@ function Parse-Frontmatter {
     }
 
     $result.Body = $match.Groups[2].Value
-    $lines = if ([string]::IsNullOrEmpty($match.Groups[1].Value)) { @() } else { @($match.Groups[1].Value -split "`n") }
+    $lines = @(if ([string]::IsNullOrEmpty($match.Groups[1].Value)) { @() } else { $match.Groups[1].Value -split "`n" })
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $line = $lines[$i]
         if ([string]::IsNullOrWhiteSpace($line) -or $line.TrimStart().StartsWith('#')) { continue }
@@ -103,8 +109,8 @@ try {
     if (@('quiz', 'research', 'prototype', 'task') -notcontains $Type) { throw "Invalid --type '$Type'. Expected one of: quiz, research, prototype, task." }
 
     $resolvedPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
-    $labelsToUse = if (-not [string]::IsNullOrWhiteSpace($UserOverride)) { $UserOverride } else { $Labels }
-    $finalLabels = Split-LabelList -InputLabels $labelsToUse
+    $labelsToUse = if (-not [string]::IsNullOrWhiteSpace($UserOverride)) { $UserOverride } else { @($Labels, $InheritedLabels, "recon:$Type") -join ',' }
+    $finalLabels = @(Split-LabelList -InputLabels $labelsToUse)
     Write-VerboseMessage "Final labels: $(if ($finalLabels.Count) { $finalLabels -join ', ' } else { '<none>' })"
 
     $exists = Test-Path -LiteralPath $resolvedPath
