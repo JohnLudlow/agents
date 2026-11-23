@@ -52,6 +52,31 @@ Historical Quiz and Task records remain readable. Compare the Blocked Tickets ta
 | [Import tests](https://example.com/issues/4) | Research | [Import schema](https://example.com/issues/3) | Waiting for the schema. |
 ```
 
+## Criterion Owner Links
+
+Each Map criterion needs an owner link in its AC text. Write the owner type, then the link:
+`AC001: Resolve the import format. Research: #12`.
+
+- **Owner types:** Research, Prototype, Quiz (Requirements), Quiz (Understanding), Learn, or Prerequisite.
+  An Implementation ticket cannot own a Map criterion, and no Implementation ticket sits under a Map.
+- **Link format:** GitHub uses `#nnn` or a Markdown link. Azure DevOps uses `#nnn` (or `AB#nnn`) or a Markdown link.
+  Local Markdown Maps use a Markdown link.
+- **Decision only:** Add `(decision only)` to a criterion that needs no owner.
+- **No owner yet:** List the criterion ID in Not Yet Specified (Fog of War), with a **what** or **how** tag.
+  The validator warns (`map_criterion_owner_pending`) at creation and errors (`map_criterion_owner_missing`) at resolution.
+  An unlisted, unowned criterion is an error at creation.
+- **Closed or deleted owner:** If the owner ticket is closed or deleted and the criterion is unchecked,
+  the validator flags it for re-review (`map_owner_review_required`). It is a warning before resolution and an error at resolution.
+  Pass the owner states in `options.ownerStates` (`{ "#12": "closed" }`).
+  The user may override: pass `options.ownerReviewOverrides` with `{ id, userApproved: true, reason, approvedAt }`.
+  The override turns the error into a `map_owner_review_overridden` warning.
+- **Extra links (not validated):** The validator checks only the link in the AC text.
+  The caller also creates a typed link when both items are in a provider with typed links (Azure DevOps predecessor/successor).
+  The caller creates a simple link when the items are in different providers or the provider has only simple links.
+- **Historical Maps:** Maps read at the `read` stage with historical status values are never checked.
+
+Creating the owner ticket alone does not satisfy the criterion.
+
 ## Resolution Contract
 
 Record each decision once, identify remaining fog, and confirm the frontier and
@@ -78,6 +103,9 @@ A missing required section or shared field is a structural error and cannot be o
 | `map_table_empty_note_missing`, `map_table_columns`, `map_table_row` | Add an explicit none note or repair the Markdown table structure. |
 | `map_frontier_status_invalid` | Move blocked tickets to Blocked Tickets; use a current open status on the frontier. |
 | `map_blocker_missing`, `map_block_reason_missing` | Name the blocking ticket and state why it blocks the work. |
+| `map_criterion_owner_missing`, `map_criterion_owner_type_missing`, `map_criterion_owner_link_invalid` | Add `Type: link` to the criterion, mark it `(decision only)`, or (before resolution) list it in Fog of War. |
+| `map_criterion_owner_implementation` | Use a non-Implementation owner. |
+| `map_owner_review_required` | Re-review the criterion, or record a user override. |
 
 ## Limited Creation Override
 

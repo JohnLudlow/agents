@@ -47,17 +47,22 @@ No fog yet; charting is in progress.
 
 No exclusions yet; charting is in progress.
 
+<!-- Each acceptance criterion needs an owner link in its text, such as
+"Research: #12" (or a Markdown link), or the mark "(decision only)". The owner
+is a Research, Prototype, Quiz, Learn, or Prerequisite ticket, never an
+Implementation ticket. List a criterion with no owner yet by ID in Fog of War. -->
+
 ## Acceptance Criteria
 
-- [ ] AC001: Every known decision has a linked ticket and a recorded outcome.
+- [ ] AC001: Every known decision has a linked ticket and a recorded outcome (decision only).
 
-- [ ] AC002: Every ticket dependency appears in the Blocked Tickets table.
+- [ ] AC002: Every ticket dependency appears in the Blocked Tickets table (decision only).
 
-- [ ] AC003: The Open Tickets table lists all unblocked work that is ready to start.
+- [ ] AC003: The Open Tickets table lists all unblocked work that is ready to start (decision only).
 
-- [ ] AC004: Each Fog of War item has a **what** or **how** tag.
+- [ ] AC004: Each Fog of War item has a **what** or **how** tag (decision only).
 
-- [ ] AC005: The destination is met or the remaining delivery plan is explicit.
+- [ ] AC005: The destination is met or the remaining delivery plan is explicit (decision only).
 
 ## Open Tickets (Frontier)
 

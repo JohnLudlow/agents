@@ -225,6 +225,7 @@ function validateTicket(ticket, options = {}) {
 
   if (type === "map") {
     validateMapContent(body, errors);
+    validateMapCriterionOwners(criteria.criteria, body, stage, provider, options, errors, warnings);
   }
 
   if (stage === "resolution") {
@@ -652,6 +653,67 @@ function validateMapContent(body, errors) {
     "Open Tickets", ["Ticket", "Type", "Assignee", "Status"], errors);
   validateMapTable(getSection(body, "Blocked Tickets"),
     "Blocked Tickets", ["Ticket", "Type", "Blocked by", "Reason"], errors);
+}
+
+const MAP_OWNER_LABEL = /\b(Implementation|Research|Prototype|Quiz \(Requirements\)|Quiz \(Understanding\)|Quiz-Requirements|Quiz-Understanding|Quiz|Learn|Prerequisite)\s*:\s*(\[[^\]]+\]\(([^)\s]+)\)|(?:AB)?#\d+)/i;
+
+/**
+ * Check that each Map criterion names a non-Implementation owner ticket in its
+ * AC text (for example `Research: #12`). Historical Maps never reach this check.
+ * Options: `ownerStates` maps an owner link target to "open", "closed", or
+ * "deleted"; `ownerReviewOverrides` lists user-approved overrides by criterion ID.
+ */
+function validateMapCriterionOwners(criteria, body, stage, provider, options, errors, warnings) {
+  const fog = getSection(body, "Not Yet Specified (Fog of War)") ?? getSection(body, "Fog of War") ?? "";
+  const fogLines = fog.split(/\r?\n/).filter((line) => /^\s*[-*+]\s+/.test(line));
+  const ownerStates = isPlainObject(options.ownerStates) ? options.ownerStates : {};
+  const overrides = Array.isArray(options.ownerReviewOverrides) ? options.ownerReviewOverrides : [];
+
+  for (const criterion of criteria) {
+    const path = `body.Acceptance Criteria.${criterion.id}`;
+    if (/\(\s*decision only\s*\)/i.test(criterion.text)) {
+      continue;
+    }
+    const match = MAP_OWNER_LABEL.exec(criterion.text);
+    if (!match) {
+      const inFog = fogLines.some((line) => new RegExp(`\\b${criterion.id}\\b`).test(line));
+      if (/(?:AB)?#\d+|\[[^\]]+\]\([^)\s]+\)/.test(criterion.text)) {
+        addIssue(errors, "map_criterion_owner_type_missing", path, "Name the owner type before the link, such as 'Research: #12'.");
+      } else if (stage === "resolution") {
+        addIssue(errors, "map_criterion_owner_missing", path, "Link an owner ticket (or mark the criterion 'decision only') before the Map is resolved.");
+      } else if (inFog) {
+        warnings.push(issue("map_criterion_owner_pending", path, "No owner yet; the criterion is listed in Fog of War. Add an owner link before resolution."));
+      } else {
+        addIssue(errors, "map_criterion_owner_missing", path, "Link an owner ticket, mark the criterion 'decision only', or list it in Not Yet Specified (Fog of War).");
+      }
+      continue;
+    }
+
+    const [, label, link, url] = match;
+    if (/^implementation$/i.test(label)) {
+      addIssue(errors, "map_criterion_owner_implementation", path, "An Implementation ticket cannot own a Map criterion. Use Research, Prototype, Quiz, Learn, or Prerequisite.");
+      continue;
+    }
+    if (provider === "markdown" && !url) {
+      addIssue(errors, "map_criterion_owner_link_invalid", path, "Local Markdown Maps need a Markdown link to the owner ticket.");
+      continue;
+    }
+
+    const state = ownerStates[url ?? link];
+    if (!criterion.checked && (state === "closed" || state === "deleted")) {
+      const approved = overrides.some((entry) => isPlainObject(entry) && entry.id === criterion.id &&
+        entry.userApproved === true && typeof entry.reason === "string" && entry.reason.trim() !== "" &&
+        Number.isFinite(Date.parse(entry.approvedAt)));
+      const message = `Owner ticket is ${state} but the criterion is unchecked. Re-review the criterion.`;
+      if (approved) {
+        warnings.push(issue("map_owner_review_overridden", path, `${message} The user approved an override.`));
+      } else if (stage === "resolution") {
+        addIssue(errors, "map_owner_review_required", path, message);
+      } else {
+        warnings.push(issue("map_owner_review_required", path, message));
+      }
+    }
+  }
 }
 
 function isExplicitNone(section) {

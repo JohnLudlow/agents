@@ -149,6 +149,9 @@ each affected AC by ID, records its individual user approval, reason, and
 issue comment, and leaves all other criteria subject to normal checks.
 Close only when all criteria are checked or individually re-scoped.
 
+For Map criteria, the AC text itself links the owner ticket, for example
+`AC001: Resolve the format. Research: #12`. See `MAP_VALIDATION_GUIDE.md`.
+
 Callers use `getNextAcceptanceCriterion(criteria, rescope)` and `validateClosureReadiness` to
 implement this process. A criterion needs an invitation, explicit
 confirmation, evidence, linked owner, and source-comment URL in order. The

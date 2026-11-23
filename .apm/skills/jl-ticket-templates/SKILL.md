@@ -32,6 +32,8 @@ The stages are:
 
 Stop when `valid` is false and report the first actionable error.
 
+Each Map criterion links its owner ticket in the AC text (`Research: #12`) or is marked `(decision only)`. Implementation tickets cannot own Map criteria. See `references/MAP_VALIDATION_GUIDE.md`.
+
 A GitHub Map with only Map-content errors may follow the limited override in `references/MAP_VALIDATION_GUIDE.md`. Correct all other errors.
 
 ## Acceptance-Criteria Review

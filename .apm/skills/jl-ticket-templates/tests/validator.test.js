@@ -96,7 +96,7 @@ No blocked tickets yet; charting is in progress.
 
 ## Acceptance Criteria
 
-${criteria(5)}
+${criteria(5).replace(/$/gm, " (decision only)")}
 `;
 }
 
@@ -378,6 +378,104 @@ test("preserves historical Map lifecycle values for read-only validation", () =>
 
   assert.equal(result.valid, true);
   assert.ok(result.warnings.some((warning) => warning.code === "legacy_map_status"));
+});
+
+function ownedMap(acLines, fog = "No fog yet; charting is in progress.") {
+  const lines = acLines.map((text, index) => `- [ ] AC${String(index + 1).padStart(3, "0")}: ${text}`);
+  while (lines.length < 5) {
+    lines.push(`- [ ] AC${String(lines.length + 1).padStart(3, "0")}: Record outcome (decision only)`);
+  }
+  const body = mapBody()
+    .replace("No fog yet; charting is in progress.", fog)
+    .replace(/## Acceptance Criteria[\s\S]*$/, `## Acceptance Criteria\n\n${lines.join("\n")}\n`);
+  return mapTicket({ body });
+}
+
+function doneMap(ticket) {
+  return { ...ticket, status: "Done", body: ticket.body.replace("- **Status:** Draft", "- **Status:** Done"), resolution: { userAccepted: true } };
+}
+
+const codes = (issues) => issues.map((entry) => entry.code);
+
+test("AC023: Map criterion without owner warns at creation when listed in Fog of War", () => {
+  const ticket = ownedMap(["Resolve the import format."],
+    "- AC001: import format — **what** (owner not yet chosen).");
+  const result = validateTicket(ticket, { stage: "creation" });
+  assert.equal(result.valid, true);
+  assert.ok(codes(result.warnings).includes("map_criterion_owner_pending"));
+});
+
+test("AC023: Map criterion without owner errors at creation when not in Fog of War", () => {
+  const result = validateTicket(ownedMap(["Resolve the import format."]));
+  assert.ok(codes(result.errors).includes("map_criterion_owner_missing"));
+});
+
+test("AC023: Map criterion without owner errors at resolution even when in Fog of War", () => {
+  const ticket = {
+    ...doneMap(ownedMap(["Resolve the import format."], "- AC001: import format — **what** (pending).")),
+  };
+  const result = validateTicket(ticket, { stage: "resolution" });
+  assert.ok(codes(result.errors).includes("map_criterion_owner_missing"));
+});
+
+test("AC023: accepts provider-supported owner links in AC text", () => {
+  const hash = ownedMap(["Resolve the format. Research: #12", "Try it. Prototype: AB#34"]);
+  assert.equal(validateTicket(hash, { provider: "github" }).valid, true);
+  const link = ownedMap(["Resolve the format. Research: [Format](https://github.com/example/repo/issues/12)"]);
+  assert.equal(validateTicket(link, { provider: "github" }).valid, true);
+  const { labels, body, ...frontmatter } = link;
+  assert.equal(validateTicket({ frontmatter: { ...frontmatter, labels }, body }, { provider: "markdown" }).valid, true);
+  const hashMd = ownedMap(["Resolve the format. Research: #12"]);
+  const md = { labels: hashMd.labels, body: hashMd.body };
+  const { labels: l2, body: b2, ...fm2 } = hashMd;
+  assert.ok(codes(validateTicket({ frontmatter: { ...fm2, labels: l2 }, body: b2 }, { provider: "markdown" }).errors)
+    .includes("map_criterion_owner_link_invalid"));
+  assert.ok(md.body);
+});
+
+test("AC023: rejects a link without an owner type", () => {
+  const result = validateTicket(ownedMap(["Resolve the format. See #12"]));
+  assert.ok(codes(result.errors).includes("map_criterion_owner_type_missing"));
+});
+
+test("AC023: decision-only criteria need no owner", () => {
+  const result = validateTicket(doneMap(ownedMap(["Choose the name (decision only)"])), { stage: "resolution" });
+  assert.equal(result.valid, true);
+});
+
+test("AC023: Implementation tickets cannot own Map criteria", () => {
+  const result = validateTicket(ownedMap(["Build the importer. Implementation: #12"]));
+  assert.ok(codes(result.errors).includes("map_criterion_owner_implementation"));
+});
+
+test("AC023: closed or deleted owner flags an unchecked criterion for re-review, user may override", () => {
+  const ticket = doneMap(ownedMap(["Resolve the format. Research: #12"]));
+  const flagged = validateTicket(ticket, { stage: "resolution", ownerStates: { "#12": "closed" } });
+  assert.ok(codes(flagged.errors).includes("map_owner_review_required"));
+  const deleted = validateTicket(ticket, { stage: "resolution", ownerStates: { "#12": "deleted" } });
+  assert.ok(codes(deleted.errors).includes("map_owner_review_required"));
+  const creation = validateTicket(ticket, { stage: "creation", ownerStates: { "#12": "closed" } });
+  assert.ok(codes(creation.warnings).includes("map_owner_review_required"));
+  const overridden = validateTicket(ticket, {
+    stage: "resolution",
+    ownerStates: { "#12": "closed" },
+    ownerReviewOverrides: [{ id: "AC001", userApproved: true, reason: "Owner finished.", approvedAt: "2026-11-23T10:00:00Z" }],
+  });
+  assert.equal(overridden.valid, true);
+  assert.ok(codes(overridden.warnings).includes("map_owner_review_overridden"));
+  const incomplete = validateTicket(ticket, {
+    stage: "resolution",
+    ownerStates: { "#12": "closed" },
+    ownerReviewOverrides: [{ id: "AC001", userApproved: true, reason: "", approvedAt: "2026-11-23T10:00:00Z" }],
+  });
+  assert.ok(codes(incomplete.errors).includes("map_owner_review_required"));
+});
+
+test("AC023: historical Maps are not checked for owner links", () => {
+  const body = `## Acceptance Criteria\n\n- [ ] AC001: Resolve the format.\n`;
+  const result = validateTicket({ frontmatter: { type: "map", status: "Charting" }, body }, { provider: "markdown", stage: "read" });
+  assert.equal(result.valid, true);
+  assert.ok(!codes(result.errors).some((code) => code.startsWith("map_criterion_owner")));
 });
 
 test("read-only validation of historical records mutates nothing and sets no labels", () => {
