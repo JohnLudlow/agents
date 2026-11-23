@@ -43,11 +43,12 @@ Repository configuration is expressed as YAML embedded in `AGENTS.md` and/or
 `CONTRIBUTING.md`. Each agent or skill defines its own configuration section
 and documents its own keys and defaults.
 
-Example (from a hypothetical jl-quiz skill):
+Example (from a hypothetical jl-quiz skill; the real keys are the independent
+`jl_quiz_requirements` and `jl_quiz_understanding` blocks):
 
 ```yaml
-jl_quiz:
-  quiz_mode: a
+jl_quiz_requirements:
+  quiz_mode: in_chat
   plan_destination: github_issue
   file_storage_location: docs/plans/
 ```

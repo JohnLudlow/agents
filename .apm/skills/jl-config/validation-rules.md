@@ -56,9 +56,13 @@ jl_quiz:
 
 **Per-agent key names:**
 
-- `jl_quiz`
+- `jl_quiz_requirements`
+- `jl_quiz_understanding`
 - `jl_recon`
 - `jl_issue_management`
+
+The `jl_quiz` block is obsolete for new tickets (see 3.1). A historical `jl_quiz` block is
+still read as an object.
 
 **Failures:**
 
@@ -68,22 +72,22 @@ jl_quiz:
 **Example (INVALID — scalar):**
 
 ```yaml
-jl_quiz: true
+jl_quiz_requirements: true
 ```
 
 **Example (INVALID — array):**
 
 ```yaml
-jl_quiz:
-  - mode: a
-  - mode: b
+jl_quiz_requirements:
+  - mode: in_chat
+  - mode: questionnaire
 ```
 
 **Example (VALID — object):**
 
 ```yaml
-jl_quiz:
-  quiz_mode: a
+jl_quiz_requirements:
+  quiz_mode: in_chat
 ```
 
 **Success case (missing key):**
@@ -97,7 +101,13 @@ Layer 2 only validates *if the key is present*.
 
 ### 3.1 jl-quiz Validation
 
-Agent key: `jl_quiz`
+Agent keys: `jl_quiz_requirements` and `jl_quiz_understanding`. Each block is independent and
+accepts the same settings.
+
+The `jl_quiz` block is **obsolete** for new tickets. The validator reports this error:
+`jl_quiz: obsolete block, not valid for new tickets. Use independent 'jl_quiz_requirements' and
+'jl_quiz_understanding' blocks`. When the validator reads historical configuration, it accepts a
+`jl_quiz` block (and the legacy `quiz_mode` values `a` and `b`) without an error.
 
 #### Required Settings
 
@@ -110,10 +120,10 @@ Agent key: `jl_quiz`
 #### Recommended Settings
 
 - **`quiz_mode`** (string)
-  - Allowed values: `a`, `b`
+  - Allowed values: `in_chat`, `questionnaire`
   - Failure if: value is not one of these strings
   - Failure if: value is present but is not a string
-  - Default: `a`
+  - Default: `in_chat`
 
 - **`file_storage_location`** (string)
   - Allowed values: any repository-relative path
@@ -126,8 +136,8 @@ Agent key: `jl_quiz`
 #### Example (VALID)
 
 ```yaml
-jl_quiz:
-  quiz_mode: a
+jl_quiz_requirements:
+  quiz_mode: in_chat
   plan_destination: github_issue
   file_storage_location: docs/plans/
 ```
@@ -135,23 +145,30 @@ jl_quiz:
 #### Example (INVALID — enum violation)
 
 ```yaml
-jl_quiz:
+jl_quiz_requirements:
   plan_destination: slack_thread  # not in allowed list
 ```
 
 #### Example (INVALID — type mismatch)
 
 ```yaml
-jl_quiz:
-  quiz_mode: 1  # must be string "a" or "b"
+jl_quiz_understanding:
+  quiz_mode: 1  # must be string "in_chat" or "questionnaire"
 ```
 
 #### Example (INVALID — missing required)
 
 ```yaml
-jl_quiz:
-  quiz_mode: a
+jl_quiz_understanding:
+  quiz_mode: in_chat
   # plan_destination missing — required
+```
+
+#### Example (INVALID — obsolete block)
+
+```yaml
+jl_quiz:
+  plan_destination: github_issue  # use jl_quiz_requirements or jl_quiz_understanding
 ```
 
 ---
@@ -185,6 +202,33 @@ All jl-recon settings are optional; defaults apply if missing.
   - Failure if: value is an empty string
   - Failure if: value does not start with one or more `#` characters
   - Default: `## Not Yet Specified (Fog of War)`
+
+- **`model_selection.<key>`** (string: `inherit` or a recognized model name)
+  - Allowed keys: `default`, `map`, `research`, `prototype`, `quiz_requirements`,
+    `quiz_understanding`, `learn`, `prerequisite`, `ticket_resolution_checks`,
+    `status_report_checks` (legacy aliases `mode2_checks` and `mode3_checks` also accepted)
+  - Failure if: the key is not allowed, or the value is not a non-empty string
+  - Default: inherits `model_selection.default` (which defaults to `inherit`)
+
+- **`labels.<key>`** (non-empty array of non-empty strings)
+  - Allowed keys: `default`, `map`, `research`, `prototype`, `quiz_requirements`,
+    `quiz_understanding`, `learn`, `prerequisite`
+  - Failure if: the key is not allowed, or the value is not a non-empty array of strings
+
+- **`title_format.<key>`** (non-empty string)
+  - Allowed keys: `map`, `research`, `prototype`, `quiz_requirements`,
+    `quiz_understanding`, `learn`, `prerequisite`
+  - Failure if: the key is not allowed, or the value is not a non-empty string
+
+- **`checks.on_ticket_resolution_enabled`**, **`checks.on_status_report_enabled`** (boolean)
+  and **`checks.timeout_seconds`** (positive integer)
+
+#### Obsolete ticket types
+
+The ticket types `quiz` and `task` are obsolete for new tickets. In `model_selection`, `labels`
+and `title_format`, the validator reports: `obsolete ticket type 'quiz', not valid for new
+tickets. Use one of: map, research, prototype, quiz_requirements, quiz_understanding, learn,
+prerequisite`. When the validator reads historical configuration, it accepts these keys.
 
 #### Example (VALID)
 

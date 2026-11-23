@@ -23,13 +23,13 @@ node scripts/validate-config.js
 
 ## Success Examples
 
-### Valid jl_quiz Configuration
+### Valid jl_quiz_requirements Configuration
 
 **Input (CONTRIBUTING.md or AGENTS.md):**
 
 ```yaml
-jl_quiz:
-  quiz_mode: a
+jl_quiz_requirements:
+  quiz_mode: in_chat
   plan_destination: github_issue
   file_storage_location: docs/plans/
 ```
@@ -39,6 +39,28 @@ jl_quiz:
 ```text
 ✓ CONTRIBUTING.md agent config is valid
 ```
+
+### Obsolete jl_quiz Block
+
+**Input:**
+
+```yaml
+jl_quiz:
+  plan_destination: github_issue
+```
+
+**Output:**
+
+```text
+✗ CONTRIBUTING.md: [WARN] jl_quiz: obsolete block, not valid for new tickets. Use independent 'jl_quiz_requirements' and 'jl_quiz_understanding' blocks
+```
+
+The validator accepts a `jl_quiz` block only when it reads historical configuration.
+
+> **Note:** The quiz error examples below show the block name `jl_quiz`. The same
+> messages apply to `jl_quiz_requirements` and `jl_quiz_understanding`; the message
+> starts with the name of the block that has the error. Valid `quiz_mode` values are
+> `in_chat` and `questionnaire`.
 
 ### Valid jl_recon Configuration
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const fs = require("fs");
 const path = require("path");
+const contract = require("./config-contract");
 
 // Minimal YAML parser - extracts agent config blocks from markdown
 function extractYamlFromMarkdown(text, agentKey) {
@@ -10,7 +11,7 @@ function extractYamlFromMarkdown(text, agentKey) {
   // Look for the agent key in the text, then extract the YAML block
   // Pattern: `agentKey:` followed by indented lines until next key or end
   const pattern = new RegExp(
-    `^${agentKey}:\\s*(?:\\r?\\n)?((?:^  .+$(?:\\r?\\n)?)*)?`,
+    `^${agentKey}:[ \\t]*(?:\\r?\\n)?((?:^  .+$(?:\\r?\\n)?)*)?`,
     "m"
   );
 
@@ -190,11 +191,22 @@ function validateSubagentDelegation(config) {
   return { errors, warnings };
 }
 
+function parseScalar(value) {
+  if ((value.startsWith('"') && value.endsWith('"') && value.length >= 2) ||
+      (value.startsWith("'") && value.endsWith("'") && value.length >= 2)) {
+    return value.slice(1, -1);
+  }
+  if (value === "true") return true;
+  if (value === "false") return false;
+  if (!isNaN(value) && value !== "") return Number(value);
+  return value;
+}
+
 // Simple YAML parser for config validation
 function parseYaml(text) {
   const lines = text.split(/\r?\n/);
   const root = {};
-  const stack = [{ obj: root, indent: -1 }];
+  const stack = [{ obj: root, indent: -1, parent: null, key: null }];
 
   let lineNum = 0;
   for (const line of lines) {
@@ -219,6 +231,24 @@ function parseYaml(text) {
       stack.pop();
     }
 
+    // Block sequence item: convert the (still empty) parent mapping to an array.
+    if (trimmed === "-" || trimmed.startsWith("- ")) {
+      const top = stack[stack.length - 1];
+      if (!Array.isArray(top.obj)) {
+        if (top.parent === null || Object.keys(top.obj).length > 0) {
+          return {
+            error: true,
+            message: `Unexpected list item at line ${lineNum}`,
+            lineNum,
+          };
+        }
+        top.obj = [];
+        top.parent[top.key] = top.obj;
+      }
+      top.obj.push(parseScalar(trimmed.slice(1).trim()));
+      continue;
+    }
+
     if (trimmed.includes(":")) {
       const [key, ...valueParts] = trimmed.split(":");
       const value = valueParts.join(":").trim();
@@ -235,25 +265,11 @@ function parseYaml(text) {
       if (value === "") {
         // This is a mapping key - next indented lines are its value
         const newObj = {};
-        stack[stack.length - 1].obj[key.trim()] = newObj;
-        stack.push({ obj: newObj, indent });
+        const parentObj = stack[stack.length - 1].obj;
+        parentObj[key.trim()] = newObj;
+        stack.push({ obj: newObj, indent, parent: parentObj, key: key.trim() });
       } else {
-        // Parse the value
-        let parsedValue = value;
-
-        // Handle quotes
-        if ((value.startsWith('"') && value.endsWith('"')) ||
-            (value.startsWith("'") && value.endsWith("'"))) {
-          parsedValue = value.slice(1, -1);
-        } else if (value === "true") {
-          parsedValue = true;
-        } else if (value === "false") {
-          parsedValue = false;
-        } else if (!isNaN(value) && value !== "") {
-          parsedValue = Number(value);
-        }
-
-        stack[stack.length - 1].obj[key.trim()] = parsedValue;
+        stack[stack.length - 1].obj[key.trim()] = parseScalar(value);
       }
     }
   }
@@ -280,15 +296,51 @@ function validateLayer2(config, agentKey) {
   return { valid: true };
 }
 
+// Obsolete 'quiz'/'task' type keys are errors for new-ticket use only.
+function obsoleteTypeKeyError(settingPath, key, options) {
+  if (contract.OBSOLETE_TYPE_KEYS.includes(key) && !options.historical) {
+    return {
+      valid: false,
+      error: `${settingPath}: obsolete ticket type '${key}', not valid for new tickets. Use one of: ${contract.RECON_TYPE_KEYS.join(", ")}`,
+    };
+  }
+  return null;
+}
+
 // Validate Layer 3: Semantic validation per agent
-function validateLayer3(config, agentKey) {
+function validateLayer3(config, agentKey, options = {}) {
   if (!(agentKey in config)) {
     return { valid: true };
   }
 
   const cfg = config[agentKey];
 
+  if (contract.QUIZ_CONFIG_KEYS.includes(agentKey)) {
+    // New independent quiz blocks accept only the documented quiz_mode values.
+    if ("quiz_mode" in cfg && !contract.QUIZ_MODES.includes(cfg.quiz_mode)) {
+      return {
+        valid: false,
+        error: `${agentKey}.quiz_mode: must be one of ${contract.QUIZ_MODES.join(", ")}, got '${cfg.quiz_mode}'`,
+      };
+    }
+    const legacyResult = validateLayer3({ jl_quiz: cfg }, "jl_quiz", { ...options, quizBlock: true });
+    if (!legacyResult.valid) {
+      return { valid: false, error: legacyResult.error.replace(/^jl_quiz/, agentKey) };
+    }
+    return { valid: true };
+  }
+
   if (agentKey === "jl_quiz") {
+    if (!options.quizBlock) {
+      // Obsolete block. New-ticket use is an error; historical config is read leniently.
+      if (!options.historical) {
+        return {
+          valid: false,
+          error:
+            "jl_quiz: obsolete block, not valid for new tickets. Use independent 'jl_quiz_requirements' and 'jl_quiz_understanding' blocks",
+        };
+      }
+    }
     // Required: plan_destination
     if (!("plan_destination" in cfg)) {
       return {
@@ -328,10 +380,10 @@ function validateLayer3(config, agentKey) {
         };
       }
 
-      if (!["a", "b"].includes(im)) {
+      if (!["a", "b", ...contract.QUIZ_MODES].includes(im)) {
         return {
           valid: false,
-          error: `jl_quiz.quiz_mode: must be 'a' or 'b', got '${im}'`,
+          error: `jl_quiz.quiz_mode: must be one of ${contract.QUIZ_MODES.join(", ")} (legacy 'a' or 'b' also read), got '${im}'`,
         };
       }
     }
@@ -442,18 +494,13 @@ function validateLayer3(config, agentKey) {
       }
 
       const validModelSelectionKeys = new Set([
-        "default",
-        "quiz",
-        "research",
-        "prototype",
-        "task",
-        "ticket_resolution_checks",
-        "status_report_checks",
-        "mode2_checks",
-        "mode3_checks",
+        ...contract.MODEL_SELECTION_KEYS,
+        ...(options.historical ? contract.OBSOLETE_TYPE_KEYS : []),
       ]);
 
       for (const [key, value] of Object.entries(modelSelection)) {
+        const obsolete = obsoleteTypeKeyError(`jl_recon.model_selection.${key}`, key, options);
+        if (obsolete) return obsolete;
         if (!validModelSelectionKeys.has(key)) {
           return {
             valid: false,
@@ -479,6 +526,65 @@ function validateLayer3(config, agentKey) {
           return {
             valid: false,
             error: `jl_recon.model_selection.${key}: unknown model name '${value}' (use a recognized model or 'inherit')`,
+          };
+        }
+      }
+    }
+
+    if ("labels" in cfg) {
+      const labels = cfg.labels;
+      if (typeof labels !== "object" || labels === null || Array.isArray(labels)) {
+        return { valid: false, error: `jl_recon.labels: must be object, got ${Array.isArray(labels) ? "array" : typeof labels}` };
+      }
+      const allowed = new Set([...contract.LABEL_KEYS, ...(options.historical ? contract.OBSOLETE_TYPE_KEYS : [])]);
+      for (const [key, value] of Object.entries(labels)) {
+        const obsolete = obsoleteTypeKeyError(`jl_recon.labels.${key}`, key, options);
+        if (obsolete) return obsolete;
+        if (!allowed.has(key)) {
+          return { valid: false, error: `jl_recon.labels.${key}: invalid key. Allowed: ${contract.LABEL_KEYS.join(", ")}` };
+        }
+        if (!Array.isArray(value) || value.length === 0 || value.some((v) => typeof v !== "string" || v.trim() === "")) {
+          return { valid: false, error: `jl_recon.labels.${key}: must be a non-empty array of non-empty strings` };
+        }
+      }
+    }
+
+    if ("title_format" in cfg) {
+      const titles = cfg.title_format;
+      if (typeof titles !== "object" || titles === null || Array.isArray(titles)) {
+        return { valid: false, error: `jl_recon.title_format: must be object, got ${Array.isArray(titles) ? "array" : typeof titles}` };
+      }
+      const allowed = new Set([...contract.TITLE_FORMAT_KEYS, ...(options.historical ? contract.OBSOLETE_TYPE_KEYS : [])]);
+      for (const [key, value] of Object.entries(titles)) {
+        const obsolete = obsoleteTypeKeyError(`jl_recon.title_format.${key}`, key, options);
+        if (obsolete) return obsolete;
+        if (!allowed.has(key)) {
+          return { valid: false, error: `jl_recon.title_format.${key}: invalid key. Allowed: ${contract.TITLE_FORMAT_KEYS.join(", ")}` };
+        }
+        if (typeof value !== "string" || value.trim() === "") {
+          return { valid: false, error: `jl_recon.title_format.${key}: must be a non-empty string` };
+        }
+      }
+    }
+
+    if ("checks" in cfg) {
+      const checks = cfg.checks;
+      if (typeof checks !== "object" || checks === null || Array.isArray(checks)) {
+        return { valid: false, error: `jl_recon.checks: must be object, got ${Array.isArray(checks) ? "array" : typeof checks}` };
+      }
+      for (const [key, value] of Object.entries(checks)) {
+        if (contract.CHECKS_BOOLEAN_KEYS.includes(key)) {
+          if (typeof value !== "boolean") {
+            return { valid: false, error: `jl_recon.checks.${key}: must be boolean, got ${typeof value}` };
+          }
+        } else if (key === contract.CHECKS_NUMERIC_KEY) {
+          if (typeof value !== "number" || !Number.isInteger(value) || value < 1) {
+            return { valid: false, error: `jl_recon.checks.${key}: must be a positive integer, got '${value}'` };
+          }
+        } else {
+          return {
+            valid: false,
+            error: `jl_recon.checks.${key}: invalid key. Allowed: ${[...contract.CHECKS_BOOLEAN_KEYS, contract.CHECKS_NUMERIC_KEY].join(", ")}`,
           };
         }
       }
@@ -574,10 +680,15 @@ function validateLayer3(config, agentKey) {
 }
 
 // Main validation function
-function validateConfigFile(filePath, fileName) {
+function validateConfigFile(filePath, fileName, options = {}) {
   const content = fs.readFileSync(filePath, "utf8");
+  return validateConfigText(content, fileName, options);
+}
+
+function validateConfigText(content, fileName, options = {}) {
   const agentKeys = [
-    "jl_quiz",
+    contract.OBSOLETE_QUIZ_BLOCK,
+    ...contract.QUIZ_CONFIG_KEYS,
     "jl_recon",
     "jl_issue_management",
     "jl_subagent_models",
@@ -679,7 +790,7 @@ function validateConfigFile(filePath, fileName) {
     }
 
     // Layer 3: Semantic validation
-    const layer3Result = validateLayer3(config, agentKey);
+    const layer3Result = validateLayer3(config, agentKey, options);
     if (!layer3Result.valid) {
       hasErrors = true;
       message.push(
@@ -692,6 +803,7 @@ function validateConfigFile(filePath, fileName) {
 }
 
 // Main script
+function main() {
 const root = path.join(__dirname, "..");
 const contributingPath = path.join(root, "CONTRIBUTING.md");
 const agentsPath = path.join(root, "AGENTS.md");
@@ -723,3 +835,10 @@ if (fs.existsSync(agentsPath)) {
 }
 
 process.exit(failed ? 1 : 0);
+}
+
+if (require.main === module) {
+  main();
+}
+
+module.exports = { parseYaml, validateConfigText, validateConfigFile, validateLayer3, extractYamlFromMarkdown };
