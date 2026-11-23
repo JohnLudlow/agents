@@ -11,6 +11,20 @@ const TICKET_TYPES = Object.freeze([
 ]);
 
 const LEGACY_TYPES = Object.freeze(["quiz", "task"]);
+
+/**
+ * Default title patterns for new tickets, keyed by `jl_recon.title_format`
+ * config key (underscore spelling). See references/SHARED_BASE_SCHEMA.md.
+ */
+const DEFAULT_TITLE_PATTERNS = Object.freeze({
+  map: "Map: {destination}",
+  research: "Research: {topic}",
+  prototype: "Prototype: {concept}",
+  quiz_requirements: "Quiz (Requirements): {question}",
+  quiz_understanding: "Quiz (Understanding): {question}",
+  learn: "Learn: {topic}",
+  prerequisite: "Prerequisite: {work}",
+});
 const STATUSES = Object.freeze(["Draft", "Ready", "In Progress", "Done", "Blocked"]);
 const MAP_STATUSES = Object.freeze(["Charting", "Walked", "Completed", "Stale"]);
 const OVERRIDABLE_MAP_ERRORS = Object.freeze([
@@ -119,7 +133,8 @@ function validateTemplate(template, platform) {
  * provider-native logical fields and a readable Details section in `body`.
  *
  * @param {unknown} ticket Ticket representation.
- * @param {{provider?: "github"|"markdown", stage?: "creation"|"resolution"|"read"}} options
+ * @param {{provider?: "github"|"markdown", stage?: "creation"|"resolution"|"read", titleFormat?: Record<string, string>}} options
+ *   `titleFormat` is the optional `jl_recon.title_format` object; titles are checked at creation only.
  * @returns {{valid: boolean, errors: ValidationIssue[], warnings: ValidationIssue[]}}
  */
 function validateTicket(ticket, options = {}) {
@@ -179,6 +194,11 @@ function validateTicket(ticket, options = {}) {
     addIssue(errors, "invalid_status", "status", `Status must be one of: ${STATUSES.join(", ")}.`);
   }
 
+  // Title contract applies to new tickets only; historical titles are never checked.
+  if (stage === "creation" && TICKET_TYPES.includes(type) && typeof fields.title === "string" && fields.title.trim() !== "") {
+    errors.push(...validateTitleFormat(type, fields.title, options.titleFormat).errors);
+  }
+
   if (provider === "github") {
     validateGitHubRepresentation(ticket, type, fields.status, errors);
   }
@@ -213,6 +233,50 @@ function validateTicket(ticket, options = {}) {
   }
 
   return { ...buildResult(errors, warnings), provider, stage, type };
+}
+
+/**
+ * Validate a NEW ticket title against the default pattern for its type, or a
+ * configured `jl_recon.title_format` override. Checks the literal prefix (and
+ * any literal suffix) and that the variable part is non-empty. Never call this
+ * for historical tickets.
+ *
+ * An override replaces the default for that type. An override that is not a
+ * non-empty string with a `{variable}` placeholder is ignored (built-in used).
+ *
+ * @param {string} type Ticket type, hyphen (`quiz-requirements`) or underscore spelling.
+ * @param {unknown} title Proposed title.
+ * @param {Record<string, string>} [overrides] `jl_recon.title_format` object.
+ * @returns {{valid: boolean, errors: ValidationIssue[], pattern?: string}}
+ */
+function validateTitleFormat(type, title, overrides) {
+  const errors = [];
+  const key = typeof type === "string" ? type.replace(/-/g, "_") : "";
+  if (!Object.prototype.hasOwnProperty.call(DEFAULT_TITLE_PATTERNS, key)) {
+    addIssue(errors, "title_type_unknown", "title", `No title pattern for type '${String(type)}'.`);
+    return { valid: false, errors };
+  }
+
+  let pattern = DEFAULT_TITLE_PATTERNS[key];
+  const override = isPlainObject(overrides) && Object.prototype.hasOwnProperty.call(overrides, key) ? overrides[key] : undefined;
+  if (typeof override === "string" && /\{[A-Za-z_]+\}/.test(override)) {
+    pattern = override;
+  }
+
+  if (typeof title !== "string" || title.trim() === "") {
+    addIssue(errors, "title_empty", "title", `Title must follow '${pattern}'.`);
+    return { valid: false, errors, pattern };
+  }
+
+  const match = /^([^{]*)\{[A-Za-z_]+\}([^{]*)$/.exec(pattern);
+  const prefix = match ? match[1] : pattern;
+  const suffix = match ? match[2] : "";
+  if (!title.startsWith(prefix) || !title.endsWith(suffix) && suffix !== "") {
+    addIssue(errors, "title_prefix", "title", `Title must follow '${pattern}'.`);
+  } else if (title.length < prefix.length + suffix.length || title.slice(prefix.length, title.length - suffix.length).trim() === "") {
+    addIssue(errors, "title_variable_missing", "title", `Title needs a value after the prefix: '${pattern}'.`);
+  }
+  return { valid: errors.length === 0, errors, pattern };
 }
 
 /**
@@ -922,6 +986,7 @@ function isPlainObject(value) {
 }
 
 module.exports = {
+  DEFAULT_TITLE_PATTERNS,
   LEGACY_TYPES,
   MAP_STATUSES,
   PLATFORM_RULES,
@@ -934,4 +999,5 @@ module.exports = {
   validateStatusTransition,
   validateTemplate,
   validateTicket,
+  validateTitleFormat,
 };

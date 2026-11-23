@@ -73,7 +73,8 @@ Azure DevOps payloads continue to use their provider fields and the existing gen
 ## Public API
 
 - `validateTemplate(template, platform)` validates provider payload structure.
-- `validateTicket(ticket, { provider, stage })` validates shared and type-specific ticket content.
+- `validateTicket(ticket, { provider, stage, titleFormat? })` validates shared and type-specific ticket content. Creation also checks the title.
+- `validateTitleFormat(type, title, overrides?)` checks a new title against the default or configured pattern. Do not use it on historical tickets.
 - `validateCreationOverride(validation, decision, audit?)` authorizes a Map-content exception; call it again after posting the issue comment.
 - `validateAcceptanceCriteria(markdown)` validates checklist structure and ID sequence.
 - `validateStatusTransition(from, to, details)` validates lifecycle transitions.

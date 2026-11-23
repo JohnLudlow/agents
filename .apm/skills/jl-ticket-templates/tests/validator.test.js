@@ -11,6 +11,8 @@ const {
   validateCreationOverride,
   validateStatusTransition,
   validateTicket,
+  validateTitleFormat,
+  DEFAULT_TITLE_PATTERNS,
 } = require("../validator");
 
 function criteria(count = 3) {
@@ -200,7 +202,7 @@ ${criteria()}
     const result = validateTicket(
       requirementsTicket({
         ...scenario,
-        title: `${scenario.type}: Example`,
+        title: `${scenario.type[0].toUpperCase()}${scenario.type.slice(1)}: Example`,
       }),
       { provider: "github", stage: "creation" }
     );
@@ -455,6 +457,7 @@ ${criteria()}
 `;
   const ticket = requirementsTicket({
     type: "research",
+    title: "Research: Available approaches",
     labels: ["recon:research"],
     body: researchBody,
   });
@@ -668,6 +671,7 @@ ${criteria()}
     validateTicket(
       requirementsTicket({
         type: "prerequisite",
+        title: "Prerequisite: Vendor access",
         labels: ["recon:prerequisite"],
         body,
       }),
@@ -679,6 +683,7 @@ ${criteria()}
   const invalid = validateTicket(
     requirementsTicket({
       type: "prerequisite",
+      title: "Prerequisite: Vendor access",
       labels: ["recon:prerequisite"],
       body: body.replace("Ask the vendor to enable access.", "Edit the repository source code."),
     }),
@@ -899,4 +904,81 @@ test("re-scoping one AC does not bypass checks for the other criteria", () => {
   assert.ok(validateClosureReadiness([criteria[0], {
     ...confirmed, userConfirmedAt: "2026-11-21T10:00:30Z",
   }], rescope).errors.some((error) => error.code === "review_order"));
+});
+
+const TITLE_CASES = [
+  ["map", "Map", "destination"],
+  ["research", "Research", "topic"],
+  ["prototype", "Prototype", "concept"],
+  ["quiz-requirements", "Quiz (Requirements)", "question"],
+  ["quiz-understanding", "Quiz (Understanding)", "question"],
+  ["learn", "Learn", "topic"],
+  ["prerequisite", "Prerequisite", "work"],
+];
+
+test("default title patterns cover the seven new ticket types", () => {
+  assert.equal(Object.keys(DEFAULT_TITLE_PATTERNS).length, 7);
+  for (const [type, prefix, variable] of TITLE_CASES) {
+    assert.equal(DEFAULT_TITLE_PATTERNS[type.replace("-", "_")], `${prefix}: {${variable}}`);
+  }
+});
+
+for (const [type, prefix] of TITLE_CASES) {
+  test(`validateTitleFormat accepts and rejects default title for ${type}`, () => {
+    assert.equal(validateTitleFormat(type, `${prefix}: Something real`).valid, true);
+    assert.equal(validateTitleFormat(type.replace("-", "_"), `${prefix}: Something real`).valid, true);
+    const wrongPrefix = validateTitleFormat(type, "Other: Something real");
+    assert.ok(wrongPrefix.errors.some((error) => error.code === "title_prefix"));
+    const missingVariable = validateTitleFormat(type, `${prefix}:   `);
+    assert.ok(missingVariable.errors.some((error) => error.code === "title_variable_missing"));
+    assert.equal(validateTitleFormat(type, `${prefix}:`).valid, false);
+    assert.equal(validateTitleFormat(type, "").valid, false);
+  });
+}
+
+test("validateTitleFormat rejects unknown and legacy types", () => {
+  assert.ok(validateTitleFormat("quiz", "Quiz: Anything").errors.some((e) => e.code === "title_type_unknown"));
+  assert.ok(validateTitleFormat("task", "Task: Anything").errors.some((e) => e.code === "title_type_unknown"));
+});
+
+test("validateTitleFormat accepts a configured override pattern", () => {
+  const overrides = { map: "[Map] {destination}", quiz_requirements: "Ask: {question}?" };
+  assert.equal(validateTitleFormat("map", "[Map] Import data", overrides).valid, true);
+  assert.equal(validateTitleFormat("map", "Map: Import data", overrides).valid, false);
+  assert.equal(validateTitleFormat("map", "[Map] ", overrides).valid, false);
+  assert.equal(validateTitleFormat("quiz-requirements", "Ask: Who owns it?", overrides).valid, true);
+  assert.equal(validateTitleFormat("quiz-requirements", "Ask: Who owns it", overrides).valid, false);
+  // Other types keep defaults; invalid overrides fall back to the default.
+  assert.equal(validateTitleFormat("learn", "Learn: Topic", overrides).valid, true);
+  assert.equal(validateTitleFormat("learn", "Learn: Topic", { learn: "no placeholder" }).valid, true);
+  assert.equal(validateTitleFormat("learn", "Learn: Topic", { learn: 5 }).valid, true);
+});
+
+test("validateTicket checks titles at creation, honoring overrides", () => {
+  const base = requirementsTicket();
+  const bad = validateTicket({ ...base, title: "Requirements for users" }, { provider: "github", stage: "creation" });
+  assert.ok(bad.errors.some((error) => error.code === "title_prefix"));
+  const overridden = validateTicket(
+    { ...base, title: "Ask: User requirements" },
+    { provider: "github", stage: "creation", titleFormat: { quiz_requirements: "Ask: {question}" } }
+  );
+  assert.equal(overridden.errors.some((error) => error.code.startsWith("title_")), false);
+});
+
+test("validateTicket does not check historical or non-creation titles", () => {
+  const legacy = validateTicket(
+    { title: "Old quiz title", type: "quiz", status: "Done", body: "" },
+    { provider: "github", stage: "read" }
+  );
+  assert.equal(legacy.errors.some((error) => error.code.startsWith("title_")), false);
+  const historicalMap = validateTicket(
+    { ...mapTicket(), title: "Legacy map name", status: "Completed" },
+    { provider: "github", stage: "read" }
+  );
+  assert.equal(historicalMap.errors.some((error) => error.code.startsWith("title_")), false);
+  const resolution = validateTicket(
+    { ...requirementsTicket(), title: "Freeform title" },
+    { provider: "github", stage: "resolution" }
+  );
+  assert.equal(resolution.errors.some((error) => error.code.startsWith("title_")), false);
 });

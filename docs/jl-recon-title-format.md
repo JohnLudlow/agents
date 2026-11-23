@@ -2,6 +2,11 @@
 
 This guide describes title patterns for new Recon ticket types.
 
+The shipped title contract is in
+[`SHARED_BASE_SCHEMA.md`](../.apm/skills/jl-ticket-templates/references/SHARED_BASE_SCHEMA.md#title-format).
+It is checked by `validateTitleFormat` in `jl-ticket-templates/validator.js`.
+This page is a human guide that points to it.
+
 ## Supported Keys and Defaults
 
 Configure `jl_recon.title_format` in `AGENTS.md` or `CONTRIBUTING.md`. Each key uses the underscore spelling shown below, including quiz keys.

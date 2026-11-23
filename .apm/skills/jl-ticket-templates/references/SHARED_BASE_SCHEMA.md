@@ -76,6 +76,27 @@ It calls `validateClosureReadiness`. A boolean flag cannot replace review eviden
 
 Historical Maps with `Charting`, `Walked`, `Completed`, or `Stale` remain unchanged and readable.
 
+## Title Format
+
+New tickets follow one default title pattern per type. `validateTitleFormat`
+checks the literal prefix and that the variable part is not empty.
+
+| Type | Config key | Default pattern |
+| --- | --- | --- |
+| `map` | `map` | `Map: {destination}` |
+| `research` | `research` | `Research: {topic}` |
+| `prototype` | `prototype` | `Prototype: {concept}` |
+| `quiz-requirements` | `quiz_requirements` | `Quiz (Requirements): {question}` |
+| `quiz-understanding` | `quiz_understanding` | `Quiz (Understanding): {question}` |
+| `learn` | `learn` | `Learn: {topic}` |
+| `prerequisite` | `prerequisite` | `Prerequisite: {work}` |
+
+- A `jl_recon.title_format.<key>` override replaces the default for that key.
+  It must be a non-empty string with one `{variable}` placeholder. Otherwise use the default.
+- Pass the override object as `titleFormat` in `validateTicket` options.
+- Check titles at creation only. Never check historical tickets, and never rewrite them.
+- The retired `quiz` and `task` keys are not aliases.
+
 ## Validation Stages
 
 ### Creation
@@ -140,7 +161,8 @@ entries for re-scoped criteria; no approval exempts an unrelated criterion.
 
 `validator.js` keeps `validateTemplate(template, platform)` for provider payloads. It also exports:
 
-- `validateTicket(ticket, { provider, stage })` for new-ticket creation, resolution, and historical reads.
+- `validateTicket(ticket, { provider, stage, titleFormat? })` for creation, resolution, and historical reads. Creation also checks the title.
+- `validateTitleFormat(type, title, overrides?)` for the title contract; see Title Format above.
 - `validateAcceptanceCriteria(markdown)` for checklist shape and sequential IDs.
 - `validateStatusTransition(from, to, details)` for lifecycle checks.
 - `validateCreationOverride(validation, decision, audit?)` for a limited, auditable GitHub Map creation exception; see `MAP_VALIDATION_GUIDE.md`.
