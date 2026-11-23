@@ -106,7 +106,7 @@ function Get-FileEncoding { param([string]$Path) if (-not (Test-Path -LiteralPat
 try {
     if ([string]::IsNullOrWhiteSpace($FilePath)) { throw "--file-path is required." }
     if ([string]::IsNullOrWhiteSpace($Type)) { throw "--type is required." }
-    if (@('quiz', 'research', 'prototype', 'task') -notcontains $Type) { throw "Invalid --type '$Type'. Expected one of: quiz, research, prototype, task." }
+    if (@('research', 'prototype', 'quiz-requirements', 'quiz-understanding', 'learn', 'prerequisite') -notcontains $Type) { throw "Invalid --type '$Type'. Expected one of: research, prototype, quiz-requirements, quiz-understanding, learn, prerequisite." }
 
     $resolvedPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($FilePath)
     $labelsToUse = if (-not [string]::IsNullOrWhiteSpace($UserOverride)) { $UserOverride } else { @($Labels, $InheritedLabels, "recon:$Type") -join ',' }

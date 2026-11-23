@@ -127,13 +127,13 @@ Describe 'Markdown map and ticket labels' {
     $helper = Join-Path $skillsRoot 'jl-issue-management' 'scripts' 'record-markdown-ticket-labels.ps1'
     $result = Invoke-LabelHelper -Path $helper -Parameters @{
       FilePath         = $script:ticketPath
-      Type             = 'task'
+      Type             = 'prerequisite'
       ConfiguredLabels = 'configured'
       InheritedLabels  = 'recon:map'
     }
 
     $result.Errors | Should -BeNullOrEmpty
-    Get-RecordedLabels $script:ticketPath | Should -Be @('configured', 'recon:map', 'recon:task')
+    Get-RecordedLabels $script:ticketPath | Should -Be @('configured', 'recon:map', 'recon:prerequisite')
   }
 
   It 'writes an empty list in the issue-management map copy' {
@@ -143,5 +143,51 @@ Describe 'Markdown map and ticket labels' {
 
     $result.Errors | Should -BeNullOrEmpty
     [System.IO.File]::ReadAllText($script:mapPath) | Should -Match '(?m)^labels: \[\]$'
+  }
+
+  Context 'historical tickets are not relabeled' {
+    BeforeAll {
+      $script:skillsRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+      $script:copies = @('jl-recon', 'jl-issue-management') | ForEach-Object {
+        Join-Path $script:skillsRoot $_ 'scripts' 'record-markdown-ticket-labels.ps1'
+      }
+    }
+
+    It 'leaves a historical <_> file byte-for-byte unchanged' -ForEach @('quiz', 'task', 'map', 'Charting', 'Walked', 'Completed', 'Stale') {
+      $original = "---`ntype: `"$_`"`nstatus: `"Charting`"`nlabels:`n  - `"legacy`"`n---`nHistorical body`n"
+      foreach ($helper in $script:copies) {
+        [System.IO.File]::WriteAllText($script:ticketPath, $original)
+        $before = [System.IO.File]::ReadAllBytes($script:ticketPath)
+
+        $result = Invoke-LabelHelper -Path $helper -Parameters @{ FilePath = $script:ticketPath; Type = $_; Labels = 'x'; Backup = $true }
+
+        $result.Output | Should -Not -Match 'Recorded labels'
+        [System.IO.File]::ReadAllBytes($script:ticketPath) | Should -Be $before
+        Test-Path -LiteralPath ($script:ticketPath + '.bak') | Should -BeFalse
+      }
+    }
+
+    It 'leaves a historical file unchanged for legacy type <_> with an override or dry run' -ForEach @('quiz', 'task') {
+      $original = "---`ntype: `"$_`"`nstatus: `"Ready`"`n---`nHistorical body`n"
+      foreach ($helper in $script:copies) {
+        [System.IO.File]::WriteAllText($script:ticketPath, $original)
+        $before = [System.IO.File]::ReadAllBytes($script:ticketPath)
+        [void](Invoke-LabelHelper -Path $helper -Parameters @{ FilePath = $script:ticketPath; Type = $_; UserOverride = 'x' })
+        [void](Invoke-LabelHelper -Path $helper -Parameters @{ FilePath = $script:ticketPath; Type = $_; DryRun = $true })
+        [System.IO.File]::ReadAllBytes($script:ticketPath) | Should -Be $before
+      }
+    }
+
+    It 'does not rewrite the historical Map status <_> when labels are recorded' -ForEach @('Charting', 'Walked', 'Completed', 'Stale') {
+      foreach ($skill in @('jl-recon', 'jl-issue-management')) {
+        $helper = Join-Path $script:skillsRoot $skill 'scripts' 'record-markdown-map-labels.ps1'
+        [System.IO.File]::WriteAllText($script:mapPath, "---`ntype: `"map`"`nstatus: `"$_`"`n---`nHistorical Map`n")
+
+        $result = Invoke-LabelHelper -Path $helper -Parameters @{ FilePath = $script:mapPath; Labels = 'recon:map' }
+
+        $result.Errors | Should -BeNullOrEmpty
+        [System.IO.File]::ReadAllText($script:mapPath) | Should -Match "(?m)^status: `"$_`"\r?$"
+      }
+    }
   }
 }

@@ -16,7 +16,7 @@ GitHub repository in owner/name format.
 Issue or ticket number to update.
 
 .PARAMETER Type
-Ticket type. Valid values: quiz, research, prototype, task.
+Ticket type. Valid values: research, prototype, quiz-requirements, quiz-understanding, learn, prerequisite.
 
 .PARAMETER ConfiguredLabels
 Comma-separated labels configured for the ticket type.
@@ -34,7 +34,7 @@ Prints diagnostic output.
 Shows the labels that would be applied without changing the issue.
 
 .EXAMPLE
-.\scripts\apply-ticket-labels.ps1 -Repo JohnLudlow/agents -TicketNumber 154 -Type task -ConfiguredLabels "enhancement,triage" -InheritedLabels "needs-review" -DryRun
+.\scripts\apply-ticket-labels.ps1 -Repo JohnLudlow/agents -TicketNumber 154 -Type prerequisite -ConfiguredLabels "prerequisite,triage" -InheritedLabels "needs-review" -DryRun
 #>
 [CmdletBinding(PositionalBinding = $false)]
 param(
@@ -120,9 +120,9 @@ function Test-GhAvailable {
 function Test-TicketType {
     param([string]$TicketType)
 
-    $validTypes = @('quiz', 'research', 'prototype', 'task')
+    $validTypes = @('research', 'prototype', 'quiz-requirements', 'quiz-understanding', 'learn', 'prerequisite')
     if ($validTypes -notcontains $TicketType) {
-        Write-ErrorMessage "Invalid --type '$TicketType'. Expected one of: quiz, research, prototype, task."
+        Write-ErrorMessage "Invalid --type '$TicketType'. Expected one of: research, prototype, quiz-requirements, quiz-understanding, learn, prerequisite."
         return $false
     }
 

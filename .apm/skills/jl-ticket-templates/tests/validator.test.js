@@ -378,6 +378,39 @@ test("preserves historical Map lifecycle values for read-only validation", () =>
   assert.ok(result.warnings.some((warning) => warning.code === "legacy_map_status"));
 });
 
+test("read-only validation of historical records mutates nothing and sets no labels", () => {
+  const records = [
+    ...["quiz", "task"].map((type) => ({ type, status: "Ready" })),
+    ...["Charting", "Walked", "Completed", "Stale"].map((status) => ({ type: "map", status })),
+  ];
+
+  for (const fields of records) {
+    for (const provider of ["markdown", "github"]) {
+      const ticket =
+        provider === "markdown"
+          ? { frontmatter: { ...fields, labels: ["legacy"] }, body: "Historical record" }
+          : { ...fields, labels: ["legacy"], body: "Historical record" };
+      const before = JSON.stringify(ticket);
+      const deepFreeze = (value) => {
+        if (value && typeof value === "object" && !Object.isFrozen(value)) {
+          Object.freeze(value);
+          Object.values(value).forEach(deepFreeze);
+        }
+        return value;
+      };
+      deepFreeze(ticket);
+
+      const result = validateTicket(ticket, { provider, stage: "read" });
+
+      assert.equal(result.valid, true, `${fields.type}/${fields.status}`);
+      assert.equal(JSON.stringify(ticket), before);
+      assert.deepEqual((ticket.frontmatter ?? ticket).labels, ["legacy"]);
+      assert.equal("labels" in result, false);
+      assert.equal("mutation" in result, false);
+    }
+  }
+});
+
 test("rejects legacy Quiz and Task types for new tickets", () => {
   const result = validateTicket(
     requirementsTicket({ type: "task" }),

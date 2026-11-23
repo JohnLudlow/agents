@@ -126,4 +126,52 @@ Describe 'Azure DevOps map and ticket tags' {
         $LASTEXITCODE | Should -Be 1
         $diagnostic | Should -Match "Invalid --type '$_'"
     }
+
+    Context 'historical tickets are not retagged' {
+        BeforeAll {
+            $skillsRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+            $script:copies = @('jl-recon', 'jl-issue-management') | ForEach-Object {
+                @{ Name = $_; Path = Join-Path $skillsRoot $_ 'scripts' 'apply-ado-ticket-tags.ps1' }
+            }
+        }
+
+        It 'makes zero az calls for legacy type or map status <_>' -ForEach @('quiz', 'task', 'map', 'Charting', 'Walked', 'Completed', 'Stale') {
+            foreach ($copy in $script:copies) {
+                $result = Invoke-LabelHelper -Path $copy.Path -Parameters @{
+                    Organization = 'https://dev.azure.com/example'
+                    Project = 'Agents'
+                    WorkItemId = 42
+                    Type = $_
+                    ConfiguredTags = 'legacy'
+                }
+                $result.Calls.Count | Should -Be 0 -Because "$($copy.Name) must not touch a historical $_ work item"
+            }
+        }
+
+        It 'makes zero az calls for a legacy type with override or dry run' -ForEach @('quiz', 'task') {
+            foreach ($copy in $script:copies) {
+                $override = Invoke-LabelHelper -Path $copy.Path -Parameters @{
+                    Organization = 'https://dev.azure.com/example'; Project = 'Agents'; WorkItemId = 42; Type = $_; UserOverride = 'x'
+                }
+                $dry = Invoke-LabelHelper -Path $copy.Path -Parameters @{
+                    Organization = 'https://dev.azure.com/example'; Project = 'Agents'; WorkItemId = 42; Type = $_; DryRun = $true
+                }
+                $override.Calls.Count | Should -Be 0
+                $dry.Calls.Count | Should -Be 0
+            }
+        }
+
+        It 'updates only the single work item it is given' {
+            foreach ($copy in $script:copies) {
+                $result = Invoke-LabelHelper -Path $copy.Path -Parameters @{
+                    Organization = 'https://dev.azure.com/example'; Project = 'Agents'; WorkItemId = 42; Type = 'learn'
+                }
+                $result.Calls.Count | Should -Be 3
+                foreach ($call in $result.Calls) { $call[0] | Should -Be 'boards' }
+                foreach ($call in ($result.Calls | Where-Object { $_ -contains '--id' })) {
+                    $call[([array]::IndexOf($call, '--id') + 1)] | Should -Be '42'
+                }
+            }
+        }
+    }
 }
