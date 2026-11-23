@@ -982,3 +982,84 @@ test("validateTicket does not check historical or non-creation titles", () => {
   );
   assert.equal(resolution.errors.some((error) => error.code.startsWith("title_")), false);
 });
+
+
+// AC016: historical issues are not rewritten.
+const HISTORICAL_FIXTURES = [
+  {
+    name: "legacy Quiz",
+    fields: { type: "quiz", status: "Ready", title: "Quiz: old topic" },
+    body: "## Questions\r\n\r\n1. Old question?\r\n\r\n## Answers\r\n- unanswered\r\n",
+  },
+  {
+    name: "legacy Task",
+    fields: { type: "task", status: "Ready", title: "Task: old work" },
+    body: "## Task\n\n- [ ] Do the thing\n- [x] Done thing\n",
+  },
+  {
+    name: "old Map (Walked)",
+    fields: { type: "map", status: "Walked", title: "Map: old" },
+    body: "# Old Map\n\n| Step | Status |\n|---|---|\n| a | Charting |\n\nTrailing space \n",
+  },
+  {
+    name: "old Map (Stale)",
+    fields: { type: "map", status: "Stale", title: "Map: stale" },
+    body: "# Stale Map\n\u00e9\u00e8 unicode and no final newline",
+  },
+];
+
+function deepFreezeValue(value) {
+  if (value && typeof value === "object" && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    Object.values(value).forEach(deepFreezeValue);
+  }
+  return value;
+}
+
+test("read-mode validation does not modify deep-frozen input", () => {
+  for (const fixture of HISTORICAL_FIXTURES) {
+    for (const provider of ["github", "markdown"]) {
+      const ticket = deepFreezeValue(
+        provider === "markdown"
+          ? { frontmatter: { ...fixture.fields, labels: ["legacy"] }, body: fixture.body }
+          : { ...fixture.fields, labels: ["legacy"], body: fixture.body }
+      );
+      const before = JSON.stringify(ticket);
+
+      assert.doesNotThrow(
+        () => validateTicket(ticket, { provider, stage: "read" }),
+        `${fixture.name}/${provider}`
+      );
+      assert.equal(JSON.stringify(ticket), before, `${fixture.name}/${provider}`);
+      assert.equal(Object.isFrozen(ticket), true);
+    }
+  }
+});
+
+test("historical issue bodies are byte-unchanged after read and validation helpers run", () => {
+  for (const fixture of HISTORICAL_FIXTURES) {
+    const originalBytes = Buffer.from(fixture.body, "utf8");
+    const options = deepFreezeValue({ stage: "read", provider: "github", overrides: {} });
+    const ticket = { ...fixture.fields, labels: ["legacy"], body: fixture.body };
+
+    validateTicket(ticket, options);
+    validateTicket(
+      { frontmatter: { ...fixture.fields }, body: fixture.body },
+      { provider: "markdown", stage: "read" }
+    );
+    validateTitleFormat(fixture.fields.type, fixture.fields.title);
+    const section = deepFreezeValue({ text: fixture.body }).text;
+    validateAcceptanceCriteria(section);
+    const parsed = validateAcceptanceCriteria(section).criteria;
+    deepFreezeValue(parsed);
+    getNextAcceptanceCriterion(parsed);
+    validateClosureReadiness(parsed);
+
+    assert.equal(ticket.body, fixture.body, fixture.name);
+    assert.ok(Buffer.from(ticket.body, "utf8").equals(originalBytes), fixture.name);
+    assert.deepEqual(ticket.labels, ["legacy"]);
+    assert.equal(ticket.type, fixture.fields.type);
+    assert.equal(ticket.status, fixture.fields.status);
+    assert.equal(ticket.title, fixture.fields.title);
+  }
+});

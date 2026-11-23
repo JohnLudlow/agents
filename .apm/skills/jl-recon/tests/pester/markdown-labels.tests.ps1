@@ -189,5 +189,29 @@ Describe 'Markdown map and ticket labels' {
         [System.IO.File]::ReadAllText($script:mapPath) | Should -Match "(?m)^status: `"$_`"\r?$"
       }
     }
+
+    It 'leaves the body of a historical Map (<name>) byte-identical when labels are recorded' -ForEach @(
+      @{ name = 'CRLF'; body = "# Old Map`r`n`r`n| Step | Status |`r`n|---|---|`r`n| a | Charting |`r`n" }
+      @{ name = 'trailing space'; body = "# Old Map`nTrailing space `n`n" }
+      @{ name = 'unicode'; body = "# Old Map`n$([char]0x00E9)$([char]0x00E8) $([char]0x4E2D) text`n" }
+      @{ name = 'no final newline'; body = "# Old Map`nlast line" }
+    ) {
+      $prefix = "---`ntype: `"map`"`nstatus: `"Walked`"`n---`n"
+      $utf8 = New-Object System.Text.UTF8Encoding($false)
+      foreach ($skill in @('jl-recon', 'jl-issue-management')) {
+        $helper = Join-Path $script:skillsRoot $skill 'scripts' 'record-markdown-map-labels.ps1'
+        [System.IO.File]::WriteAllText($script:mapPath, $prefix + $body, $utf8)
+
+        $result = Invoke-LabelHelper -Path $helper -Parameters @{ FilePath = $script:mapPath; Labels = 'recon:map' }
+
+        $result.Errors | Should -BeNullOrEmpty
+        $after = [System.IO.File]::ReadAllBytes($script:mapPath)
+        $text = $utf8.GetString($after)
+        $closing = $text.IndexOf("`n---`n", 3)
+        $closing | Should -BeGreaterThan 0
+        $afterBody = $utf8.GetBytes($text.Substring($closing + 5))
+        $afterBody | Should -Be $utf8.GetBytes($body)
+      }
+    }
   }
 }

@@ -173,5 +173,27 @@ Describe 'Azure DevOps map and ticket tags' {
                 }
             }
         }
+
+        It 'never passes title, description or body fields to az, only System.Tags' {
+            foreach ($copy in $script:copies) {
+                $result = Invoke-LabelHelper -Path $copy.Path -Parameters @{
+                    Organization = 'https://dev.azure.com/example'; Project = 'Agents'; WorkItemId = 42; Type = 'learn'
+                    ConfiguredTags = 'a,b'; InheritedTags = 'recon:map'
+                }
+                $result.Calls.Count | Should -Be 3
+                $updates = @($result.Calls | Where-Object { $_ -contains 'update' })
+                $updates.Count | Should -Be 1
+                $fieldValues = @()
+                foreach ($call in $result.Calls) {
+                    $joined = $call -join ' '
+                    $joined | Should -Not -Match '(?i)System\.Title|System\.Description|--title|--description|--discussion|Repro|AcceptanceCriteria'
+                    for ($i = 0; $i -lt $call.Count; $i++) {
+                        if ($call[$i] -eq '--fields') { $fieldValues += $call[$i + 1] }
+                    }
+                }
+                $fieldValues.Count | Should -Be 1
+                $fieldValues[0] | Should -Match '^System\.Tags='
+            }
+        }
     }
 }
