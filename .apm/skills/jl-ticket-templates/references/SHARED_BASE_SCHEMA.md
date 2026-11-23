@@ -72,7 +72,7 @@ A deferred check stays open in `Ready` or `In Progress`. Record a user-chosen sk
 
 For `In Progress` to `Done`, pass reviewed `criteria` and individually approved `rescope` entries to `validateStatusTransition`.
 
-It calls `validateClosureReadiness`. A boolean flag cannot replace review evidence.
+`validateStatusTransition` calls `validateClosureReadiness`. A boolean flag cannot replace review evidence.
 
 Historical Maps with `Charting`, `Walked`, `Completed`, or `Stale` remain unchanged and readable.
 
@@ -92,7 +92,7 @@ checks the literal prefix and that the variable part is not empty.
 | `prerequisite` | `prerequisite` | `Prerequisite: {work}` |
 
 - A `jl_recon.title_format.<key>` override replaces the default for that key.
-  It must be a non-empty string with one `{variable}` placeholder. Otherwise use the default.
+  The override must be a non-empty string with one `{variable}` placeholder. Otherwise use the default.
 - Pass the override object as `titleFormat` in `validateTicket` options.
 - Check titles at creation only. Never check historical tickets, and never rewrite them.
 - The retired `quiz` and `task` keys are not aliases.
@@ -145,8 +145,8 @@ source. Check the criterion only after the comment exists. A follow-up ticket
 alone does not satisfy its criterion.
 
 Keep the ticket open while any criterion is unmet. A re-scope identifies
-each affected AC by ID, records its individual user approval, reason, and
-issue comment, and leaves all other criteria subject to normal checks.
+each affected AC by ID. It records the individual user approval, the reason,
+and the issue comment. All other criteria stay subject to normal checks.
 Close only when all criteria are checked or individually re-scoped.
 
 For Map criteria, the AC text itself links the owner ticket, for example

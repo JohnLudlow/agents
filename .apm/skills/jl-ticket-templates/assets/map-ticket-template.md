@@ -1,6 +1,6 @@
 ---
 title: "[Map title]"
-description: "[One-line destination this map is finding its way to]"
+description: "[One-line destination of this map]"
 type: "map"
 status: "Draft"
 author: "[jl-recon or human charter]"
@@ -11,21 +11,21 @@ parent: "[Parent epic or program, if any]"
 
 # [Map Title]
 
-A **map** is a structured view of a complex effort. It organizes decisions,
-open work, and blocking edges into a single reference — helping the team see
-progress, find the next unblocked action, and understand what is decided vs.
-still in fog.
+A **map** is a structured view of a complex effort. It lists decisions,
+open work, and blocking edges in one reference. The team uses it to see
+progress, find the next unblocked action, and see which items are decided
+and which are not yet specified.
 
-Use this template when charting a recon map as a markdown document or ticket.
-It extends the shared base schema frontmatter and acceptance-criteria format;
-replace every placeholder value before use.
+Use this template to chart a recon map as a Markdown document or ticket.
+It extends the frontmatter and acceptance-criteria format of the shared base schema.
+Replace every placeholder value before use.
 
 ## Frontmatter Notes
 
-- `inciting-issue` (optional): Link to the work item or issue that prompted this map.
-  If you use related_links instead, include the inciting issue there.
-- `labels` (managed by jl-recon): Populated when the map ticket is created, reading
-  `jl_recon.labels` from CONTRIBUTING.md or AGENTS.md.
+- `inciting-issue` (optional): Link to the work item or issue that started this map.
+  If you use `related_links` instead, include the inciting issue there.
+- `labels` (managed by jl-recon): jl-recon sets this field when it creates the map ticket.
+  It reads `jl_recon.labels` from CONTRIBUTING.md or AGENTS.md.
 
 ## Destination
 
@@ -74,7 +74,7 @@ No blocked tickets yet; charting is in progress.
 
 ## Revision History
 
-Track each update: who changed what, when, and why.
+Record each update: who changed what, when, and why.
 
 | Date       | Author | Changes       |
 |:-----------|:-------|:--------------|

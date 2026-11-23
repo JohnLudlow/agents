@@ -37,14 +37,14 @@ jl_recon:
     prerequisite: "Prerequisite: {work}"
 ```
 
-Configured keys override built-in patterns. A user-provided title takes
-precedence. If a value is missing, keep the prefix and omit that value.
+Configured keys override built-in patterns. A user-provided title has priority over the pattern.
+If a value is missing, keep the prefix and omit that value.
 
 ## Validation and Resolution
 
 `title_format` must be an object with supported keys only.
 Each value must be a non-empty string.
-Invalid values produce a warning and use the built-in pattern.
+An invalid value causes a warning. The validator then uses the built-in pattern.
 
 Configuration follows `jl-config` precedence: session-specific user direction, then `AGENTS.md`, then `CONTRIBUTING.md`, then built-in defaults.
 

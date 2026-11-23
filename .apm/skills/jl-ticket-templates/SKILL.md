@@ -40,8 +40,9 @@ A GitHub Map with only Map-content errors may follow the limited override in `re
 
 New criteria use one checklist item per independently checkable outcome. Give each item a unique, sequential ID that starts with `AC001:`.
 
-Before closing, review criteria one at a time in ticket order. Show its
-evidence and linked owner. Invite the user to identify missing requirements.
+Before closing, review criteria one at a time in ticket order. Show the
+evidence and linked owner of each criterion. Invite the user to identify
+missing requirements.
 After explicit confirmation, record the decision and source in a separate
 issue comment. Check the criterion only after the comment exists.
 

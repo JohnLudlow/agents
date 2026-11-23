@@ -18,11 +18,12 @@ resolved.
 
 Log each unanswered question when it surfaces, not only at resolution. Add
 the same ticket-local ID and full text to the Map Fog of War as a **what** or
-**how** item with a link back to the originating Quiz. The Map is the canonical
-question log. Require the user to confirm both the captured requirements and
-the acknowledged open-question list before `Done`; acknowledged open
-questions do not prevent closure. When a question is answered, move the
-decision to the appropriate record or follow-up ticket and clear stale fog.
+**how** item. Link the item back to the originating Quiz. The Map is the
+canonical question log. Require the user to confirm both the captured
+requirements and the acknowledged open-question list before `Done`.
+Acknowledged open questions do not prevent closure. When a question is
+answered, move the decision to the appropriate record or follow-up ticket.
+Then clear the stale fog.
 A `Done` Quiz without confirmation of the open-question list is invalid.
 
 The resolution data uses `openQuestions: [{ id, text, mapFogUrl, acknowledged }]`.

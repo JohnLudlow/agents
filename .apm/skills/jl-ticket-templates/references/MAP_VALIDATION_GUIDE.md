@@ -63,10 +63,11 @@ Each Map criterion needs an owner link in its AC text. Write the owner type, the
   Local Markdown Maps use a Markdown link.
 - **Decision only:** Add `(decision only)` to a criterion that needs no owner.
 - **No owner yet:** List the criterion ID in Not Yet Specified (Fog of War), with a **what** or **how** tag.
-  The validator warns (`map_criterion_owner_pending`) at creation and errors (`map_criterion_owner_missing`) at resolution.
+  The validator gives a warning (`map_criterion_owner_pending`) at creation and an error (`map_criterion_owner_missing`) at resolution.
   An unlisted, unowned criterion is an error at creation.
 - **Closed or deleted owner:** If the owner ticket is closed or deleted and the criterion is unchecked,
-  the validator flags it for re-review (`map_owner_review_required`). It is a warning before resolution and an error at resolution.
+  the validator flags it for re-review (`map_owner_review_required`).
+  The flag is a warning before resolution and an error at resolution.
   Pass the owner states in `options.ownerStates` (`{ "#12": "closed" }`).
   The user may override: pass `options.ownerReviewOverrides` with `{ id, userApproved: true, reason, approvedAt }`.
   The override turns the error into a `map_owner_review_overridden` warning.
@@ -79,8 +80,8 @@ Creating the owner ticket alone does not satisfy the criterion.
 
 ## Resolution Contract
 
-Record each decision once, identify remaining fog, and confirm the frontier and
-blocking edges are current. Confirm each acceptance criterion and that the
+Record each decision once. Identify the remaining fog. Confirm that the frontier and
+blocking edges are current. Confirm each acceptance criterion. Confirm that the
 destination is met or has a delivery plan.
 
 Require user acceptance and the shared AC-before-close review before setting status to `Done`.
@@ -115,13 +116,14 @@ Shared fields, type, status, required sections, AC count, and AC format remain m
 
 An override never bypasses the AC-before-close gate.
 
-1. Show each failed check and ask for explicit user approval and a reason. Call `validateCreationOverride` with that decision. If not `allowed`, fix the Map.
+1. Show each failed check. Ask for explicit user approval and a reason.
+   Call `validateCreationOverride` with that decision. If the result is not `allowed`, fix the Map.
 
-2. If authorized, create the issue with findings visible. Add a **separate issue comment** naming each error code, approval, and reason.
+2. If authorized, create the issue with findings visible. Add a **separate issue comment** that names each error code, approval, and reason.
 
 3. Call `validateCreationOverride` again with the actual issue URL, creation time, comment URL, comment time, and body. Only `audited: true` completes creation.
 
-If the comment fails, leave the issue open and mark it **override audit pending**. Repair the comment before reporting completion.
+If the comment fails, leave the issue open. Mark it **override audit pending**. Repair the comment before you report completion.
 
 For local Markdown Maps, correct the content instead of using an issue-comment override.
 
