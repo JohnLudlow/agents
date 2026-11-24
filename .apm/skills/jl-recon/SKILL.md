@@ -621,9 +621,10 @@ Resolving one ticket on an existing map.
 8. Review acceptance criteria before closure using
    `jl-ticket-templates`' shared review contract. Show one unchecked
    criterion at a time with its evidence and linked owner, and invite the
-   user to identify missing requirements. Only after explicit user
-   confirmation, record the decision and source in a separate issue comment,
-   then check that criterion. A follow-up ticket alone is not evidence that
+   user to identify missing requirements and record each identified
+   requirement with its routing target (`new_ac`, `new_ticket`, or `owner`).
+   Only after explicit user confirmation, record the decision and source in a
+   separate issue comment, then check that criterion. A follow-up ticket alone is not evidence that
    its criterion is met. If any criterion is unmet, keep the ticket open
    unless the user approves and records a re-scope. Use
    `getNextAcceptanceCriterion` and `validateClosureReadiness` to enforce the

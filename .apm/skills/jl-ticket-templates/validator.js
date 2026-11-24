@@ -27,6 +27,13 @@ const DEFAULT_TITLE_PATTERNS = Object.freeze({
 });
 const STATUSES = Object.freeze(["Draft", "Ready", "In Progress", "Done", "Blocked"]);
 const MAP_STATUSES = Object.freeze(["Charting", "Walked", "Completed", "Stale"]);
+/**
+ * Routing targets for missing requirements identified during closure review:
+ * `new_ac` (a new acceptance criterion added to this ticket), `new_ticket`
+ * (a follow-up ticket), or `owner` (an existing linked owner ticket).
+ * See references/SHARED_BASE_SCHEMA.md ("Missing Requirements").
+ */
+const MISSING_REQUIREMENT_ROUTES = Object.freeze(["new_ac", "new_ticket", "owner"]);
 const OVERRIDABLE_MAP_ERRORS = Object.freeze([
   "map_destination_vague",
   "map_decisions_empty_note_missing",
@@ -395,7 +402,9 @@ function getNextAcceptanceCriterion(criteria, rescope = []) {
 /**
  * Check that every criterion has user approval and a source comment before checking.
  *
- * @param {Array<object>} criteria Reviewed criteria.
+ * @param {Array<object>} criteria Reviewed criteria. A checked criterion with
+ *   `missingRequirementsInvited: true` also needs the `missingRequirements` record
+ *   (an array of `{ text, routedTo }` entries; see MISSING_REQUIREMENT_ROUTES).
  * @param {Array<{id: string, userConfirmed: boolean, reason: string, userConfirmedAt: string, sourceCommentUrl: string, sourceCommentAt: string}>} rescope Approved changes for specific unchecked criteria.
  * @returns {{valid: boolean, errors: ValidationIssue[], warnings: ValidationIssue[]}}
  */
@@ -475,6 +484,32 @@ function validateClosureReadiness(criteria, rescope = []) {
         criterion.id,
         "A checked criterion requires explicit user confirmation, an invitation to add requirements, and evidence."
       );
+    }
+
+    if (criterion.missingRequirementsInvited === true && !Array.isArray(criterion.missingRequirements)) {
+      addIssue(
+        errors,
+        "missing_requirements_record_missing",
+        criterion.id,
+        "Record the missing requirements with their routing before checking the criterion."
+      );
+    }
+
+    if (Array.isArray(criterion.missingRequirements)) {
+      for (const entry of criterion.missingRequirements) {
+        if (!isPlainObject(entry) ||
+          typeof entry.text !== "string" ||
+          entry.text.trim() === "" ||
+          typeof entry.routedTo !== "string" ||
+          !MISSING_REQUIREMENT_ROUTES.includes(entry.routedTo)) {
+          addIssue(
+            errors,
+            "missing_requirements_record_invalid",
+            criterion.id,
+            `Each missing requirement needs a non-empty text and routedTo of ${MISSING_REQUIREMENT_ROUTES.join(", ")}.`
+          );
+        }
+      }
     }
 
     if (!isWorkOwnerLink(criterion.owner)) {
@@ -1051,6 +1086,7 @@ module.exports = {
   DEFAULT_TITLE_PATTERNS,
   LEGACY_TYPES,
   MAP_STATUSES,
+  MISSING_REQUIREMENT_ROUTES,
   PLATFORM_RULES,
   STATUSES,
   TICKET_TYPES,

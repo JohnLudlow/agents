@@ -826,6 +826,7 @@ test("requires closure evidence before moving In Progress to Done", () => {
       evidence: "Verified implementation.",
       userConfirmed: true,
       missingRequirementsInvited: true,
+      missingRequirements: [],
       userConfirmedAt: "2026-11-21T10:00:00Z",
       sourceCommentUrl: "https://github.com/example/repo/issues/1#issuecomment-1",
       sourceCommentAt: "2026-11-21T10:01:00Z",
@@ -864,6 +865,7 @@ test("requires source comment after confirmation and before checking", () => {
       evidence: "Focused tests pass.",
       userConfirmed: true,
       missingRequirementsInvited: true,
+      missingRequirements: [],
       userConfirmedAt: "2026-11-21T10:00:00Z",
       sourceCommentUrl: "https://github.com/example/repo/issues/1#issuecomment-1",
       sourceCommentAt: "2026-11-21T10:01:00Z",
@@ -908,6 +910,71 @@ test("requires a missing-requirements invitation and linked owner for each confi
 
   assert.ok(result.errors.some((error) => error.code === "criterion_confirmation_missing"));
   assert.ok(result.errors.some((error) => error.code === "criterion_owner_missing"));
+});
+
+test("requires a missing-requirements record when the invitation is recorded", () => {
+  const result = validateClosureReadiness([
+    {
+      id: "AC001",
+      checked: true,
+      owner: "https://github.com/example/repo/issues/212",
+      evidence: "Focused tests pass.",
+      userConfirmed: true,
+      missingRequirementsInvited: true,
+      userConfirmedAt: "2026-11-21T10:00:00Z",
+      sourceCommentUrl: "https://github.com/example/repo/issues/1#issuecomment-1",
+      sourceCommentAt: "2026-11-21T10:01:00Z",
+      checkedAt: "2026-11-21T10:02:00Z",
+    },
+  ]);
+
+  assert.ok(result.errors.some((error) => error.code === "missing_requirements_record_missing"));
+});
+
+test("accepts routed missing-requirement records, including an empty list", () => {
+  const base = {
+    id: "AC001",
+    checked: true,
+    owner: "https://github.com/example/repo/issues/212",
+    evidence: "Focused tests pass.",
+    userConfirmed: true,
+    missingRequirementsInvited: true,
+    userConfirmedAt: "2026-11-21T10:00:00Z",
+    sourceCommentUrl: "https://github.com/example/repo/issues/1#issuecomment-1",
+    sourceCommentAt: "2026-11-21T10:01:00Z",
+    checkedAt: "2026-11-21T10:02:00Z",
+  };
+  assert.equal(validateClosureReadiness([{
+    ...base,
+    missingRequirements: [
+      { text: "Vendor must approve the connection.", routedTo: "new_ac" },
+      { text: "Map query performance budget.", routedTo: "new_ticket" },
+      { text: "Pending owner for the final import.", routedTo: "owner" },
+    ],
+  }]).valid, true);
+  assert.equal(validateClosureReadiness([{ ...base, missingRequirements: [] }]).valid, true);
+});
+
+test("rejects malformed missing-requirement records", () => {
+  const base = {
+    id: "AC001",
+    checked: true,
+    owner: "https://github.com/example/repo/issues/212",
+    evidence: "Focused tests pass.",
+    userConfirmed: true,
+    missingRequirementsInvited: true,
+    userConfirmedAt: "2026-11-21T10:00:00Z",
+    sourceCommentUrl: "https://github.com/example/repo/issues/1#issuecomment-1",
+    sourceCommentAt: "2026-11-21T10:01:00Z",
+    checkedAt: "2026-11-21T10:02:00Z",
+  };
+  assert.ok(validateClosureReadiness([{ ...base, missingRequirements: "new_ac" }])
+    .errors.some((error) => error.code === "missing_requirements_record_missing"));
+  assert.ok(validateClosureReadiness([{ ...base, missingRequirements: [{ routedTo: "new_ac" }] }])
+    .errors.some((error) => error.code === "missing_requirements_record_invalid"));
+  assert.ok(validateClosureReadiness([
+    { ...base, missingRequirements: [{ text: "Vendor approval.", routedTo: "team_a" }] },
+  ]).errors.some((error) => error.code === "missing_requirements_record_invalid"));
 });
 
 test("blocks checking a later criterion before earlier criteria", () => {
@@ -993,6 +1060,7 @@ test("re-scoping one AC does not bypass checks for the other criteria", () => {
     evidence: "Focused tests pass.",
     userConfirmed: true,
     missingRequirementsInvited: true,
+    missingRequirements: [],
     userConfirmedAt: "2026-11-21T10:02:00Z",
     sourceCommentUrl: "https://github.com/example/repo/issues/1#issuecomment-3",
     sourceCommentAt: "2026-11-21T10:03:00Z",

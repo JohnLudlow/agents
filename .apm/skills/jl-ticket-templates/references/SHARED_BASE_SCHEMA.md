@@ -138,7 +138,7 @@ The validator checks the checklist shape, ID sequence, and unique IDs. Authors m
 
 Review criteria one at a time, in ticket order. Show evidence and the linked
 owner for each. Invite the user to identify missing requirements before asking
-for a decision.
+for a decision, and record where each identified requirement is routed.
 
 After user confirmation, add an issue comment that records the decision and
 source. Check the criterion only after the comment exists. A follow-up ticket
@@ -156,6 +156,24 @@ Callers use `getNextAcceptanceCriterion(criteria, rescope)` and `validateClosure
 implement this process. A criterion needs an invitation, explicit
 confirmation, evidence, linked owner, and source-comment URL in order. The
 caller owns the conversation and provider write.
+
+### Missing Requirements
+
+During the invitation step, the caller records each missing requirement the
+user identifies on the checked criterion: `missingRequirements`, an array of
+`{ text, routedTo }` records where `text` is the requirement as identified and
+`routedTo` says where it is routed.
+
+| `routedTo` | Meaning |
+| --- | --- |
+| `new_ac` | Route to a new acceptance criterion added to this ticket; record the new criterion in the Acceptance Criteria section. |
+| `new_ticket` | Route to a new follow-up ticket. |
+| `owner` | Route to an existing linked owner ticket. |
+
+When `missingRequirementsInvited` is `true` on a checked criterion, the caller
+must supply the `missingRequirements` array (it may be empty when the user
+identified nothing). The validator checks the array shape and the `routedTo`
+values; see `validateClosureReadiness`.
 Call `validateClosureReadiness(criteria, rescope)` with an array of
 `{ id, userConfirmed, reason, userConfirmedAt, sourceCommentUrl, sourceCommentAt }`
 entries for re-scoped criteria; no approval exempts an unrelated criterion.
@@ -170,6 +188,7 @@ entries for re-scoped criteria; no approval exempts an unrelated criterion.
 - `validateStatusTransition(from, to, details)` for lifecycle checks.
 - `validateCreationOverride(validation, decision, audit?)` for a limited, auditable GitHub Map creation exception; see `MAP_VALIDATION_GUIDE.md`.
 - `getNextAcceptanceCriterion(criteria)` to select one unchecked item at a time.
-- `validateClosureReadiness(criteria, rescope)` to require confirmation, evidence, ownership, and source-comment ordering.
+- `validateClosureReadiness(criteria, rescope)` to require confirmation, evidence, ownership, source-comment
+  ordering, and, when invited, the missing-requirements record with its routing.
 
 Validation results contain `valid`, structured `errors`, and `warnings`. Callers must stop when `valid` is false.

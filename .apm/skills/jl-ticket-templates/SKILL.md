@@ -42,7 +42,8 @@ New criteria use one checklist item per independently checkable outcome. Give ea
 
 Before closing, review criteria one at a time in ticket order. Show the
 evidence and linked owner of each criterion. Invite the user to identify
-missing requirements.
+missing requirements and record each identified requirement with its routing
+target (`new_ac`, `new_ticket`, or `owner`).
 After explicit confirmation, record the decision and source in a separate
 issue comment. Check the criterion only after the comment exists.
 
