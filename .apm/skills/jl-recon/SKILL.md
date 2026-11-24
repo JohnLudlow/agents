@@ -113,8 +113,9 @@ The agent MUST:
   explicit override → `model_selection.<action>` → `model_selection.default`
   → `jl_subagent_models` hierarchy.
 - Ask whether an inciting issue exists before creating the map, and if one
-  does, link the map to it using the provider's native mechanism before
-  creating any tickets.
+  does, link the map to it as a native sub-issue (GitHub `--parent`) before
+  creating any tickets. A comment or URL alone is not acceptable; see
+  `scripts/create-recon-map.ps1`.
 - Apply resolved label configuration when creating the map: use
   `labels.map` (or `labels.default` if not configured) as the map's labels.
 - Apply resolved label configuration when creating each ticket: combine the

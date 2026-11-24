@@ -28,10 +28,16 @@ Starting a map from a loose idea.
    the mechanics of each provider) with Destination and Notes filled in, the
    Decisions-so-far list empty, and the surfaced fog under the resolved
    `uncertainty_tracking.pattern` heading.
-5. If an inciting issue was confirmed, link the map to it immediately, using
-   the provider's native mechanism — see
-   [PROVIDERS.md](references/PROVIDERS.md). Do this before creating any
-   tickets; an unlinked map is the bug this step exists to prevent.
+5. If an inciting issue was confirmed, link the map to it immediately as a
+   native sub-issue of that inciting issue — never a comment or URL alone.
+   - GitHub: create with `gh issue create --parent <inciting>` or, if already
+     created, run `gh issue edit <map> --parent <inciting>` (see
+     `scripts/create-recon-map.ps1`). A comment-only link is not acceptable.
+   - Azure DevOps: use the native parent/child link (`--parent`).
+   - Markdown provider: fall back to a `Parent issue:` line in the map body.
+   Do this before creating any tickets; an unlinked map is the bug this step
+   exists to prevent. Verify the relationship exists (e.g. `gh issue view
+   <map> --json parent`) before proceeding.
 6. Create tickets for every decision sharp enough to specify now, as
    children of the map. On GitHub or Azure DevOps, copy the map's labels or
    tags onto each new ticket before adding its `recon:<type>`
