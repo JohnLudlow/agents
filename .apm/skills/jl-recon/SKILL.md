@@ -49,6 +49,20 @@ record one line per resolved decision in the map's Decisions-so-far list.
 All types are human-in-the-loop by default; see `references/LIFECYCLE.md` and
 `references/ROUTING.md` for the details.
 
+## Early ticket creation (while the map is open)
+
+Decisions that sharpen while walking a map become tickets promptly:
+
+1. Pick the ticket type using the routing table above.
+2. Fill the matching template from `jl-ticket-templates/assets/`.
+3. Validate with `validateTicket(ticket, { provider, stage: "creation" })` from
+   `jl-ticket-templates/validator.js` before creating.
+4. Apply the configured labels: map labels + type labels + `recon:<type>`
+   (see `references/PROVIDERS.md` and the label helpers).
+5. Create tickets promptly under the inciting issue while the map is open.
+   If a ticket becomes unnecessary because the plan changes, discuss its
+   closure/removal with the user before acting.
+
 ## Requirements
 
 The agent MUST:

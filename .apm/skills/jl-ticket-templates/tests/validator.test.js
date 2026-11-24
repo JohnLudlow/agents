@@ -13,6 +13,7 @@ const {
   validateTicket,
   validateTitleFormat,
   DEFAULT_TITLE_PATTERNS,
+  TICKET_TYPES,
 } = require("../validator");
 
 function criteria(count = 3) {
@@ -1326,4 +1327,44 @@ test("historical issue bodies are byte-unchanged after read and validation helpe
     assert.equal(ticket.status, fixture.fields.status);
     assert.equal(ticket.title, fixture.fields.title);
   }
+});
+test("map lifecycle routing: creation validates and transitions are accepted", () => {
+  assert.equal(validateTicket(ownedMap(["Resolve the import format. Research: #12"]), { stage: "creation" }).valid, true);
+  assert.equal(validateStatusTransition("Draft", "Ready").valid, true);
+  assert.equal(validateStatusTransition("Ready", "In Progress").valid, true);
+  assert.ok(validateStatusTransition("In Progress", "Done").errors.some((error) => error.code === "closure_not_ready"));
+});
+
+test("jl-recon entry point routes every new ticket type", () => {
+  const skill = readFileSync(resolve(__dirname, "../../jl-recon/SKILL.md"), "utf8");
+  const routing = skill.slice(skill.indexOf("## Routing"), skill.indexOf("## Requirements"));
+  for (const type of TICKET_TYPES) {
+    assert.ok(routing.includes(`| ${type} |`), `routing table should route ${type}`);
+  }
+  assert.ok(routing.includes("LIFECYCLE.md"));
+  assert.ok(!skill.includes("## Modes"));
+  assert.ok(!skill.includes("## Configuration"));
+});
+
+test("cross-provider references: validator accepts github, markdown and azure-devops", () => {
+  assert.equal(validateTicket(ownedMap(["Resolve the format. Research: #12"]), { provider: "github" }).valid, true);
+  const markdown = validateTicket({
+    frontmatter: {
+      title: "Map: Import",
+      description: "Import map",
+      type: "map",
+      status: "Draft",
+      author: "jl-recon",
+      date: "2026-11-24",
+      parent: "",
+    },
+    body: mapBody(),
+  }, { provider: "markdown" });
+  assert.equal(markdown.errors.filter((error) => error.code === "invalid_provider").length, 0);
+  assert.equal(validateTicket(ownedMap(["Resolve the format. Predecessor: AB#34"]), { provider: "azure-devops" }).valid, true);
+});
+
+test("map boundary: Implementation tickets cannot own Map criteria (no implementation under a Map)", () => {
+  const result = validateTicket(ownedMap(["Resolve the import format. Implementation: #12"]), { stage: "creation" });
+  assert.ok(codes(result.errors).includes("map_criterion_owner_implementation"));
 });
