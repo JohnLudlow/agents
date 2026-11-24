@@ -72,6 +72,18 @@ sections rely on:
   `title_format.quiz_requirements`, `title_format.quiz_understanding`,
   `title_format.learn`, `title_format.prerequisite`.
 
+## Child Tickets
+
+A map's children are planning work — Research, Prototype, Quiz and Task
+tickets, or any ticket that produces decisions and findings rather than
+implementation. Source-change work is added as **Implementation** tickets,
+children of the inciting issue, while the map is still open, instead of
+being inlined into map tickets.
+
+If a ticket becomes unnecessary because the plan changes (a decision is
+superseded, a scope is narrowed out), it is closed or removed — discuss
+that with the user first.
+
 ## Early ticket creation (while the map is open)
 
 Decisions that sharpen while walking a map become tickets promptly:
