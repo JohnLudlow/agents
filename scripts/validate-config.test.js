@@ -168,3 +168,63 @@ test("docs: shipped and repository docs name the same keys", () => {
   assert.ok(rules.includes("obsolete"), "validation-rules.md must document the obsolete jl_quiz block");
   void fence;
 });
+
+// Staleness allowance (M6, #211): shipped quiz and config docs must not teach the
+// obsolete `jl_quiz` block, or the old `quiz_mode: a|b` values, as current.
+// A hit is allowed only when it is marked as outdated. A hit counts as marked when
+// the word obsolete, historical or deprecated appears on the same line, in the same
+// blank-line-separated chunk, or in the nearest heading above it.
+// `\bjl_quiz\b` does not match `jl_quiz_requirements` because `_` is a word character.
+const MARKER = /obsolete|historical|deprecated/i;
+const STALE_PATTERNS = [/\bjl_quiz\b/, /\bquiz_mode:\s*["']?[ab]["']?\s*(#.*)?$/];
+
+function findUnmarkedStaleLines(text) {
+  const lines = text.split(/\r?\n/);
+  const hits = [];
+  lines.forEach((line, i) => {
+    if (!STALE_PATTERNS.some((p) => p.test(line))) return;
+    let start = i;
+    while (start > 0 && lines[start - 1].trim() !== "") start--;
+    let end = i;
+    while (end < lines.length - 1 && lines[end + 1].trim() !== "") end++;
+    const chunk = lines.slice(start, end + 1).join("\n");
+    let heading = "";
+    for (let j = i; j >= 0; j--) {
+      if (/^#{1,6}\s/.test(lines[j])) { heading = lines[j]; break; }
+    }
+    if (!MARKER.test(chunk) && !MARKER.test(heading)) hits.push(`${i + 1}: ${line.trim()}`);
+  });
+  return hits;
+}
+
+function listMarkdown(dir) {
+  const out = [];
+  for (const entry of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
+    const rel = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) out.push(...listMarkdown(rel));
+    else if (entry.name.endsWith(".md")) out.push(rel);
+  }
+  return out;
+}
+
+test("docs: shipped jl-quiz and jl-config docs do not teach obsolete jl_quiz or quiz_mode a/b as current", () => {
+  const files = [...listMarkdown(".apm/skills/jl-quiz"), ...listMarkdown(".apm/skills/jl-config")];
+  assert.ok(files.length > 0, "expected markdown files to scan");
+  for (const file of files) {
+    const hits = findUnmarkedStaleLines(read(file));
+    assert.deepEqual(hits, [], `${file} teaches obsolete config as current:\n${hits.join("\n")}`);
+  }
+});
+
+test("docs: stale-config scanner flags unmarked hits and allows marked ones", () => {
+  assert.equal(findUnmarkedStaleLines("Resolve `jl_quiz` first.").length, 1);
+  assert.equal(findUnmarkedStaleLines("```yaml\njl_quiz:\n  quiz_mode: a\n```").length, 2);
+  assert.equal(findUnmarkedStaleLines("The `jl_quiz` block is obsolete.").length, 0);
+  assert.equal(findUnmarkedStaleLines("### Obsolete block\n\n```yaml\njl_quiz:\n  plan_destination: x\n```").length, 0);
+  assert.equal(findUnmarkedStaleLines("jl_quiz_requirements:\n  quiz_mode: in_chat").length, 0);
+});
+
+test("docs: label helper reference does not teach legacy quiz/task --type values", () => {
+  const text = read(".apm/skills/jl-issue-management/references/LABEL_APPLICATION_HELPERS.md");
+  assert.doesNotMatch(text, /--type task\b|-Type task\b|`quiz`, `research`, `prototype`, `task`/);
+});

@@ -28,7 +28,7 @@ Apply GitHub labels to a single ticket issue. Located in `scripts/apply-ticket-l
 ./scripts/apply-ticket-labels.sh \
   --repo owner/repo \
   --ticket-number 42 \
-  --type task \
+  --type research \
   --configured-labels "enhancement,triage" \
   --inherited-labels "map,recon" \
   [--user-override "custom-label"] \
@@ -40,7 +40,8 @@ Apply GitHub labels to a single ticket issue. Located in `scripts/apply-ticket-l
 
 - `--repo REPO` — GitHub repository (owner/name)
 - `--ticket-number N` — Issue number
-- `--type TYPE` — Ticket type: `quiz`, `research`, `prototype`, `task`
+- `--type TYPE` — Ticket type: `research`, `prototype`, `quiz-requirements`, `quiz-understanding`, `learn`,
+  `prerequisite`. Maps use the map helpers, not `--type`. The old `quiz` and `task` types fail with `Invalid --type`.
 - `--configured-labels LABELS` — Comma-separated configured labels for this type
 - `--inherited-labels LABELS` — Comma-separated labels inherited from map
 - `--user-override LABELS` — Optional override; if provided, replaces entire set
@@ -67,7 +68,7 @@ Located in `scripts/apply-ticket-labels.ps1`.
 .\scripts\apply-ticket-labels.ps1 `
   -Repo owner/repo `
   -TicketNumber 42 `
-  -Type task `
+  -Type research `
   -ConfiguredLabels "enhancement,triage" `
   -InheritedLabels "map,recon" `
   [-UserOverride "custom-label"] `
@@ -129,8 +130,8 @@ tag. Located in `scripts/apply-ado-ticket-tags.ps1`.
   -Organization https://dev.azure.com/contoso `
   -Project Agents `
   -WorkItemId 456 `
-  -Type task `
-  -ConfiguredTags "task,triage" `
+  -Type research `
+  -ConfiguredTags "research,triage" `
   -InheritedTags "map,recon" `
   [-UserOverride "custom-tag"] `
   [-VerboseOutput] `
@@ -139,7 +140,7 @@ tag. Located in `scripts/apply-ado-ticket-tags.ps1`.
 
 **Parameters:** Same as map script, plus:
 
-- `-Type TYPE` — Ticket type: `quiz`, `research`, `prototype`, `task`
+- `-Type TYPE` — Ticket type: `research`, `prototype`, `quiz-requirements`, `quiz-understanding`, `learn`, `prerequisite`. The old `quiz` and `task` types are rejected.
 - `-InheritedTags TAGS` — Comma-separated tags inherited from map
 
 ## Markdown Label Helpers
@@ -151,9 +152,9 @@ Write labels to a markdown ticket file's YAML frontmatter. Used when markdown is
 ```powershell
 .\scripts\record-markdown-ticket-labels.ps1 `
   -FilePath "docs/plans/tickets/ticket-1.md" `
-  -Labels "task,triage" `
+  -Labels "research,triage" `
   -InheritedLabels "recon:map" `
-  -Type task `
+  -Type research `
   -Parent "docs/plans/map.md" `
   -BodyNote "Additional context" `
   -Title "Ticket Title"
@@ -164,7 +165,8 @@ Write labels to a markdown ticket file's YAML frontmatter. Used when markdown is
 - `-FilePath PATH` — Path to markdown file (required; created if missing)
 - `-Labels LABELS` — Comma-separated configured labels (also accepts `-ConfiguredLabels`)
 - `-InheritedLabels LABELS` — Comma-separated map labels inherited by the ticket
-- `-Type TYPE` — Ticket type: `quiz`, `research`, `prototype`, `task` (required)
+- `-Type TYPE` — Ticket type: `research`, `prototype`, `quiz-requirements`, `quiz-understanding`, `learn`,
+  `prerequisite` (required). The old `quiz` and `task` types are rejected.
 - `-Parent PATH` — Path to parent map file (stored in frontmatter)
 - `-BodyNote TEXT` — Note to insert in body under "**Labels:**" heading
 - `-UserOverride LABELS` — Optional override; if provided, replaces entire set
@@ -180,10 +182,10 @@ Write labels to a markdown ticket file's YAML frontmatter. Used when markdown is
 title: "Ticket Title"
 labels:
   - "recon:map"
-  - "recon:task"
-  - "task"
+  - "recon:research"
+  - "research"
   - "triage"
-type: "task"
+type: "research"
 parent: "docs/plans/map.md"
 ---
 ```

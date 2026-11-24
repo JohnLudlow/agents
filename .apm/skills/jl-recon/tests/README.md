@@ -41,7 +41,8 @@ The overall Pester result determines success.
 
 ## Scope
 
-The label suites verify actual helper inputs and outputs, including `quiz`, `research`, `prototype`, and `task` labels.
+The label suites verify actual helper inputs and outputs, including the six ticket types (`research`, `prototype`,
+`quiz-requirements`, `quiz-understanding`, `learn`, `prerequisite`) and map labels.
 
 They do **not** prove `AGENTS.md`/`CONTRIBUTING.md` precedence: these helpers receive already-resolved inputs.
 

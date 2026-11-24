@@ -689,8 +689,9 @@ Ticket Labels = Configured Type Labels + Inherited Map Labels + recon:<type>
 
 Resolution order:
 
-1. Start with `jl_recon.labels.<type>` for the ticket type (`quiz`,
-   `research`, `prototype`, `task`), or `labels.default` if the type-specific
+1. Start with `jl_recon.labels.<type>` for the ticket type (`research`,
+   `prototype`, `quiz_requirements`, `quiz_understanding`, `learn`,
+   `prerequisite`), or `labels.default` if the type-specific
    key is not configured.
 2. Add every label already present on the parent map.
 3. Add the required `recon:<type>` label.

@@ -164,7 +164,7 @@ preferences through `jl-config`.
 
 - Do not treat a missing config file as an error; use the `jl-config`
   mechanism with jl-quiz's own defaults first.
-- Do not keep hardcoded config logic outside this documented `jl_quiz`
+- Do not keep hardcoded config logic outside this documented quiz block
   schema; jl-config only resolves, while jl-quiz owns defaults and
   validation.
 - If `plan_destination` resolves to `local_file`, use the resolved
@@ -177,7 +177,7 @@ preferences through `jl-config`.
 
 **Completion criterion:** The skill has resolved usable values for
 `quiz_mode`, `plan_destination`, and `file_storage_location` from
-resolved `jl_quiz` config, or has asked the user only for the still-missing
+the resolved quiz block (`jl_quiz_requirements` or `jl_quiz_understanding`), or has asked the user only for the still-missing
 choice needed to proceed safely.
 
 ### Configuration Warnings
@@ -209,7 +209,8 @@ format defined by jl-config) for:
 [WARN] jl-quiz: required setting 'plan_destination' not found
   in AGENTS.md or CONTRIBUTING.md
   File: (checked both config files)
-  Fix: Add to CONTRIBUTING.md under jl_quiz: plan_destination: github_issue
+  Fix: Add to CONTRIBUTING.md under jl_quiz_requirements or
+  jl_quiz_understanding: plan_destination: github_issue
 ```
 
 #### Invalid File Path — absolute path
@@ -224,9 +225,9 @@ format defined by jl-config) for:
 #### Type Mismatch — quiz_mode
 
 ```text
-[WARN] jl-quiz: 'quiz_mode' must be a string ("a" or "b"), not a boolean
+[WARN] jl-quiz: 'quiz_mode' must be a string ("in_chat" or "questionnaire"), not a boolean
   File: CONTRIBUTING.md [line 5]
-  Fix: Change the value to a string: quiz_mode: a
+  Fix: Change the value to a string: quiz_mode: in_chat
 ```
 
 #### Invalid File Path — parent directory
@@ -241,9 +242,9 @@ format defined by jl-config) for:
 #### Root Shape Error
 
 ```text
-[WARN] jl-quiz: 'jl_quiz' config block must be an object, not a list
+[WARN] jl-quiz: 'jl_quiz_requirements' config block must be an object, not a list
   File: AGENTS.md [line 5]
-  Fix: Change the jl_quiz block to use YAML object syntax (key: value pairs)
+  Fix: Change the block to use YAML object syntax (key: value pairs)
 ```
 
 ---
@@ -259,7 +260,7 @@ format defined by jl-config) for:
    - If a prior decision has been made in this session about what mode to
      operate in, continue in that mode until instructed otherwise, continue
      to step 4
-   - If `jl_quiz.quiz_mode` resolves to a mode, continue
+   - If `quiz_mode` (from the resolved quiz block) resolves to a mode, continue
      in that mode until instructed otherwise, continue to step 4
    - If the ***Scope*** is ***small***, AND the ***Complexity*** is
      ***simple***, AND the ***shared understanding*** is ***deep*** AND
@@ -333,7 +334,8 @@ switching logic (chat ↔ questionnaire), see **[BRANCHING.md](references/BRANCH
 The agent MUST:
 
 - **Preference Resolution (BLOCKER 0):** Before any interview or questionnaire,
-  MUST call `jl-config` to resolve `jl_quiz` from `CONTRIBUTING.md` and
+  MUST call `jl-config` to resolve `jl_quiz_requirements` or
+  `jl_quiz_understanding` from `CONTRIBUTING.md` and
   `AGENTS.md`, using jl-quiz's own schema, defaults, and validation. If the
   resolved values are still insufficient for safe progress, MUST ask the user
   only for the missing session choice and then continue.

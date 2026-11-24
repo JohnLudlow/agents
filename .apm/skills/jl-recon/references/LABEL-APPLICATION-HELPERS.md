@@ -38,7 +38,7 @@ in downstream repositories.
 
 - `--repo` (required): GitHub repository in `owner/name` format
 - `--ticket-number` (required): Issue number to update
-- `--type` (required): Ticket type (`quiz`, `research`, `prototype`, `task`)
+- `--type` (required): Ticket type (`research`, `prototype`, `quiz-requirements`, `quiz-understanding`, `learn`, `prerequisite`)
 - `--configured-labels` (optional): Comma-separated configured labels for the ticket type
 - `--inherited-labels` (optional): Comma-separated labels inherited from the map
 - `--user-override` (optional): Comma-separated labels to use instead of computed set
@@ -132,7 +132,7 @@ format.
 - `--organization` (required): Azure DevOps organization URL
 - `--project` (required): Azure DevOps project name
 - `--work-item-id` (required): Ticket work item ID to update
-- `--type` (required): Ticket type (`quiz`, `research`, `prototype`, `task`)
+- `--type` (required): Ticket type (`research`, `prototype`, `quiz-requirements`, `quiz-understanding`, `learn`, `prerequisite`)
 - `--configured-tags` (optional): Comma-separated configured tags for the ticket type
 - `--inherited-tags` (optional): Comma-separated tags inherited from the map
 - `--user-override` (optional): Comma-separated tags to use instead of computed set
@@ -217,7 +217,7 @@ its frontmatter, preserves other fields, and updates only the `labels:` field.
 **Parameters**:
 
 - `--file-path` (required): Path to the markdown ticket file
-- `--type` (required): Ticket type (`quiz`, `research`, `prototype`, `task`)
+- `--type` (required): Ticket type (`research`, `prototype`, `quiz-requirements`, `quiz-understanding`, `learn`, `prerequisite`)
 - `-ConfiguredLabels` (optional): Comma-separated configured labels; an alias of the existing `-Labels` parameter
 - `-InheritedLabels` (optional): Comma-separated labels inherited from the map
 - `--user-override` (optional): Comma-separated labels to use instead of computed set

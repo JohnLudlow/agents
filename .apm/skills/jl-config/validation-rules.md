@@ -36,16 +36,16 @@ evaluated until earlier layers pass.
 **Example (INVALID — duplicate key):**
 
 ```yaml
-jl_quiz:
-  quiz_mode: a
-  quiz_mode: b
+jl_quiz_requirements:
+  quiz_mode: in_chat
+  quiz_mode: questionnaire
 ```
 
 **Example (VALID):**
 
 ```yaml
-jl_quiz:
-  quiz_mode: a
+jl_quiz_requirements:
+  quiz_mode: in_chat
 ```
 
 ---
@@ -61,7 +61,7 @@ jl_quiz:
 - `jl_recon`
 - `jl_issue_management`
 
-The `jl_quiz` block is obsolete for new tickets (see 3.1). A historical `jl_quiz` block is
+The obsolete `jl_quiz` block is not a current agent key. It is rejected for new tickets (see 3.1). A historical `jl_quiz` block is
 still read as an object.
 
 **Failures:**
@@ -353,7 +353,7 @@ Config is **missing** when:
 - No `CONTRIBUTING.md` exists
 - No `AGENTS.md` exists
 - Both files exist but do not contain the agent config key
-- A required setting (e.g., `jl_quiz.plan_destination`) is not found in either file
+- A required setting (e.g., `jl_quiz_requirements.plan_destination`) is not found in either file
   after config resolution
 
 **Validator action:** This is not a failure — resolution falls back to defaults.
@@ -372,8 +372,8 @@ If a required setting has no default, runtime prompts the user.
 **Input (CONTRIBUTING.md):**
 
 ```yaml
-jl_quiz:
-  quiz_mode: a
+jl_quiz_requirements:
+  quiz_mode: in_chat
   plan_destination: github_issue
 
 jl_recon:
@@ -385,16 +385,17 @@ jl_recon:
 **Input (AGENTS.md):**
 
 ```yaml
-jl_quiz:
-  quiz_mode: b
+jl_quiz_requirements:
+  quiz_mode: questionnaire
+  plan_destination: github_issue
 ```
 
 **Result:** ✓ VALID
 
 - All keys are objects
 - All values conform to their enums and types
-- Resolved config (after merge): `quiz_mode: b` (from AGENTS.md override),
-  `plan_destination: github_issue` (from CONTRIBUTING.md), all jl-recon defaults applied
+- Resolved config (after merge): `quiz_mode: questionnaire` (from AGENTS.md override),
+  `plan_destination: github_issue`, all jl-recon defaults applied
 
 ---
 
@@ -403,14 +404,47 @@ jl_quiz:
 **Input (CONTRIBUTING.md):**
 
 ```yaml
-jl_quiz:
+jl_quiz_requirements:
   plan_destination: slack_thread
 ```
 
 **Result:** ✗ INVALID
 
 - `plan_destination` value `slack_thread` not in allowed enum
-- Error: `jl_quiz.plan_destination: 'slack_thread' is not one of [github_issue, azure_devops_work_item, local_file, inline_message]`
+- Error: `jl_quiz_requirements.plan_destination: 'slack_thread' is not valid. Allowed: github_issue, azure_devops_work_item, local_file, inline_message`
+
+---
+
+### Scenario: Obsolete quiz_mode Value (Legacy a or b)
+
+**Input (CONTRIBUTING.md):**
+
+```yaml
+jl_quiz_requirements:
+  quiz_mode: a
+  plan_destination: github_issue
+```
+
+**Result:** ✗ INVALID
+
+- The old values `a` and `b` are not valid in the new blocks
+- Error: `jl_quiz_requirements.quiz_mode: must be one of in_chat, questionnaire, got 'a'`
+
+---
+
+### Scenario: Obsolete jl_quiz Block
+
+**Input (CONTRIBUTING.md):**
+
+```yaml
+jl_quiz:
+  plan_destination: github_issue
+```
+
+**Result:** ✗ INVALID for new tickets
+
+- Error: `jl_quiz: obsolete block, not valid for new tickets. Use independent 'jl_quiz_requirements' and 'jl_quiz_understanding' blocks`
+- The validator reads this block without error only for historical content
 
 ---
 
@@ -436,22 +470,15 @@ jl_recon:
 **Input (CONTRIBUTING.md):**
 
 ```yaml
-jl_quiz:
-  quiz_mode: a
+jl_quiz_requirements:
+  quiz_mode: in_chat
   # plan_destination missing
 ```
 
-**Input (AGENTS.md):**
+**Result:** ✗ INVALID
 
-```yaml
-jl_quiz:
-  quiz_mode: b
-```
-
-**Result:** ✓ VALID (Config shape is valid)
-
-- But at runtime: jl-quiz will notice `plan_destination` is still unresolved
-- Runtime will prompt the user or apply a session default
+- The validator checks each block. Error: `jl_quiz_requirements: missing required setting 'plan_destination'`
+- At runtime, an agent can still resolve `plan_destination` from the other config file or ask the user
 
 ---
 
@@ -473,7 +500,7 @@ Validators and runtime agents consume this document as follows:
 
 ### For Linters
 
-1. Read the agent config key name (e.g., `jl_quiz`)
+1. Read the agent config key name (e.g., `jl_quiz_requirements`)
 2. Check if the key is present in CONTRIBUTING.md or AGENTS.md
 3. If not present, no error (missing config is not invalid)
 4. If present, apply all validation rules in Layer 1, 2, 3 order
