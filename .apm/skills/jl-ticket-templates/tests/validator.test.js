@@ -1343,7 +1343,10 @@ test("jl-recon entry point routes every new ticket type", () => {
   }
   assert.ok(routing.includes("LIFECYCLE.md"));
   assert.ok(!skill.includes("## Modes"));
-  assert.ok(!skill.includes("## Configuration"));
+  // The entry point names the config keys it relies on (see the test:config
+  // contract) but keeps the schema in the reference.
+  assert.ok(skill.includes("## Configuration"));
+  assert.ok(skill.includes("references/CONFIGURATION.md"));
 });
 
 test("cross-provider references: validator accepts github, markdown and azure-devops", () => {
