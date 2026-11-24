@@ -213,7 +213,7 @@ stored in `docs/plans/`, including YAML frontmatter. Used by
 
 Generates a time-boxed, stack-agnostic prototype — runnable code, an IaC
 deployment, a mockup, a docs sample, or an architecture sketch — on its own
-`prototype/<slug>` branch. Runs `jl-quiz` as a mandatory pre-step and
+`prototype/<slug>` branch. Runs `jl-quiz-requirements` as a mandatory pre-step and
 refuses to generate until shared understanding is confirmed.
 
 [View full skill definition](.apm/skills/jl-prototype/SKILL.md)
@@ -231,7 +231,7 @@ and `jl-documenter`.
 Charts a map of decision tickets that turns a large, poorly-understood
 feature into a well-understood one. Human-in-the-loop by default (Research
 tickets may run AFK only with explicit per-ticket approval). Delegates to
-`jl-quiz` for destination-naming and Grilling tickets, and to
+`jl-quiz-requirements` for destination-naming and Grilling tickets, and to
 `jl-prototype` for Prototype tickets. User-invoked only.
 
 [View full skill definition](.apm/skills/jl-recon/SKILL.md)
