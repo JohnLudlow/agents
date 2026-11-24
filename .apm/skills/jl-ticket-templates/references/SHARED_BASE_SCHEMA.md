@@ -112,6 +112,11 @@ acceptance where the type requires it. For an approved skip, validate the
 choice and reason instead of requiring nonexistent results. A deferred check
 remains open.
 
+At resolution, a caller may pass the reviewed criteria in
+`resolution.criteria` (and approved re-scopes in `resolution.rescope`); the
+shared closure gate (`validateClosureReadiness`) runs on them. See
+[Closure Trust Limitations](#closure-trust-limitations).
+
 ### Historical Read
 
 Read legacy `quiz` and `task` tickets and historical Map statuses without
@@ -174,6 +179,24 @@ When `missingRequirementsInvited` is `true` on a checked criterion, the caller
 must supply the `missingRequirements` array (it may be empty when the user
 identified nothing). The validator checks the array shape and the `routedTo`
 values; see `validateClosureReadiness`.
+
+### Closure Trust Limitations
+
+The closure gate checks ordering, ID sequence, and record shape. It trusts
+`userConfirmed`, `missingRequirementsInvited`, `evidence`, `owner`,
+`sourceCommentUrl`, and the review timestamps from the caller. It requires
+the source comment URL to match the `https://…#issuecomment-N` format, but it
+cannot check that the comment exists or that it was posted by the user — that
+check belongs to the provider integration seam (#213).
+
+When Option A is chosen, `validateTicket` at stage `resolution` runs the gate
+when the ticket's `resolution` carries `criteria`; see the Resolution stage
+above. When Option B is chosen, each checked criterion may carry a
+`userConfirmationSource` — `{ sourceCommentUrl: string, author?: string }` —
+which the gate checks for URL format and, when `author` is present, matches
+against the author recorded by the seam. `rescope` entries accept the same
+optional field.
+
 Call `validateClosureReadiness(criteria, rescope)` with an array of
 `{ id, userConfirmed, reason, userConfirmedAt, sourceCommentUrl, sourceCommentAt }`
 entries for re-scoped criteria; no approval exempts an unrelated criterion.
@@ -182,7 +205,8 @@ entries for re-scoped criteria; no approval exempts an unrelated criterion.
 
 `validator.js` keeps `validateTemplate(template, platform)` for provider payloads. It also exports:
 
-- `validateTicket(ticket, { provider, stage, titleFormat? })` for creation, resolution, and historical reads. Creation also checks the title.
+- `validateTicket(ticket, { provider, stage, titleFormat? })` for creation, resolution, and historical reads.
+  Creation also checks the title. At resolution, when `resolution.criteria` is supplied, the closure gate runs on them.
 - `validateTitleFormat(type, title, overrides?)` for the title contract; see Title Format above.
 - `validateAcceptanceCriteria(markdown)` for checklist shape and sequential IDs.
 - `validateStatusTransition(from, to, details)` for lifecycle checks.

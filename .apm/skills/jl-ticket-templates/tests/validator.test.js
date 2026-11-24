@@ -931,6 +931,75 @@ test("requires a missing-requirements record when the invitation is recorded", (
   assert.ok(result.errors.some((error) => error.code === "missing_requirements_record_missing"));
 });
 
+test("validateTicket runs the closure gate at resolution when resolution carries criteria", () => {
+  const researchBody = `## Details
+
+- **Status:** Done
+
+## Investigation Goal
+
+What are the available approaches?
+
+## Research Scope
+
+**In scope:** Compare the approaches.
+
+**Out of scope:** Production implementation.
+
+## Acceptance Criteria
+
+${criteria()}
+
+## Findings
+
+Evidence from the investigation.
+
+## Recommendation
+
+Recommend option A because the evidence supports it.
+`;
+  const ticket = requirementsTicket({
+    type: "research",
+    labels: ["recon:research"],
+    status: "Done",
+    body: researchBody,
+  });
+
+  const failing = validateTicket({
+    ...ticket,
+    resolution: {
+      userAccepted: true,
+      criteria: [{ id: "AC001", checked: false }],
+    },
+  }, { provider: "github", stage: "resolution" });
+  assert.ok(failing.errors.some((error) => error.code === "criterion_unchecked"));
+
+  const confirmed = {
+    id: "AC001",
+    checked: true,
+    owner: "https://github.com/example/repo/issues/212",
+    evidence: "Focused tests pass.",
+    userConfirmed: true,
+    missingRequirementsInvited: true,
+    missingRequirements: [],
+    userConfirmedAt: "2026-11-24T10:00:00Z",
+    sourceCommentUrl: "https://github.com/example/repo/issues/1#issuecomment-1",
+    sourceCommentAt: "2026-11-24T10:01:00Z",
+    checkedAt: "2026-11-24T10:02:00Z",
+  };
+  const passing = validateTicket({
+    ...ticket,
+    resolution: { userAccepted: true, criteria: [confirmed] },
+  }, { provider: "github", stage: "resolution" });
+  assert.equal(passing.valid, true);
+
+  const withoutCriteria = validateTicket({
+    ...ticket,
+    resolution: { userAccepted: true },
+  }, { provider: "github", stage: "resolution" });
+  assert.equal(withoutCriteria.valid, true);
+});
+
 test("accepts routed missing-requirement records, including an empty list", () => {
   const base = {
     id: "AC001",

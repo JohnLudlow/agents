@@ -628,7 +628,9 @@ Resolving one ticket on an existing map.
    its criterion is met. If any criterion is unmet, keep the ticket open
    unless the user approves and records a re-scope. Use
    `getNextAcceptanceCriterion` and `validateClosureReadiness` to enforce the
-   sequence and closure evidence.
+   sequence and closure evidence. When the ticket moves to resolution, record
+   the reviewed criteria in the resolution record's `criteria` field so
+   `validateTicket` runs the gate on them.
 9. After closure readiness passes, call `validateStatusTransition` with the
    reviewed criteria and per-criterion re-scopes. Set the status to `Done`
    only if the transition passes, then close the provider issue if applicable.

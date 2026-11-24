@@ -238,6 +238,13 @@ function validateTicket(ticket, options = {}) {
   if (stage === "resolution") {
     const labels = provider === "github" ? ticket.labels : fields.labels;
     validateResolution(type, fields, body, ticket.resolution, errors, labels);
+    if (isPlainObject(ticket.resolution) && Array.isArray(ticket.resolution.criteria) &&
+      ticket.resolution.criteria.length > 0) {
+      errors.push(...validateClosureReadiness(
+        ticket.resolution.criteria,
+        Array.isArray(ticket.resolution.rescope) ? ticket.resolution.rescope : []
+      ).errors);
+    }
   }
 
   return { ...buildResult(errors, warnings), provider, stage, type };
