@@ -33,12 +33,12 @@ are in `references/ROUTING.md`.
 | Type | Routes to | Notes |
 | --- | --- | --- |
 | map | This router — Modes 1–4 in `references/LIFECYCLE.md` | The router itself. |
-| research | Research workflow | AFK only with the human's explicit sign-off; findings must be reviewed before closing. |
-| prototype | `jl-prototype` skill | Retained path. |
+| research | `jl-research` — evidence-backed findings, trade-off-aware recommendation, user acceptance before resolution | AFK only with the human's explicit per-ticket permission; findings must be reviewed before closing. |
+| prototype | `jl-prototype` skill — retained path | |
 | quiz-requirements | Requirements Quiz — `jl-quiz` | |
 | quiz-understanding | Understanding Quiz — `jl-quiz` | |
-| learn | Learn workflow | |
-| prerequisite | Prerequisite workflow | |
+| learn | `jl-learn` | Explanations, resources and takeaways; optional knowledge check (completed and skipped outcomes remain distinct). |
+| prerequisite | `jl-prerequisite` — external/manual unblockers with verifiable evidence; in-repository edits route to Implementation | |
 
 Provider links: use provider-native links between maps, tickets and other
 artifacts — GitHub `#nnn` or a `https://github.com/<owner>/<repo>/issues/nnn` URL,

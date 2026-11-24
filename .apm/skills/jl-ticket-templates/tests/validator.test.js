@@ -1371,3 +1371,10 @@ test("map boundary: Implementation tickets cannot own Map criteria (no implement
   const result = validateTicket(ownedMap(["Resolve the import format. Implementation: #12"]), { stage: "creation" });
   assert.ok(codes(result.errors).includes("map_criterion_owner_implementation"));
 });
+
+test("jl-recon routes prototype to jl-prototype (AC4 of #212)", () => {
+  const skill = readFileSync(resolve(__dirname, "../../jl-recon/SKILL.md"), "utf8");
+  const routing = skill.slice(skill.indexOf("## Routing"), skill.indexOf("## Early ticket creation"));
+  const prototypeRow = routing.split("\n").find((line) => line.startsWith("| prototype |"));
+  assert.ok(prototypeRow.includes("jl-prototype"), "prototype must route to the jl-prototype skill");
+});
