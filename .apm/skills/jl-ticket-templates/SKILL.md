@@ -21,7 +21,7 @@ Load `references/SHARED_BASE_SCHEMA.md` and the matching template from
 
 Import `validator.js` from this directory. Call
 `validateTicket(ticket, { provider, stage })` before creation or resolution.
-Supported providers are `github` and `markdown`. Use
+Supported providers are `github`, `markdown`, and `azure-devops`. Use
 `validateTemplate(template, platform)` for existing provider payload checks.
 
 The stages are:

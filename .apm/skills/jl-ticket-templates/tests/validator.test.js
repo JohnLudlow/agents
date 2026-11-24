@@ -478,6 +478,35 @@ test("AC023: historical Maps are not checked for owner links", () => {
   assert.ok(!codes(result.errors).some((code) => code.startsWith("map_criterion_owner")));
 });
 
+test("AC023: validateTicket accepts the azure-devops provider", () => {
+  const result = validateTicket(ownedMap(["Resolve the format. Predecessor: AB#34"]), { provider: "azure-devops" });
+  assert.equal(result.valid, true);
+  assert.equal(result.provider, "azure-devops");
+});
+
+test("AC023: ADO Maps accept typed owner links in AC text", () => {
+  const result = validateTicket(ownedMap(["Resolve the format. Predecessor: AB#34", "Try it. Successor: #10"]), { provider: "azure-devops" });
+  assert.equal(result.valid, true);
+});
+
+test("AC023: ADO Maps without an owner link error at creation", () => {
+  const result = validateTicket(ownedMap(["Resolve the format."]), { provider: "azure-devops" });
+  assert.ok(codes(result.errors).includes("map_criterion_owner_missing"));
+});
+
+test("AC023: closed or deleted ADO owners flag unchecked criteria via ownerStates", () => {
+  const ticket = doneMap(ownedMap(["Resolve the format. Predecessor: AB#34"]));
+  const flagged = validateTicket(ticket, { provider: "azure-devops", stage: "resolution", ownerStates: { "AB#34": "closed" } });
+  assert.ok(codes(flagged.errors).includes("map_owner_review_required"));
+  const deleted = validateTicket(ticket, { provider: "azure-devops", stage: "resolution", ownerStates: { "AB#34": "deleted" } });
+  assert.ok(codes(deleted.errors).includes("map_owner_review_required"));
+});
+
+test("AC023: ADO owner links need a provider type", () => {
+  const result = validateTicket(ownedMap(["Resolve the format. See #12"]), { provider: "azure-devops" });
+  assert.ok(codes(result.errors).includes("map_criterion_owner_type_missing"));
+});
+
 test("read-only validation of historical records mutates nothing and sets no labels", () => {
   const records = [
     ...["quiz", "task"].map((type) => ({ type, status: "Ready" })),

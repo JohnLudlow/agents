@@ -59,8 +59,9 @@ Each Map criterion needs an owner link in its AC text. Write the owner type, the
 
 - **Owner types:** Research, Prototype, Quiz (Requirements), Quiz (Understanding), Learn, or Prerequisite.
   An Implementation ticket cannot own a Map criterion, and no Implementation ticket sits under a Map.
-- **Link format:** GitHub uses `#nnn` or a Markdown link. Azure DevOps uses `#nnn` (or `AB#nnn`) or a Markdown link.
-  Local Markdown Maps use a Markdown link.
+- **Link format:** GitHub uses `#nnn` or a Markdown link. Azure DevOps Maps use the typed links
+  `Predecessor`/`Successor` (for example `Predecessor: AB#34`); the validator checks them
+  (`ownerStates` keys use the ADO target, such as `AB#34`). Local Markdown Maps use a Markdown link.
 - **Decision only:** Add `(decision only)` to a criterion that needs no owner.
 - **No owner yet:** List the criterion ID in Not Yet Specified (Fog of War), with a **what** or **how** tag.
   The validator gives a warning (`map_criterion_owner_pending`) at creation and an error (`map_criterion_owner_missing`) at resolution.
@@ -71,9 +72,8 @@ Each Map criterion needs an owner link in its AC text. Write the owner type, the
   Pass the owner states in `options.ownerStates` (`{ "#12": "closed" }`).
   The user may override: pass `options.ownerReviewOverrides` with `{ id, userApproved: true, reason, approvedAt }`.
   The override turns the error into a `map_owner_review_overridden` warning.
-- **Extra links (not validated):** The validator checks only the link in the AC text.
-  The caller also creates a typed link when both items are in a provider with typed links (Azure DevOps predecessor/successor).
-  The caller creates a simple link when the items are in different providers or the provider has only simple links.
+- **Extra links (not validated):** The validator checks the link in the AC text. For Azure DevOps
+  it checks the typed links `Predecessor`/`Successor`. Other cross-provider links remain the caller's responsibility.
 - **Historical Maps:** Maps read at the `read` stage with historical status values are never checked.
 
 Creating the owner ticket alone does not satisfy the criterion.

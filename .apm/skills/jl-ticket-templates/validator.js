@@ -155,8 +155,8 @@ function validateTicket(ticket, options = {}) {
     return buildResult(errors, warnings);
   }
 
-  if (!["github", "markdown"].includes(provider)) {
-    addIssue(errors, "invalid_provider", "provider", "Provider must be github or markdown.");
+  if (!["github", "markdown", "azure-devops"].includes(provider)) {
+    addIssue(errors, "invalid_provider", "provider", "Provider must be github, markdown, or azure-devops.");
     return buildResult(errors, warnings);
   }
 
@@ -699,9 +699,13 @@ function validateMapContent(body, errors) {
 
 const MAP_OWNER_LABEL = /\b(Implementation|Research|Prototype|Quiz \(Requirements\)|Quiz \(Understanding\)|Quiz-Requirements|Quiz-Understanding|Quiz|Learn|Prerequisite)\s*:\s*(\[[^\]]+\]\(([^)\s]+)\)|(?:AB)?#\d+)/i;
 
+/** Azure DevOps typed owner links for Map criteria, e.g. `Predecessor: AB#34`. */
+const ADO_OWNER_LABEL = /\b(Predecessor|Successor)\s*:\s*((?:AB)?#\d+)/i;
+
 /**
  * Check that each Map criterion names a non-Implementation owner ticket in its
- * AC text (for example `Research: #12`). Historical Maps never reach this check.
+ * AC text (for example `Research: #12`; for provider `azure-devops`,
+ * `Predecessor: AB#34` or `Successor: #10`). Historical Maps never reach this check.
  * Options: `ownerStates` maps an owner link target to "open", "closed", or
  * "deleted"; `ownerReviewOverrides` lists user-approved overrides by criterion ID.
  */
@@ -716,7 +720,8 @@ function validateMapCriterionOwners(criteria, body, stage, provider, options, er
     if (/\(\s*decision only\s*\)/i.test(criterion.text)) {
       continue;
     }
-    const match = MAP_OWNER_LABEL.exec(criterion.text);
+    const match = MAP_OWNER_LABEL.exec(criterion.text) ??
+      (provider === "azure-devops" ? ADO_OWNER_LABEL.exec(criterion.text) : null);
     if (!match) {
       const inFog = fogLines.some((line) => new RegExp(`\\b${criterion.id}\\b`).test(line));
       if (/(?:AB)?#\d+|\[[^\]]+\]\([^)\s]+\)/.test(criterion.text)) {
