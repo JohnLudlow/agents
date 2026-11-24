@@ -9,16 +9,25 @@ workflow, driven by the `jl_quiz_requirements` configuration block
 The workflow is conversational (Mode A, in-chat interview by default): ask
 one decision at a time and wait for the user's answer before the next one.
 
-## Goal model (AC009, AC010)
+## State the goal model (AC009, AC010)
 
-1. Derive a goal model from the session context: a one-line objective plus
-   the things the user is trying to achieve. Facts answerable from the
-   repository are resolved by the agent itself and are never put to the
-   user as decisions.
-2. State the model to the user: "My goal model of this is: <objective> —
-   please confirm or correct it."
-3. The user confirms or corrects it; record the confirmed model as the
-   opening of the Requirements Quiz record.
+The agent derives a goal model: a one-line objective plus the things the
+user is trying to achieve. Facts answerable from the repository are
+resolved by the agent itself — they are never put to the user as decisions.
+
+The agent then **states its goal model for the user to review** (AC009):
+
+> "My goal model of this is: <objective> — the things the user is trying to
+> achieve: <brief list>. Please confirm or correct it."
+
+**The user can confirm or correct the agent's goal model** (AC010):
+
+1. If the user confirms — the stated model is the starting point of the
+   Requirements Quiz record.
+2. If the user corrects it — the agent records the corrected model as the
+   opening of the record (decisions the user adds in the correction are
+   part of it). The agent does not silently re-derive; it restates the
+   corrected model and moves on.
 
 ## Confirmed requirements (AC001, AC003)
 
