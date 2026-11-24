@@ -49,6 +49,29 @@ record one line per resolved decision in the map's Decisions-so-far list.
 All types are human-in-the-loop by default; see `references/LIFECYCLE.md` and
 `references/ROUTING.md` for the details.
 
+## Configuration
+
+Configuration is resolved from `jl_recon`; the full schema is in
+`references/CONFIGURATION.md`. The entry point names the keys the other
+sections rely on:
+
+- **Model selection:** `jl_recon.model_selection.default` and the per-type
+  keys — `jl_recon.model_selection.map`, `jl_recon.model_selection.research`,
+  `jl_recon.model_selection.prototype`,
+  `jl_recon.model_selection.quiz_requirements`,
+  `jl_recon.model_selection.quiz_understanding`, `jl_recon.model_selection.learn`,
+  `jl_recon.model_selection.prerequisite` — applied at delegated execution
+  points (see "Requirements").
+- **Labels:** `jl_recon.labels.default` and the per-type keys —
+  `jl_recon.labels.map`, `jl_recon.labels.research`, `jl_recon.labels.prototype`,
+  `jl_recon.labels.quiz_requirements`, `jl_recon.labels.quiz_understanding`,
+  `jl_recon.labels.learn`, `jl_recon.labels.prerequisite` — applied when
+  creating maps and tickets.
+- **Title formats:** `jl_recon.title_format` with the per-type keys
+  `title_format.map`, `title_format.research`, `title_format.prototype`,
+  `title_format.quiz_requirements`, `title_format.quiz_understanding`,
+  `title_format.learn`, `title_format.prerequisite`.
+
 ## Early ticket creation (while the map is open)
 
 Decisions that sharpen while walking a map become tickets promptly:
