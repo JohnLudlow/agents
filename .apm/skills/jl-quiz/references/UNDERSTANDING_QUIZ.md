@@ -19,13 +19,22 @@ The user then chooses the outcome (AC005–AC007, all user-chosen):
 - "skip" (AC006) — the user chooses not to do it this time;
 - "defer" (AC007) — the user moves it to a later time or context.
 
-## Record the outcome (AC008)
+## Record the outcome (AC008, AC016)
 
-The user's choice is recorded against the check: done / skipped / deferred
-/ declined — and nothing is recorded as verified understanding unless the
-user said they did it (AC008: skip, defer, and decline outcomes are
-recorded without fabricating evidence of verified understanding; AC016: a
-declined check is never described as verified understanding).
+The user's choice is recorded against the check with an explicit state:
+
+- **Done** — the user completed the check. Recorded as verified
+  understanding of that check, with the user's own words quoted.
+- **Skipped** — the user chose to skip the check. Recorded as skipped —
+  nothing is recorded as verified understanding (AC008).
+- **Deferred** — the user deferred the check to a later time or context.
+  Recorded as deferred — nothing is recorded as verified understanding
+  unless the user says otherwise when returning.
+- **Declined** — the user declined the check. Recorded as declined — a
+  declined check is never described as verified understanding (AC008, AC016).
+
+The record stays honest about the outcome: a check that was skipped,
+deferred or declined is never described as verified understanding.
 
 ## Run the check when chosen
 
