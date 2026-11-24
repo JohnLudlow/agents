@@ -120,6 +120,17 @@ jl_quiz_understanding:
   quiz_mode: questionnaire
 ```
 
+## Workflow Files
+
+This skill ships two workflow entry points, in `references/`:
+
+- **Requirements Quiz** — `references/REQUIREMENTS_QUIZ.md` — the
+  `/jl-quiz-requirements` workflow (AC001–AC004 plus the goal model).
+- **Understanding Quiz** — `references/UNDERSTANDING_QUIZ.md` — the
+  `/jl-quiz-understanding` workflow (AC005–AC008).
+
+Both start from the configuration resolution in BLOCKER 0 below.
+
 ## When This Skill is Invoked
 
 When this skill is invoked, follow these steps:
