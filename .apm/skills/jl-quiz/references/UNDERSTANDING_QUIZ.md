@@ -10,8 +10,8 @@ workflow, driven by the `jl_quiz_understanding` configuration block
 
 The agent picks one specific thing worth the user demonstrating
 understanding of — a term, concept or outcome (the "check") and states it
-as the user's prompt, e.g. "Check: what happens to the main branch if a
-merge contains a conflict — does the agent rebase, fast-forward or ask?"
+as the user's prompt, for example: "Check: what happens to the main branch
+if a merge contains a conflict — does the agent rebase, fast-forward or ask?"
 The user then chooses the outcome (AC005–AC007, all user-chosen):
 
 - "yes, I'll do it now" — the user will demonstrate understanding in this
@@ -80,7 +80,12 @@ floating reference.
 
 - **Each offered understanding check has a separate Understanding Quiz
   ticket** (AC017) — every check the agent offers gets its own ticket,
-  including a check the user declines.
+  including a check the user declines. Tickets carry the shared acceptance
+  criteria format (one independently checkable outcome per criterion,
+  sequential `AC001:` IDs — AC026, AC027, AC028) and are linked with
+  provider-native links (GitHub `#nnn` or issue URLs, Azure DevOps `AB#nnn`,
+  or Markdown links) so the work is never referenced with a floating path
+  or number (AC024).
 - **The user approves ticket creation** (AC018) — a ticket is created only
   after the user says to go ahead. Before creation the ticket is validated
   against `jl-ticket-templates/assets/quiz-ticket-template.md` and the

@@ -69,6 +69,14 @@ Azure DevOps `AB#nnn`, or a Markdown link) — never a floating reference
 
 If there is no map in play, this step is skipped.
 
+## Shared acceptance criteria format (AC026, AC027, AC028, AC029)
+
+Both Quiz workflows produce acceptance criteria in the shared format:
+one independently checkable outcome per criterion, with a unique
+sequential ID in the form `AC001:` numbering sequentially within each
+ticket or record (AC026, AC027, AC028, AC029). The Requirements Quiz
+records captured requirements with `REQ001`-style sequential IDs (AC003).
+
 ## Wrap-up
 
 Restate the objective plus every captured requirement and every
