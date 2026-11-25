@@ -9,7 +9,12 @@ This is the active configuration for this repository. Agents read these settings
 Configuration is in a YAML code fence for markdown readability; the linter automatically strips code fences before parsing.
 
 ```yaml
-jl_quiz:
+jl_quiz_requirements:
+  quiz_mode: in_chat
+  plan_destination: github_issue
+  file_storage_location: docs/plans/
+
+jl_quiz_understanding:
   quiz_mode: in_chat
   plan_destination: github_issue
   file_storage_location: docs/plans/
@@ -76,8 +81,8 @@ This repository is NOT the only repository. Remember this.
 
 **Rule 2**: If a file is **configuration for how agents work in this specific repo**, it goes in `AGENTS.md`.
 
-- ✅ "jl-quiz should use quiz_mode: b in this repo" → AGENTS.md
-- ❌ "Here's how to configure jl-quiz" → That goes in jl-quiz/SKILL.md (shipped)
+- ✅ "Requirements Quiz should use quiz_mode: questionnaire in this repo" → AGENTS.md
+- ❌ "Here's how to configure a Quiz ticket" → That goes in the shipped Quiz skill documentation
 
 **Rule 3**: If you're adding content that a **skill needs to function**, add it to the skill's directory.
 
@@ -109,11 +114,12 @@ Agent users in other repos can access this because it's shipped.
 ```markdown
 # AGENTS.md
 
-## jl-quiz Configuration Schema
+## Quiz Configuration Schema
 
-jl-quiz accepts the following settings:
+Quiz settings use independent `jl_quiz_requirements` and
+`jl_quiz_understanding` blocks. Each accepts the following settings:
 
-- quiz_mode: a or b
+- quiz_mode: in_chat or questionnaire
 - ...
 
 ❌ This won't be available in other repos. If an agent in a downstream
@@ -149,7 +155,7 @@ This is only used in JohnLudlow/agents, so it stays local.
 
 ```text
 ~/.agents/skills/jl-recon
-└── SKILL.md                    ❌ Not within the repo, and therefore won't be built and would be overriden by the next 
+└── SKILL.md                    ❌ Not within the repo, and therefore won't be built and would be overriden by the next
                                    deployment
 ```
 

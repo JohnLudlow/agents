@@ -43,11 +43,12 @@ Repository configuration is expressed as YAML embedded in `AGENTS.md` and/or
 `CONTRIBUTING.md`. Each agent or skill defines its own configuration section
 and documents its own keys and defaults.
 
-Example (from a hypothetical jl-quiz skill):
+Example (from a hypothetical jl-quiz skill; the real keys are the independent
+`jl_quiz_requirements` and `jl_quiz_understanding` blocks):
 
 ```yaml
-jl_quiz:
-  quiz_mode: a
+jl_quiz_requirements:
+  quiz_mode: in_chat
   plan_destination: github_issue
   file_storage_location: docs/plans/
 ```
@@ -97,7 +98,7 @@ Result:
 
 ```text
 // Consuming agent defines defaults and its own configuration key path
-// Example: jl-quiz defines defaults for jl_quiz config
+// Example: jl-quiz defines defaults for jl_quiz_requirements config
 defaults = <defined by consuming agent/skill>
 
 contributingConfig = {}
@@ -119,23 +120,23 @@ return resolved
 If `CONTRIBUTING.md` contains:
 
 ```yaml
-jl_quiz:
-  quiz_mode: a
+jl_quiz_requirements:
+  quiz_mode: in_chat
   plan_destination: github_issue
 ```
 
 And `AGENTS.md` contains:
 
 ```yaml
-jl_quiz:
-  quiz_mode: b
+jl_quiz_requirements:
+  quiz_mode: questionnaire
 ```
 
 Then the resolved result is:
 
 ```yaml
-jl_quiz:
-  quiz_mode: b
+jl_quiz_requirements:
+  quiz_mode: questionnaire
   plan_destination: github_issue
 ```
 
@@ -156,7 +157,7 @@ jl-config provides guidance on implementing portable validation:
    - malformed indentation, duplicate mappings, and invalid quoting are failures
 
 2. **Root shape**
-   - the agent-specific key (e.g., `jl_quiz`, `jl_recon`) must be an object if present
+   - the agent-specific key (e.g., `jl_quiz_requirements`, `jl_recon`) must be an object if present
    - if the key is not present, resolution falls back to defaults
 
 3. **Type validation**
@@ -277,7 +278,7 @@ When prompting is required:
 Example:
 
 ```text
-I could not find plan_destination in jl_quiz config 
+I could not find plan_destination in jl_quiz_requirements config
 (checked AGENTS.md and CONTRIBUTING.md).
 I need this to know where to place the plan.
 Please choose one: github_issue, azure_devops_work_item, local_file, inline_message.
@@ -295,7 +296,7 @@ Please choose one: github_issue, azure_devops_work_item, local_file, inline_mess
 
 Each agent or skill should document its own configuration in its own skill `SKILL.md`:
 
-1. **Configuration section heading**: name your config section clearly (e.g., `jl_quiz` for jl-quiz)
+1. **Configuration section heading**: name your config section clearly (e.g., `jl_quiz_requirements` for jl-quiz)
 2. **Schema table**: document each setting with type, enum values (if any), and defaults
 3. **Setting sensitivity**: mark each setting required, recommended, or optional
 4. **Examples**: show how the config looks in CONTRIBUTING.md and AGENTS.md
@@ -306,21 +307,21 @@ Example (in jl-quiz SKILL.md):
 ```markdown
 ## Configuration
 
-jl-quiz reads settings from `jl_quiz` configuration in AGENTS.md or CONTRIBUTING.md.
+jl-quiz reads settings from `jl_quiz_requirements` and `jl_quiz_understanding` configuration in AGENTS.md or CONTRIBUTING.md.
 
 ### Schema
 
 | Setting | Type | Allowed values | Default | Sensitivity |
 | --- | --- | --- | --- | --- |
-| `quiz_mode` | string | `a` or `b` | `a` | recommended |
+| `quiz_mode` | string | `in_chat` or `questionnaire` | `in_chat` | recommended |
 | `plan_destination` | string | github_issue, local_file, ... | (none) | required |
 | `file_storage_location` | string | repository-relative path | `docs/plans/` | recommended |
 
 ### Defaults
 
-If jl_quiz config is not found, jl-quiz uses:
+If the quiz config block is not found, jl-quiz uses:
 
-- quiz_mode: a
+- quiz_mode: in_chat
 - plan_destination: (prompts user if required and missing)
 - file_storage_location: docs/plans/
 
@@ -328,15 +329,15 @@ If jl_quiz config is not found, jl-quiz uses:
 
 In CONTRIBUTING.md:
 \`\`\`yaml
-jl_quiz:
+jl_quiz_requirements:
   plan_destination: github_issue
-  quiz_mode: a
+  quiz_mode: in_chat
 \`\`\`
 
 In AGENTS.md (overrides quiz_mode only):
 \`\`\`yaml
-jl_quiz:
-  quiz_mode: b
+jl_quiz_requirements:
+  quiz_mode: questionnaire
 \`\`\`
 ```
 
@@ -359,14 +360,14 @@ Resolved config (any agent):
 `CONTRIBUTING.md` contains (for jl-quiz):
 
 ```yaml
-jl_quiz:
-  quiz_mode: b
+jl_quiz_requirements:
+  quiz_mode: questionnaire
   plan_destination: github_issue
 ```
 
 Resolved config:
 
-- `quiz_mode: b` (from CONTRIBUTING.md)
+- `quiz_mode: questionnaire` (from CONTRIBUTING.md)
 - `plan_destination: github_issue` (from CONTRIBUTING.md)
 - any other jl-quiz settings use defaults
 
@@ -389,21 +390,21 @@ Resolved config:
 `CONTRIBUTING.md` contains:
 
 ```yaml
-jl_quiz:
-  quiz_mode: a
+jl_quiz_understanding:
+  quiz_mode: in_chat
   plan_destination: github_issue
 ```
 
 `AGENTS.md` contains:
 
 ```yaml
-jl_quiz:
-  quiz_mode: b
+jl_quiz_understanding:
+  quiz_mode: questionnaire
 ```
 
 Resolved config:
 
-- `quiz_mode: b` (AGENTS.md overrides CONTRIBUTING.md)
+- `quiz_mode: questionnaire` (AGENTS.md overrides CONTRIBUTING.md)
 - `plan_destination: github_issue` (from CONTRIBUTING.md, not in AGENTS.md)
 - any other jl-quiz settings use defaults
 
@@ -439,9 +440,9 @@ Every configuration warning should follow this format:
 **Examples:**
 
 ```text
-[WARN] jl-quiz: 'quiz_mode' has invalid value 'c' (must be 'a' or 'b')
+[WARN] jl-quiz: 'quiz_mode' has invalid value 'c' (must be 'in_chat' or 'questionnaire')
   File: CONTRIBUTING.md [line 5]
-  Fix: Change quiz_mode to 'a' or 'b' in the jl_quiz config block
+  Fix: Change quiz_mode to 'in_chat' or 'questionnaire' in the jl_quiz_requirements config block
 ```
 
 ```text
@@ -524,7 +525,7 @@ jl-quiz validates its configuration at startup and emits warnings for:
 **Type Mismatch**
 \`\`\`
 [WARN] jl-quiz: 'quiz_mode' must be a string, not a boolean
-  Fix: Change the value to 'a' or 'b' (keep quotes)
+  Fix: Change the value to 'in_chat' or 'questionnaire' (keep quotes)
 \`\`\`
 
 **Enum Violation**
@@ -539,7 +540,7 @@ jl-quiz validates its configuration at startup and emits warnings for:
 \`\`\`
 [WARN] jl-quiz: required setting 'plan_destination' not found
   in AGENTS.md or CONTRIBUTING.md
-  Fix: Add to CONTRIBUTING.md or AGENTS.md under jl_quiz:
+  Fix: Add to CONTRIBUTING.md or AGENTS.md under jl_quiz_requirements or jl_quiz_understanding:
     plan_destination: github_issue
 \`\`\`
 

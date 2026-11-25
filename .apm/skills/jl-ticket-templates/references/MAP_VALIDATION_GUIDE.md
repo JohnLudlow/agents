@@ -1,301 +1,136 @@
-# Map Ticket Validation Guide
+# Map Validation Guide
 
-This document defines the validation contract for map tickets and guides integration
-into jl-recon. Use this when implementing the map validator or reviewing validation
-behavior in consuming skills.
+Use `SHARED_BASE_SCHEMA.md` for shared fields and lifecycle. Validate new Maps at creation and resolution.
 
-## Validation Contract
+Read historical Maps without changing their statuses or labels.
 
-A map ticket is **valid** when:
+## Creation Contract
 
-| Criterion | Rule |
-|-----------|------|
-| **Frontmatter** | All required fields present: title, type, status, author, date |
-| **Type check** | `type: "map"` must be set |
-| **Destination** | Clear, one-sentence description of map's target outcome |
-| **Acceptance Criteria** | At least 5 specific items covering decisions, fog, scope, frontier, and acceptance |
-| **Decisions section** | Explicitly lists resolved decisions with ticket links (or explicitly empty with note) |
-| **Fog of War section** | Lists known unknowns with kind tag (what / how) or explicitly notes "None at chart time" |
-| **Frontier table** | Shows open, unblocked tickets with clear status (Draft / Ready / In Progress) |
+New Maps use `Draft`, `Ready`, `In Progress`, `Done`, or `Blocked`. GitHub uses native metadata and a readable Details list.
 
-### Destination Clarity
+Local Markdown uses YAML frontmatter.
 
-The Destination section must describe a specific, achievable outcome that the map
-aims to reach — not a vague goal. Use this test:
+Require Destination, Notes, Decisions So Far, Fog of War, Out of Scope, both ticket sections, and Acceptance Criteria.
 
-- ✓ "Shipped customer-profile service with documented API and deployment runbook"
-- ✗ "Improve the system"
+- **Destination:** Name a specific outcome, such as "Deliver an import flow with documented error handling." Generic text such as "Improve the system" fails.
 
-### Frontier and Blocking Clarity
+- **Notes:** Record the context and constraints, such as "The existing API handles imports."
 
-- All open tickets in the Frontier table must have a clear Status
-- All blocked tickets must have a corresponding entry in Blocked Tickets table
-- Each blocked ticket must name the blocker and reason (not blank)
+- **Decisions So Far:** Link each recorded decision to its ticket. If none are recorded, say why: "No decisions yet; charting is in progress."
 
-## Error Messages
+- **Fog of War:** Tag each item **what** or **how**. For example, "- API limits — **how** (needs research)." Explain an empty list.
 
-Report one error at a time. Each error includes: title, issue, location, guidance,
-and correct example.
+- **Out of Scope:** List exclusions or explain why none are known yet.
 
-### Error 1: Destination missing or vague
+- **Open Tickets (Frontier):** Use `Ticket`, `Type`, `Assignee`, and `Status` columns or explain an empty table. Status is `Draft`, `Ready`, or `In Progress`.
 
-**Title:** Destination unclear
+- **Blocked Tickets:** Use `Ticket`, `Type`, `Blocked by`, and `Reason` columns or explain an empty table. No Status column is required.
 
-**Issue:** Map has no Destination section, or destination is vague (no specific outcome)
+- **Acceptance Criteria:** Provide at least five individually checkable `AC001:`-style items with sequential IDs.
 
-**Location:** "Destination" section (after frontmatter)
+Review the five Map outcomes with the user: decisions, blocking edges, frontier, fog and scope, and destination or delivery plan.
 
-**Guidance:** Add a clear, one-sentence outcome that the map is designed to reach.
-Answer: what does success look like? Use specific deliverables or shipped features,
-not abstract goals.
+The validator checks count and format, not whether the criteria cover these outcomes or are independently checkable.
 
-**Example of vague destination (invalid):**
-> "Improve the system"
+For populated tables, use Markdown headers and a separator row. Leave Assignee empty if unassigned.
 
-**Example of clear destination (valid):**
-> "Shipped customer-profile service with documented API contract, passing integration
-> tests, and deployment runbook in /docs/runbooks"
+New ticket types are Map, Research, Prototype, Requirements Quiz, Understanding Quiz, Learn, and Prerequisite.
 
-### Error 2: Insufficient acceptance criteria
-
-**Title:** Map acceptance criteria incomplete
-
-**Issue:** Fewer than 5 criteria, or criteria section missing entirely
-
-**Location:** "Acceptance Criteria" section
-
-**Guidance:** Map acceptance criteria should cover: (1) All Decisions Resolved,
-(2) Blocking Edges Clear, (3) Frontier Identified, (4) Fog Minimized, (5) Destination
-Met. Add one criterion for each, making them specific and checkable.
-
-**Example of sufficient criteria:**
-
-```markdown
-1. All Decisions Resolved — Every known decision has a ticket and recorded outcome
-2. Blocking Edges Clear — All dependencies shown in Blocked Tickets table
-3. Frontier Identified — Open Tickets table shows unblocked work
-4. Fog Minimized — Fog of War lists 3 or fewer items, each tagged with kind
-5. Destination Met — API documented, tests passing, runbook written
-```
-
-### Error 3: Decisions section empty without note
-
-**Title:** Decisions unclear
-
-**Issue:** Decisions section is empty with no note explaining why (e.g., "No decisions
-yet; still in early chart phase")
-
-**Location:** "Decisions So Far" section
-
-**Guidance:** Either list resolved decisions with links, or add a brief note explaining
-why the section is empty (e.g., "Not yet charted" or "All decisions delegated to
-child maps"). Avoid silent emptiness.
-
-**Example with explanation:**
-
-```markdown
-## Decisions So Far
-
-No decisions yet — currently in research and exploration phase.
-See [Research Queue](../../plans/research-queue) for open research tickets.
-```
-
-### Error 4: Fog of War items not tagged with kind
-
-**Title:** Fog items incomplete
-
-**Issue:** Fog of War items present but not tagged with kind (what / how)
-
-**Location:** "Not Yet Specified" section, fog item [number]
-
-**Guidance:** Tag each fog item with **what** (goal fuzzy, means clear) or **how**
-(goal fixed, means fuzzy). This helps prioritize work: "what" fog needs clarification
-before tickets are cut; "how" fog is ready to explore.
-
-**Example of incomplete fog item:**
-> - User authentication strategy
-
-**Example with kind tag:**
-> - User authentication strategy — **what** (clear we need auth, unclear which approach)
-
-### Error 5: Frontier or Blocked table malformed
-
-**Title:** Frontier or blocking structure unclear
-
-**Issue:** Open Tickets or Blocked Tickets table is missing, empty without note, or
-has rows with missing Status, Reason, or Blocker columns
-
-**Location:** "Open Tickets (Frontier)" or "Blocked Tickets" section
-
-**Guidance:** Open Tickets table must list unblocked, ready-to-claim work with Status.
-Blocked Tickets table must list work waiting on something else, with Reason. If either
-is empty, note why (e.g., "All tickets resolved" or "No currently blocked work").
-
-**Example of correct structure:**
+Historical Quiz and Task records remain readable. Compare the Blocked Tickets table with the provider's actual blocker links.
 
 ```markdown
 ## Open Tickets (Frontier)
 
 | Ticket | Type | Assignee | Status |
-|--------|------|----------|--------|
-| Database schema design | Research | @alice | Ready |
+| --- | --- | --- | --- |
+| [Import schema](https://example.com/issues/3) | Research | @alice | Ready |
 
 ## Blocked Tickets
 
 | Ticket | Type | Blocked by | Reason |
-|--------|------|-----------|--------|
-| Performance testing | Task | API contract | BLOCKED: cannot benchmark until API signature is stable |
+| --- | --- | --- | --- |
+| [Import tests](https://example.com/issues/4) | Research | [Import schema](https://example.com/issues/3) | Waiting for the schema. |
 ```
 
-### Error 6: Status value invalid
+## Criterion Owner Links
 
-**Title:** Invalid status value
+Each Map criterion needs an owner link in its AC text. Write the owner type, then the link:
+`AC001: Resolve the import format. Research: #12`.
 
-**Issue:** `status` field in frontmatter is not one of: Charting, Walked, Completed, Stale
+- **Owner types:** Research, Prototype, Quiz (Requirements), Quiz (Understanding), Learn, or Prerequisite.
+  An Implementation ticket cannot own a Map criterion, and no Implementation ticket sits under a Map.
+- **Link format:** GitHub uses `#nnn` or a Markdown link. Azure DevOps Maps use the typed links
+  `Predecessor`/`Successor` (for example `Predecessor: AB#34`); the validator checks them
+  (`ownerStates` keys use the ADO target, such as `AB#34`). Local Markdown Maps use a Markdown link.
+- **Decision only:** Add `(decision only)` to a criterion that needs no owner.
+- **No owner yet:** List the criterion ID in Not Yet Specified (Fog of War), with a **what** or **how** tag.
+  The validator gives a warning (`map_criterion_owner_pending`) at creation and an error (`map_criterion_owner_missing`) at resolution.
+  An unlisted, unowned criterion is an error at creation.
+- **Closed or deleted owner:** If the owner ticket is closed or deleted and the criterion is unchecked,
+  the validator flags it for re-review (`map_owner_review_required`).
+  The flag is a warning before resolution and an error at resolution.
+  Pass the owner states in `options.ownerStates` (`{ "#12": "closed" }`).
+  The user may override: pass `options.ownerReviewOverrides` with `{ id, userApproved: true, reason, approvedAt }`.
+  The override turns the error into a `map_owner_review_overridden` warning.
+- **Extra links (not validated):** The validator checks the link in the AC text. For Azure DevOps
+  it checks the typed links `Predecessor`/`Successor`. Other cross-provider links remain the caller's responsibility.
+- **Historical Maps:** Maps read at the `read` stage with historical status values are never checked.
 
-**Location:** Frontmatter, `status` field
+Creating the owner ticket alone does not satisfy the criterion.
 
-**Guidance:** Use one of the standard map status values:
+## Resolution Contract
 
-- **Charting** — map is being built, decisions not yet made
-- **Walked** — map has been walked; most decisions resolved but work ongoing
-- **Completed** — map destination reached; work finished
-- **Stale** — map is no longer the active plan (superseded or abandoned)
+Record each decision once. Identify the remaining fog. Confirm that the frontier and
+blocking edges are current. Confirm each acceptance criterion. Confirm that the
+destination is met or has a delivery plan.
 
-**Example of correct frontmatter:**
+Require user acceptance and the shared AC-before-close review before setting status to `Done`.
 
-```yaml
-status: "Walked"
-```
+An untagged Fog of War item is invalid: give each unknown a **what** or
+**how** tag.
 
-## User Override Workflow
+## Errors and Remediation
 
-If validation fails but the user wants to create the map anyway:
+Report one actionable error at a time with its `code`, `path`, and message. Show a correct example.
 
-1. **Report error** — show the error message with location and guidance
-2. **Offer override** — ask "Override validation and proceed? [Yes] [No]"
-3. **Record override** — if user approves:
-   - Create the map ticket as-is
-   - Add a comment: "⚠️ Validation override by [user]: [error title]. Reason: [user input]"
-   - Log override in session for audit trail
+A missing required section or shared field is a structural error and cannot be overridden.
 
-This ensures deliberate overrides are visible and traceable.
+| Error code | Remedy |
+| --- | --- |
+| `map_destination_vague` | Replace a generic goal with a concrete target outcome. |
+| `map_decisions_empty_note_missing`, `map_decision_link_missing` | Explain why decisions are absent, or link each decision to its ticket. |
+| `map_fog_empty_note_missing`, `map_fog_tag_missing` | Explain why no fog is known, or tag every item **what** or **how**. |
+| `map_scope_empty_note_missing` | List exclusions or explain why none are known. |
+| `map_table_empty_note_missing`, `map_table_columns`, `map_table_row` | Add an explicit none note or repair the Markdown table structure. |
+| `map_frontier_status_invalid` | Move blocked tickets to Blocked Tickets; use a current open status on the frontier. |
+| `map_blocker_missing`, `map_block_reason_missing` | Name the blocking ticket and state why it blocks the work. |
+| `map_criterion_owner_missing`, `map_criterion_owner_type_missing`, `map_criterion_owner_link_invalid` | Add `Type: link` to the criterion, mark it `(decision only)`, or (before resolution) list it in Fog of War. |
+| `map_criterion_owner_implementation` | Use a non-Implementation owner. |
+| `map_owner_review_required` | Re-review the criterion, or record a user override. |
 
-## Integration Points in jl-recon
+## Limited Creation Override
 
-### Pseudocode: Map Validation Flow
+Use `validateCreationOverride` only for a GitHub Map with exclusively Map-content errors in its allowlist.
 
-```text
-function createMapTicket(ticketContent, userOptions) {
-  // Parse frontmatter and body sections
-  parsed = parseMapTicket(ticketContent)
+Shared fields, type, status, required sections, AC count, and AC format remain mandatory.
 
-  // Validate against contract
-  validationResult = validateMapTicket(parsed)
+An override never bypasses the AC-before-close gate.
 
-  if validationResult.valid {
-    // Proceed to ticket creation
-    return createGitHubIssue(parsed)
-  } else {
-    // Report error
-    reportError(validationResult.errors[0])
+1. Show each failed check. Ask for explicit user approval and a reason.
+   Call `validateCreationOverride` with that decision. If the result is not `allowed`, fix the Map.
 
-    // Offer override
-    if userApproveOverride() {
-      // Record override
-      ticketContent = addOverrideComment(ticketContent, userOptions)
-      return createGitHubIssue(ticketContent)
-    } else {
-      // User declined; return without creating
-      return null
-    }
-  }
-}
+2. If authorized, create the issue with findings visible. Add a **separate issue comment** that names each error code, approval, and reason.
 
-function validateMapTicket(parsed) {
-  errors = []
+3. Call `validateCreationOverride` again with the actual issue URL, creation time, comment URL, comment time, and body. Only `audited: true` completes creation.
 
-  // Check frontmatter
-  if !hasRequiredFields(parsed.frontmatter, ["title", "type", "status", "author", "date"]) {
-    errors.push(Error_MissingFrontmatter)
-  }
+If the comment fails, leave the issue open. Mark it **override audit pending**. Repair the comment before you report completion.
 
-  if parsed.frontmatter.type != "map" {
-    errors.push(Error_InvalidType)
-  }
+For local Markdown Maps, correct the content instead of using an issue-comment override.
 
-  if !isValidMapStatus(parsed.frontmatter.status) {
-    // Valid status: Charting, Walked, Completed, Stale
-    errors.push(Error_InvalidStatus)
-  }
+Re-scoping during resolution requires a separate user decision for each affected AC.
 
-  // Check Destination section
-  destination = extractSection(parsed.body, "Destination")
-  if !destination || !isSpecific(destination) {
-    errors.push(Error_DestinationUnclear)
-  }
+## Focused Regression Cases
 
-  // Check Acceptance Criteria section
-  criteria = extractSection(parsed.body, "Acceptance Criteria")
-  if !criteria || criteria.itemCount < 5 {
-    errors.push(Error_InsufficientCriteria)
-  }
+The Node suite checks Map status compatibility, both provider formats, destination clarity, Notes, decision links, fog tags, tables, blockers, and overrides.
 
-  // Check Decisions section (can be empty with explanation)
-  decisions = extractSection(parsed.body, "Decisions So Far")
-  if decisions.isEmpty && !decisions.hasNote {
-    errors.push(Error_EmptyDecisionsNoNote)
-  }
-
-  // Check Fog of War section (all items must be tagged)
-  fog = extractSection(parsed.body, "Not Yet Specified")
-  for each item in fog.items {
-    if !isTagged(item, ["what", "how"]) {
-      errors.push(Error_FogItemNotTagged(item))
-    }
-  }
-
-  // Check Frontier and Blocked tables
-  frontier = extractTable(parsed.body, "Open Tickets")
-  if !frontier || !hasColumn(frontier, "Status") {
-    errors.push(Error_FrontierMalformed)
-  }
-
-  blocked = extractTable(parsed.body, "Blocked Tickets")
-  if !blocked || !hasColumns(blocked, ["Blocked by", "Reason"]) {
-    errors.push(Error_BlockedTableMalformed)
-  }
-
-  return { valid: errors.length == 0, errors: errors }
-}
-```
-
-### Integration: Where to Call validateMapTicket
-
-In `jl-recon/SKILL.md`, add a "Map Ticket Validation" section (or expand existing
-validation section to cover map tickets) that describes:
-
-1. When jl-recon creates a new map ticket, call the map validator
-2. Report validation errors with remediation guidance
-3. If user approves override, record it in a ticket comment
-4. Create ticket only after validation passes or override is approved
-
-Reference this guide for the contract and error messages.
-
-## Testing the Validator
-
-Use these test cases to verify the map validator:
-
-| Test Case | Input | Expected Output | Notes |
-|-----------|-------|-----------------|-------|
-| Valid map | Complete frontmatter + destination + 5 criteria + frontier table | `{ valid: true, errors: [] }` | Happy path |
-| Missing destination | No Destination section | Error_DestinationUnclear | Required section |
-| Vague destination | "Improve system" | Error_DestinationUnclear | Must be specific outcome |
-| Too few criteria | 3 acceptance criteria | Error_InsufficientCriteria | Minimum 5 required |
-| Empty decisions, no note | Empty "Decisions So Far" section | Error_EmptyDecisionsNoNote | Silence requires explanation |
-| Fog item untagged | "Database schema — ?" | Error_FogItemNotTagged | Every item needs what/how |
-| Frontier table missing | No "Open Tickets" section | Error_FrontierMalformed | Required section |
-| Blocked table missing Status column | Blocked Tickets with missing Status | Error_BlockedTableMalformed | Required columns |
-| Invalid status | `status: "InProgress"` | Error_InvalidStatus | Must be map status, not task status |
-| Override accepted | User says "Yes" | `{ valid: true, override: true, comment: "..." }` | Record reason |
-| Override declined | User says "No" | `{ valid: false, errors: [...], created: false }` | Do not create |
+Subjective clarity and cross-ticket relationships require user review.

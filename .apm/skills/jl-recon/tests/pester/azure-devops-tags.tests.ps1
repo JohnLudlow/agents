@@ -7,7 +7,7 @@ Describe 'Azure DevOps map and ticket tags' {
         $script:ticketHelper = Join-Path $script:scriptRoot 'apply-ado-ticket-tags.ps1'
     }
 
-    It 'passes sorted map tags to System.Tags, then inherits them on a <_> ticket' -ForEach @('quiz', 'research', 'prototype', 'task') {
+    It 'passes sorted map tags to System.Tags, then inherits them on a <_> ticket' -ForEach @('research', 'prototype', 'quiz-requirements', 'quiz-understanding', 'learn', 'prerequisite') {
         $map = Invoke-LabelHelper -Path $script:mapHelper -Parameters @{
             Organization = 'https://dev.azure.com/example'
             Project = 'Agents'
@@ -31,7 +31,8 @@ Describe 'Azure DevOps map and ticket tags' {
 
         $ticket.Errors | Should -BeNullOrEmpty
         $ticket.Calls.Count | Should -Be 3
-        $ticket.Calls[2] | Should -Contain "System.Tags=area-auth;planning;recon:map;recon:$_;type:question"
+        $expectedTags = @('area-auth', 'planning', 'recon:map', "recon:$_", 'type:question') | Sort-Object -Unique
+        $ticket.Calls[2] | Should -Contain "System.Tags=$($expectedTags -join ';')"
     }
 
     It 'replaces configured map tags with the override' {
@@ -52,7 +53,7 @@ Describe 'Azure DevOps map and ticket tags' {
             Organization = 'https://dev.azure.com/example'
             Project = 'Agents'
             WorkItemId = 42
-            Type = 'task'
+            Type = 'quiz-requirements'
             ConfiguredTags = 'configured'
             InheritedTags = 'recon:map'
             UserOverride = 'zeta,priority-high,zeta'
@@ -90,7 +91,7 @@ Describe 'Azure DevOps map and ticket tags' {
             Organization = 'https://dev.azure.com/example'
             Project = 'Agents'
             WorkItemId = 42
-            Type = 'task'
+            Type = 'learn'
         }
 
         $result.Calls.Count | Should -Be 2
@@ -102,21 +103,97 @@ Describe 'Azure DevOps map and ticket tags' {
             Organization = 'https://dev.azure.com/example'
             Project = 'Agents'
             WorkItemId = 42
-            Type = 'task'
+            Type = 'prerequisite'
         }
 
         $result.Calls.Count | Should -Be 3
         $result.Output | Should -Not -Match 'Applied tags'
     }
 
-    It 'rejects invalid ticket types before contacting az' {
+    It 'rejects unsupported ticket type <_> before contacting az' -ForEach @('quiz', 'task', 'invalid') {
         $result = Invoke-LabelHelper -Path $script:ticketHelper -Parameters @{
             Organization = 'https://dev.azure.com/example'
             Project = 'Agents'
             WorkItemId = 42
-            Type = 'invalid'
+            Type = $_
         }
 
         $result.Calls | Should -BeNullOrEmpty
+        $helperLiteral = "'" + $script:ticketHelper.Replace("'", "''") + "'"
+        $typeLiteral = "'" + $_.Replace("'", "''") + "'"
+        $command = "function az { throw 'Unexpected az call' }; & $helperLiteral -Organization 'https://dev.azure.com/example' -Project 'Agents' -WorkItemId 42 -Type $typeLiteral"
+        $diagnostic = & pwsh -NoLogo -NoProfile -Command $command 2>&1
+        $LASTEXITCODE | Should -Be 1
+        $diagnostic | Should -Match "Invalid --type '$_'"
+    }
+
+    Context 'historical tickets are not retagged' {
+        BeforeAll {
+            $skillsRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+            $script:copies = @('jl-recon', 'jl-issue-management') | ForEach-Object {
+                @{ Name = $_; Path = Join-Path $skillsRoot $_ 'scripts' 'apply-ado-ticket-tags.ps1' }
+            }
+        }
+
+        It 'makes zero az calls for legacy type or map status <_>' -ForEach @('quiz', 'task', 'map', 'Charting', 'Walked', 'Completed', 'Stale') {
+            foreach ($copy in $script:copies) {
+                $result = Invoke-LabelHelper -Path $copy.Path -Parameters @{
+                    Organization = 'https://dev.azure.com/example'
+                    Project = 'Agents'
+                    WorkItemId = 42
+                    Type = $_
+                    ConfiguredTags = 'legacy'
+                }
+                $result.Calls.Count | Should -Be 0 -Because "$($copy.Name) must not touch a historical $_ work item"
+            }
+        }
+
+        It 'makes zero az calls for a legacy type with override or dry run' -ForEach @('quiz', 'task') {
+            foreach ($copy in $script:copies) {
+                $override = Invoke-LabelHelper -Path $copy.Path -Parameters @{
+                    Organization = 'https://dev.azure.com/example'; Project = 'Agents'; WorkItemId = 42; Type = $_; UserOverride = 'x'
+                }
+                $dry = Invoke-LabelHelper -Path $copy.Path -Parameters @{
+                    Organization = 'https://dev.azure.com/example'; Project = 'Agents'; WorkItemId = 42; Type = $_; DryRun = $true
+                }
+                $override.Calls.Count | Should -Be 0
+                $dry.Calls.Count | Should -Be 0
+            }
+        }
+
+        It 'updates only the single work item it is given' {
+            foreach ($copy in $script:copies) {
+                $result = Invoke-LabelHelper -Path $copy.Path -Parameters @{
+                    Organization = 'https://dev.azure.com/example'; Project = 'Agents'; WorkItemId = 42; Type = 'learn'
+                }
+                $result.Calls.Count | Should -Be 3
+                foreach ($call in $result.Calls) { $call[0] | Should -Be 'boards' }
+                foreach ($call in ($result.Calls | Where-Object { $_ -contains '--id' })) {
+                    $call[([array]::IndexOf($call, '--id') + 1)] | Should -Be '42'
+                }
+            }
+        }
+
+        It 'never passes title, description or body fields to az, only System.Tags' {
+            foreach ($copy in $script:copies) {
+                $result = Invoke-LabelHelper -Path $copy.Path -Parameters @{
+                    Organization = 'https://dev.azure.com/example'; Project = 'Agents'; WorkItemId = 42; Type = 'learn'
+                    ConfiguredTags = 'a,b'; InheritedTags = 'recon:map'
+                }
+                $result.Calls.Count | Should -Be 3
+                $updates = @($result.Calls | Where-Object { $_ -contains 'update' })
+                $updates.Count | Should -Be 1
+                $fieldValues = @()
+                foreach ($call in $result.Calls) {
+                    $joined = $call -join ' '
+                    $joined | Should -Not -Match '(?i)System\.Title|System\.Description|--title|--description|--discussion|Repro|AcceptanceCriteria'
+                    for ($i = 0; $i -lt $call.Count; $i++) {
+                        if ($call[$i] -eq '--fields') { $fieldValues += $call[$i + 1] }
+                    }
+                }
+                $fieldValues.Count | Should -Be 1
+                $fieldValues[0] | Should -Match '^System\.Tags='
+            }
+        }
     }
 }

@@ -23,13 +23,13 @@ node scripts/validate-config.js
 
 ## Success Examples
 
-### Valid jl_quiz Configuration
+### Valid jl_quiz_requirements Configuration
 
 **Input (CONTRIBUTING.md or AGENTS.md):**
 
 ```yaml
-jl_quiz:
-  quiz_mode: a
+jl_quiz_requirements:
+  quiz_mode: in_chat
   plan_destination: github_issue
   file_storage_location: docs/plans/
 ```
@@ -39,6 +39,28 @@ jl_quiz:
 ```text
 ✓ CONTRIBUTING.md agent config is valid
 ```
+
+### Obsolete jl_quiz Block
+
+**Input:**
+
+```yaml
+jl_quiz:
+  plan_destination: github_issue
+```
+
+**Output:**
+
+```text
+✗ CONTRIBUTING.md: [WARN] jl_quiz: obsolete block, not valid for new tickets. Use independent 'jl_quiz_requirements' and 'jl_quiz_understanding' blocks
+```
+
+The validator accepts a `jl_quiz` block only when it reads historical configuration.
+
+> **Note:** The quiz error examples below use `jl_quiz_requirements`. The same
+> messages apply to `jl_quiz_understanding`. Each message starts with the name of the
+> block that has the error. Valid `quiz_mode` values are `in_chat` and `questionnaire`.
+> The messages in this file come from running `scripts/validate-config.js`.
 
 ### Valid jl_recon Configuration
 
@@ -80,11 +102,11 @@ jl_recon:
 
 ### Error: Missing Required Setting
 
-**Input (jl_quiz without plan_destination):**
+**Input (jl_quiz_requirements without plan_destination):**
 
 ```yaml
-jl_quiz:
-  quiz_mode: a
+jl_quiz_requirements:
+  quiz_mode: in_chat
   file_storage_location: docs/plans/
   # Missing: plan_destination (required)
 ```
@@ -92,7 +114,7 @@ jl_quiz:
 **Output:**
 
 ```text
-✗ CONTRIBUTING.md: [WARN] jl_quiz: missing required setting 'plan_destination'
+✗ CONTRIBUTING.md: [WARN] jl_quiz_requirements: missing required setting 'plan_destination'
   Fix: Check value types and allowed values. See .apm/skills/jl-config/validation-rules.md Layer 3
 ```
 
@@ -101,25 +123,24 @@ jl_quiz:
 **Input (invalid plan_destination):**
 
 ```yaml
-jl_quiz:
+jl_quiz_requirements:
   plan_destination: slack_thread
-  quiz_mode: a
+  quiz_mode: in_chat
 ```
 
 **Output:**
 
 ```text
-✗ CONTRIBUTING.md: [WARN] jl_quiz.plan_destination: 'slack_thread' is not valid. 
-Allowed: github_issue, azure_devops_work_item, local_file, inline_message
+✗ CONTRIBUTING.md: [WARN] jl_quiz_requirements.plan_destination: 'slack_thread' is not valid. Allowed: github_issue, azure_devops_work_item, local_file, inline_message
   Fix: Check value types and allowed values. See .apm/skills/jl-config/validation-rules.md Layer 3
 ```
 
-### Error: Type Mismatch (Boolean Instead of String)
+### Error: Invalid quiz_mode (Number or Legacy Value)
 
-**Input (quiz_mode as number instead of string):**
+**Input (quiz_mode as number instead of in_chat or questionnaire):**
 
 ```yaml
-jl_quiz:
+jl_quiz_understanding:
   plan_destination: github_issue
   quiz_mode: 1
 ```
@@ -127,16 +148,18 @@ jl_quiz:
 **Output:**
 
 ```text
-✗ CONTRIBUTING.md: [WARN] jl_quiz.quiz_mode: must be string, got number
+✗ CONTRIBUTING.md: [WARN] jl_quiz_understanding.quiz_mode: must be one of in_chat, questionnaire, got '1'
   Fix: Check value types and allowed values. See .apm/skills/jl-config/validation-rules.md Layer 3
 ```
+
+The old values `a` and `b` give the same error: `must be one of in_chat, questionnaire, got 'a'`.
 
 ### Error: Invalid Path (Absolute Path)
 
 **Input (file_storage_location with absolute path):**
 
 ```yaml
-jl_quiz:
+jl_quiz_requirements:
   plan_destination: github_issue
   file_storage_location: /absolute/path/to/docs
 ```
@@ -144,7 +167,7 @@ jl_quiz:
 **Output:**
 
 ```text
-✗ CONTRIBUTING.md: [WARN] jl_quiz.file_storage_location: cannot be absolute path (got '/absolute/path/to/docs')
+✗ CONTRIBUTING.md: [WARN] jl_quiz_requirements.file_storage_location: cannot be absolute path (got '/absolute/path/to/docs')
   Fix: Check value types and allowed values. See .apm/skills/jl-config/validation-rules.md Layer 3
 ```
 
@@ -153,7 +176,7 @@ jl_quiz:
 **Input (file_storage_location with ..):**
 
 ```yaml
-jl_quiz:
+jl_quiz_requirements:
   plan_destination: github_issue
   file_storage_location: ../../docs/
 ```
@@ -161,25 +184,44 @@ jl_quiz:
 **Output:**
 
 ```text
-✗ CONTRIBUTING.md: [WARN] jl_quiz.file_storage_location: cannot contain '..' (got '../../docs/')
+✗ CONTRIBUTING.md: [WARN] jl_quiz_requirements.file_storage_location: cannot contain '..' (got '../../docs/')
   Fix: Check value types and allowed values. See .apm/skills/jl-config/validation-rules.md Layer 3
 ```
 
 ### Error: Invalid Shape (Agent Config is Not an Object)
 
-**Input (jl_quiz as array instead of object):**
+**Input (jl_quiz_requirements as array instead of object):**
 
 ```yaml
-jl_quiz:
-  - quiz_mode: a
+jl_quiz_requirements:
+  - quiz_mode: in_chat
   - plan_destination: github_issue
 ```
 
 **Output:**
 
 ```text
-✗ CONTRIBUTING.md: [WARN] jl_quiz: Config key 'jl_quiz' must be an object, got array
-  Fix: Ensure 'jl_quiz' is an object (mapping). See .apm/skills/jl-config/validation-rules.md Layer 2
+✗ CONTRIBUTING.md: [WARN] jl_quiz_requirements: Config key 'jl_quiz_requirements' must be an object, got array
+  Fix: Ensure 'jl_quiz_requirements' is an object (mapping). See .apm/skills/jl-config/validation-rules.md Layer 2
+```
+
+### Error: Obsolete Ticket Type Key
+
+**Input (obsolete `quiz` type in jl_recon.labels):**
+
+```yaml
+jl_recon:
+  labels:
+    quiz:
+      - "x"
+```
+
+**Output:**
+
+```text
+✗ CONTRIBUTING.md: [WARN] jl_recon.labels.quiz: obsolete ticket type 'quiz', not valid for new tickets.
+Use one of: map, research, prototype, quiz_requirements, quiz_understanding, learn, prerequisite
+  Fix: Check value types and allowed values. See .apm/skills/jl-config/validation-rules.md Layer 3
 ```
 
 ### Error: Invalid Boolean Type (String "true" Instead of Boolean true)
@@ -221,7 +263,7 @@ jl_recon:
 **Input (file_storage_location as empty string):**
 
 ```yaml
-jl_quiz:
+jl_quiz_requirements:
   plan_destination: github_issue
   file_storage_location: ""
 ```
@@ -229,7 +271,7 @@ jl_quiz:
 **Output:**
 
 ```text
-✗ CONTRIBUTING.md: [WARN] jl_quiz.file_storage_location: cannot be empty string
+✗ CONTRIBUTING.md: [WARN] jl_quiz_requirements.file_storage_location: cannot be empty string
   Fix: Check value types and allowed values. See .apm/skills/jl-config/validation-rules.md Layer 3
 ```
 
@@ -245,7 +287,7 @@ Each error message follows this format:
 ### Parts
 
 - **FILENAME**: `CONTRIBUTING.md` or `AGENTS.md`
-- **agent.setting**: The agent name and setting path (e.g., `jl_quiz.plan_destination`)
+- **agent.setting**: The agent name and setting path (e.g., `jl_quiz_requirements.plan_destination`)
 - **specific issue**: The validation failure (type mismatch, enum violation, missing required, etc.)
 - **Fix**: Actionable guidance pointing to the validation rules document and the relevant layer
 
@@ -264,13 +306,13 @@ To understand why a config is invalid, consult:
 
 ### "missing required setting"
 
-**Cause:** jl_quiz or jl_issue_management requires `plan_destination` but it's not
-in either `CONTRIBUTING.md` or `AGENTS.md`.
+**Cause:** jl_quiz_requirements, jl_quiz_understanding or jl_issue_management requires `plan_destination` but it's not
+in the block.
 
 **Fix:** Add the required setting:
 
 ```yaml
-jl_quiz:
+jl_quiz_requirements:
   plan_destination: github_issue
 ```
 
@@ -282,28 +324,30 @@ jl_quiz:
 
 ```yaml
 # Before (invalid)
-jl_quiz:
+jl_quiz_requirements:
   plan_destination: slack_thread
 
 # After (valid)
-jl_quiz:
+jl_quiz_requirements:
   plan_destination: github_issue
 ```
 
-### "must be string, got boolean/number"
+### "must be one of in_chat, questionnaire"
 
-**Cause:** A string setting was given a boolean or number value instead.
+**Cause:** `quiz_mode` has a value that is not allowed. This includes a number and the old values `a` and `b`.
 
-**Fix:** Wrap the value in quotes:
+**Fix:** Use `in_chat` or `questionnaire`:
 
 ```yaml
 # Before (invalid)
-jl_quiz:
+jl_quiz_requirements:
+  plan_destination: github_issue
   quiz_mode: 1
 
 # After (valid)
-jl_quiz:
-  quiz_mode: a
+jl_quiz_requirements:
+  plan_destination: github_issue
+  quiz_mode: in_chat
 ```
 
 ### "must be boolean, got string"
@@ -332,11 +376,11 @@ jl_recon:
 
 ```yaml
 # Before (invalid)
-jl_quiz:
+jl_quiz_requirements:
   file_storage_location: /usr/local/docs/
 
 # After (valid)
-jl_quiz:
+jl_quiz_requirements:
   file_storage_location: docs/plans/
 ```
 
@@ -348,11 +392,11 @@ jl_quiz:
 
 ```yaml
 # Before (invalid)
-jl_quiz:
+jl_quiz_requirements:
   file_storage_location: ../../docs/
 
 # After (valid)
-jl_quiz:
+jl_quiz_requirements:
   file_storage_location: docs/plans/
 ```
 
@@ -366,14 +410,14 @@ actual, active configuration in plain markdown is checked.
 
 ```yaml
 # This configuration is not validated because it's in a code block
-jl_quiz:
+jl_quiz_requirements:
   plan_destination: slack_thread
 ```
 
 **Example (validated):**
 
 ```text
-jl_quiz:
+jl_quiz_requirements:
   plan_destination: github_issue
 ```
 

@@ -8,7 +8,7 @@ Usage: ./scripts/apply-ticket-labels.sh [options]
 Options:
   --repo REPO                    GitHub repo (owner/name)
   --ticket-number N              Ticket/issue number
-  --type TYPE                    Ticket type: quiz|research|prototype|task
+  --type TYPE                    Ticket type: research|prototype|quiz-requirements|quiz-understanding|learn|prerequisite
   --configured-labels LABELS     Comma-separated configured labels
   --inherited-labels LABELS      Comma-separated inherited labels
   --user-override LABELS         If set, use ONLY these labels (replace all)
@@ -87,9 +87,9 @@ require_gh() {
 
 validate_type() {
   case "$1" in
-    quiz|research|prototype|task) return 0 ;;
+    research|prototype|quiz-requirements|quiz-understanding|learn|prerequisite) return 0 ;;
     *)
-      log_error "Invalid --type '$1'. Expected one of: quiz, research, prototype, task."
+      log_error "Invalid --type '$1'. Expected one of: research, prototype, quiz-requirements, quiz-understanding, learn, prerequisite."
       return 1
       ;;
   esac

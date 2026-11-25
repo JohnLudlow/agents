@@ -11,9 +11,7 @@ parent: "[Parent issue or epic, if any]"
 
 # Task Template
 
-This template captures a **bounded work item** — a piece of implementation that
-has a clear scope, measurable acceptance criteria, and an identifiable owner.
-Use this when you have work to assign, track, or coordinate.
+This file is retained for reading historical Task tickets. Do not use it to create new Recon tickets. New source changes belong in Implementation issues, not Recon map children.
 
 ## Work Scope
 
@@ -33,22 +31,9 @@ Example:
 > - Migration from legacy data is out of scope
 > - Performance optimization beyond current requirements
 
-## Acceptance Criteria
+## Historical Acceptance Criteria
 
-A task is accepted when these criteria are all met:
-
-1. **[Specific, Measurable, Checkable]** — [Example outcome or command to verify]
-2. **[Specific, Measurable, Checkable]** — [Example outcome or command to verify]
-3. **[Specific, Measurable, Checkable]** — [Example outcome or command to verify]
-
-Each criterion should be checkable by running a command (build, test, review),
-inspecting a file, or running a measurable test.
-
-Example acceptance criteria for the UserRepository task:
-- Code compiles without warnings: `dotnet build`
-- Method signature matches contract: accepts `userId`, `CancellationToken`; returns `Task<User?>`
-- Unit tests pass: `dotnet test UserRepositoryTests.cs`
-- Integration test passes against real PostgreSQL connection
+Retain the original criteria when reading a historical Task ticket. Do not use this file to create new tickets.
 
 ## Implementation Notes
 

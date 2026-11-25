@@ -25,7 +25,8 @@ Every `jl-planner` session carries the same state:
 - **Plan target** — markdown plan, GitHub issue, Azure DevOps work item, or
   another approved destination.
 - **Shared understanding** — the clarified scope, constraints, assumptions,
-  non-goals, and acceptance criteria collected through `jl-quiz`.
+  non-goals, and acceptance criteria collected through the Requirements Quiz
+  (`/jl-quiz-requirements`).
 - **Master plan** — the canonical parent planning artifact for the session.
 - **Delegated planning subtask** — a bounded child task delegated for
   breakdown, research, risk analysis, or specialist planning.
@@ -59,7 +60,7 @@ and before the final plan is accepted.
 `jl-planner` MUST NOT use delegation to bypass:
 
 - template compliance
-- clarification via `jl-quiz`
+- clarification via the Requirements Quiz (`/jl-quiz-requirements`)
 - plan target confirmation
 - provider workflow confirmation
 - human approval for provider-native writes
@@ -251,7 +252,7 @@ The parent planner owns the following decision points.
 
 ```text
 Run jl-planning-workflow BLOCKERs
-  -> reach shared understanding via jl-quiz
+  -> reach shared understanding via jl-quiz-requirements
   -> evaluate planning scope
   -> if scope fits one session:
        continue inline
@@ -560,7 +561,7 @@ The planner is running in a harness without subagent spawning support.
 The agent MUST:
 
 - load `jl-planning-workflow` before planning
-- use `jl-quiz` to reach shared understanding before delegated planning begins
+- use `jl-quiz-requirements` to reach shared understanding before delegated planning begins
 - evaluate delegation only after the relevant planning context is sharp enough
   to bound the child task
 - resolve `jl_approval_gates` before each delegation decision point
@@ -582,7 +583,9 @@ The agent MUST NOT:
 ## Related Skills and Agents
 
 - `jl-planning-workflow` — mandatory planning workflow and BLOCKER logic
-- `jl-quiz` — shared-understanding and clarification mechanism
+- `jl-quiz-requirements` / `jl-quiz-understanding` — shared-understanding and
+  clarification mechanisms (Requirements Quiz and Understanding Quiz
+  workflows)
 - `jl-feature-planner` — primary child agent for delegated breakdown and
   specialist planning
 - `jl-subagent-spawning` — delegate-to-subagent protocol, harness limits, and

@@ -17,7 +17,7 @@ constraint: only agents can be fleet members; skills cannot be fleet members.
 - **Fleet mode:** `user → /fleet /agent1 /agent2 → model coordinates agents`
 - **Constraint:** Only agents can be fleet members; skills cannot be fleet
   members
-- **Consequence:** `/fleet /jl-quiz ...` fails because quiz is a skill,
+- **Consequence:** `/fleet /jl-quiz-requirements ...` fails because the Requirements Quiz workflow is a skill,
   not an agent
 
 ## Could Skills Become Fleet-Capable?

@@ -14,7 +14,9 @@ resolution mechanism (`AGENTS.md`/`CONTRIBUTING.md` merge rules, precedence, and
 
 Notable repository-level namespaces:
 
-- `jl_quiz`, `jl_recon`, `jl_issue_management` — per-skill workflow settings
+- `jl_quiz_requirements`, `jl_quiz_understanding`, `jl_recon`,
+  `jl_issue_management` — per-skill workflow settings (the old `jl_quiz` block and the `quiz`/`task`
+  ticket-type keys are obsolete for new tickets; the validator rejects them)
   - `jl_recon.model_selection` — configure model preferences for delegated recon flows and quality checks
   - `jl_recon.title_format` — customize issue title formatting for maps and tickets (see [jl-recon Title Format Configuration](./jl-recon-title-format.md))
 - `jl_approval_gates` — boolean gates controlling whether delegation may happen at all

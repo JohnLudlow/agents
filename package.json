@@ -6,6 +6,12 @@
   "scripts": {
     "build:agents": "node scripts/validate-apm-package.js",
     "validate": "node scripts/validate-apm-package.js",
+    "test:ticket-templates": "node --test .apm/skills/jl-ticket-templates/tests/validator.test.js",
+    "test:config": "node --test scripts/validate-config.test.js",
+    "test:jl-quiz": "node --test .apm/skills/jl-quiz/tests/workflow-doc.test.js",
+    "test:jl-learn": "node --test .apm/skills/jl-learn/tests/learn.test.js",
+    "test:jl-research": "node --test .apm/skills/jl-research/tests/research.test.js",
+    "test:jl-prerequisite": "node --test .apm/skills/jl-prerequisite/tests/prerequisite.test.js",
     "lint:placement": "node scripts/lint-document-placement.js",
     "apm:compile": "apm compile || true",
     "install:local": "echo \"Use 'apm install <path>' to install this package locally (requires apm).\"",
@@ -38,8 +44,8 @@
     "node": ">=22.0.0"
   },
   "dependencies": {
-    "opentmux": "^1.5.7",
-    "@ramtinj95/opencode-tokenscope": "^1.6.3"
-  },
-  "devDependencies": {}
+    "@ramtinj95/opencode-tokenscope": "^1.6.3",
+    "bats": "^1.13.0",
+    "opentmux": "^1.5.7"
+  }
 }

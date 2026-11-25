@@ -45,13 +45,13 @@ in-chat interview or a questionnaire-first flow.
 ```text
 procedure startQuizAgent(debugMode)
   defaults :=
-    quiz_mode: "a"
+    quiz_mode: "in_chat"
     plan_destination: undefined
     file_storage_location: "docs/plans/"
 
   try
     result := resolveConfig({
-      configKey: "jl_quiz",
+      configKey: "jl_quiz_requirements",
       defaults: defaults,
       settingKeys: ["quiz_mode"],
       includeSource: debugMode
@@ -59,14 +59,14 @@ procedure startQuizAgent(debugMode)
 
     quizMode := result.value
 
-    if quizMode is not "a" and quizMode is not "b"
-      raise invalid_value("jl_quiz.quiz_mode")
+    if quizMode is not "in_chat" and quizMode is not "questionnaire"
+      raise invalid_value("jl_quiz_requirements.quiz_mode")
 
     if debugMode
       log("Resolved quiz_mode", quizMode, "from", result.source)
       log("Checked files", result.checkedFiles)
 
-    if quizMode = "a"
+    if quizMode = "in_chat"
       runLiveInterview()
     else
       runQuestionnaireFirstFlow()
@@ -86,14 +86,14 @@ end procedure
 Default mode (`includeSource: false`) returns only the value:
 
 ```text
-result = { value: "a" }
+result = { value: "in_chat" }
 ```
 
 Debug mode (`includeSource: true`) may return:
 
 ```text
 result =
-  value: "b"
+  value: "questionnaire"
   source: "agents"
   checkedFiles:
     contributing: "found"
@@ -185,13 +185,13 @@ for the current harness.
 ```text
 procedure choosePlanDestination(debugMode)
   defaults :=
-    quiz_mode: "a"
+    quiz_mode: "in_chat"
     plan_destination: undefined
     file_storage_location: "docs/plans/"
 
   try
     result := resolveConfig({
-      configKey: "jl_quiz",
+      configKey: "jl_quiz_requirements",
       defaults: defaults,
       settingKeys: ["plan_destination", "file_storage_location"],
       includeSource: debugMode
@@ -244,19 +244,19 @@ invocation if useful, but do not reuse config across unrelated invocations.
 
 ```text
 procedure invokeSharedSkill(agentContext, debugMode)
-  cacheKey := agentContext.session_id + ":" + agentContext.repository_root + ":jl_quiz"
+  cacheKey := agentContext.session_id + ":" + agentContext.repository_root + ":jl_quiz_requirements"
 
   if invocationCache contains cacheKey
     return invocationCache[cacheKey]
 
   defaults :=
-    quiz_mode: "a"
+    quiz_mode: "in_chat"
     plan_destination: undefined
     file_storage_location: "docs/plans/"
 
   try
     result := resolveConfig({
-      configKey: "jl_quiz",
+      configKey: "jl_quiz_requirements",
       defaults: defaults,
       includeSource: debugMode
     })

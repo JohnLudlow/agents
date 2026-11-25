@@ -11,15 +11,16 @@ parent: ""
 
 # Prototype: {exploration_name}
 
-This template is for **prototype tickets** — time-boxed explorations that raise
-the fidelity of a discussion with a cheap, throwaway artifact to react to.
+This template is for **prototype tickets**. A prototype ticket describes a
+time-boxed exploration. The exploration builds a cheap, throwaway artifact
+that the team can examine and discuss.
 
 Use this template when:
 
-- a decision depends on trying something quickly rather than discussing endlessly
-- a design or implementation question benefits from a working (if rough) example
-- exploring a technique or library before committing to a larger change
-- reducing uncertainty by building instead of reasoning
+- a decision depends on a quick trial
+- a design or implementation question needs a working, rough example
+- you must test a technique or library before a larger change
+- you must reduce uncertainty by building a sample
 
 This template **inherits** from the shared ticket base schema documented in
 `jl-ticket-templates/references/SHARED_BASE_SCHEMA.md`. See that document
@@ -102,12 +103,17 @@ Example:
 
 ## Acceptance Criteria
 
-- [ ] Research question clearly stated
-- [ ] Implementation approach documents what will and will not be built
-- [ ] Verification criteria are specific and measurable
-- [ ] Throwaway plan explicitly states what will be discarded
-- [ ] Findings are documented with specific observations or data
-- [ ] Next steps or dependent decisions identified (if any)
+- [ ] AC001: The ticket states one research question.
+
+- [ ] AC002: The approach lists what the prototype will and will not build.
+
+- [ ] AC003: Verification checks have specific, observable results.
+
+- [ ] AC004: The throwaway plan states what will be discarded and retained.
+
+- [ ] AC005: Findings record observations from the verification checks.
+
+- [ ] AC006: The ticket links any next steps or dependent decisions.
 
 ## Notes or Revision History
 

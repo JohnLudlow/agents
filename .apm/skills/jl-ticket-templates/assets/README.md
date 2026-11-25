@@ -1,79 +1,33 @@
 # Ticket Template Assets
 
-These assets provide reusable ticket-definition templates for skills that
-need to create or normalize issue payloads for external platforms.
+These assets provide reusable templates for new Recon ticket types and provider payloads.
 
-## What These Templates Are For
+## Provider Templates
 
-Each template captures a minimal, portable ticket shape for one platform.
-Skills can load the matching asset, substitute placeholder values such as
-`{title}` or `{description}`, then map the result into provider-specific API
-calls.
+The GitHub Recon payload uses native issue metadata and a readable Details list. Do not copy YAML frontmatter into a GitHub issue body.
 
-## How Other Skills Use These Templates
+- `github-issue-template.json` — generic GitHub issue payload example.
+- `github-recon-ticket-template.json` — GitHub mapping for shared Recon ticket fields.
+- `azure-devops-template.json` — existing Azure DevOps work item payload example.
 
-Other skills should treat these files as canonical examples for
-platform-specific ticket payloads:
+## Ticket Templates
 
-1. Select the asset for the destination platform.
-2. Replace placeholder tokens like `{title}` with real values.
-3. Validate required fields against the `fields` metadata before sending the
-   payload.
-4. Add provider-specific fields only when the target workflow needs them.
+New Markdown tickets use shared YAML frontmatter and one type-specific template:
 
-## Common Template Structure
+- `map-ticket-template.md` — new Map tickets.
+- `research-ticket-template.md` — new Research tickets.
+- `prototype-ticket-template.md` — new Prototype tickets.
+- `quiz-requirements-ticket-template.md` — new Requirements Quiz tickets.
+- `quiz-understanding-ticket-template.md` — new Understanding Quiz tickets.
+- `learn-ticket-template.md` — new Learn tickets.
+- `prerequisite-ticket-template.md` — new external or manual Prerequisite tickets.
+- `quiz-ticket-template.md` and `task-ticket-template.md` — historical read-only templates.
 
-All platform templates should follow the same core structure:
+## Usage
 
-- `platform`: Stable platform identifier, such as `github` or
-  `azure-devops`
-- `name`: Human-readable template name
-- Provider payload fields such as `title`, `body`, `description`, or `type`
-- `fields`: Validation metadata describing expected dynamic inputs
+1. Select the new-ticket template that matches the ticket type.
+2. Replace every placeholder with a real value.
+3. Keep each acceptance criterion on a separate checklist line with sequential IDs.
+4. Validate the ticket for its provider and stage before creating or resolving it.
 
-The `fields` object should describe constraints using plain metadata:
-
-- `type`: Expected value type
-- `required`: Whether the field must be provided
-- `minLength` or `maxLength`: String length constraints
-- `enum`: Allowed values for fixed-choice fields
-
-Use placeholder syntax like `{field_name}` for dynamic values. Keep field
-names descriptive and close to the target platform vocabulary.
-
-## Included Templates
-
-- `github-issue-template.json` — baseline GitHub issue payload example
-- `azure-devops-template.json` — baseline Azure DevOps work item payload
-  example
-- `quiz-ticket-template.md` — markdown template for quiz tickets (decisions
-  with options and reasoning); inherits from shared base schema
-- `research-ticket-template.md` — markdown template for research tickets
-  (investigations with evidence and findings); inherits from shared base schema
-- `prototype-ticket-template.md` — markdown template for prototype tickets
-  (time-boxed explorations with verification); inherits from shared base schema
-- `task-ticket-template.md` — markdown template for task tickets (bounded
-  implementation work with explicit scope and acceptance criteria); inherits
-  from shared base schema
-- `map-ticket-template.md` — markdown template for map tickets (complex efforts
-  organized into decisions, open work, and blocking edges); inherits from shared
-  base schema
-
-## How to Add a New Platform Template
-
-1. Create a new JSON file in this `assets/` directory named for the
-   platform, such as `jira-template.json`.
-2. Add a `platform` identifier and a clear `name`.
-3. Define the provider payload using placeholder values like `{title}` and
-   `{body}`.
-4. Add a `fields` object describing every dynamic field's constraints.
-5. Keep the template minimal and platform-agnostic unless the provider
-   requires a platform-specific field.
-6. Update this README to list the new template and explain any notable
-   platform differences.
-
-## Notes for Skill Authors
-
-These assets are examples and reusable defaults, not a complete schema
-system. If a consuming skill needs richer validation or field mapping, keep
-that logic in the skill and preserve these files as simple reference assets.
+The shared contract and validator API are defined in `../references/SHARED_BASE_SCHEMA.md` and `../validator.js`.

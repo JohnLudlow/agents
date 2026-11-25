@@ -65,12 +65,14 @@ function Parse-Frontmatter {
         if ($normalized.StartsWith('---')) {
             throw "Frontmatter opening delimiter found but closing '---' is missing."
         }
-        $result.Body = $normalized
+        $result.Body = $Content
         return $result
     }
 
     $frontmatterText = $match.Groups[1].Value
-    $result.Body = $match.Groups[2].Value
+    # Keep the body byte-for-byte (CRLF, trailing whitespace, final newline) so historical content is never rewritten.
+    $rawMatch = [regex]::Match($Content, '^(?s)---\r?\n(.*?)\r?\n---(?:\r?\n(.*))?$')
+    $result.Body = if ($rawMatch.Success) { $rawMatch.Groups[2].Value } else { $match.Groups[2].Value }
     $lines = @(if ([string]::IsNullOrEmpty($frontmatterText)) { @() } else { $frontmatterText -split "`n" })
 
     for ($i = 0; $i -lt $lines.Count; $i++) {

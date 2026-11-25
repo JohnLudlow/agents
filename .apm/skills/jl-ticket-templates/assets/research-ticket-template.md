@@ -11,15 +11,16 @@ parent: ""
 
 # Research: {research_topic}
 
-This template is for **research tickets** — investigations that explore a
-question, gather evidence, and report findings to inform a decision.
+This template is for **research tickets**. A research ticket describes an
+investigation of a question. The investigation gathers evidence and reports
+findings for a decision.
 
 Use this template when:
 
 - a feature or design decision depends on external knowledge
-- you need to evaluate options before committing to a path
-- investigation findings should be documented for future reference
-- the scope and methodology of the research matter to stakeholders
+- you must evaluate options before you choose a path
+- you must document the findings for future use
+- the scope and method of the research are important to stakeholders
 
 This template **inherits** from the shared ticket base schema documented in
 `jl-ticket-templates/references/SHARED_BASE_SCHEMA.md`. See that document
@@ -96,11 +97,15 @@ Example:
 
 ## Acceptance Criteria
 
-- [ ] Investigation goal clearly stated as a research question
-- [ ] Scope explicitly lists what is in and out of bounds
-- [ ] Findings are documented with specific evidence or references
-- [ ] Recommendation is supported by the findings
-- [ ] Next steps or dependent decisions are identified (if any)
+- [ ] AC001: The investigation goal is a neutral research question.
+
+- [ ] AC002: The scope lists what is in scope and out of scope.
+
+- [ ] AC003: Findings include specific evidence or references.
+
+- [ ] AC004: The recommendation is supported by the findings and states trade-offs.
+
+- [ ] AC005: The ticket links any next steps or dependent decisions.
 
 ## Notes or Revision History
 

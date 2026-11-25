@@ -75,10 +75,13 @@ preferable to a silent assumption that turns out to be wrong.
 
 ## Configuration
 
-jl-quiz reads settings from `jl_quiz` configuration in `CONTRIBUTING.md`
-and `AGENTS.md`. It uses `jl-config` only for the generic resolution
-mechanism; jl-quiz itself owns this schema, its defaults, and its
-validation.
+jl-quiz reads settings from the independent `jl_quiz_requirements` and
+`jl_quiz_understanding` blocks in `CONTRIBUTING.md` and `AGENTS.md`. Use the
+block that matches the Quiz type (Requirements Quiz or Understanding Quiz).
+Both blocks accept the same settings. The old `jl_quiz` block is obsolete for
+new tickets; the validator rejects it with a clear error. It uses `jl-config`
+only for the generic resolution mechanism; jl-quiz itself owns this schema,
+its defaults, and its validation.
 
 ### Schema
 
@@ -90,7 +93,8 @@ validation.
 
 ### Validation and defaults
 
-- validate that `jl_quiz`, if present, is an object
+- validate that `jl_quiz_requirements` and `jl_quiz_understanding`, if present, are objects
+- reject the obsolete `jl_quiz` block for new tickets
 - validate `quiz_mode` against the `in_chat` / `questionnaire` enum
 - validate `plan_destination` against the documented destination enum
 - validate `file_storage_location` as a repository-relative string when present
@@ -103,7 +107,7 @@ validation.
 In `CONTRIBUTING.md`:
 
 ```yaml
-jl_quiz:
+jl_quiz_requirements:
   quiz_mode: in_chat
   plan_destination: github_issue
   file_storage_location: docs/plans/
@@ -112,20 +116,31 @@ jl_quiz:
 In `AGENTS.md`:
 
 ```yaml
-jl_quiz:
+jl_quiz_understanding:
   quiz_mode: questionnaire
 ```
+
+## Workflow Files
+
+This skill ships two workflow entry points, in `references/`:
+
+- **Requirements Quiz** — `references/REQUIREMENTS_QUIZ.md` — the
+  `/jl-quiz-requirements` workflow (AC001–AC004 plus the goal model).
+- **Understanding Quiz** — `references/UNDERSTANDING_QUIZ.md` — the
+  `/jl-quiz-understanding` workflow (AC005–AC008).
+
+Both start from the configuration resolution in BLOCKER 0 below.
 
 ## When This Skill is Invoked
 
 When this skill is invoked, follow these steps:
 
-### ✓ BLOCKER 0: Resolve `jl_quiz` Configuration via `jl-config`
+### ✓ BLOCKER 0: Resolve Quiz Configuration via `jl-config`
 
 Before proceeding with interviews or questionnaires, resolve setup
 preferences through `jl-config`.
 
-**Settings this skill consumes from `jl_quiz`:**
+**Settings this skill consumes from `jl_quiz_requirements` or `jl_quiz_understanding`:**
 
 - `quiz_mode`
   - `in_chat` = in-chat interview
@@ -142,11 +157,12 @@ preferences through `jl-config`.
 
 1. Read `AGENTS.md` if it exists.
 2. Read `CONTRIBUTING.md` if it exists.
-3. Call `jl-config`'s generic resolution mechanism for the `jl_quiz` key:
+3. Call `jl-config`'s generic resolution mechanism for the quiz block that
+   matches the ticket type (`jl_quiz_requirements` or `jl_quiz_understanding`):
    - start from jl-quiz's documented defaults
    - merge `CONTRIBUTING.md`
    - merge `AGENTS.md`
-4. Validate the resolved `jl_quiz` object against jl-quiz's own schema:
+4. Validate the resolved quiz object against jl-quiz's own schema:
    - `quiz_mode` must be `in_chat` or `questionnaire`
    - `plan_destination` must be one of the documented destination values
    - `file_storage_location`, if present, must be a repository-relative path
@@ -159,7 +175,7 @@ preferences through `jl-config`.
 
 - Do not treat a missing config file as an error; use the `jl-config`
   mechanism with jl-quiz's own defaults first.
-- Do not keep hardcoded config logic outside this documented `jl_quiz`
+- Do not keep hardcoded config logic outside this documented quiz block
   schema; jl-config only resolves, while jl-quiz owns defaults and
   validation.
 - If `plan_destination` resolves to `local_file`, use the resolved
@@ -172,7 +188,7 @@ preferences through `jl-config`.
 
 **Completion criterion:** The skill has resolved usable values for
 `quiz_mode`, `plan_destination`, and `file_storage_location` from
-resolved `jl_quiz` config, or has asked the user only for the still-missing
+the resolved quiz block (`jl_quiz_requirements` or `jl_quiz_understanding`), or has asked the user only for the still-missing
 choice needed to proceed safely.
 
 ### Configuration Warnings
@@ -204,7 +220,8 @@ format defined by jl-config) for:
 [WARN] jl-quiz: required setting 'plan_destination' not found
   in AGENTS.md or CONTRIBUTING.md
   File: (checked both config files)
-  Fix: Add to CONTRIBUTING.md under jl_quiz: plan_destination: github_issue
+  Fix: Add to CONTRIBUTING.md under jl_quiz_requirements or
+  jl_quiz_understanding: plan_destination: github_issue
 ```
 
 #### Invalid File Path — absolute path
@@ -219,9 +236,9 @@ format defined by jl-config) for:
 #### Type Mismatch — quiz_mode
 
 ```text
-[WARN] jl-quiz: 'quiz_mode' must be a string ("a" or "b"), not a boolean
+[WARN] jl-quiz: 'quiz_mode' must be a string ("in_chat" or "questionnaire"), not a boolean
   File: CONTRIBUTING.md [line 5]
-  Fix: Change the value to a string: quiz_mode: a
+  Fix: Change the value to a string: quiz_mode: in_chat
 ```
 
 #### Invalid File Path — parent directory
@@ -236,9 +253,9 @@ format defined by jl-config) for:
 #### Root Shape Error
 
 ```text
-[WARN] jl-quiz: 'jl_quiz' config block must be an object, not a list
+[WARN] jl-quiz: 'jl_quiz_requirements' config block must be an object, not a list
   File: AGENTS.md [line 5]
-  Fix: Change the jl_quiz block to use YAML object syntax (key: value pairs)
+  Fix: Change the block to use YAML object syntax (key: value pairs)
 ```
 
 ---
@@ -254,7 +271,7 @@ format defined by jl-config) for:
    - If a prior decision has been made in this session about what mode to
      operate in, continue in that mode until instructed otherwise, continue
      to step 4
-   - If `jl_quiz.quiz_mode` resolves to a mode, continue
+   - If `quiz_mode` (from the resolved quiz block) resolves to a mode, continue
      in that mode until instructed otherwise, continue to step 4
    - If the ***Scope*** is ***small***, AND the ***Complexity*** is
      ***simple***, AND the ***shared understanding*** is ***deep*** AND
@@ -328,7 +345,8 @@ switching logic (chat ↔ questionnaire), see **[BRANCHING.md](references/BRANCH
 The agent MUST:
 
 - **Preference Resolution (BLOCKER 0):** Before any interview or questionnaire,
-  MUST call `jl-config` to resolve `jl_quiz` from `CONTRIBUTING.md` and
+  MUST call `jl-config` to resolve `jl_quiz_requirements` or
+  `jl_quiz_understanding` from `CONTRIBUTING.md` and
   `AGENTS.md`, using jl-quiz's own schema, defaults, and validation. If the
   resolved values are still insufficient for safe progress, MUST ask the user
   only for the missing session choice and then continue.

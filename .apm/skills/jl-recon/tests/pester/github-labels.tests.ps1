@@ -5,7 +5,7 @@ Describe 'GitHub ticket labels' {
         $script:githubHelper = Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) 'scripts' 'apply-ticket-labels.ps1'
     }
 
-    It 'combines configured, inherited and required labels once in sorted order for <_>' -ForEach @('quiz', 'research', 'prototype', 'task') {
+    It 'combines configured, inherited and required labels once in sorted order for <_>' -ForEach @('research', 'prototype', 'quiz-requirements', 'quiz-understanding', 'learn', 'prerequisite') {
         $result = Invoke-LabelHelper -Path $script:githubHelper -Parameters @{
             Repo = 'example/repo'
             TicketNumber = 42
@@ -17,14 +17,15 @@ Describe 'GitHub ticket labels' {
         $result.Errors | Should -BeNullOrEmpty
         $result.Calls.Count | Should -Be 2
         $result.Calls[0] | Should -Be @('issue', 'view', '42', '--repo', 'example/repo')
-        $result.Calls[1] | Should -Be @('issue', 'edit', '42', '--repo', 'example/repo', '--add-label', "area-auth,planning,recon:map,recon:$_,type:question")
+        $expectedLabels = @('area-auth', 'planning', 'recon:map', "recon:$_", 'type:question') | Sort-Object -Unique
+        $result.Calls[1] | Should -Be @('issue', 'edit', '42', '--repo', 'example/repo', '--add-label', ($expectedLabels -join ','))
     }
 
     It 'uses only the override, removing existing labels not in it' {
         $result = Invoke-LabelHelper -Path $script:githubHelper -ExistingLabels @('old-label', 'planning') -Parameters @{
             Repo = 'example/repo'
             TicketNumber = 42
-            Type = 'task'
+            Type = 'quiz-requirements'
             ConfiguredLabels = 'configured'
             InheritedLabels = 'recon:map'
             UserOverride = 'zeta,priority-high,zeta'
@@ -60,7 +61,7 @@ Describe 'GitHub ticket labels' {
         $result = Invoke-LabelHelper -Path $script:githubHelper -ExitCodes @{ labels = 1 } -Parameters @{
             Repo = 'example/repo'
             TicketNumber = 42
-            Type = 'task'
+            Type = 'quiz-understanding'
             UserOverride = 'new-label'
         }
 
@@ -74,7 +75,7 @@ Describe 'GitHub ticket labels' {
         $result = Invoke-LabelHelper -Path $helper -ExistingLabels @('old-label') -Parameters @{
             Repo = 'example/repo'
             TicketNumber = 42
-            Type = 'task'
+            Type = 'prerequisite'
             UserOverride = 'priority-high'
         }
 
@@ -88,7 +89,7 @@ Describe 'GitHub ticket labels' {
         $result = Invoke-LabelHelper -Path $script:githubHelper -ExitCodes @{ view = 1 } -Parameters @{
             Repo = 'example/repo'
             TicketNumber = 42
-            Type = 'quiz'
+            Type = 'learn'
         }
 
         $result.Calls.Count | Should -Be 1
@@ -98,20 +99,83 @@ Describe 'GitHub ticket labels' {
         $result = Invoke-LabelHelper -Path $script:githubHelper -ExitCodes @{ edit = 1 } -Parameters @{
             Repo = 'example/repo'
             TicketNumber = 42
-            Type = 'task'
+            Type = 'prerequisite'
         }
 
         $result.Calls.Count | Should -Be 2
         $result.Output | Should -Not -Match 'Applied labels'
     }
 
-    It 'does not call gh for an invalid ticket type' {
+    It 'rejects unsupported ticket type <_> before contacting gh' -ForEach @('quiz', 'task', 'invalid') {
         $result = Invoke-LabelHelper -Path $script:githubHelper -Parameters @{
             Repo = 'example/repo'
             TicketNumber = 42
-            Type = 'invalid'
+            Type = $_
         }
 
         $result.Calls | Should -BeNullOrEmpty
+        $helperLiteral = "'" + $script:githubHelper.Replace("'", "''") + "'"
+        $typeLiteral = "'" + $_.Replace("'", "''") + "'"
+        $command = "function gh { throw 'Unexpected gh call' }; & $helperLiteral -Repo 'example/repo' -TicketNumber 42 -Type $typeLiteral"
+        $diagnostic = & pwsh -NoLogo -NoProfile -Command $command 2>&1
+        $LASTEXITCODE | Should -Be 1
+        $diagnostic | Should -Match "Invalid --type '$_'"
+    }
+
+    Context 'historical tickets are not relabeled' {
+        BeforeAll {
+            $skillsRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+            $script:copies = @('jl-recon', 'jl-issue-management') | ForEach-Object {
+                @{ Name = $_; Path = Join-Path $skillsRoot $_ 'scripts' 'apply-ticket-labels.ps1' }
+            }
+        }
+
+        It 'makes zero gh calls for legacy type <_> in both helper copies' -ForEach @('quiz', 'task', 'map') {
+            foreach ($copy in $script:copies) {
+                $result = Invoke-LabelHelper -Path $copy.Path -Parameters @{
+                    Repo = 'example/repo'
+                    TicketNumber = 42
+                    Type = $_
+                    ConfiguredLabels = 'legacy'
+                }
+                $result.Calls.Count | Should -Be 0 -Because "$($copy.Name) must not touch a historical $_ ticket"
+            }
+        }
+
+        It 'makes zero gh calls for legacy type <_> even with an override or dry run' -ForEach @('quiz', 'task') {
+            foreach ($copy in $script:copies) {
+                $override = Invoke-LabelHelper -Path $copy.Path -ExistingLabels @('old') -Parameters @{
+                    Repo = 'example/repo'; TicketNumber = 42; Type = $_; UserOverride = 'x'
+                }
+                $dry = Invoke-LabelHelper -Path $copy.Path -Parameters @{
+                    Repo = 'example/repo'; TicketNumber = 42; Type = $_; DryRun = $true
+                }
+                $override.Calls.Count | Should -Be 0
+                $dry.Calls.Count | Should -Be 0
+            }
+        }
+
+        It 'makes zero gh calls for historical Map status <_> used as a type' -ForEach @('Charting', 'Walked', 'Completed', 'Stale') {
+            foreach ($copy in $script:copies) {
+                $result = Invoke-LabelHelper -Path $copy.Path -Parameters @{
+                    Repo = 'example/repo'; TicketNumber = 42; Type = $_
+                }
+                $result.Calls.Count | Should -Be 0
+            }
+        }
+
+        It 'only reads or edits the single ticket it is given' {
+            foreach ($copy in $script:copies) {
+                $result = Invoke-LabelHelper -Path $copy.Path -Parameters @{
+                    Repo = 'example/repo'; TicketNumber = 42; Type = 'learn'
+                }
+                $result.Calls.Count | Should -Be 2
+                foreach ($call in $result.Calls) {
+                    $call[0] | Should -Be 'issue'
+                    $call[1] | Should -BeIn @('view', 'edit')
+                    $call[2] | Should -Be '42'
+                }
+            }
+        }
     }
 }

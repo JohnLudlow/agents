@@ -162,7 +162,7 @@ labels:
 ### Validation
 
 - `labels` must be an object
-- Each key (`map`, `quiz`, `research`, `prototype`, `task`) must map to a list
+- Each key (`default`, `map`, `research`, `prototype`, `quiz_requirements`, `quiz_understanding`, `learn`, `prerequisite`) must map to a list
 - Each list element must be a string
 - Label strings must not contain commas (GitHub) or semicolons (Azure DevOps)
 

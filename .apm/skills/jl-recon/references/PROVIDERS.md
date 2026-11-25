@@ -148,7 +148,9 @@ inciting issue, check it first.
   alongside it; one list carries all resolved decisions, whether or not each
   one has a sub-issue behind it.
 - **Ticket type**: a label — `recon:research`, `recon:prototype`,
-  `recon:quiz`, `recon:task`.
+  `recon:quiz-requirements`, `recon:quiz-understanding`, `recon:learn`, or
+  `recon:prerequisite`. The old `recon:quiz` and `recon:task` labels remain
+  historical and are not applied to new tickets.
 - **Blocking**: GitHub's native "blocked by" / "blocks" issue links. Also add
   a short note in the ticket body stating the reason, e.g. `BLOCKED:
   requires the widget widgetiser from [widgetising-widgets]` — the native
@@ -199,9 +201,9 @@ last.
 Apply ticket labels in this order:
 
 1. **Start with configured labels for the ticket type**: Read
-   `jl_recon.labels.<type>` for the ticket's type (`quiz`, `research`,
-   `prototype`, or `task`). If that type-specific key is not configured, fall
-   back to `labels.default`.
+   `jl_recon.labels.<type>` for the ticket's type (`research`, `prototype`,
+   `quiz_requirements`, `quiz_understanding`, `learn`, or `prerequisite`). If
+   that type-specific key is not configured, fall back to `labels.default`.
 2. **Add inherited labels from the parent map**: Copy every label the map
    already carries. This is additive, not a replacement. If the map was
    created from configured labels, those created labels are what the ticket
@@ -217,12 +219,15 @@ Apply ticket labels in this order:
 
 #### Ticket Type Mapping
 
-Each ticket type always receives its own dedicated `recon:<type>` label:
+Each new ticket type always receives its own dedicated `recon:<type>` label:
 
-- **Quiz** → `recon:quiz`
+- **Map** → `recon:map`
 - **Research** → `recon:research`
 - **Prototype** → `recon:prototype`
-- **Task** → `recon:task`
+- **Requirements Quiz** → `recon:quiz-requirements`
+- **Understanding Quiz** → `recon:quiz-understanding`
+- **Learn** → `recon:learn`
+- **Prerequisite** → `recon:prerequisite`
 
 #### Inheritance Behavior
 
@@ -243,17 +248,35 @@ the map's labels.
 
 #### Type-by-Type Examples
 
-##### Quiz Tickets
+##### Requirements Quiz Tickets
 
 ```text
-Ticket Labels = jl_recon.labels.quiz + map labels + recon:quiz
+Ticket Labels = jl_recon.labels.quiz_requirements + map labels + recon:quiz-requirements
 ```
 
 Example:
 
-- `jl_recon.labels.quiz = ["type:question", "needs-answer"]`
+- `jl_recon.labels.quiz_requirements = ["type:question", "needs-answer"]`
 - Map labels = `["recon:map", "area:auth"]`
-- Final set = `["area:auth", "needs-answer", "recon:map", "recon:quiz", "type:question"]`
+- Final set = `["area:auth", "needs-answer", "recon:map", "recon:quiz-requirements", "type:question"]`
+
+##### Understanding Quiz Tickets
+
+```text
+Ticket Labels = jl_recon.labels.quiz_understanding + map labels + recon:quiz-understanding
+```
+
+##### Learn Tickets
+
+```text
+Ticket Labels = jl_recon.labels.learn + map labels + recon:learn
+```
+
+##### Prerequisite Tickets
+
+```text
+Ticket Labels = jl_recon.labels.prerequisite + map labels + recon:prerequisite
+```
 
 ##### Research Tickets
 
@@ -279,17 +302,8 @@ Example:
 - Map labels = `["recon:map", "area:editor"]`
 - Final set = `["area:editor", "recon:map", "recon:prototype", "spike", "type:prototype"]`
 
-##### Task Tickets
-
-```text
-Ticket Labels = jl_recon.labels.task + map labels + recon:task
-```
-
-Example:
-
-- `jl_recon.labels.task = ["type:task", "decision-unblocker"]`
-- Map labels = `["recon:map", "priority:high"]`
-- Final set = `["decision-unblocker", "priority:high", "recon:map", "recon:task", "type:task"]`
+The historical `task` type is read-only. Create new work as a ticket type
+defined in the shared contract; do not apply `recon:task`.
 
 #### Configuration Examples
 
@@ -300,10 +314,12 @@ jl_recon:
   labels:
     default: ["recon:map"]
     map: ["recon:map", "planning"]
-    quiz: ["type:question", "needs-answer"]
+    quiz_requirements: ["type:question", "needs-answer"]
+    quiz_understanding: ["type:understanding"]
     research: ["type:research", "recon-output"]
     prototype: ["type:prototype", "spike"]
-    task: ["type:task", "decision-unblocker"]
+    learn: ["type:learning"]
+    prerequisite: ["type:prerequisite", "decision-unblocker"]
 ```
 
 Example `AGENTS.md` override:
@@ -470,7 +486,9 @@ differs.
 
 1. Start with configured labels for the ticket type (from `jl_recon.labels.<type>`)
 2. Add inherited tags from the parent map
-3. Add the `recon:<type>` tag (`recon:quiz`, `recon:research`, `recon:prototype`, `recon:task`)
+3. Add the required type tag (`recon:research`, `recon:prototype`,
+   `recon:quiz-requirements`, `recon:quiz-understanding`, `recon:learn`, or
+   `recon:prerequisite`)
 4. De-duplicate (set union)
 5. Sort alphabetically for determinism
 6. Apply user override if provided (replace the entire set)
@@ -514,12 +532,12 @@ az boards work-item relation add \
 
 **Type-by-type examples**:
 
-- **Quiz**:
+- **Requirements Quiz**:
 
   ```text
-  jl_recon.labels.quiz = ["type:question", "needs-answer"]
+  jl_recon.labels.quiz_requirements = ["type:question", "needs-answer"]
   map tags = ["recon:map"]
-  resolved tags = "needs-answer;recon:map;recon:quiz;type:question"
+  resolved tags = "needs-answer;recon:map;recon:quiz-requirements;type:question"
   ```
 
 - **Research**:
@@ -538,12 +556,12 @@ az boards work-item relation add \
   resolved tags = "recon:map;recon:prototype;spike;type:prototype"
   ```
 
-- **Task**:
+- **Prerequisite**:
 
   ```text
-  jl_recon.labels.task = ["type:task", "implementation"]
+  jl_recon.labels.prerequisite = ["type:prerequisite", "decision-unblocker"]
   map tags = ["recon:map"]
-  resolved tags = "implementation;recon:map;recon:task;type:task"
+  resolved tags = "decision-unblocker;recon:map;recon:prerequisite;type:prerequisite"
   ```
 
 ##### Azure DevOps Tag Query Examples
@@ -568,10 +586,12 @@ against `[System.Tags]`.
   ```text
   [System.Tags] Contains "planning"
   AND (
-    [System.Tags] Contains "recon:quiz"
+    [System.Tags] Contains "recon:quiz-requirements"
+    OR [System.Tags] Contains "recon:quiz-understanding"
     OR [System.Tags] Contains "recon:research"
     OR [System.Tags] Contains "recon:prototype"
-    OR [System.Tags] Contains "recon:task"
+    OR [System.Tags] Contains "recon:learn"
+    OR [System.Tags] Contains "recon:prerequisite"
   )
   ```
 
@@ -669,8 +689,9 @@ Ticket Labels = Configured Type Labels + Inherited Map Labels + recon:<type>
 
 Resolution order:
 
-1. Start with `jl_recon.labels.<type>` for the ticket type (`quiz`,
-   `research`, `prototype`, `task`), or `labels.default` if the type-specific
+1. Start with `jl_recon.labels.<type>` for the ticket type (`research`,
+   `prototype`, `quiz_requirements`, `quiz_understanding`, `learn`,
+   `prerequisite`), or `labels.default` if the type-specific
    key is not configured.
 2. Add every label already present on the parent map.
 3. Add the required `recon:<type>` label.
@@ -684,10 +705,12 @@ jl_recon:
   labels:
     default: ["recon:map"]
     map: ["recon:map", "planning"]
-    quiz: ["needs-answer", "type:question"]
+    quiz_requirements: ["needs-answer", "type:question"]
+    quiz_understanding: ["type:understanding"]
     research: ["recon-output", "type:research"]
     prototype: ["spike", "type:prototype"]
-    task: ["decision-unblocker", "type:task"]
+    learn: ["type:learning"]
+    prerequisite: ["decision-unblocker", "type:prerequisite"]
 ```
 
 Expected ticket frontmatter format:
@@ -697,7 +720,7 @@ Inline format:
 ```yaml
 ---
 title: "Verify auth refresh token rotation"
-labels: ["needs-answer", "planning", "recon:map", "recon:quiz", "type:question"]
+labels: ["needs-answer", "planning", "recon:map", "recon:quiz-requirements", "type:question"]
 parent: "docs/plans/authentication-recon-map.md"
 ---
 ```
@@ -711,7 +734,7 @@ labels:
   - "needs-answer"
   - "planning"
   - "recon:map"
-  - "recon:quiz"
+  - "recon:quiz-requirements"
   - "type:question"
 parent: "docs/plans/authentication-recon-map.md"
 ---
@@ -719,13 +742,13 @@ parent: "docs/plans/authentication-recon-map.md"
 
 ##### Type-by-type examples
 
-Quiz ticket:
+Requirements Quiz ticket:
 
 ```text
 Configured Type Labels = ["needs-answer", "type:question"]
 Inherited Map Labels   = ["planning", "recon:map"]
-Required Type Label    = ["recon:quiz"]
-Final Labels           = ["needs-answer", "planning", "recon:map", "recon:quiz", "type:question"]
+Required Type Label    = ["recon:quiz-requirements"]
+Final Labels           = ["needs-answer", "planning", "recon:map", "recon:quiz-requirements", "type:question"]
 ```
 
 Research ticket:
@@ -746,13 +769,13 @@ Required Type Label    = ["recon:prototype"]
 Final Labels           = ["planning", "recon:map", "recon:prototype", "spike", "type:prototype"]
 ```
 
-Task ticket:
+Prerequisite ticket:
 
 ```text
-Configured Type Labels = ["decision-unblocker", "type:task"]
+Configured Type Labels = ["decision-unblocker", "type:prerequisite"]
 Inherited Map Labels   = ["planning", "recon:map"]
-Required Type Label    = ["recon:task"]
-Final Labels           = ["decision-unblocker", "planning", "recon:map", "recon:task", "type:task"]
+Required Type Label    = ["recon:prerequisite"]
+Final Labels           = ["decision-unblocker", "planning", "recon:map", "recon:prerequisite", "type:prerequisite"]
 ```
 
 ##### Optional body note
@@ -762,7 +785,7 @@ ticket body. This is recommended, but not required, because the frontmatter is
 the source of truth.
 
 ```markdown
-**Labels:** needs-answer, planning, recon:map, recon:quiz, type:question
+**Labels:** needs-answer, planning, recon:map, recon:quiz-requirements, type:question
 
 **Blocked by:** [Auth token storage decision](auth-token-storage-decision.md)
 ```

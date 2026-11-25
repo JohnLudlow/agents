@@ -36,6 +36,14 @@ runs:
       run: |
         node -e "require('./package.json')" && echo "✓ package.json is valid"
 
+    - name: Test ticket templates validator
+      shell: bash
+      run: npm run test:ticket-templates
+
+    - name: Test config validator
+      shell: bash
+      run: npm run test:config
+
     - name: Validate document placement
       shell: bash
       run: |
