@@ -89,7 +89,9 @@ Examples:
 
 1. Resolve `jl_approval_gates.documentation_approval_required` at session start.
 2. For each candidate delegated section, check the effective approval mode.
-3. If `documentation_approval_required` is `true`, prompt before calling `DelegateToSubagent`.
+3. If `documentation_approval_required` is `true`, prompt before delegating
+   each section to the target agent's native delegation in the current harness
+   (with inline/manual fallback).
 4. If `documentation_approval_required` is `false`, delegation is pre-authorized.
 5. If the user declines, record the gap in the documentation plan and explain why delegation was needed.
 6. Before publication, resolve `documentation_publish_approval_required` and require approval if `true`.
@@ -263,7 +265,6 @@ Publishing may be a simple handoff for small inline docs or a gated coordination
 
 ## References
 
-- `jl-subagent-spawning` — `../jl-subagent-spawning/SKILL.md` for `DelegateToSubagent` protocol and harness fallback patterns
 - `jl-recon` — `../jl-recon/SKILL.md` for inherited gate handling and graceful AFK delegation patterns
 - `jl-feature-documenter` — `../../agents/jl-feature-documenter.agent.md` for implementation-facing documentation ownership
 - `jl-documentation-template` — `../jl-documentation-template/SKILL.md` for canonical structure of produced docs

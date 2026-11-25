@@ -88,7 +88,8 @@ Every implementation session should maintain the following shared state:
 - **Implementation slice** — a bounded unit of work the parent agent can do
   inline or delegate
 - **Delegated subtask** — a child slice assigned to a specialist or
-  language-specific agent through `DelegateToSubagent`
+  language-specific agent through native delegation in the current harness
+  (with inline/manual fallback)
 - **Parent feature branch** — the main feature branch coordinating all child
   work
 - **Child feature branch** — a delegated subtask branch rooted under the
@@ -289,9 +290,9 @@ for each slice:
     choose target agent
     if prompt required:
       ask "Delegate {subtask} (language: {lang}) to {target_agent}? [Approve] [Decline]"
-    if approved and harness supports delegation:
+    if approved and the harness supports delegation:
       create child worktree + child branch
-      DelegateToSubagent(slice)
+      native delegation of the slice in the current harness
       collect artifact bundle
     else if fallback == inline:
       implement slice inline
@@ -620,8 +621,6 @@ If available at runtime, delegate to the following community skills and agents.
   which library to use, which design pattern to follow, how to handle a
   trade-off, or any choice the codebase does not answer for the agent.
   Prefer asking over assuming.
-- `jl-subagent-spawning` — reference for `DelegateToSubagent`, harness
-  capability differences, and graceful fallback behaviour
 - `jl-feature-documenter` — supporting documentation and implementation notes
 - `jl-feature-tester` — focused validation and integration testing
 - `polyglot-test-agent` — multi-language test generation and execution
@@ -632,15 +631,12 @@ If available at runtime, delegate to the following community skills and agents.
 
 - Works with both Copilot CLI and OpenCode
 - Depends on plans from `jl-feature-planner`
-- Can delegate bounded implementation slices to specialist agents
+- Can delegate bounded implementation slices to specialist agents using the
+  current harness's native delegation support, with inline/manual fallback
 - Delegates documentation to `jl-feature-documenter`
-- Uses `jl-feature-tester` or similar agents for validation when appropriate
-- Follows `jl-subagent-spawning` guidance for harness-aware delegation
 
 ## References
 
-- `.apm/skills/jl-subagent-spawning/SKILL.md` — `DelegateToSubagent`
-  protocol, harness support, and fallback patterns
 - `.apm/skills/jl-recon/SKILL.md` — approval-gate resolution and AFK-style
   delegation patterns that this implementation flow mirrors for bounded child
   work

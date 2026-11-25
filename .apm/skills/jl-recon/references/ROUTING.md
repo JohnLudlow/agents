@@ -19,7 +19,7 @@ for that specific ticket.
 - **Task** — manual work that has to happen before a decision can be made
   (provisioning access, moving data, signing up for a service). Not a
   decision itself; it unblocks one. When a Task involves making source
-  changes directly, it gets an isolated worktree — see
-  `jl-subagent-spawning/SKILL.md` → Task Ticket Worktree-Trigger Detection
+  changes directly, it gets an isolated worktree — see the Task Ticket
+  Worktree-Trigger Detection in jl-recon LIFECYCLE.md
   for how that's determined (explicit `worktree: required` marker, then
   inference, defaulting to inline when ambiguous).

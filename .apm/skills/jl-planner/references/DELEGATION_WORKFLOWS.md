@@ -24,7 +24,7 @@ Run jl-planning-workflow BLOCKERs
        if approved:
          create child plan artifact target
          create child worktree/branch if code or prototype work is involved
-         DelegateToSubagent(breakdown)
+         native delegation in the current harness (breakdown)
          collect returned plan sections, risks, and dependencies
        else:
          use configured inline/manual fallback
@@ -42,7 +42,7 @@ Run jl-planning-workflow BLOCKERs
   -> if approval required:
        ask "Delegate research of {subject} to {target_agent}? [Approve] [Decline]"
   -> if approved:
-       DelegateToSubagent(research) in parallel where practical
+       native delegation in the current harness (research) in parallel where practical
        collect findings, recommendations, and unresolved risks
   -> else:
        use configured inline/manual fallback
@@ -56,7 +56,7 @@ Run jl-planning-workflow BLOCKERs
 Clarification or breakdown reveals a specialist planning need
   -> select bounded target agent
   -> resolve specialist-planning approval mode
-  -> if approved, DelegateToSubagent(specialist-planning)
+  -> if approved, native delegation in the current harness (specialist-planning)
   -> collect returned plan section and assumptions
   -> validate against parent scope and constraints
   -> merge into master plan
@@ -75,7 +75,7 @@ for each surfaced planning subtask:
     prepare child artifact target
     if code or prototype work may occur:
       create and register child worktree/branch
-    DelegateToSubagent(task_type)
+    native delegation of the task_type subtask
     collect returned artifacts
   else:
     apply configured fallback

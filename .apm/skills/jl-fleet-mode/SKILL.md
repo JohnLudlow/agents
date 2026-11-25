@@ -149,7 +149,7 @@ Three harnesses require vendor research before detection can complete:
 | Pi | What env var or API identifies Pi? Does Herdr integration matter? | #205 |
 | OpenCode | What env var or API identifies OpenCode? | #205 |
 
-See `.apm/skills/jl-subagent-spawning/references/ROADMAP.md` Phase 2 section for detailed blocker tracking.
+See native delegation support in the current harness with inline/manual fallback for blocker tracking.
 
 ## References
 

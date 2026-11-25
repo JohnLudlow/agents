@@ -317,16 +317,12 @@ The agent MUST NOT:
   workflows)
 - `jl-feature-planner` — primary child agent for delegated breakdown and
   specialist planning
-- `jl-subagent-spawning` — delegate-to-subagent protocol, harness limits, and
-  fallback patterns
 - `jl-recon` — reference pattern for approval-gated AFK or delegated research
 - `jl-issue-management` — provider workflow and source-of-record guidance
 - `jl-adversarial-review` — review pass before planning completion
 
 ## References
 
-- [`../jl-subagent-spawning/SKILL.md`](../jl-subagent-spawning/SKILL.md) —
-  DelegateToSubagent protocol and harness support guidance
 - [`../jl-recon/SKILL.md`](../jl-recon/SKILL.md) — approval-gated research and
   graceful delegation pattern
 - [`../jl-planning-workflow/SKILL.md`](../jl-planning-workflow/SKILL.md) —

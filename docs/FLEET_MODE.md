@@ -180,11 +180,10 @@ Agents do NOT recommend fleet for quick, sequential, or tightly-coupled work.
 ## Technical Details and Implementation
 
 For implementation-level details about fleet mode, model selection, harness
-detection, and subagent coordination, see
-`.apm/skills/jl-subagent-spawning/SKILL.md` → **Fleet Mode Utilization and
-Harness Detection (AC5.1)**.
+detection, and subagent coordination, see native delegation support in the
+current harness with inline/manual fallback.
 
-That reference covers:
+That material covers:
 
 - Harness detection pseudocode
 - Model resolution hierarchy
@@ -226,4 +225,4 @@ for your platform.
 
 - **Installation & Setup**: See `docs/INSTALLATION.md` for how to install these agents
 - **Agent Reference**: See the root `README.md` for an overview of available agents
-- **For Developers**: If you're building agents, see `.apm/skills/jl-subagent-spawning/SKILL.md` for delegation APIs and configuration
+- **For Developers**: If you're building agents, see `jl_approval_gates` and `jl_subagent_models` in docs/CONFIGURATION.md for delegation configuration

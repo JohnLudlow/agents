@@ -35,5 +35,5 @@ This folder contains user-facing guides and reference documentation for working 
 If you're implementing agents or extending this package:
 
 - See the root **README.md** for agent descriptions and architecture
-- See `.apm/skills/jl-subagent-spawning/SKILL.md` for subagent delegation APIs and model selection
+- See native delegation support in the current harness (with inline/manual fallback) for subagent delegation
 - See `CONTRIBUTING.md` in the root for contribution guidelines

@@ -66,7 +66,7 @@ session decision when invoked from `jl-recon`.
 Resolve config before delegating any child task: prompt when
 `prototype_approval_required` is `true`, skip the prompt when `false`, and
 default to `true` when config is missing or malformed (human-in-the-loop by
-default). The gate governs `DelegateToSubagent` calls; it does not require a
+default). The gate governs native delegation calls; it does not require a
 second prompt after the child is approved for the same bounded subtask.
 
 ### Approval prompt
@@ -227,7 +227,7 @@ session start.
    session's already-resolved approval decision instead of re-prompting for
    the same bounded delegation.
 3. If `prototype_approval_required` resolves to `true`, prompt the user
-   before calling `DelegateToSubagent`.
+   before calling the target agent's native delegation.
 4. If `prototype_approval_required` resolves to `false`, delegate without
    prompting.
 5. If the user declines, use the configured fallback (see Resolution rules
@@ -322,8 +322,6 @@ generation, and jl-recon prototype ticket delegates nested work.
 - **jl-quiz** — mandatory pre-step; this skill's Objective, Technique,
   Stack, Audience & purpose, Keep vs discard, Acceptance criteria, and Output
   location decisions are all surfaced through it, not asked separately.
-- **jl-subagent-spawning** — defines the `DelegateToSubagent` protocol and
-  harness constraints used when prototype work is delegated.
 - **jl-recon** — may invoke this skill for Prototype tickets and may supply
   inherited approval-gate context for delegated prototype work.
 - **jl-markdown-standards** — applies to the generated `README.md` and any
@@ -346,8 +344,6 @@ generation, and jl-recon prototype ticket delegates nested work.
 
 ## References
 
-- [jl-subagent-spawning](../jl-subagent-spawning/SKILL.md) — delegate-to-
-  subagent protocol, harness notes, and coordination constraints
 - [jl-recon](../jl-recon/SKILL.md) — parent ticket routing and AFK delegation
   pattern this skill can inherit from
 - [CONTRIBUTING.md](../../../CONTRIBUTING.md) — repository configuration and

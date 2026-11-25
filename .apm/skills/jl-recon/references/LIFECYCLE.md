@@ -96,9 +96,9 @@ Resolving one ticket on an existing map.
 3. Note who's working it — an assignee, or a short marker in the ticket body
    — so another human glancing at the map can tell. No formal claim step;
    this is informational, not a lock.
-4. If the ticket will be delegated to a subagent (via `jl-subagent-spawning`'s
-   `DelegateToSubagent` action, where the harness supports it and the
-   required approval is present), emit a clear handoff message before
+4. If the ticket will be delegated to a subagent via native delegation in
+   the current harness (where the harness supports it and the required
+   approval is present), emit a clear handoff message before
    spawning — see "Delegation Handoff Messaging" below. If the ticket is
    resolved inline instead, skip this step.
 5. Resolve it through the mechanism its type maps to (see Ticket Types
@@ -159,8 +159,8 @@ findings and explicitly confirms the resolution.
 
 **Workflow:**
 
-1. **Invoke checks** — Call jl-adversarial-reviewer using `jl-subagent-spawning`'s
-   fallback hierarchy: try subagent → try Herdr → read into session. Pass the
+1. **Invoke checks** — Call jl-adversarial-reviewer using native
+   delegation in the current harness, with inline/manual fallback. Pass the
    resolved ticket's content (resolution text, findings, context from the map).
    Resolve the requested model using `model_selection.ticket_resolution_checks` (or
    `model_selection.default`) before invoking fallback; if either is `inherit`
@@ -268,8 +268,8 @@ recording the resolution:
 > back}. {If Research: "Please review the findings before I close this
 > ticket."}
 
-See `jl-subagent-spawning/SKILL.md` for the underlying `DelegateToSubagent`
-approval, capability, and fallback mechanics this messaging sits on top of.
+Delegation approval, capability, and fallback mechanics sit on native
+delegation in the current harness with inline/manual fallback.
 
 ### 3. Report on implementation status
 
@@ -292,9 +292,8 @@ explicitly confirms publication.
 
 **Workflow:**
 
-1. **Invoke checks** — Call doublecheck using jl-subagent-spawning's fallback
-   hierarchy (attempt subagent → fallback to Herdr when subagent unavailable
-   → read into session when multi-harness is unavailable). Pass the generated
+1. **Invoke checks** — Call doublecheck using native delegation in the
+   current harness, with inline/manual fallback when delegation is unavailable. Pass the generated
    status report text. Doublecheck will analyze each claim in the report and
    return per-claim verification results (VERIFIED/PLAUSIBLE/UNVERIFIED/
    DISPUTED/FABRICATION_RISK with confidence levels and source links). Resolve
@@ -386,8 +385,8 @@ explicitly confirms publication.
 
 **Workflow:**
 
-1. **Invoke checks** — Call doublecheck using `jl-subagent-spawning`'s fallback
-   hierarchy: try subagent → try Herdr → read into session. Pass the generated
+1. **Invoke checks** — Call doublecheck using native delegation in the current
+   harness, with inline/manual fallback. Pass the generated
    status report text. Doublecheck will analyze each claim in the report and
    return per-claim verification results (VERIFIED/PLAUSIBLE/UNVERIFIED/
    DISPUTED/FABRICATION_RISK with confidence levels and source links). Resolve

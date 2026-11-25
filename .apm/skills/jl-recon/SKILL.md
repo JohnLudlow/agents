@@ -127,8 +127,8 @@ The agent MUST:
 - Apply resolved checks configuration when running Mode 2 (Work through the map):
   if `checks.on_ticket_resolution_enabled` is true, run quality checks before
   recording ticket resolutions; otherwise skip checks and proceed directly.
-- When running Mode 2 checks, use jl-subagent-spawning's fallback hierarchy (try
-  subagent → try Herdr → read into session); handle unavailable checks gracefully
+- When running Mode 2 checks, use native delegation in the current harness
+  (with inline/manual fallback); handle unavailable checks gracefully
   by warning the user, keeping partial findings when available, and allowing
   proceed or override.
 - Display Mode 2 check findings as a markdown table sorted by severity (critical → major → minor → nit),
@@ -138,8 +138,8 @@ The agent MUST:
 - Apply resolved checks configuration when running Mode 3 (Report on implementation status):
   if `checks.on_status_report_enabled` is true, run quality checks on generated
   status reports; otherwise skip checks and proceed directly to report output.
-- When running Mode 3 checks, use jl-subagent-spawning's fallback hierarchy (try
-  subagent → try Herdr → read into session); handle unavailable checks gracefully
+- When running Mode 3 checks, use native delegation in the current harness
+  (with inline/manual fallback); handle unavailable checks gracefully
   by warning the user, keeping partial verification results when available, and allowing
   proceed or override.
 - Display Mode 3 check findings as a markdown table sorted by verification risk

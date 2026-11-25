@@ -16,7 +16,7 @@ Run jl-quiz
   -> resolve prototype approval gate
   -> if approval required, ask:
        "Delegate design to {target_agent}? [Approve] [Decline]"
-  -> if approved, call DelegateToSubagent(design)
+  -> if approved, call native delegation in the current harness (design)
   -> collect child design decisions into prototype report
   -> resume parent quiz with updated shared understanding
 ```
@@ -28,7 +28,7 @@ Prototype scaffold planned
   -> detect implementation slice too large for one session
   -> partition into bounded child task
   -> resolve prototype approval gate or inherited parent gate
-  -> if approved, call DelegateToSubagent(implementation)
+  -> if approved, call native delegation in the current harness (implementation)
        on child branch/worktree
   -> collect code artifacts, notes, and self-check outputs
   -> integrate accepted result into parent prototype branch
@@ -40,7 +40,7 @@ Prototype scaffold planned
 Prototype artifact exists
   -> determine test or verification gap
   -> resolve per-task approval override for test delegation
-  -> if approved, call DelegateToSubagent(test)
+  -> if approved, call native delegation in the current harness (test)
        using polyglot-test-agent or jl-feature-tester
   -> collect generated tests, test results, and gaps
   -> summarize pass/fail status in prototype report
@@ -56,7 +56,7 @@ for each surfaced subtask:
     ask "Delegate {task_type} to {target_agent}? [Approve] [Decline]"
   if approved:
     create child worktree + child branch
-    DelegateToSubagent(subtask)
+    native delegation of the subtask
     collect returned artifacts
   else if fallback == inline:
     continue inline

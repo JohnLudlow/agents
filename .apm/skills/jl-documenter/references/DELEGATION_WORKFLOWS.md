@@ -22,7 +22,7 @@ for each section:
       ask "Delegate {section} documentation to {target_agent}? [Approve] [Decline]"
     if approved:
       create section worktree + branch
-      DelegateToSubagent(section)
+      native delegation in the current harness
       collect section draft + metadata
     else:
       apply fallback

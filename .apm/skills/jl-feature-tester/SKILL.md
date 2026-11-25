@@ -63,8 +63,9 @@ Every testing session carries the same state:
   `false`, delegation may proceed without prompting.
 - If config is missing or malformed, default to `test_approval_required: true`
   (human-in-the-loop by default).
-- Approval authorizes `DelegateToSubagent` for the bounded subtask; it does
-  not remove the need for CI or result validation later in the flow.
+- Approval authorizes native delegation in the current harness (with inline/manual
+  fallback) for the bounded subtask; it does not remove the need for CI or result
+  validation later in the flow.
 
 ## Approval Gate Integration
 
@@ -227,8 +228,8 @@ The agent MUST:
 - own the full testing lifecycle: discover, generate, run, verify, and report.
 - resolve approval-gate configuration before delegating any test-generation
   or verification subtask.
-- evaluate `jl_approval_gates.test_approval_required` before calling
-  `DelegateToSubagent`.
+- evaluate `jl_approval_gates.test_approval_required` before calling the
+  target agent's native delegation.
 - use the exact generation approval prompt when the gate requires it.
 - keep delegated test tasks isolated in worktrees or branches before merging
   accepted outputs into the feature branch.
@@ -256,7 +257,6 @@ harness unavailable fallback.
 
 ## Relationship to Other Skills
 
-- **jl-subagent-spawning** — defines the `DelegateToSubagent` protocol and harness considerations used for delegated testing subtasks.
 - **jl-recon** — documents approval-gated AFK-style delegation and parent coordination.
 - **jl-config** — provides the configuration-resolution mechanism used for `jl_approval_gates`.
 - **jl-code-quality** — informs expectations around testability, coverage, and meaningful assertions.
@@ -264,7 +264,6 @@ harness unavailable fallback.
 
 ## References
 
-- [jl-subagent-spawning](../jl-subagent-spawning/SKILL.md) — `DelegateToSubagent` protocol and harness guidance.
 - [jl-recon](../jl-recon/SKILL.md) — example of approval-gated delegated workflow and parent-child coordination.
 - [jl-config](../jl-config/SKILL.md) — config resolution and precedence rules.
 - `CONTRIBUTING.md` — repository config source for `jl_approval_gates`.

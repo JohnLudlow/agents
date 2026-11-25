@@ -17,7 +17,7 @@ discover changed components and existing tests
   -> if approval required, ask:
        "Generate tests for {component} using {agent}? [Approve] [Decline]"
   -> if approved, create child worktree/branch
-  -> DelegateToSubagent(generation)
+  -> native delegation of generation in the current harness
   -> collect generated test files and child run results
   -> run or queue parent validation and CI checks
   -> accept, revise, or fall back inline
@@ -30,7 +30,7 @@ tests executed
   -> inspect pass/fail, coverage, regressions, or noisy failures
   -> decide if inline analysis is enough
   -> if not, resolve test approval gate for verification
-  -> if approved, DelegateToSubagent(verification)
+  -> if approved, native delegation of verification
   -> collect findings, likely root causes, and recommended next steps
   -> fold result into consolidated test report
 ```
@@ -47,7 +47,7 @@ for each component or test gap:
     ask for approval
   if approved:
     create child worktree + child branch
-    DelegateToSubagent(task_type)
+    native delegation of the task_type subtask
     collect artifacts and child findings
   else:
     apply fallback

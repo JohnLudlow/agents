@@ -20,12 +20,7 @@ Notable repository-level namespaces:
   - `jl_recon.model_selection` — configure model preferences for delegated recon flows and quality checks
   - `jl_recon.title_format` — customize issue title formatting for maps and tickets (see [jl-recon Title Format Configuration](./jl-recon-title-format.md))
 - `jl_approval_gates` — boolean gates controlling whether delegation may happen at all
-  (see [`jl-subagent-spawning`](../.apm/skills/jl-subagent-spawning/SKILL.md#approval-gates-jl_approval_gates))
 - `jl_subagent_models` — model selection hierarchy for delegated subagents
-  (see [`jl-subagent-spawning`](../.apm/skills/jl-subagent-spawning/SKILL.md#hierarchical-model-selection))
-- `jl_subagent_delegation.max_nesting_depth` — circular-delegation depth limit, default `3`; must
-  be a positive integer (see [`jl-subagent-spawning`](../.apm/skills/jl-subagent-spawning/SKILL.md#circular-delegation-prevention)
-  for enforcement and `npm run validate` for the config check)
 
 ## Plugin Capability Manifest
 
@@ -40,9 +35,6 @@ target can run inside a worktree, spawn further subagents, prefer fleet mode, or
 certain models — independently of what the runtime harness (CLI, browser, Azure DevOps) itself
 supports.
 
-The full schema, discovery mechanism, and relationship to the harness capability matrix are
-documented in
-[`jl-subagent-spawning/references/PLUGIN_CAPABILITY_REGISTRY.md`](../.apm/skills/jl-subagent-spawning/references/PLUGIN_CAPABILITY_REGISTRY.md).
 This section walks through worked examples for common cases.
 
 ### Example 1: A plugin that requires its own worktree
@@ -98,16 +90,11 @@ capabilities:
 ---
 ```
 
-`supported_models` filters the candidate list *before* the existing six-candidate model resolution
-cascade runs (see
-[`HARNESS_FALLBACK.md`](../.apm/skills/jl-subagent-spawning/references/HARNESS_FALLBACK.md)) — it
-narrows which models are eligible; it does not change the cascade's precedence order.
+`supported_models` filters the candidate list before the model resolution cascade
+runs — it narrows which models are eligible; it does not change the cascade's
+precedence order.
 
 ## Related
 
-- [`jl-subagent-spawning/SKILL.md`](../.apm/skills/jl-subagent-spawning/SKILL.md) — the full
-  delegation contract, including the Plugin Capability Registry summary
-- [`PLUGIN_CAPABILITY_REGISTRY.md`](../.apm/skills/jl-subagent-spawning/references/PLUGIN_CAPABILITY_REGISTRY.md) —
-  the canonical schema and discovery mechanism
 - [`jl-config/SKILL.md`](../.apm/skills/jl-config/SKILL.md) — repository-level configuration
   resolution, for the settings that aren't part of a plugin's own manifest
