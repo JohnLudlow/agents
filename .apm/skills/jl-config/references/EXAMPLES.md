@@ -259,8 +259,136 @@ For more validation errors and how to fix them, see [LINTER_EXAMPLES.md](LINTER_
 
 ---
 
+## Generic Consumer Examples (Hypothetical)
+
+Examples of how consumers describe their settings. Full file-presence cases are in
+[File-Presence Examples](#file-presence-examples).
+
+```yaml
+jl_quiz_requirements:
+  quiz_mode: in_chat
+  plan_destination: github_issue
+  file_storage_location: docs/plans/
+```
+
+```yaml
+jl_recon:
+  decision_gates:
+    destination_confirmation: true
+    research_afk: true
+  model_selection:
+    default: inherit
+    ticket_resolution_checks: gpt-5.4-mini
+```
+
+## Setting-Level Merge Example (Hypothetical)
+
+If `CONTRIBUTING.md` contains:
+
+```yaml
+jl_quiz_requirements:
+  quiz_mode: in_chat
+  plan_destination: github_issue
+```
+
+And `AGENTS.md` contains:
+
+```yaml
+jl_quiz_requirements:
+  quiz_mode: questionnaire
+```
+
+Then the resolved result is:
+
+```yaml
+jl_quiz_requirements:
+  quiz_mode: questionnaire
+  plan_destination: github_issue
+```
+
+`AGENTS.md` overrides only `quiz_mode`; it does not erase sibling settings
+supplied by `CONTRIBUTING.md`.
+
+## Sensitivity Examples (Hypothetical)
+
+- Required (jl-quiz): declare `plan_destination` **required** because the
+  agent cannot safely proceed without a resolved value. Behavior: ask the user
+  if not configured; never silently invent a value.
+- Recommended (jl-quiz): declare `file_storage_location` **recommended** to
+  guide artifact placement.
+- Optional: a custom `pattern` setting for marking uncertainty may be optional if a portable default already works well.
+
+## File-Presence Examples
+
+### Example 1: No Config Files
+
+Repository state:
+
+- no `AGENTS.md`
+- no `CONTRIBUTING.md`
+
+Resolved config (any agent):
+
+- all default values apply (defined by the consuming agent)
+- the agent remains usable without repository setup
+
+### Example 2: Only CONTRIBUTING.md
+
+`CONTRIBUTING.md` contains (for jl-quiz):
+
+```yaml
+jl_quiz_requirements:
+  quiz_mode: questionnaire
+  plan_destination: github_issue
+```
+
+Resolved config:
+
+- `quiz_mode: questionnaire` (from CONTRIBUTING.md)
+- `plan_destination: github_issue` (from CONTRIBUTING.md)
+- any other jl-quiz settings use defaults
+
+### Example 3: Only AGENTS.md
+
+`AGENTS.md` contains (for jl-recon):
+
+```yaml
+jl_recon:
+  destination_confirmation: true
+```
+
+Resolved config:
+
+- `destination_confirmation: true` (from AGENTS.md)
+- any other jl-recon settings use defaults
+
+### Example 4: Both Files with Precedence
+
+`CONTRIBUTING.md` contains:
+
+```yaml
+jl_quiz_understanding:
+  quiz_mode: in_chat
+  plan_destination: github_issue
+```
+
+`AGENTS.md` contains:
+
+```yaml
+jl_quiz_understanding:
+  quiz_mode: questionnaire
+```
+
+Resolved config:
+
+- `quiz_mode: questionnaire` (AGENTS.md overrides CONTRIBUTING.md)
+- `plan_destination: github_issue` (from CONTRIBUTING.md, not in AGENTS.md)
+- any other jl-quiz settings use defaults
+
 ## See Also
 
 - [SKILL.md](../SKILL.md) — Complete resolution mechanism and model
 - [validation-rules.md](../validation-rules.md) — Schema reference (per-agent keys, allowed values)
-- [LINTER_EXAMPLES.md](../references/LINTER_EXAMPLES.md) — Error messages and how to fix them
+- [AUTHORING_GUIDE.md](AUTHORING_GUIDE.md) — Consumer configuration guidance
+- [WARNING_EXAMPLES.md](WARNING_EXAMPLES.md) — Warning formats and illustrations
+- [LINTER_EXAMPLES.md](LINTER_EXAMPLES.md) — Linter error messages and how to fix them

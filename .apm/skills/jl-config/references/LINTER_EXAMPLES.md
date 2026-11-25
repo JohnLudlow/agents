@@ -4,6 +4,9 @@ description: "Example error messages from the YAML config linter"
 
 # Configuration Linter Examples
 
+**Maintainer-only material.** This document depends on repo-local tooling
+(`scripts/validate-config.js`) and is not a portable runtime requirement.
+
 This document shows example error messages from the `validate-config.js` linter,
 which validates agent configuration YAML in `CONTRIBUTING.md` and `AGENTS.md`.
 
@@ -300,7 +303,7 @@ Errors are categorized by which validation layer caught them:
 - **Layer 3**: Semantic Validation (value types, enums, constraints)
 
 To understand why a config is invalid, consult:
-[.apm/skills/jl-config/validation-rules.md](./.apm/skills/jl-config/validation-rules.md)
+[validation-rules.md](../validation-rules.md)
 
 ## Common Fixes
 
