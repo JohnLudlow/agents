@@ -24,18 +24,28 @@ Use this skill when you need to:
 
 The mechanism is intentionally self-contained and portable: any repository can
 use jl-config without reading this repository's `CONTRIBUTING.md` or learning
-repository-specific conventions. Configuration schema and defaults belong in the
-individual agents/skills that consume them.
+repository-specific conventions. Configuration schema and defaults belong in
+the individual agents/skills that consume them.
+
+## Load contract
+
+Routine consumers read SKILL.md for the core rules. Load
+[references/EXAMPLES.md](references/EXAMPLES.md) (file-presence and merge
+examples), [references/AUTHORING_GUIDE.md](references/AUTHORING_GUIDE.md)
+(consumer configuration), [references/WARNING_EXAMPLES.md](references/WARNING_EXAMPLES.md)
+(warning illustrations), and `validation-rules.md` (detailed validation).
 
 ## Worked Examples
 
-If you're a repository maintainer learning what to write in CONTRIBUTING.md or AGENTS.md,
-start with [references/EXAMPLES.md](references/EXAMPLES.md) — worked examples showing
-minimal config, override patterns, and resolution precedence in action.
+If you're a repository maintainer learning what to write in CONTRIBUTING.md or
+AGENTS.md, start with [references/EXAMPLES.md](references/EXAMPLES.md) — worked
+examples showing minimal config, override patterns, and resolution precedence
+in action.
 
 If you're an agent or skill developer implementing config consumption, read the
 [Resolution Pattern](#resolution-pattern) and [Validation Pattern](#validation-pattern)
-sections below.
+sections below, and [references/AUTHORING_GUIDE.md](references/AUTHORING_GUIDE.md)
+when writing your consumer `SKILL.md` configuration.
 
 ## Generic Configuration Model
 
@@ -43,26 +53,13 @@ Repository configuration is expressed as YAML embedded in `AGENTS.md` and/or
 `CONTRIBUTING.md`. Each agent or skill defines its own configuration section
 and documents its own keys and defaults.
 
-Example (from a hypothetical jl-quiz skill; the real keys are the independent
-`jl_quiz_requirements` and `jl_quiz_understanding` blocks):
+Hypothetical consumer example (file-presence cases in [references/EXAMPLES.md](references/EXAMPLES.md)):
 
 ```yaml
 jl_quiz_requirements:
   quiz_mode: in_chat
   plan_destination: github_issue
   file_storage_location: docs/plans/
-```
-
-Example (from a hypothetical jl-recon skill):
-
-```yaml
-jl_recon:
-  decision_gates:
-    destination_confirmation: true
-    research_afk: true
-  model_selection:
-    default: inherit
-    ticket_resolution_checks: gpt-5.4-mini
 ```
 
 Agents may read settings from either file, from both, or from neither. The
@@ -115,34 +112,6 @@ resolved = deepMerge(defaults, contributingConfig, agentsConfig)
 return resolved
 ```
 
-### Setting-Level Merge Example
-
-If `CONTRIBUTING.md` contains:
-
-```yaml
-jl_quiz_requirements:
-  quiz_mode: in_chat
-  plan_destination: github_issue
-```
-
-And `AGENTS.md` contains:
-
-```yaml
-jl_quiz_requirements:
-  quiz_mode: questionnaire
-```
-
-Then the resolved result is:
-
-```yaml
-jl_quiz_requirements:
-  quiz_mode: questionnaire
-  plan_destination: github_issue
-```
-
-`AGENTS.md` overrides only `quiz_mode`; it does not erase sibling settings
-supplied by `CONTRIBUTING.md`.
-
 ## Validation Pattern
 
 Validation is the responsibility of the consuming agent/skill. Each agent
@@ -152,54 +121,16 @@ jl-config provides guidance on implementing portable validation:
 
 ### Generic Validation Checklist
 
-1. **YAML syntax validity**
-   - the extracted YAML must parse successfully
-   - malformed indentation, duplicate mappings, and invalid quoting are failures
-
-2. **Root shape**
-   - the agent-specific key (e.g., `jl_quiz_requirements`, `jl_recon`) must be an object if present
-   - if the key is not present, resolution falls back to defaults
-
-3. **Type validation**
-   - check that each setting has the expected type (string, boolean, number, object, etc.)
-   - if a setting is present but has the wrong type, reject or coerce with a warning
-
-4. **Enum validation** (if applicable to your agent)
-   - if a setting has an enumerated set of allowed values, validate against them
-   - reject values not in the enum
-
-5. **Portable rules**
-   - do not require repository-specific absolute paths; use repository-relative paths
-   - do not make validation depend on unrelated files existing
-   - allow configuration to be partial (missing optional settings should not fail)
-
-### Validation Pseudocode (Generic Pattern)
-
-```text
-function validate(config):
-  errors = []
-
-  // Check basic types
-  for each setting in config:
-    if value exists and type does not match expected type:
-      errors.add("setting '<name>' has wrong type")
-
-  // Check enum values (if applicable)
-  for each enum-valued setting:
-    if value exists and value not in allowed_enum:
-      errors.add("setting '<name>' has invalid enum value")
-
-  // Check constraints
-  for each constrained setting:
-    if constraint violated:
-      errors.add("setting '<name>' violates constraint")
-
-  return errors
-```
+1. **YAML syntax validity** — the extracted YAML must parse successfully; malformed indentation, duplicate mappings, and invalid quoting are failures
+2. **Root shape** — the agent-specific key (e.g., `jl_quiz_requirements`) must be an object if present; otherwise resolution falls back to defaults
+3. **Type validation** — each setting must have the expected type; reject or coerce with a warning
+4. **Enum validation** (when applicable) — reject values not in the allowed set
+5. **Portable rules** — use repository-relative paths; allow partial configuration
 
 Each consuming agent documents its own schema, defaults, types, and enums in its
 own skill documentation. jl-config validates only the mechanism (YAML syntax,
-type shapes); agents validate their own semantics.
+type shapes); agents validate their own semantics. The generic validation
+pseudocode lives in [validation-rules.md](validation-rules.md).
 
 ## Setting Sensitivity (Required, Recommended, Optional)
 
@@ -218,10 +149,6 @@ Behavior:
 - once the user answers, continue with that session value even if the repo does
   not persist it
 
-Example:
-
-- jl-quiz may require `plan_destination` to know where to write output
-
 ### Recommended
 
 Declare a setting **recommended** when a default exists and work can continue,
@@ -234,10 +161,6 @@ Behavior:
 - optionally tell the user which default was applied
 - prompt only if the missing choice is likely to cause churn
 
-Example:
-
-- jl-quiz may recommend `file_storage_location` to guide artifact placement
-
 ### Optional
 
 Declare a setting **optional** when it only affects ergonomics or formatting and
@@ -248,10 +171,7 @@ Behavior:
 - use the resolved config if present
 - otherwise use the default silently unless surfacing it adds value
 
-Example:
-
-- a custom `pattern` setting for marking uncertainty may be optional if a portable
-  default already works well
+Worked sensitivity examples: [references/EXAMPLES.md](references/EXAMPLES.md).
 
 ## Guidance for Agents and Skills
 
@@ -284,130 +204,6 @@ I need this to know where to place the plan.
 Please choose one: github_issue, azure_devops_work_item, local_file, inline_message.
 ```
 
-### Authoring Guidance for Repositories
-
-- Prefer `AGENTS.md` for agent-facing overrides and tighter local behaviour.
-- Use `CONTRIBUTING.md` for broader repository defaults shared by humans and agents.
-- Keep values portable and repository-relative.
-- Override only the settings you need; omitted settings inherit from lower
-  precedence sources or defaults.
-
-### Authoring Guidance for Agents and Skills
-
-Each agent or skill should document its own configuration in its own skill `SKILL.md`:
-
-1. **Configuration section heading**: name your config section clearly (e.g., `jl_quiz_requirements` for jl-quiz)
-2. **Schema table**: document each setting with type, enum values (if any), and defaults
-3. **Setting sensitivity**: mark each setting required, recommended, or optional
-4. **Examples**: show how the config looks in CONTRIBUTING.md and AGENTS.md
-5. **Prompting guidance**: explain how missing settings are handled
-
-Example (in jl-quiz SKILL.md):
-
-```markdown
-## Configuration
-
-jl-quiz reads settings from `jl_quiz_requirements` and `jl_quiz_understanding` configuration in AGENTS.md or CONTRIBUTING.md.
-
-### Schema
-
-| Setting | Type | Allowed values | Default | Sensitivity |
-| --- | --- | --- | --- | --- |
-| `quiz_mode` | string | `in_chat` or `questionnaire` | `in_chat` | recommended |
-| `plan_destination` | string | github_issue, local_file, ... | (none) | required |
-| `file_storage_location` | string | repository-relative path | `docs/plans/` | recommended |
-
-### Defaults
-
-If the quiz config block is not found, jl-quiz uses:
-
-- quiz_mode: in_chat
-- plan_destination: (prompts user if required and missing)
-- file_storage_location: docs/plans/
-
-### Examples
-
-In CONTRIBUTING.md:
-\`\`\`yaml
-jl_quiz_requirements:
-  plan_destination: github_issue
-  quiz_mode: in_chat
-\`\`\`
-
-In AGENTS.md (overrides quiz_mode only):
-\`\`\`yaml
-jl_quiz_requirements:
-  quiz_mode: questionnaire
-\`\`\`
-```
-
-## Examples
-
-### Example 1: No Config Files
-
-Repository state:
-
-- no `AGENTS.md`
-- no `CONTRIBUTING.md`
-
-Resolved config (any agent):
-
-- all default values apply (defined by the consuming agent)
-- the agent remains usable without repository setup
-
-### Example 2: Only CONTRIBUTING.md
-
-`CONTRIBUTING.md` contains (for jl-quiz):
-
-```yaml
-jl_quiz_requirements:
-  quiz_mode: questionnaire
-  plan_destination: github_issue
-```
-
-Resolved config:
-
-- `quiz_mode: questionnaire` (from CONTRIBUTING.md)
-- `plan_destination: github_issue` (from CONTRIBUTING.md)
-- any other jl-quiz settings use defaults
-
-### Example 3: Only AGENTS.md
-
-`AGENTS.md` contains (for jl-recon):
-
-```yaml
-jl_recon:
-  destination_confirmation: true
-```
-
-Resolved config:
-
-- `destination_confirmation: true` (from AGENTS.md)
-- any other jl-recon settings use defaults
-
-### Example 4: Both Files with Precedence
-
-`CONTRIBUTING.md` contains:
-
-```yaml
-jl_quiz_understanding:
-  quiz_mode: in_chat
-  plan_destination: github_issue
-```
-
-`AGENTS.md` contains:
-
-```yaml
-jl_quiz_understanding:
-  quiz_mode: questionnaire
-```
-
-Resolved config:
-
-- `quiz_mode: questionnaire` (AGENTS.md overrides CONTRIBUTING.md)
-- `plan_destination: github_issue` (from CONTRIBUTING.md, not in AGENTS.md)
-- any other jl-quiz settings use defaults
-
 ## Reporting Configuration Warnings
 
 Agents should warn users about invalid or missing configuration at startup, making
@@ -416,16 +212,13 @@ warning format for all agents using jl-config.
 
 ### Warning Occasions
 
-Agents should emit warnings when:
+Agents should emit warnings when: 1) **Invalid configuration** is detected
+(YAML syntax error, type mismatch, enum violation, or constraint failure), or
+2) a **required setting is unresolved** after resolution (no default, not
+configured).
 
-1. **Invalid configuration** detected: YAML syntax error, type mismatch, enum violation, or constraint failure
-2. **Required settings unresolved** after config resolution: a required setting has no default and is not configured
-
-Agents should **not** warn about:
-
-- missing optional/recommended settings (use defaults silently)
-- files that don't exist (this is not an error)
-- settings that resolve to their defaults normally
+Agents should not warn about missing optional/recommended settings, files that
+don't exist, or settings that resolve to their defaults.
 
 ### Standard Warning Format
 
@@ -436,51 +229,6 @@ Every configuration warning should follow this format:
   File: <filename> [<line-number>] (if applicable; omit if only "not found")
   Fix: <actionable guidance for the user>
 ```
-
-**Examples:**
-
-```text
-[WARN] jl-quiz: 'quiz_mode' has invalid value 'c' (must be 'in_chat' or 'questionnaire')
-  File: CONTRIBUTING.md [line 5]
-  Fix: Change quiz_mode to 'in_chat' or 'questionnaire' in the jl_quiz_requirements config block
-```
-
-```text
-[WARN] jl-recon: 'decision_gates' must be an object, not a list
-  File: AGENTS.md [line 12]
-  Fix: Ensure 'decision_gates' is a YAML object with boolean-valued keys
-```
-
-```text
-[WARN] jl-issue-management: required setting 'plan_destination' not found
-  File: (checked AGENTS.md and CONTRIBUTING.md)
-  Fix: Add 'plan_destination: github_issue' to AGENTS.md or CONTRIBUTING.md under jl_issue_management
-```
-
-### Components
-
-**\[WARN\] prefix** — all config warnings use this prefix for easy filtering in logs
-
-**agent-or-skill-name** — the name of the agent or skill emitting the warning (e.g., `jl-quiz`, `jl-recon`)
-
-**specific issue** — a one-line description of what is wrong, written for the user to understand:
-
-- State what the problem is (e.g., "invalid enum value", "type mismatch", "required setting missing")
-- Avoid jargon; state values concretely
-- If applicable, mention what was found vs. what was expected
-
-**File and line number** (optional):
-
-- Include if the error is in a file and location is known
-- Omit if the issue is "not found" or no specific location applies
-- Format: `File: <filename> [line-number]`
-
-**Fix** — actionable guidance:
-
-- Suggest the exact change the user should make
-- If configuration is required for progress, guide the user to the right file
-- If the issue is in the syntax, explain what the correct format is
-- Be concise but complete
 
 ### When to Log Warnings
 
@@ -511,49 +259,7 @@ Each agent that uses jl-config is responsible for:
 2. implementing validation against its own schema (use `.apm/skills/jl-config/validation-rules.md`
    as the reference for validation layers)
 3. emitting warnings in the standard format when validation fails or required settings are missing
-4. documenting **exactly which warnings** it may emit (see example below)
-
-### Example: jl-quiz Warning Documentation
-
-In the jl-quiz skill's SKILL.md, add a "Configuration Warnings" section:
-
-```markdown
-## Configuration Warnings
-
-jl-quiz validates its configuration at startup and emits warnings for:
-
-**Type Mismatch**
-\`\`\`
-[WARN] jl-quiz: 'quiz_mode' must be a string, not a boolean
-  Fix: Change the value to 'in_chat' or 'questionnaire' (keep quotes)
-\`\`\`
-
-**Enum Violation**
-\`\`\`
-[WARN] jl-quiz: 'plan_destination' has invalid value 'slack'
-  (must be one of: github_issue, azure_devops_work_item, local_file,
-  inline_message)
-  Fix: Change to one of the allowed values
-\`\`\`
-
-**Missing Required Setting**
-\`\`\`
-[WARN] jl-quiz: required setting 'plan_destination' not found
-  in AGENTS.md or CONTRIBUTING.md
-  Fix: Add to CONTRIBUTING.md or AGENTS.md under jl_quiz_requirements or jl_quiz_understanding:
-    plan_destination: github_issue
-\`\`\`
-
-**Invalid File Path**
-\`\`\`
-[WARN] jl-quiz: 'file_storage_location' must be repository-relative (no leading / or drive letters)
-  File: AGENTS.md [line 8]
-  Fix: Change '/docs/plans' to 'docs/plans' or use a relative path
-\`\`\`
-```
-
-The agent then implements warnings using these templates, adapting the language
-to match its schema and reporting the line number if known.
+4. documenting **exactly which warnings** it may emit (see [references/WARNING_EXAMPLES.md](references/WARNING_EXAMPLES.md))
 
 ## Portability Contract
 
@@ -577,4 +283,3 @@ A repository adoption of `jl-config` (by an agent or skill) is considered health
 - missing optional/recommended settings fall back to documented defaults
 - **configuration warnings follow the standard format and are visible to the user**
 - the agent works correctly in test scenarios with and without config files
-- another repository can use the same agent and achieve the same behavior

@@ -111,7 +111,7 @@ The agent MUST:
 - Apply resolved `model_selection` values at delegated execution points
   (ticket delegation and Mode 2/Mode 3 checks), using deterministic precedence:
   explicit override → `model_selection.<action>` → `model_selection.default`
-  → `jl_subagent_models` hierarchy.
+  → native tooling in the current harness.
 - Ask whether an inciting issue exists before creating the map, and if one
   does, link the map to it as a native sub-issue (GitHub `--parent`) before
   creating any tickets. A comment or URL alone is not acceptable; see
@@ -127,8 +127,8 @@ The agent MUST:
 - Apply resolved checks configuration when running Mode 2 (Work through the map):
   if `checks.on_ticket_resolution_enabled` is true, run quality checks before
   recording ticket resolutions; otherwise skip checks and proceed directly.
-- When running Mode 2 checks, use jl-subagent-spawning's fallback hierarchy (try
-  subagent → try Herdr → read into session); handle unavailable checks gracefully
+- When running Mode 2 checks, use native delegation in the current harness
+  (with inline/manual fallback); handle unavailable checks gracefully
   by warning the user, keeping partial findings when available, and allowing
   proceed or override.
 - Display Mode 2 check findings as a markdown table sorted by severity (critical → major → minor → nit),
@@ -138,8 +138,8 @@ The agent MUST:
 - Apply resolved checks configuration when running Mode 3 (Report on implementation status):
   if `checks.on_status_report_enabled` is true, run quality checks on generated
   status reports; otherwise skip checks and proceed directly to report output.
-- When running Mode 3 checks, use jl-subagent-spawning's fallback hierarchy (try
-  subagent → try Herdr → read into session); handle unavailable checks gracefully
+- When running Mode 3 checks, use native delegation in the current harness
+  (with inline/manual fallback); handle unavailable checks gracefully
   by warning the user, keeping partial verification results when available, and allowing
   proceed or override.
 - Display Mode 3 check findings as a markdown table sorted by verification risk

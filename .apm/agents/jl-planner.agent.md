@@ -379,10 +379,6 @@ still apply.
 - `jl-adversarial-review` — invoked before plan completion (Planning
   Step 7) to identify flaws, omissions, and standards violations. This is a
   quality gate; stop and address feedback before signoff.
-- `jl-subagent-spawning` — reference guide for spawning planning
-  subagents across different harnesses (CLI, browser, Azure DevOps). Consult
-  when implementing Phase 2 (harness detection) or troubleshooting subagent
-  coordination across Copilot harnesses.
 - `jl-code-tour` — user-invoked; suggest it by name when a plan or scope
   discussion would benefit from a guided walkthrough of the codebase, but
   never launch it yourself.

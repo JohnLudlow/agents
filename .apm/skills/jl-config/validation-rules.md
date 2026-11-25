@@ -518,6 +518,37 @@ Validators and runtime agents consume this document as follows:
 
 ---
 
+## Appendix: Generic Validation Pseudocode
+
+Promoted from `SKILL.md` (retained there as the checklist; this pseudocode
+provides the implementation detail for all agents and validators).
+
+```text
+function validate(config):
+  errors = []
+
+  // Check basic types
+  for each setting in config:
+    if value exists and type does not match expected type:
+      errors.add("setting '<name>' has wrong type")
+
+  // Check enum values (if applicable)
+  for each enum-valued setting:
+    if value exists and value not in allowed_enum:
+      errors.add("setting '<name>' has invalid enum value")
+
+  // Check constraints
+  for each constrained setting:
+    if constraint violated:
+      errors.add("setting '<name>' violates constraint")
+
+  return errors
+```
+
+Each consuming agent documents its own schema, defaults, types, and enums in its
+own skill documentation. jl-config validates only the mechanism (YAML syntax,
+type shapes); agents validate their own semantics.
+
 ## Related Documentation
 
 - [jl-config SKILL.md](./) — Configuration resolution mechanism

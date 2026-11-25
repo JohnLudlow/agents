@@ -249,8 +249,7 @@ Each skill and agent defines its own configuration options. Configuration is doc
   model-selection overrides for delegated work and quality checks
 - **[jl-issue-management Configuration](.apm/skills/jl-issue-management/SKILL.md#configuration)** — Issue destination, file storage location, decision gates
 - **[jl-config Reference](.apm/skills/jl-config/SKILL.md)** — Configuration resolution mechanism and portable config pattern (used by all skills)
-- **[jl-subagent-spawning Configuration](.apm/skills/jl-subagent-spawning/SKILL.md#approval-gates-jl_approval_gates)** —
-  Approval gates, model selection hierarchy, and the plugin capability manifest
+- **[jl-config Reference](.apm/skills/jl-config/SKILL.md)** — configuration resolution mechanism
 
 ### Plugin Capability Manifest
 
@@ -271,9 +270,7 @@ capabilities:
 
 A missing `capabilities` block means capability-unknown, not capability-denied — no migration is
 required for existing skills. See [Configuration Guide](docs/CONFIGURATION.md#plugin-capability-manifest)
-for worked examples and
-[`PLUGIN_CAPABILITY_REGISTRY.md`](.apm/skills/jl-subagent-spawning/references/PLUGIN_CAPABILITY_REGISTRY.md)
-for the full schema and discovery mechanism.
+for worked examples.
 
 ### How to Configure
 

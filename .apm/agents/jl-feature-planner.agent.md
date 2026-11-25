@@ -352,10 +352,6 @@ still apply.
 - `jl-adversarial-review` — available as a quality gate skill for
   reviewing planning artifacts. Invoked by the top-level planner before
   completion, but can be used by this agent or other agents as needed.
-- `jl-subagent-spawning` — reference guide for spawning planning
-  subagents across different harnesses (CLI, browser, Azure DevOps). Consult
-  when implementing Phase 2 (harness detection) or troubleshooting subagent
-  coordination across Copilot harnesses.
 - `jl-code-tour` — user-invoked; suggest it by name when planning would
   benefit from a guided walkthrough of the codebase, but never launch it
   yourself.

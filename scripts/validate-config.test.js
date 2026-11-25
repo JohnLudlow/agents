@@ -39,7 +39,7 @@ test("valid: independent quiz blocks are accepted", () => {
 });
 
 test("valid: full jl_recon contract with all seven type keys", () => {
-  const lines = ["jl_recon:", "  model_selection:", "    default: inherit"];
+  const lines = ["jl_recon:"];
   for (const key of contract.RECON_TYPE_KEYS) lines.push(`    ${key}: inherit`);
   lines.push("    ticket_resolution_checks: inherit", "    status_report_checks: inherit", "  labels:", "    default:", '      - "recon:map"');
   for (const key of contract.RECON_TYPE_KEYS) lines.push(`    ${key}:`, `      - "recon:${key.replace("_", "-")}"`);
@@ -64,7 +64,6 @@ test("historical: obsolete jl_quiz block stays readable", () => {
 test("invalid: obsolete quiz and task keys are rejected in model_selection, labels and title_format", () => {
   for (const key of contract.OBSOLETE_TYPE_KEYS) {
     const cases = {
-      model_selection: `jl_recon:\n  model_selection:\n    ${key}: inherit`,
       labels: `jl_recon:\n  labels:\n    ${key}:\n      - "x"`,
       title_format: `jl_recon:\n  title_format:\n    ${key}: "T: {x}"`,
     };
@@ -79,9 +78,6 @@ test("invalid: obsolete quiz and task keys are rejected in model_selection, labe
 test("historical: obsolete quiz and task keys stay readable", () => {
   const yaml = [
     "jl_recon:",
-    "  model_selection:",
-    "    quiz: inherit",
-    "    task: inherit",
     "  labels:",
     "    quiz:",
     '      - "recon:quiz"',
@@ -92,7 +88,6 @@ test("historical: obsolete quiz and task keys stay readable", () => {
 
 test("invalid: unknown keys are rejected", () => {
   for (const yaml of [
-    "jl_recon:\n  model_selection:\n    bogus: inherit",
     'jl_recon:\n  labels:\n    bogus:\n      - "x"',
     'jl_recon:\n  title_format:\n    bogus: "x"',
     "jl_recon:\n  checks:\n    bogus: true",
@@ -109,7 +104,6 @@ test("invalid: bad value types are rejected", () => {
     "jl_quiz_requirements:\n  plan_destination: slack_thread",
     "jl_quiz_requirements:\n  plan_destination: github_issue\n  quiz_mode: a",
     "jl_quiz_understanding:\n  plan_destination: github_issue\n  file_storage_location: /abs",
-    "jl_recon:\n  model_selection:\n    learn: 5",
     "jl_recon:\n  labels:\n    learn: notalist",
     "jl_recon:\n  title_format:\n    learn: 5",
     "jl_recon:\n  checks:\n    timeout_seconds: 0",
@@ -227,4 +221,54 @@ test("docs: stale-config scanner flags unmarked hits and allows marked ones", ()
 test("docs: label helper reference does not teach legacy quiz/task --type values", () => {
   const text = read(".apm/skills/jl-issue-management/references/LABEL_APPLICATION_HELPERS.md");
   assert.doesNotMatch(text, /--type task\b|-Type task\b|`quiz`, `research`, `prototype`, `task`/);
+});
+
+// Retirement warnings per #255: retired delegation settings warn, never error.
+const RETIRED_WARNINGS = {
+  "jl_subagent_models": "jl_subagent_models is retired",
+  "model_selection": "jl_recon.model_selection is retired",
+  "mode2_checks": "jl_recon.model_selection is retired",
+  "mode3_checks": "jl_recon.model_selection is retired",
+};
+
+test("retirement: absent retired settings produce no warnings", () => {
+  const result = check("jl_approval_gates:\n  plan_approval_required: true\n");
+  const messages = result.messages.join("\n");
+  for (const text of Object.values(RETIRED_WARNINGS)) {
+    assert.equal(messages.includes(text), false, `unexpected warning for ${text}`);
+  }
+  assert.equal(result.hasErrors, false, messages);
+});
+
+test("retirement: jl_subagent_models warns without error", () => {
+  const result = check("jl_subagent_models:\n  default: claude-sonnet-5\n");
+  assert.equal(result.hasErrors, false, result.messages.join("\n"));
+  assert.match(result.messages.join("\n"), /jl_subagent_models is retired/);
+  assert.match(result.messages.join("\n"), /Remove the jl_subagent_models block/);
+});
+
+test("retirement: jl_recon.model_selection warns without error", () => {
+  const result = check("jl_recon:\n  model_selection:\n    default: inherit\n");
+  assert.equal(result.hasErrors, false, result.messages.join("\n"));
+  assert.match(result.messages.join("\n"), /jl_recon\.model_selection is retired/);
+});
+
+test("retirement: legacy mode2_checks/mode3_checks warn without error", () => {
+  const result = check("jl_recon:\n  model_selection:\n    mode2_checks: inherit\n    mode3_checks: inherit\n");
+  assert.equal(result.hasErrors, false, result.messages.join("\n"));
+  assert.match(result.messages.join("\n"), /jl_recon\.model_selection is retired/);
+});
+
+test("retirement: combined settings warn, approval gates still validate", () => {
+  const result = check(
+    "jl_subagent_models:\n  default: claude-sonnet-5\n" +
+      "jl_recon:\n  model_selection:\n    default: inherit\n" +
+      "jl_approval_gates:\n  plan_approval_required: false\n"
+  );
+  assert.equal(result.hasErrors, false, result.messages.join("\n"));
+  const messages = result.messages.join("\n");
+  assert.match(messages, /jl_subagent_models is retired/);
+  assert.match(messages, /jl_recon\.model_selection is retired/);
+  const gateResult = check("jl_approval_gates:\n  plan_approval_required: 'nope'\n");
+  assert.equal(gateResult.hasErrors, true, "approval gates still validated");
 });

@@ -88,7 +88,8 @@ Every implementation session should maintain the following shared state:
 - **Implementation slice** — a bounded unit of work the parent agent can do
   inline or delegate
 - **Delegated subtask** — a child slice assigned to a specialist or
-  language-specific agent through `DelegateToSubagent`
+  language-specific agent through native delegation in the current harness
+  (with inline/manual fallback)
 - **Parent feature branch** — the main feature branch coordinating all child
   work
 - **Child feature branch** — a delegated subtask branch rooted under the
@@ -193,57 +194,6 @@ If the current harness cannot spawn or coordinate the desired child agent:
 - offer inline implementation when practical,
 - mark the subtask as manual rather than silently dropping it.
 
-## Model Selection
-
-Model selection for delegated implementation follows the shared hierarchy:
-global default < per-agent default < per-type default < per-task override.
-
-For `jl-feature-implementer`, the per-agent default is `gpt-4-turbo` because
-code-heavy implementation slices often benefit from a model tuned for code
-generation. Reasoning-heavy implementation research or risky refactors may
-still override to Claude.
-
-Resolve models in this order:
-
-1. explicit `DelegationRequest.model`
-2. `jl_subagent_models.overrides.<task-key>`
-3. `jl_subagent_models.<delegation-type>`
-4. `jl-feature-implementer` per-agent default
-5. `jl_subagent_models.default`
-
-Typical mappings:
-
-- `implementation` -> `jl_subagent_models.implementation`
-- validation-heavy or test-generation follow-up -> `jl_subagent_models.test_generation`
-
-If the chosen model is unavailable in the current harness, continue down the
-hierarchy until an available model is found and record the substitution in the
-merge coordination record.
-
-Example configuration:
-
-```yaml
-jl_subagent_models:
-  default: "claude-sonnet-5"
-  implementation: "gpt-4-turbo"
-  test_generation: "claude-opus-4.5"
-  overrides:
-    security-critical-refactor: "claude-opus-4.5"
-```
-
-### Concrete examples
-
-1. Research-style override:
-   a complex implementation analysis can explicitly request
-   `claude-opus-4.5` for one subtask even though normal code slices default to
-   `gpt-4-turbo`.
-2. Test-generation by type:
-   implementation stays on GPT while delegated unit-test expansion uses the
-   repository `test_generation` model.
-3. Harness fallback:
-   if browser harness does not support `gpt-4-turbo`, fall back through the
-   hierarchy and tell the user which model actually ran.
-
 ## Delegation Workflows
 
 Delegation fits inside the normal implementation pipeline after plan loading
@@ -289,9 +239,9 @@ for each slice:
     choose target agent
     if prompt required:
       ask "Delegate {subtask} (language: {lang}) to {target_agent}? [Approve] [Decline]"
-    if approved and harness supports delegation:
+    if approved and the harness supports delegation:
       create child worktree + child branch
-      DelegateToSubagent(slice)
+      native delegation of the slice in the current harness
       collect artifact bundle
     else if fallback == inline:
       implement slice inline
@@ -620,8 +570,6 @@ If available at runtime, delegate to the following community skills and agents.
   which library to use, which design pattern to follow, how to handle a
   trade-off, or any choice the codebase does not answer for the agent.
   Prefer asking over assuming.
-- `jl-subagent-spawning` — reference for `DelegateToSubagent`, harness
-  capability differences, and graceful fallback behaviour
 - `jl-feature-documenter` — supporting documentation and implementation notes
 - `jl-feature-tester` — focused validation and integration testing
 - `polyglot-test-agent` — multi-language test generation and execution
@@ -632,15 +580,12 @@ If available at runtime, delegate to the following community skills and agents.
 
 - Works with both Copilot CLI and OpenCode
 - Depends on plans from `jl-feature-planner`
-- Can delegate bounded implementation slices to specialist agents
+- Can delegate bounded implementation slices to specialist agents using the
+  current harness's native delegation support, with inline/manual fallback
 - Delegates documentation to `jl-feature-documenter`
-- Uses `jl-feature-tester` or similar agents for validation when appropriate
-- Follows `jl-subagent-spawning` guidance for harness-aware delegation
 
 ## References
 
-- `.apm/skills/jl-subagent-spawning/SKILL.md` — `DelegateToSubagent`
-  protocol, harness support, and fallback patterns
 - `.apm/skills/jl-recon/SKILL.md` — approval-gate resolution and AFK-style
   delegation patterns that this implementation flow mirrors for bounded child
   work

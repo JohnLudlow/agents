@@ -37,8 +37,8 @@ mode coordinates agents only, not skills. Skills must be invoked directly
 within an agent's context. For harnesses that don't support skill invocation,
 the separate agent provides fallback coverage.
 
-For details on cross-harness subagent spawning, see the
-**jl-subagent-spawning** skill.
+For details on cross-harness subagent spawning, see the native delegation
+support in the current harness (with inline/manual fallback).
 
 ## Model Configuration
 

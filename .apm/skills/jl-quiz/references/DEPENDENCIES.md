@@ -11,9 +11,6 @@
 - **jl-planning-workflow** — This skill (quiz) is invoked during BLOCKER
   1 (Shared Understanding) in planning agents. The planning workflow skill
   orchestrates all BLOCKERs.
-- **jl-subagent-spawning** — Reference this skill if you're implementing
-  Phase 2 (harness detection) to understand when subagents can spawn quiz
-  instances across different harnesses (CLI, browser, Azure DevOps).
 
 ## Dependency Flow
 

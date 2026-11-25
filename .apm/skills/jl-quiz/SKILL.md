@@ -441,7 +441,7 @@ For detailed validation rules, error messages, and test cases, see:
 ## Relationship to Other Skills and Commands
 
 See **[DEPENDENCIES.md](references/DEPENDENCIES.md)** for relationships to jl-issue-management,
-jl-markdown-standards, jl-planning-workflow, and jl-subagent-spawning.
+jl-markdown-standards, jl-planning-workflow.
 
 ## Examples
 
