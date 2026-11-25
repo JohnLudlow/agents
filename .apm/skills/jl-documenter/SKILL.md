@@ -160,54 +160,6 @@ standalone disciplines, and the narrowest competent specialist when terminology 
 are domain-sensitive. If no specialist exists in the current harness, document the gap and fall
 back according to config. Full table: [references/SPECIALIST_SELECTION.md](references/SPECIALIST_SELECTION.md).
 
-## Model Selection
-
-Model selection for documentation delegation follows the shared hierarchy:
-global default < per-agent default < per-type default < per-task override.
-
-For `jl-documenter`, the per-agent default is `claude-sonnet-5` because
-documentation synthesis, tone normalization, and cross-section consistency
-usually benefit from strong reasoning.
-
-Resolve models in this order:
-
-1. explicit `DelegationRequest.model`
-2. `jl_subagent_models.overrides.<task-key>`
-3. `jl_subagent_models.<delegation-type>`
-4. `jl-documenter` per-agent default
-5. `jl_subagent_models.default`
-
-Typical mapping:
-
-- `documentation` -> `jl_subagent_models.documentation`
-
-If a chosen model is unavailable in the current harness, continue down the
-hierarchy until an available model is found and record the substitution in the
-consolidated publication summary.
-
-Example configuration:
-
-```yaml
-jl_subagent_models:
-  default: "claude-sonnet-5"
-  documentation: "claude-sonnet-5"
-  overrides:
-    migration-guide-rewrite: "claude-opus-4.5"
-```
-
-### Concrete examples
-
-1. Research-style documentation analysis with override:
-   a difficult migration guide can explicitly request `claude-opus-4.5` for one
-   bounded rewrite task.
-2. Test-generation adjacent docs:
-   when documenting performance-test guidance, keep normal docs on Claude while
-   a generated test appendix may explicitly use `gpt-4-turbo` if requested.
-3. Harness fallback:
-   if browser harness cannot honor the requested model, fall back through the
-   hierarchy and clearly report which model actually wrote the delegated
-   section.
-
 ## Branch & Worktree Management
 
 Each delegated section gets isolated workspace state so multiple documenters can work in parallel

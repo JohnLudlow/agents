@@ -146,41 +146,6 @@ child worktrees or branches, collect generated tests and reports, require
 CI-backed validation before acceptance when configured, and present one
 consolidated testing outcome.
 
-### Model Selection
-
-Model selection for delegated testing follows the shared hierarchy:
-global default < per-agent default < per-type default < per-task override.
-
-For `jl-feature-tester`, the per-agent default is `claude-opus-4.5` for test
-generation and verification because deep edge-case reasoning and coverage
-analysis usually benefit from a stronger reasoning model; `gpt-4-turbo` is a
-valid override for performance-sensitive generated tests or mechanical
-code-heavy test scaffolds.
-
-Resolve models in this order: explicit `DelegationRequest.model`, then
-`jl_subagent_models.overrides.<task-key>`, then
-`jl_subagent_models.<delegation-type>`, then the `jl-feature-tester`
-per-agent default, then `jl_subagent_models.default`.
-
-Typical mappings: coverage, regression, and unit-test generation map to
-Claude preferred; performance-test scaffolding maps to GPT when speed or
-structured code emission matters.
-
-If a requested model is unavailable in the current harness, fall back through
-the remaining hierarchy and record the substitution in the consolidated test
-report.
-
-Example configuration:
-
-```yaml
-jl_subagent_models:
-  default: "claude-sonnet-5"
-  test_generation: "claude-opus-4.5"
-  implementation: "gpt-4-turbo"
-  overrides:
-    perf-smoke-tests: "gpt-4-turbo"
-```
-
 ## Delegation Workflows
 
 The parent testing flow is `discover -> generate -> run -> verify -> report`.

@@ -54,65 +54,17 @@ function isRecognizedModelName(modelName) {
   return recognizedModelPatterns.some((pattern) => pattern.test(modelName));
 }
 
-function validateSubagentModels(config) {
+function validateRetiredSubagentModels(config) {
   if (!("jl_subagent_models" in config)) {
     return { errors: [], warnings: [] };
   }
 
-  const errors = [];
-  const warnings = [];
-  const cfg = config.jl_subagent_models;
-
-  if (typeof cfg !== "object" || cfg === null || Array.isArray(cfg)) {
-    errors.push("jl_subagent_models must be an object");
-    return { errors, warnings };
-  }
-
-  const allowedTopLevelKeys = new Set([
-    "default",
-    "research",
-    "implementation",
-    "test_generation",
-    "documentation",
-    "overrides",
-  ]);
-
-  for (const key of Object.keys(cfg)) {
-    if (!allowedTopLevelKeys.has(key)) {
-      warnings.push(`jl_subagent_models.${key}: unrecognized top-level key`);
-    }
-  }
-
-  for (const key of ["default", "research", "implementation", "test_generation", "documentation"]) {
-    if (!(key in cfg)) continue;
-    if (typeof cfg[key] !== "string") {
-      errors.push(`jl_subagent_models.${key} must be a string`);
-      continue;
-    }
-
-    if (!isRecognizedModelName(cfg[key])) {
-      warnings.push(`jl_subagent_models.${key}: unknown model name '${cfg[key]}'`);
-    }
-  }
-
-  if ("overrides" in cfg) {
-    if (typeof cfg.overrides !== "object" || cfg.overrides === null || Array.isArray(cfg.overrides)) {
-      errors.push("jl_subagent_models.overrides must be an object");
-    } else {
-      for (const [taskKey, modelName] of Object.entries(cfg.overrides)) {
-        if (typeof modelName !== "string") {
-          errors.push(`jl_subagent_models.overrides.${taskKey} must be a string`);
-          continue;
-        }
-
-        if (!isRecognizedModelName(modelName)) {
-          warnings.push(`jl_subagent_models.overrides.${taskKey}: unknown model name '${modelName}'`);
-        }
-      }
-    }
-  }
-
-  return { errors, warnings };
+  return {
+    errors: [],
+    warnings: [
+      "jl_subagent_models is retired: remove the jl_subagent_models block; delegation now uses native tooling with inline/manual fallback",
+    ],
+  };
 }
 
 function validateApprovalGates(config) {
@@ -445,52 +397,7 @@ function validateLayer3(config, agentKey, options = {}) {
     }
 
     if ("model_selection" in cfg) {
-      const modelSelection = cfg.model_selection;
-      if (typeof modelSelection !== "object" || modelSelection === null || Array.isArray(modelSelection)) {
-        return {
-          valid: false,
-          error: `jl_recon.model_selection: must be object, got ${
-            Array.isArray(modelSelection) ? "array" : typeof modelSelection
-          }`,
-        };
-      }
-
-      const validModelSelectionKeys = new Set([
-        ...contract.MODEL_SELECTION_KEYS,
-        ...(options.historical ? contract.OBSOLETE_TYPE_KEYS : []),
-      ]);
-
-      for (const [key, value] of Object.entries(modelSelection)) {
-        const obsolete = obsoleteTypeKeyError(`jl_recon.model_selection.${key}`, key, options);
-        if (obsolete) return obsolete;
-        if (!validModelSelectionKeys.has(key)) {
-          return {
-            valid: false,
-            error: `jl_recon.model_selection.${key}: invalid key. Allowed: ${Array.from(validModelSelectionKeys).join(", ")}`,
-          };
-        }
-
-        if (typeof value !== "string") {
-          return {
-            valid: false,
-            error: `jl_recon.model_selection.${key}: must be string, got ${typeof value}`,
-          };
-        }
-
-        if (value.trim() === "") {
-          return {
-            valid: false,
-            error: `jl_recon.model_selection.${key}: cannot be empty string`,
-          };
-        }
-
-        if (value !== "inherit" && !isRecognizedModelName(value)) {
-          return {
-            valid: false,
-            error: `jl_recon.model_selection.${key}: unknown model name '${value}' (use a recognized model or 'inherit')`,
-          };
-        }
-      }
+      // Retired per #255: warn in validateConfigText rather than error here.
     }
 
     if ("labels" in cfg) {
@@ -669,13 +576,13 @@ function validateConfigText(content, fileName, options = {}) {
         `${fileName}: ${parseResult.message}\n  Fix: Check jl_subagent_models indentation and YAML syntax.`
       );
     } else {
-      const subagentValidation = validateSubagentModels(parseResult.parsed);
+      const subagentValidation = validateRetiredSubagentModels(parseResult.parsed);
       for (const error of subagentValidation.errors) {
         hasErrors = true;
         message.push(`${fileName}: [WARN] ${error}\n  Fix: Check jl_subagent_models schema and value types.`);
       }
       for (const warning of subagentValidation.warnings) {
-        message.push(`${fileName}: [WARN] ${warning}\n  Fix: Verify the model name or key spelling.`);
+        message.push(`${fileName}: [WARN] ${warning}\n  Fix: Remove the jl_subagent_models block from configuration.`);
       }
     }
   }
@@ -696,6 +603,21 @@ function validateConfigText(content, fileName, options = {}) {
       }
       for (const warning of approvalValidation.warnings) {
         message.push(`${fileName}: [WARN] ${warning}\n  Fix: Verify the gate key spelling and naming convention.`);
+      }
+    }
+  }
+
+  // Retired per #255: warn when jl_recon.model_selection (or legacy aliases)
+  // is present; no dispatch effect, removal is the fix.
+  {
+    const reconYamlBlock = extractYamlFromMarkdown(content, "jl_recon");
+    if (reconYamlBlock) {
+      const reconParse = parseYaml(reconYamlBlock);
+      const reconConfig = reconParse && !reconParse.error ? reconParse.parsed.jl_recon || {} : null;
+      if (reconConfig && "model_selection" in reconConfig) {
+        message.push(
+          `${fileName}: [WARN] jl_recon.model_selection is retired\n  Fix: Remove the jl_recon.model_selection block (including legacy mode2_checks/mode3_checks aliases) from configuration.`
+        );
       }
     }
   }

@@ -182,38 +182,6 @@ prior-art/internal-pattern comparison):
 - unresolved unknowns
 - impact on plan scope, sequencing, or risk
 
-### Model Selection
-
-Model selection for planning delegations follows the shared hierarchy:
-global default < per-agent default < per-type default < per-task override.
-
-For `jl-planner`, the per-agent default is `claude-sonnet-5` because planning,
-breakdown, and research-heavy delegation usually benefit from stronger
-reasoning.
-
-Resolve delegation models in this order: 1. `DelegationRequest.model` → 2.
-`jl_subagent_models.overrides.<task-key>` → 3.
-`jl_subagent_models.<delegation-type>` → 4. `jl-planner` per-agent default →
-5. `jl_subagent_models.default`. Canonical mappings: `research`,
-`implementation`, `test-generation`, `documentation` (each maps to the
-matching `jl_subagent_models.*` key).
-
-If the chosen model is unavailable in the current harness, continue down the
-hierarchy until an available model is found and warn in the consolidated plan
-notes.
-
-Example configuration:
-
-```yaml
-jl_subagent_models:
-  default: "claude-sonnet-5"
-  research: "claude-sonnet-5"
-  implementation: "gpt-4-turbo"
-  documentation: "claude-sonnet-5"
-  overrides:
-    epic-risk-analysis: "claude-opus-4.5"
-```
-
 ## Delegation Workflows
 
 The parent planner owns the following decision points; read

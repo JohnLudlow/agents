@@ -17,8 +17,7 @@ returned test files and run output, then waits for CI before recommending
 acceptance.
 
 Model example: no explicit model is provided, so the skill checks
-`jl_subagent_models.test_generation`, then its per-agent Claude default, then
-the global default.
+native tooling in the current harness (with inline/manual fallback).
 
 ### Example 2 — performance requirement identified
 

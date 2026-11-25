@@ -225,4 +225,4 @@ for your platform.
 
 - **Installation & Setup**: See `docs/INSTALLATION.md` for how to install these agents
 - **Agent Reference**: See the root `README.md` for an overview of available agents
-- **For Developers**: If you're building agents, see `jl_approval_gates` and `jl_subagent_models` in docs/CONFIGURATION.md for delegation configuration
+- **For Developers**: If you're building agents, see `jl_approval_gates` in docs/CONFIGURATION.md for delegation configuration

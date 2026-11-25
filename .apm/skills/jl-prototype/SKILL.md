@@ -187,34 +187,6 @@ one consolidated report to the user.
 | `test` | prototype artifacts need generated tests or broader validation | `polyglot-test-agent` or `jl-feature-tester` |
 | `parallel-research` | independent research or validation can proceed concurrently | bounded specialist agent appropriate to the stack |
 
-### Model Selection
-
-Model selection for prototype delegations follows the shared hierarchy:
-global default < per-agent default < per-type default < per-task override.
-
-For `jl-prototype`, the per-agent default is: `claude-sonnet-5` for design
-and parallel research, `gpt-4-turbo` for implementation, and
-`claude-opus-4.5` for test-oriented validation when deeper reasoning matters.
-
-Resolve models in this order: explicit `DelegationRequest.model`, then
-`jl_subagent_models.overrides.<task-key>`, then
-`jl_subagent_models.<delegation-type>`, then the `jl-prototype` per-agent
-default for the current subtask, then `jl_subagent_models.default`.
-
-If the selected model is unavailable in the current harness, fall through to
-the next candidate and warn in the parent prototype report.
-
-Example configuration:
-
-```yaml
-jl_subagent_models:
-  default: "claude-sonnet-5"
-  implementation: "gpt-4-turbo"
-  test_generation: "claude-opus-4.5"
-  overrides:
-    prototype-auth-spike: "claude-opus-4.5"
-```
-
 ## Approval Gate Integration
 
 Approval gates apply at each delegation decision point, not only once at

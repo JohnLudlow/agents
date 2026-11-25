@@ -164,7 +164,7 @@ findings and explicitly confirms the resolution.
    resolved ticket's content (resolution text, findings, context from the map).
    Resolve the requested model using `model_selection.ticket_resolution_checks` (or
    `model_selection.default`) before invoking fallback; if either is `inherit`
-   or invalid, continue into the `jl_subagent_models` hierarchy.
+   or invalid, use native tooling in the current harness (with inline/manual fallback).
    Apply a per-check timeout of `checks.timeout_seconds` (default: `30`). On
    harness unavailability, timeout, network error, or malformed findings, do
    not block Mode 2: warn the user, keep any successful findings, and continue
@@ -299,7 +299,7 @@ explicitly confirms publication.
    DISPUTED/FABRICATION_RISK with confidence levels and source links). Resolve
    the requested model using `model_selection.status_report_checks` (or
    `model_selection.default`) before invoking fallback; if either is `inherit`
-   or invalid, continue into the `jl_subagent_models` hierarchy. Apply a
+   or invalid, use native tooling in the current harness (with inline/manual fallback). Apply a
    per-check timeout of `checks.timeout_seconds` (default: `30`). On harness
    unavailability, timeout, network error, or malformed findings, do not block
    Mode 3: warn the user, keep any successful findings, and continue to an
@@ -392,7 +392,7 @@ explicitly confirms publication.
    DISPUTED/FABRICATION_RISK with confidence levels and source links). Resolve
    the requested model using `model_selection.status_report_checks` (or
    `model_selection.default`) before invoking fallback; if either is `inherit`
-   or invalid, continue into the `jl_subagent_models` hierarchy. Apply a
+   or invalid, use native tooling in the current harness (with inline/manual fallback). Apply a
    per-check timeout of `checks.timeout_seconds` (default: `30`). On harness
    unavailability, timeout, network error, or malformed findings, do not block
    Mode 3: warn the user, keep any successful findings, and continue to an

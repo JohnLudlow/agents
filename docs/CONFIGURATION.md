@@ -17,10 +17,23 @@ Notable repository-level namespaces:
 - `jl_quiz_requirements`, `jl_quiz_understanding`, `jl_recon`,
   `jl_issue_management` — per-skill workflow settings (the old `jl_quiz` block and the `quiz`/`task`
   ticket-type keys are obsolete for new tickets; the validator rejects them)
-  - `jl_recon.model_selection` — configure model preferences for delegated recon flows and quality checks
   - `jl_recon.title_format` — customize issue title formatting for maps and tickets (see [jl-recon Title Format Configuration](./jl-recon-title-format.md))
 - `jl_approval_gates` — boolean gates controlling whether delegation may happen at all
-- `jl_subagent_models` — model selection hierarchy for delegated subagents
+
+## Retired Delegation Settings
+
+The following settings are retired as of #255. Their presence produces an
+actionable warning from `npm run validate`; there is no dispatch effect:
+
+- `jl_subagent_models` — delegation now uses native tooling in the current
+  harness, with inline or manual fallback. Remove the block and rely on
+  native delegation or the fallback path.
+- `jl_recon.model_selection` — including the legacy `mode2_checks` and
+  `mode3_checks` aliases. Remove the block; delegated recon flows use native
+  tooling now.
+
+`jl_approval_gates` and workflow safeguards remain the supported delegation
+configuration.
 
 ## Plugin Capability Manifest
 
@@ -75,8 +88,8 @@ skill applies the same delegation-unavailable fallback it would for a declared `
 
 ### Example 3: A plugin that narrows its own model support
 
-A plugin that only knows how to run reliably on specific models can declare that directly, rather
-than relying on the repository's `jl_subagent_models` hierarchy alone:
+A plugin that only knows how to run reliably on specific models can declare that directly:
+rather than relying on the repository's native tooling alone:
 
 ```yaml
 ---

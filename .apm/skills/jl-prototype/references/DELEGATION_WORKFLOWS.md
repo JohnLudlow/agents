@@ -71,8 +71,7 @@ finalize consolidated prototype report
    delegate a difficult design spike with `model: "claude-opus-4.5"`; if the
    harness supports it, use Opus instead of the prototype defaults.
 2. Test generation with per-type model:
-   use `jl_subagent_models.test_generation: "claude-opus-4.5"` for reasoning
-   about edge-case unit tests while leaving implementation on `gpt-4-turbo`.
+   use native tooling in the current harness (with inline/manual fallback).
 3. Harness fallback:
    if browser harness cannot honor `gpt-4-turbo` for an implementation subtask,
    fall back to `claude-sonnet-5` or the global default and record the warning.

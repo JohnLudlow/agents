@@ -111,7 +111,7 @@ The agent MUST:
 - Apply resolved `model_selection` values at delegated execution points
   (ticket delegation and Mode 2/Mode 3 checks), using deterministic precedence:
   explicit override → `model_selection.<action>` → `model_selection.default`
-  → `jl_subagent_models` hierarchy.
+  → native tooling in the current harness.
 - Ask whether an inciting issue exists before creating the map, and if one
   does, link the map to it as a native sub-issue (GitHub `--parent`) before
   creating any tickets. A comment or URL alone is not acceptable; see
